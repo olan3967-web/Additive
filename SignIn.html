@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADDITIVE - Sign In</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#0b0f1c; font-family: 'Inter', sans-serif; color:white; }
+        .app { display: flex; }
+        .sidebar { width:260px; background:#0f1322; padding:32px 20px; }
+        .nav-item { display:block; padding:10px 16px; color:#a3aed4; text-decoration:none; }
+        .active { background:#1e2a4e; border-radius:12px; color:white; }
+        .main { flex:1; padding:32px 40px; }
+        .rewards-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin:30px 0; }
+        .day-card { background:#101624; padding:20px; border-radius:28px; text-align:center; }
+        .claim-btn { background:#2f3b6e; border:none; padding:12px; border-radius:40px; color:white; width:100%; margin-top:12px; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo" style="font-size:24px;">ADDITIVE®</div>
+        <div class="nav">
+            <a href="dashboard.html" class="nav-item">Dashboard</a>
+            <a href="start.html" class="nav-item">Start</a>
+            <a href="history.html" class="nav-item">History</a>
+            <a href="signin.html" class="nav-item active">Sign in</a>
+            <a href="withdrawal.html" class="nav-item">Withdrawal</a>
+            <a href="chat.html" class="nav-item">Chat with us</a>
+            <a href="settings.html" class="nav-item">Settings</a>
+        </div>
+    </aside>
+    <main class="main">
+        <h2>SIGN IN</h2>
+        <p>Build your daily reward streak: <strong>TOTAL REWARDS €490</strong></p>
+        <div class="rewards-grid">
+            <div class="day-card">Day 1: €10</div><div class="day-card">Day 2: €30</div><div class="day-card">Day 3: €50</div>
+            <div class="day-card">Day 4: €90</div><div class="day-card">Day 5: €110</div><div class="day-card">Day 6: €200</div>
+        </div>
+        <button class="claim-btn">Claim now</button>
+        <p style="margin:20px 0;">You are not eligible to claim yet. Complete 6 consecutive days.</p>
+        <div style="background:#0f1424; padding:20px; border-radius:28px;">
+            <h4>SIGN IN REWARDS RULES</h4>
+            <p>Complete 30 orders to unlock reward claims. Claim once per round.</p>
+        </div>
+    </main>
+</div>
+</body>
+</html>

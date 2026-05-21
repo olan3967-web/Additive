@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADDITIVE - Start</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0b0f1c;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+        }
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 260px;
+            background: #0f1322;
+            border-right: 1px solid #1e243b;
+            padding: 32px 20px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 32px;
+        }
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .nav-item {
+            padding: 10px 16px;
+            border-radius: 12px;
+            color: #a3aed4;
+            text-decoration: none;
+        }
+        .nav-item.active {
+            background: #1e2a4e;
+            color: white;
+        }
+        .main {
+            flex: 1;
+            padding: 32px 40px;
+        }
+        .start-hero {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .stats-grid {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin: 40px 0;
+        }
+        .stat-card {
+            background: #101624;
+            padding: 24px;
+            border-radius: 32px;
+            min-width: 160px;
+            text-align: center;
+        }
+        .hotels {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 30px 0;
+        }
+        .hotel {
+            background: #0f1424;
+            padding: 12px 24px;
+            border-radius: 40px;
+        }
+        .btn {
+            background: #2f3b6e;
+            padding: 12px 28px;
+            border-radius: 40px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">ADDITIVE</div>
+        <div class="nav">
+            <a href="dashboard.html" class="nav-item">Dashboard</a>
+            <a href="start.html" class="nav-item active">Start</a>
+            <a href="history.html" class="nav-item">History</a>
+            <a href="signin.html" class="nav-item">Sign in</a>
+            <a href="withdrawal.html" class="nav-item">Withdrawal</a>
+            <a href="chat.html" class="nav-item">Chat with us</a>
+            <a href="settings.html" class="nav-item">Settings</a>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="start-hero">
+            <h1>START</h1>
+            <p>Explore curated hotel tasks with a clean premium experience.</p>
+            <button class="btn" style="margin-top:20px;">Start</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">BALANCE<br><strong>€100.65</strong></div>
+            <div class="stat-card">COMMISSIONS<br><strong>0.00</strong></div>
+            <div class="stat-card">PENDING<br><strong>0.00</strong></div>
+            <div class="stat-card">TRIAL BONUS<br><strong>0.00</strong></div>
+        </div>
+
+        <div style="background:#101624; border-radius:28px; padding:20px; margin:20px 0;">
+            ADDITIVE+ MARKETING AUTOMATION — ORDERS 30 &nbsp;&nbsp; <button class="btn">Start Now</button>
+        </div>
+
+        <h3>FEATURED HOTELS</h3>
+        <div class="hotels">
+            <span class="hotel">ETREE</span><span class="hotel">SHANGRI-LA</span><span class="hotel">FOUR SEASONS</span>
+            <span class="hotel">CAPELLA</span><span class="hotel">RAFFLES</span><span class="hotel">DOUF</span>
+        </div>
+
+        <div class="upgrade-banner" style="background:#191f38; border-radius:24px; padding:20px; margin-top:40px;">
+            PREMIUM ACCESS — Upgrade your membership
+            <a href="#" style="float:right;">Upgrade Now</a>
+        </div>
+    </main>
+</div>
+</body>
+</html>
