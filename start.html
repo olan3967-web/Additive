@@ -166,48 +166,65 @@
         
         .featured-section { margin-top: 20px; }
 .featured-title { font-size: 16px; font-weight: 500; color: #C9B095; margin-bottom: 14px; letter-spacing: 1px; }
+
+/* 轮播容器 */
 .marquee-images { 
     overflow: hidden; 
     white-space: nowrap; 
-    background: #0E1838; 
+    background: transparent; 
     border-radius: 20px; 
-    padding: 20px 0; 
+    padding: 10px 0; 
     position: relative; 
 }
+
+/* 滚动内容 */
 .marquee-images-content { 
     display: inline-block; 
     animation: scrollImages 35s linear infinite; 
 }
+
+/* 单个酒店项 */
 .hotel-img-item { 
     display: inline-block; 
     margin: 0 12px; 
     text-align: center; 
-    vertical-align: middle;
+    vertical-align: top;
+    background: transparent;
+    width: 180px;
+}
+
+/* 图片容器 - 白色背景，固定圆角框 */
+.hotel-img-item .img-wrapper {
+    width: 180px;
+    height: 110px;
     background: #ffffff;
     border-radius: 16px;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
+
+/* 图片本身 - fill 填满整个框架 */
 .hotel-img-item img { 
-    width: 180px; 
-    height: 110px; 
-    border-radius: 16px; 
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     object-position: center;
     background: #ffffff;
-    display: block;
 }
+
+/* 酒店名称 */
 .hotel-img-item .hotel-name { 
     display: block; 
-    font-size: 13px; 
-    color: #333; 
+    font-size: 12px; 
+    color: #C9B095; 
     margin-top: 8px; 
-    margin-bottom: 8px;
-    font-weight: 600;
-    background: #ffffff;
-    padding: 4px;
-    border-radius: 8px;
+    font-weight: 500;
 }
+
+/* 向左滚动动画 */
 @keyframes scrollImages { 
     0% { transform: translateX(0); } 
     100% { transform: translateX(-50%); } 
@@ -553,34 +570,39 @@
             }
             
             // 加载精选酒店
-            if(data.featured_hotels && data.featured_hotels.length > 0) {
-                const container = document.getElementById('hotelImagesContainer');
-                if(container) {
-                    container.innerHTML = '';
-                    for(let hotel of data.featured_hotels) {
-                        const div = document.createElement('div');
-                        div.className = 'hotel-img-item';
-                        let imgUrl = hotel.image || '';
-                        
-                        // 如果图片 URL 是相对路径，补全完整 URL
-                        if(imgUrl && !imgUrl.startsWith('http')) {
-                            imgUrl = `https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/hotel-images/${imgUrl}`;
-                        }
-                        
-                        div.innerHTML = `
-                            <img src="${imgUrl}" 
-                                 alt="${hotel.name}" 
-                                 style="width:180px; height:110px; border-radius:16px; object-fit:contain; background:#0E1838; padding:8px;"
-                                 onerror="this.onerror=null; this.src='https://placehold.co/180x110/0E1838/C9B095?text=No+Image'; this.style.objectFit='cover';">
-                            <span class="hotel-name">${escapeHtml(hotel.name)}</span>
-                        `;
-                        container.appendChild(div);
-                    }
-                    // 双倍内容实现无缝滚动
-                    const items = container.innerHTML;
-                    container.innerHTML = items + items;
+if(data.featured_hotels && data.featured_hotels.length > 0) {
+    const container = document.getElementById('hotelImagesContainer');
+    if(container) {
+        container.innerHTML = '';
+        for(let hotel of data.featured_hotels) {
+            const div = document.createElement('div');
+            div.className = 'hotel-img-item';
+            let imgUrl = hotel.image || '';
+            
+            // 确保图片 URL 完整
+            if(imgUrl && !imgUrl.startsWith('http')) {
+                if(imgUrl.startsWith('/storage/')) {
+                    imgUrl = `https://ygeawapbjcfytjoxpttk.supabase.co${imgUrl}`;
+                } else if(!imgUrl.startsWith('https://')) {
+                    imgUrl = `https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/hotel-images/${imgUrl}`;
                 }
             }
+            
+            div.innerHTML = `
+                <div class="img-wrapper">
+                    <img src="${imgUrl}" 
+                         alt="${hotel.name}" 
+                         onerror="this.onerror=null; this.src='https://placehold.co/180x110/ffffff/C9B095?text=${encodeURIComponent(hotel.name)}'; this.style.objectFit='cover';">
+                </div>
+                <span class="hotel-name">${escapeHtml(hotel.name)}</span>
+            `;
+            container.appendChild(div);
+        }
+        // 双倍内容实现无缝滚动
+        const items = container.innerHTML;
+        container.innerHTML = items + items;
+    }
+}
         }
     } catch(e) {
         console.error('Error loading animated config:', e);
