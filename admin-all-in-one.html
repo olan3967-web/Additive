@@ -190,9 +190,10 @@
 
 <script>
     // 使用 window.supabaseJs 避免变量冲突
-    const SB_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-    const SB_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-    const sb = window.supabase.createClient(SB_URL, SB_KEY);
+    // 正确的代码
+const SB_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+const SB_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+const sb = supabase.createClient(SB_URL, SB_KEY);
     
     let searchKeyword = '';
 
