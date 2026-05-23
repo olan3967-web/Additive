@@ -9,47 +9,352 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
     <style>
-        /* 保留原有样式，添加以下修复 */
-        .hotel-img-item {
-            display: inline-block;
-            margin: 0 12px;
-            text-align: center;
-            vertical-align: top;
-            background: transparent;
-            width: 180px;
+        /* 电脑版默认样式 - 8:2 布局 */
+        .start-hero { margin-bottom: 24px; }
+        .start-hero h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
+        .start-hero p { color: #7a85a5; font-size: 13px; margin-bottom: 0; }
+        
+        .menu-toggle {
+            display: none;
+            width: fit-content;
+            margin-bottom: 16px;
+            background: rgba(201, 176, 149, 0.2);
+            border: 1px solid rgba(201, 176, 149, 0.4);
+            border-radius: 12px;
+            padding: 8px 12px;
+            cursor: pointer;
+            color: #C9B095;
+            font-size: 18px;
         }
-        .hotel-img-item .img-wrapper {
-            width: 180px;
-            height: 110px;
-            background: #ffffff;
-            border-radius: 16px;
-            overflow: hidden;
+        .menu-toggle.hidden { display: none; }
+        
+        .two-columns {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        /* 电脑版左侧视频区域 - 占8份 */
+        .left-col {
+            flex: 8;
+            background: #0E1838;
+            border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 400px;
+            border: 1px solid rgba(201, 176, 149, 0.2);
+            overflow: hidden;
         }
-        .hotel-img-item img {
+        /* 电脑版右侧卡片 - 占2份 */
+        .right-col {
+            flex: 2;
+        }
+        
+        #videoContainer {
             width: 100%;
             height: 100%;
-            object-fit: cover;
-            object-position: center;
-            background: #ffffff;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .hotel-img-item .hotel-name {
+        .video-placeholder {
+            text-align: center;
+            color: #5a6388;
+        }
+        .video-placeholder i {
+            font-size: 56px;
+            margin-bottom: 12px;
             display: block;
-            font-size: 12px;
             color: #C9B095;
-            margin-top: 8px;
-            font-weight: 500;
         }
-        @keyframes scrollImages {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+        #videoContainer video,
+        #videoContainer img {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            object-fit: cover;
+            border-radius: 24px;
         }
-        .marquee-images-content {
-            display: inline-block;
-            animation: scrollImages 35s linear infinite;
+        
+        /* 黑金奢华大卡片样式 */
+        .big-card {
+            background: linear-gradient(145deg, rgba(20, 30, 55, 0.8), rgba(10, 18, 43, 0.9));
+            border: 1px solid rgba(201, 176, 149, 0.35);
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: rgba(10, 18, 43, 0.6);
+            border-radius: 20px;
+            padding: 18px 12px;
+            text-align: center;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+            transition: all 0.3s;
+        }
+        .stat-card:hover {
+            border-color: rgba(201, 176, 149, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #a0a8c0;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #C9B095;
+        }
+        
+        .balance-value {
+            color: #ffffff;
+        }
+        
+        .orders-row {
+            background: rgba(10, 18, 43, 0.6);
+            border-radius: 20px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+        }
+        
+        .orders-label {
+            font-size: 14px;
+            color: #a0a8c0;
+        }
+        
+        .orders-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: #C9B095;
+        }
+        
+        .start-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #C9B095, #b8944a);
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            color: #0A122B;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .start-btn:hover {
+            transform: scale(1.01);
+            box-shadow: 0 5px 15px rgba(201, 176, 149, 0.3);
+        }
+        
+        /* 精选酒店 */
+        .featured-section { margin-top: 20px; }
+        .featured-title { font-size: 16px; font-weight: 500; color: #C9B095; margin-bottom: 14px; letter-spacing: 1px; }
+        .marquee-images { 
+            overflow: hidden; 
+            white-space: nowrap; 
+            background: #0E1838; 
+            border-radius: 20px; 
+            padding: 20px 0; 
+            position: relative; 
+        }
+        .marquee-images-content { 
+            display: inline-block; 
+            animation: scrollImages 35s linear infinite; 
+        }
+        .hotel-img-item { 
+            display: inline-block; 
+            margin: 0 12px; 
+            text-align: center; 
+            vertical-align: middle; 
+        }
+        .hotel-img-item img { 
+            width: 180px; 
+            height: 110px; 
+            border-radius: 16px; 
+            object-fit: cover; 
+            border: 1px solid rgba(201, 176, 149, 0.3); 
+            background: #0A122B; 
+            transition: all 0.3s; 
+        }
+        .hotel-img-item img:hover { 
+            transform: scale(1.03); 
+            border-color: #C9B095; 
+        }
+        .hotel-img-item .hotel-name { 
+            display: block; 
+            font-size: 13px; 
+            color: #C9B095; 
+            margin-top: 10px; 
+            font-weight: 500; 
+        }
+        @keyframes scrollImages { 
+            0% { transform: translateX(0); } 
+            100% { transform: translateX(-50%); } 
+        }
+        
+        /* 升级卡片脉冲发光 */
+        @keyframes pulseGlow { 
+            0% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); } 
+            50% { box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12); border-color: rgba(201, 176, 149, 0.5); } 
+            100% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); } 
+        }
+        .upgrade-card-pulse { 
+            background: rgba(20, 30, 55, 0.6); 
+            backdrop-filter: blur(12px); 
+            border-radius: 28px; 
+            padding: 24px; 
+            transition: all 0.3s ease; 
+            animation: pulseGlow 2.5s ease-in-out infinite; 
+            border: 1px solid rgba(201, 176, 149, 0.3); 
+            margin-top: 32px; 
+        }
+        .upgrade-card-pulse:hover { 
+            animation: none; 
+            transform: translateY(-4px); 
+            box-shadow: inset 0 0 30px rgba(201, 176, 149, 0.3), 0 0 20px rgba(201, 176, 149, 0.2); 
+            border-color: rgba(201, 176, 149, 0.7); 
+        }
+        .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
+        .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
+        .btn-upgrade { background: rgba(201, 176, 149, 0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; border: 1px solid rgba(201, 176, 149, 0.3); }
+        .btn-upgrade:hover { background: rgba(201, 176, 149, 0.25); transform: scale(1.02); color: #ffd700; }
+        
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
+        .order-modal {
+            background: linear-gradient(145deg, #12172e, #0e1225);
+            border-radius: 32px;
+            width: 500px;
+            max-width: 90%;
+            padding: 0;
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        .modal-header {
+            background: linear-gradient(135deg, #1a1f3a, #12172e);
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header h2 { font-size: 20px; font-weight: 700; color: #C9B095; }
+        .modal-close { background: none; border: none; color: #aaa; font-size: 24px; cursor: pointer; }
+        .modal-close:hover { color: #C9B095; }
+        .modal-body { padding: 24px; max-height: 80vh; overflow-y: auto; }
+        .order-image { width: 100%; height: 160px; background: #0a0e1a; border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 20px; }
+        .order-image img { width: 100%; height: 100%; object-fit: cover; }
+        .order-name { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 8px; text-align: center; }
+        .order-code { text-align: center; font-size: 14px; color: #C9B095; margin-bottom: 20px; letter-spacing: 1px; }
+        .order-details { background: rgba(0, 0, 0, 0.3); border-radius: 20px; padding: 16px; margin-bottom: 20px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .detail-label { color: #aaa; font-size: 14px; }
+        .detail-value { color: #fff; font-weight: 600; font-size: 16px; }
+        .detail-value.price { color: #4ade80; font-size: 18px; }
+        .star-rating-premium { display: flex; justify-content: center; gap: 12px; margin: 24px 0; }
+        .star-premium { cursor: pointer; transition: all 0.25s ease; }
+        .star-premium i { font-size: 40px; color: #4a5578; transition: all 0.25s ease; }
+        .star-premium.active i { color: #C9B095; text-shadow: 0 0 8px rgba(201, 176, 149, 0.4); transform: scale(1.08); }
+        .star-premium:hover { transform: translateY(-3px); }
+        .star-premium:hover i { color: #C9B095; }
+        .rating-text-premium { text-align: center; font-size: 13px; color: #c0c0d0; margin-bottom: 20px; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+        .btn-submit { flex: 1; background: #C9B095; border: none; padding: 14px; border-radius: 40px; color: #0A122B; font-weight: 600; cursor: pointer; }
+        .btn-submit:hover { opacity: 0.85; transform: scale(1.02); }
+        .btn-close-modal { flex: 1; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); padding: 14px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; }
+        #progressContainer { margin-top: 20px; display: none; }
+        .progress-bar-bg { background: rgba(255, 255, 255, 0.1); border-radius: 10px; height: 8px; overflow: hidden; }
+        .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.3s ease; }
+        .progress-text { text-align: center; margin-top: 12px; font-size: 13px; color: #C9B095; }
+        
+        /* 手机版样式 */
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+            .two-columns { flex-direction: column; gap: 20px; }
+            .left-col {
+                flex: auto;
+                width: 100vw;
+                position: relative;
+                left: 50%;
+                right: 50%;
+                margin-left: -50vw;
+                margin-right: -50vw;
+                background: transparent;
+                border: none;
+                border-radius: 0;
+                min-height: auto;
+                overflow: visible;
+                padding: 0;
+                margin-top: 0;
+                margin-bottom: 0;
+            }
+            .left-col #videoContainer { width: 100%; min-height: auto; margin: 0; padding: 0; }
+            #videoContainer video,
+            #videoContainer img {
+                border-radius: 0;
+                object-fit: contain;
+                min-height: auto;
+                max-height: 220px;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                display: block;
+            }
+            .right-col { flex: auto; padding: 0 16px; }
+            .start-hero { margin-bottom: 12px; padding: 0 16px; }
+            .start-hero h1 { font-size: 22px; }
+            .start-hero p { font-size: 11px; }
+            .stats-grid { gap: 10px; margin-bottom: 16px; }
+            .stat-card { padding: 12px; }
+            .stat-value { font-size: 20px; }
+            .orders-row { padding: 12px 16px; margin-bottom: 16px; }
+            .orders-value { font-size: 20px; }
+            .start-btn { padding: 12px; font-size: 14px; }
+            .big-card { padding: 20px; }
+            .hotel-img-item img { width: 120px; height: 75px; }
+            .upgrade-card-pulse { padding: 16px; margin: 20px 16px; }
+            .featured-section { padding: 0 16px; }
+            .featured-title { font-size: 14px; }
+            .marquee-images { padding: 12px 0; }
         }
     </style>
 </head>
@@ -170,12 +475,15 @@
         }
         
         async function loadUserData() {
-            const user = checkLogin();
-            if (!user) return;
+            const user = getCurrentUser();
+            if (!user) {
+                window.location.href = 'signin.html';
+                return;
+            }
             currentUserUid = user.uid;
             
             try {
-                // 从 Supabase 获取最新数据
+                // 从 Supabase 获取最新用户数据
                 const { data: userData } = await sb
                     .from('users')
                     .select('balance, trial_bonus_amount')
@@ -191,6 +499,7 @@
                     localStorage.setItem('currentUser', JSON.stringify(user));
                 }
                 
+                // 获取订单统计
                 const { data: orders } = await sb
                     .from('order_history')
                     .select('commission')
@@ -257,6 +566,7 @@
                     .single();
                 
                 if(data) {
+                    // 加载视频
                     if(data.video_url) {
                         const videoContainer = document.getElementById('videoContainer');
                         if(videoContainer) {
@@ -264,11 +574,12 @@
                             if(url.endsWith('.mp4') || url.includes('.mp4')) {
                                 videoContainer.innerHTML = `<video src="${url}" autoplay loop muted playsinline style="width:100%; border-radius:24px;"></video>`;
                             } else {
-                                videoContainer.innerHTML = `<img src="${url}" style="width:100%; border-radius:24px;">`;
+                                videoContainer.innerHTML = `<img src="${url}" style="width:100%; border-radius:24px;" onerror="this.parentElement.innerHTML='<div class=\\'video-placeholder\\'><i class=\\'fas fa-play-circle\\'></i><p>动态视频区域</p><small>可上传 MP4 / GIF</small></div>'">`;
                             }
                         }
                     }
                     
+                    // 加载精选酒店 - 只加载一次，不重复
                     if(data.featured_hotels && data.featured_hotels.length > 0) {
                         const container = document.getElementById('hotelImagesContainer');
                         if(container) {
@@ -277,17 +588,13 @@
                                 const div = document.createElement('div');
                                 div.className = 'hotel-img-item';
                                 let imgUrl = hotel.image || '';
-                                if(imgUrl && imgUrl.includes('supabase.co')) {
-                                    imgUrl = imgUrl.split('?')[0];
-                                }
                                 div.innerHTML = `
-                                    <div class="img-wrapper">
-                                        <img src="${imgUrl}" alt="${hotel.name}" onerror="this.src='https://placehold.co/180x110/ffffff/C9B095?text=No+Image'">
-                                    </div>
+                                    <img src="${imgUrl}" alt="${hotel.name}" onerror="this.src='https://placehold.co/180x110/0E1838/C9B095?text=Hotel'">
                                     <span class="hotel-name">${escapeHtml(hotel.name)}</span>
                                 `;
                                 container.appendChild(div);
                             });
+                            // 双倍内容实现无缝滚动
                             const items = container.innerHTML;
                             container.innerHTML = items + items;
                         }
