@@ -71,8 +71,8 @@
             text-align: center;
         }
         .stat-number { font-size: 28px; font-weight: bold; color: #ffd966; }
-        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
-        .search-input { flex: 1; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .search-input { flex: 1; min-width: 150px; }
         .modal {
             position: fixed;
             top: 0;
@@ -112,7 +112,6 @@
     </div>
 
     <div class="main">
-        <!-- Dashboard -->
         <div id="page_dashboard" class="page active">
             <div class="stats">
                 <div class="stat-card"><div>Total Users</div><div class="stat-number" id="statUsers">0</div></div>
@@ -120,10 +119,9 @@
                 <div class="stat-card"><div>Pending Withdrawals</div><div class="stat-number" id="statPending">0</div></div>
                 <div class="stat-card"><div>Total Orders</div><div class="stat-number" id="statOrders">0</div></div>
             </div>
-            <div class="card">✅ Connected to Supabase. Use sidebar menu to manage.</div>
+            <div class="card">✅ Connected to Supabase. Click sidebar menu to manage.</div>
         </div>
 
-        <!-- Users -->
         <div id="page_users" class="page">
             <div class="card">
                 <div class="search-bar">
@@ -133,7 +131,7 @@
                     <button onclick="openAddUserModal()">+ Add User</button>
                 </div>
                 <div style="overflow-x:auto">
-                    <table>
+                    <table id="usersTable">
                         <thead><tr><th>UID</th><th>Username</th><th>Balance</th><th>Orders</th><th>VIP</th><th>Actions</th></tr></thead>
                         <tbody id="usersTableBody"></tbody>
                     </table>
@@ -141,67 +139,45 @@
             </div>
         </div>
 
-        <!-- Withdrawals -->
         <div id="page_withdrawals" class="page">
             <div class="card">
                 <h3>Pending Withdrawals</h3>
                 <div style="overflow-x:auto">
-                    <table>
-                        <thead><tr><th>UID</th><th>Username</th><th>Amount</th><th>Wallet</th><th>Date</th><th>Actions</th></tr></thead>
-                        <tbody id="withdrawalsTableBody"></tbody>
-                    </table>
+                    <table><thead><tr><th>UID</th><th>Username</th><th>Amount</th><th>Wallet</th><th>Date</th><th>Actions</th></tr></thead>
+                    <tbody id="withdrawalsTableBody"></tbody></table>
                 </div>
             </div>
         </div>
 
-        <!-- VIP Settings -->
         <div id="page_vip" class="page">
-            <div class="card">
-                <h3>VIP Settings</h3>
-                <div id="vipSettingsDiv"></div>
-            </div>
+            <div class="card"><h3>VIP Settings</h3><div id="vipSettingsDiv"></div></div>
         </div>
 
-        <!-- Bonus -->
         <div id="page_bonus" class="page">
             <div class="card">
                 <h3>Distribute Bonus</h3>
-                <div style="margin-bottom:10px">
-                    <label>Amount (€):</label>
-                    <input type="number" id="bonusAmount" value="10" style="width:150px">
-                </div>
-                <div style="margin-bottom:10px">
-                    <label>User UID (empty = all):</label>
-                    <input type="text" id="bonusTarget" style="width:200px">
-                </div>
+                <div style="margin-bottom:10px"><label>Amount (€):</label> <input type="number" id="bonusAmount" value="10" style="width:150px"></div>
+                <div style="margin-bottom:10px"><label>User UID (empty = all):</label> <input type="text" id="bonusTarget" style="width:200px"></div>
                 <button onclick="distributeBonus()">Send Bonus</button>
             </div>
         </div>
 
-        <!-- Orders -->
         <div id="page_orders" class="page">
             <div class="card">
                 <h3>Order History</h3>
                 <div style="overflow-x:auto">
-                    <table>
-                        <thead><tr><th>ID</th><th>UID</th><th>Username</th><th>Order Code</th><th>Hotel</th><th>Price</th><th>Commission</th><th>Date</th></tr></thead>
-                        <tbody id="ordersTableBody"></tbody>
-                    </table>
+                    <table><thead><tr><th>ID</th><th>UID</th><th>Username</th><th>Order Code</th><th>Hotel</th><th>Price</th><th>Commission</th><th>Date</th></tr></thead>
+                    <tbody id="ordersTableBody"></tbody></table>
                 </div>
             </div>
         </div>
 
-        <!-- Sign In Rewards -->
         <div id="page_signin" class="page">
-            <div class="card">
-                <h3>Sign In Rewards</h3>
-                <div id="signinRewardsDiv"></div>
-            </div>
+            <div class="card"><h3>Sign In Rewards</h3><div id="signinRewardsDiv"></div></div>
         </div>
     </div>
 </div>
 
-<!-- Add User Modal -->
 <div id="addUserModal" class="modal">
     <div class="modal-content">
         <h3>Create New User</h3>
@@ -213,146 +189,125 @@
 </div>
 
 <script>
-    // Supabase config
-    const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    let currentSearch = '';
-
-    function showToast(msg, isError = false) {
-        alert(msg);
-    }
+    // 使用 window.supabaseJs 避免变量冲突
+    const SB_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+    const SB_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+    const sb = window.supabase.createClient(SB_URL, SB_KEY);
+    
+    let searchKeyword = '';
 
     function showPage(pageId) {
-        // Hide all pages
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('page_' + pageId).classList.add('active');
-        // Update nav active state
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        event.target.closest('.nav-item').classList.add('active');
-        // Load data
+        if(event && event.target) {
+            const clicked = event.target.closest('.nav-item');
+            if(clicked) clicked.classList.add('active');
+        }
         if(pageId === 'dashboard') loadDashboard();
         if(pageId === 'users') loadUsers();
         if(pageId === 'withdrawals') loadWithdrawals();
         if(pageId === 'vip') loadVipSettings();
-        if(pageId === 'bonus') {}
         if(pageId === 'orders') loadOrders();
         if(pageId === 'signin') loadSigninRewards();
     }
 
     async function loadDashboard() {
-        const { data: users } = await _supabase.from('users').select('*');
-        if(users) {
-            document.getElementById('statUsers').innerText = users.length;
-            const totalBalance = users.reduce((s,u) => s + (u.balance || 0), 0);
-            document.getElementById('statBalance').innerText = '€' + totalBalance.toFixed(2);
-        }
-        const { data: withdrawals } = await _supabase.from('withdrawals').select('*').eq('status', 'pending');
-        document.getElementById('statPending').innerText = withdrawals?.length || 0;
-        const { data: orders } = await _supabase.from('order_history').select('*');
-        document.getElementById('statOrders').innerText = orders?.length || 0;
+        try {
+            const { data: users } = await sb.from('users').select('*');
+            if(users) {
+                document.getElementById('statUsers').innerText = users.length;
+                const total = users.reduce((s,u) => s + (u.balance || 0), 0);
+                document.getElementById('statBalance').innerText = '€' + total.toFixed(2);
+            }
+            const { data: withdrawals } = await sb.from('withdrawals').select('*').eq('status', 'pending');
+            document.getElementById('statPending').innerText = withdrawals?.length || 0;
+            const { data: orders } = await sb.from('order_history').select('*');
+            document.getElementById('statOrders').innerText = orders?.length || 0;
+        } catch(e) { console.error(e); alert('Error loading dashboard: ' + e.message); }
     }
 
     async function loadUsers() {
-        let query = _supabase.from('users').select('*').order('created_at', { ascending: false });
-        if(currentSearch) {
-            query = query.or(`uid.ilike.%${currentSearch}%,username.ilike.%${currentSearch}%`);
-        }
-        const { data: users } = await query;
-        const { data: allOrders } = await _supabase.from('order_history').select('*');
-        const tbody = document.getElementById('usersTableBody');
-        if(tbody && users) {
-            tbody.innerHTML = '';
-            for(let u of users) {
-                const userOrders = allOrders?.filter(o => o.uid === u.uid) || [];
-                const row = tbody.insertRow();
-                row.insertCell(0).innerText = u.uid;
-                row.insertCell(1).innerText = u.username;
-                row.insertCell(2).innerHTML = `€${(u.balance || 0).toFixed(2)}`;
-                row.insertCell(3).innerText = userOrders.length;
-                row.insertCell(4).innerHTML = `<select onchange="updateVipLevel('${u.uid}', this.value)">
-                    <option value="1" ${u.vip_level === 1 ? 'selected' : ''}>Normal</option>
-                    <option value="2" ${u.vip_level === 2 ? 'selected' : ''}>VIP</option>
-                    <option value="3" ${u.vip_level === 3 ? 'selected' : ''}>SVIP</option>
-                </select>`;
-                row.insertCell(5).innerHTML = `
-                    <button onclick="deposit('${u.uid}')">Deposit</button>
-                    <button onclick="cut('${u.uid}')">Cut</button>
-                    <button class="danger" onclick="deleteUser('${u.uid}')">Delete</button>
-                `;
+        try {
+            let query = sb.from('users').select('*').order('created_at', { ascending: false });
+            if(searchKeyword) query = query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
+            const { data: users } = await query;
+            const { data: allOrders } = await sb.from('order_history').select('*');
+            const tbody = document.getElementById('usersTableBody');
+            if(tbody && users) {
+                tbody.innerHTML = '';
+                for(let u of users) {
+                    const userOrders = allOrders?.filter(o => o.uid === u.uid) || [];
+                    const row = tbody.insertRow();
+                    row.insertCell(0).innerText = u.uid;
+                    row.insertCell(1).innerText = u.username;
+                    row.insertCell(2).innerHTML = `€${(u.balance || 0).toFixed(2)}`;
+                    row.insertCell(3).innerText = userOrders.length;
+                    row.insertCell(4).innerHTML = `<select onchange="updateVip('${u.uid}', this.value)">
+                        <option value="1" ${u.vip_level===1?'selected':''}>Normal</option>
+                        <option value="2" ${u.vip_level===2?'selected':''}>VIP</option>
+                        <option value="3" ${u.vip_level===3?'selected':''}>SVIP</option>
+                    </select>`;
+                    row.insertCell(5).innerHTML = `<button onclick="addBalance('${u.uid}')">Deposit</button>
+                        <button onclick="cutBalance('${u.uid}')">Cut</button>
+                        <button class="danger" onclick="delUser('${u.uid}')">Delete</button>`;
+                }
             }
-        }
+        } catch(e) { alert('Error: ' + e.message); }
     }
 
-    async function updateVipLevel(uid, level) {
-        await _supabase.from('users').update({ vip_level: parseInt(level) }).eq('uid', uid);
+    async function updateVip(uid, level) {
+        await sb.from('users').update({ vip_level: parseInt(level) }).eq('uid', uid);
         alert('VIP updated');
     }
 
-    async function deposit(uid) {
-        const amount = parseFloat(prompt('Enter amount (€):'));
-        if(isNaN(amount) || amount <= 0) return;
-        const { data: user } = await _supabase.from('users').select('balance, username').eq('uid', uid).single();
-        await _supabase.from('users').update({ balance: (user.balance || 0) + amount }).eq('uid', uid);
-        await _supabase.from('deposits').insert([{ uid, username: user.username, amount, type: 'manual' }]);
+    async function addBalance(uid) {
+        const amt = parseFloat(prompt('Amount (€):'));
+        if(isNaN(amt) || amt <= 0) return;
+        const { data: user } = await sb.from('users').select('balance, username').eq('uid', uid).single();
+        await sb.from('users').update({ balance: (user.balance || 0) + amt }).eq('uid', uid);
+        await sb.from('deposits').insert([{ uid, username: user.username, amount: amt, type: 'manual' }]);
         loadUsers(); loadDashboard();
-        alert(`Added €${amount}`);
+        alert(`+€${amt}`);
     }
 
-    async function cut(uid) {
-        const amount = parseFloat(prompt('Enter amount to cut (€):'));
-        if(isNaN(amount) || amount <= 0) return;
-        const { data: user } = await _supabase.from('users').select('balance').eq('uid', uid).single();
-        if((user.balance || 0) < amount) { alert('Insufficient balance'); return; }
-        await _supabase.from('users').update({ balance: (user.balance || 0) - amount }).eq('uid', uid);
+    async function cutBalance(uid) {
+        const amt = parseFloat(prompt('Amount to cut (€):'));
+        if(isNaN(amt) || amt <= 0) return;
+        const { data: user } = await sb.from('users').select('balance').eq('uid', uid).single();
+        if((user.balance || 0) < amt) { alert('Insufficient balance'); return; }
+        await sb.from('users').update({ balance: (user.balance || 0) - amt }).eq('uid', uid);
         loadUsers(); loadDashboard();
-        alert(`Removed €${amount}`);
+        alert(`-€${amt}`);
     }
 
-    async function deleteUser(uid) {
-        if(confirm('Delete this user permanently?')) {
-            await _supabase.from('users').delete().eq('uid', uid);
-            await _supabase.from('order_history').delete().eq('uid', uid);
-            await _supabase.from('deposits').delete().eq('uid', uid);
-            await _supabase.from('withdrawals').delete().eq('uid', uid);
+    async function delUser(uid) {
+        if(confirm('Delete permanently?')) {
+            await sb.from('users').delete().eq('uid', uid);
+            await sb.from('order_history').delete().eq('uid', uid);
+            await sb.from('deposits').delete().eq('uid', uid);
+            await sb.from('withdrawals').delete().eq('uid', uid);
             loadUsers(); loadDashboard();
-            alert('User deleted');
+            alert('Deleted');
         }
     }
 
-    function searchUsers() {
-        currentSearch = document.getElementById('searchInput').value.trim();
-        loadUsers();
-    }
-
-    function clearSearch() {
-        currentSearch = '';
-        document.getElementById('searchInput').value = '';
-        loadUsers();
-    }
-
-    function openAddUserModal() {
-        document.getElementById('addUserModal').classList.add('active');
-    }
-
-    function closeAddUserModal() {
-        document.getElementById('addUserModal').classList.remove('active');
-    }
+    function searchUsers() { searchKeyword = document.getElementById('searchInput').value.trim(); loadUsers(); }
+    function clearSearch() { searchKeyword = ''; document.getElementById('searchInput').value = ''; loadUsers(); }
+    function openAddUserModal() { document.getElementById('addUserModal').classList.add('active'); }
+    function closeAddUserModal() { document.getElementById('addUserModal').classList.remove('active'); }
 
     async function createUser() {
         const username = document.getElementById('newUsername').value.trim();
-        const password = document.getElementById('newPassword').value;
-        if(!username || !password) { alert('Username and password required'); return; }
-        const { data: existing } = await _supabase.from('users').select('username').eq('username', username).single();
-        if(existing) { alert('Username exists'); return; }
-        const { data: maxUid } = await _supabase.from('users').select('uid').order('uid', { ascending: false }).limit(1);
+        const pwd = document.getElementById('newPassword').value;
+        if(!username || !pwd) { alert('Username and password required'); return; }
+        const { data: exist } = await sb.from('users').select('username').eq('username', username).single();
+        if(exist) { alert('Username exists'); return; }
+        const { data: maxUid } = await sb.from('users').select('uid').order('uid', { ascending: false }).limit(1);
         let newUid = '100001';
-        if(maxUid && maxUid.length > 0) newUid = (parseInt(maxUid[0].uid) + 1).toString();
-        const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const { error } = await _supabase.from('users').insert([{
-            uid: newUid, username, password, invite_code: inviteCode, balance: 0, vip_level: 1
-        }]);
+        if(maxUid && maxUid.length) newUid = (parseInt(maxUid[0].uid) + 1).toString();
+        const code = Math.random().toString(36).substring(2,8).toUpperCase();
+        const { error } = await sb.from('users').insert([{ uid: newUid, username, password: pwd, invite_code: code, balance: 0, vip_level: 1 }]);
         if(error) { alert(error.message); return; }
         loadUsers(); closeAddUserModal();
         alert(`User ${username} created`);
@@ -361,93 +316,87 @@
     }
 
     async function loadWithdrawals() {
-        const { data: withdrawals } = await _supabase.from('withdrawals').select('*').eq('status', 'pending').order('request_date', { ascending: false });
+        const { data: wd } = await sb.from('withdrawals').select('*').eq('status', 'pending').order('request_date', { ascending: false });
         const tbody = document.getElementById('withdrawalsTableBody');
-        if(tbody && withdrawals) {
+        if(tbody && wd) {
             tbody.innerHTML = '';
-            for(let w of withdrawals) {
+            for(let w of wd) {
                 const row = tbody.insertRow();
                 row.insertCell(0).innerText = w.uid;
                 row.insertCell(1).innerText = w.username;
                 row.insertCell(2).innerHTML = `€${(w.amount || 0).toFixed(2)}`;
                 row.insertCell(3).innerText = w.wallet_address || '-';
                 row.insertCell(4).innerText = new Date(w.request_date).toLocaleString();
-                row.insertCell(5).innerHTML = `
-                    <button class="success" onclick="approveWithdrawal(${w.id}, '${w.uid}', ${w.amount})">Approve</button>
-                    <button class="danger" onclick="rejectWithdrawal(${w.id})">Reject</button>
-                `;
+                row.insertCell(5).innerHTML = `<button class="success" onclick="approveWd(${w.id}, '${w.uid}', ${w.amount})">Approve</button>
+                    <button class="danger" onclick="rejectWd(${w.id})">Reject</button>`;
             }
         }
     }
 
-    async function approveWithdrawal(id, uid, amount) {
-        if(confirm(`Approve €${amount} withdrawal?`)) {
-            await _supabase.from('withdrawals').update({ status: 'approved', processed_date: new Date() }).eq('id', id);
+    async function approveWd(id, uid, amt) {
+        if(confirm(`Approve €${amt}?`)) {
+            await sb.from('withdrawals').update({ status: 'approved', processed_date: new Date() }).eq('id', id);
             loadWithdrawals(); loadDashboard();
             alert('Approved');
         }
     }
 
-    async function rejectWithdrawal(id) {
-        if(confirm('Reject this withdrawal?')) {
-            const { data: w } = await _supabase.from('withdrawals').select('uid, amount').eq('id', id).single();
+    async function rejectWd(id) {
+        if(confirm('Reject?')) {
+            const { data: w } = await sb.from('withdrawals').select('uid, amount').eq('id', id).single();
             if(w) {
-                const { data: user } = await _supabase.from('users').select('balance').eq('uid', w.uid).single();
-                await _supabase.from('users').update({ balance: (user.balance || 0) + w.amount }).eq('uid', w.uid);
+                const { data: user } = await sb.from('users').select('balance').eq('uid', w.uid).single();
+                await sb.from('users').update({ balance: (user.balance || 0) + w.amount }).eq('uid', w.uid);
             }
-            await _supabase.from('withdrawals').update({ status: 'rejected', processed_date: new Date() }).eq('id', id);
+            await sb.from('withdrawals').update({ status: 'rejected', processed_date: new Date() }).eq('id', id);
             loadWithdrawals(); loadDashboard();
             alert('Rejected, funds returned');
         }
     }
 
     async function loadVipSettings() {
-        const { data: vips } = await _supabase.from('vip_settings').select('*').order('level');
+        const { data: vips } = await sb.from('vip_settings').select('*').order('level');
         const div = document.getElementById('vipSettingsDiv');
         if(div && vips) {
             div.innerHTML = '';
             for(let v of vips) {
-                div.innerHTML += `
-                    <div style="background:#1a1f3a; padding:15px; border-radius:8px; margin-bottom:15px;">
-                        <h3>${v.rank_name} (Level ${v.level})</h3>
-                        <div>Orders Limit: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:100px"></div>
-                        <div>Commission Rate (%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:100px"></div>
-                        <button onclick="saveVipSetting(${v.level})" style="margin-top:10px">Save</button>
-                    </div>
-                `;
+                div.innerHTML += `<div style="background:#1a1f3a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <h3>${v.rank_name} (Level ${v.level})</h3>
+                    <div>Orders Limit: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:100px"></div>
+                    <div>Commission Rate (%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:100px"></div>
+                    <button onclick="saveVip(${v.level})" style="margin-top:10px">Save</button>
+                </div>`;
             }
         }
     }
 
-    async function saveVipSetting(level) {
-        const ordersLimit = parseInt(document.getElementById(`limit_${level}`).value);
-        const commissionRate = parseFloat(document.getElementById(`rate_${level}`).value);
-        await _supabase.from('vip_settings').update({ orders_limit: ordersLimit, commission_rate: commissionRate }).eq('level', level);
+    async function saveVip(level) {
+        const limit = parseInt(document.getElementById(`limit_${level}`).value);
+        const rate = parseFloat(document.getElementById(`rate_${level}`).value);
+        await sb.from('vip_settings').update({ orders_limit: limit, commission_rate: rate }).eq('level', level);
         alert('Saved');
     }
 
     async function distributeBonus() {
-        const amount = parseFloat(document.getElementById('bonusAmount').value);
-        const targetUid = document.getElementById('bonusTarget').value.trim();
-        if(isNaN(amount) || amount <= 0) { alert('Invalid amount'); return; }
-        if(targetUid) {
-            const { data: user } = await _supabase.from('users').select('balance').eq('uid', targetUid).single();
+        const amt = parseFloat(document.getElementById('bonusAmount').value);
+        const target = document.getElementById('bonusTarget').value.trim();
+        if(isNaN(amt) || amt <= 0) { alert('Invalid amount'); return; }
+        if(target) {
+            const { data: user } = await sb.from('users').select('balance').eq('uid', target).single();
             if(user) {
-                await _supabase.from('users').update({ balance: (user.balance || 0) + amount }).eq('uid', targetUid);
-                alert(`Added €${amount} to ${targetUid}`);
-            } else { alert('User not found'); }
+                await sb.from('users').update({ balance: (user.balance || 0) + amt }).eq('uid', target);
+                alert(`Added €${amt} to ${target}`);
+            } else alert('User not found');
         } else {
-            const { data: users } = await _supabase.from('users').select('uid, balance');
-            for(let u of users) {
-                await _supabase.from('users').update({ balance: (u.balance || 0) + amount }).eq('uid', u.uid);
-            }
-            alert(`Added €${amount} to all users`);
+            const { data: users } = await sb.from('users').select('uid, balance');
+            for(let u of users) await sb.from('users').update({ balance: (u.balance || 0) + amt }).eq('uid', u.uid);
+            alert(`Added €${amt} to all users`);
         }
         loadUsers(); loadDashboard();
     }
 
     async function loadOrders() {
-        const { data: orders } = await _supabase.from('order_history').select('*').order('date', { ascending: false }).limit(100);
+        const { data: orders } = await sb.from('order_history').select('*').order('date', { ascending: false }).limit(100);
         const tbody = document.getElementById('ordersTableBody');
         if(tbody && orders) {
             tbody.innerHTML = '';
@@ -466,24 +415,21 @@
     }
 
     async function loadSigninRewards() {
-        const { data: rewards } = await _supabase.from('signin_rewards').select('*').order('day');
+        const { data: rewards } = await sb.from('signin_rewards').select('*').order('day');
         const div = document.getElementById('signinRewardsDiv');
         if(div && rewards) {
             div.innerHTML = '';
             for(let r of rewards) {
-                div.innerHTML += `
-                    <div style="margin-bottom:10px">
-                        Day ${r.day}: <input type="number" id="reward_${r.day}" value="${r.amount}" style="width:100px"> €
-                        <button onclick="saveSigninReward(${r.day})">Save</button>
-                    </div>
-                `;
+                div.innerHTML += `<div style="margin-bottom:10px">Day ${r.day}: 
+                    <input type="number" id="reward_${r.day}" value="${r.amount}" style="width:100px"> €
+                    <button onclick="saveReward(${r.day})">Save</button></div>`;
             }
         }
     }
 
-    async function saveSigninReward(day) {
-        const amount = parseFloat(document.getElementById(`reward_${day}`).value);
-        await _supabase.from('signin_rewards').update({ amount }).eq('day', day);
+    async function saveReward(day) {
+        const amt = parseFloat(document.getElementById(`reward_${day}`).value);
+        await sb.from('signin_rewards').update({ amount: amt }).eq('day', day);
         alert(`Day ${day} saved`);
     }
 
@@ -494,12 +440,8 @@
         }
     }
 
-    // Check login
-    if(localStorage.getItem('admin_logged_in') !== 'true') {
-        window.location.href = 'admin-login.html';
-    }
-
-    // Initial load
+    if(localStorage.getItem('admin_logged_in') !== 'true') window.location.href = 'admin-login.html';
+    
     loadDashboard();
 </script>
 </body>
