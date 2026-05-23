@@ -99,15 +99,15 @@
 <div class="app">
     <div class="sidebar">
         <div class="logo">ADDITIVE<span>®</span></div>
-        <div class="nav-item active" onclick="showPage('dashboard')">📊 Dashboard</div>
-        <div class="nav-item" onclick="showPage('users')">👥 Users</div>
-        <div class="nav-item" onclick="showPage('withdrawals')">💰 Withdrawals</div>
-        <div class="nav-item" onclick="showPage('vip')">👑 VIP Settings</div>
-        <div class="nav-item" onclick="showPage('bonus')">🎁 Bonus</div>
-        <div class="nav-item" onclick="showPage('orders')">📋 Orders</div>
-        <div class="nav-item" onclick="showPage('signin')">✅ Sign In Rewards</div>
+        <div class="nav-item" data-page="dashboard">📊 Dashboard</div>
+        <div class="nav-item" data-page="users">👥 Users</div>
+        <div class="nav-item" data-page="withdrawals">💰 Withdrawals</div>
+        <div class="nav-item" data-page="vip">👑 VIP Settings</div>
+        <div class="nav-item" data-page="bonus">🎁 Bonus</div>
+        <div class="nav-item" data-page="orders">📋 Orders</div>
+        <div class="nav-item" data-page="signin">✅ Sign In Rewards</div>
         <div style="margin-top: 30px;">
-            <button onclick="logout()" style="width:100%; background:#7a2f2f;">🚪 Logout</button>
+            <button id="logoutBtn" style="width:100%; background:#7a2f2f;">🚪 Logout</button>
         </div>
     </div>
 
@@ -126,12 +126,12 @@
             <div class="card">
                 <div class="search-bar">
                     <input type="text" id="searchInput" class="search-input" placeholder="Search by UID or Username">
-                    <button onclick="searchUsers()">Search</button>
-                    <button onclick="clearSearch()">Clear</button>
-                    <button onclick="openAddUserModal()">+ Add User</button>
+                    <button id="searchBtn">Search</button>
+                    <button id="clearBtn">Clear</button>
+                    <button id="addUserBtn">+ Add User</button>
                 </div>
                 <div style="overflow-x:auto">
-                    <table id="usersTable">
+                    <table>
                         <thead><tr><th>UID</th><th>Username</th><th>Balance</th><th>Orders</th><th>VIP</th><th>Actions</th></tr></thead>
                         <tbody id="usersTableBody"></tbody>
                     </table>
@@ -158,7 +158,7 @@
                 <h3>Distribute Bonus</h3>
                 <div style="margin-bottom:10px"><label>Amount (€):</label> <input type="number" id="bonusAmount" value="10" style="width:150px"></div>
                 <div style="margin-bottom:10px"><label>User UID (empty = all):</label> <input type="text" id="bonusTarget" style="width:200px"></div>
-                <button onclick="distributeBonus()">Send Bonus</button>
+                <button id="distributeBonusBtn">Send Bonus</button>
             </div>
         </div>
 
@@ -183,28 +183,26 @@
         <h3>Create New User</h3>
         <input type="text" id="newUsername" placeholder="Username" style="width:100%; margin:10px 0; padding:10px">
         <input type="password" id="newPassword" placeholder="Password" style="width:100%; margin:10px 0; padding:10px">
-        <button onclick="createUser()">Create</button>
-        <button onclick="closeAddUserModal()">Cancel</button>
+        <button id="createUserBtn">Create</button>
+        <button id="closeModalBtn">Cancel</button>
     </div>
 </div>
 
 <script>
-    // 使用 window.supabaseJs 避免变量冲突
-    // 正确的代码
-const SB_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-const SB_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-const sb = supabase.createClient(SB_URL, SB_KEY);
+    const SB_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+    const SB_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+    const sb = supabase.createClient(SB_URL, SB_KEY);
     
     let searchKeyword = '';
 
+    // 页面切换函数
     function showPage(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('page_' + pageId).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        if(event && event.target) {
-            const clicked = event.target.closest('.nav-item');
-            if(clicked) clicked.classList.add('active');
-        }
+        const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+        if(activeNav) activeNav.classList.add('active');
+        
         if(pageId === 'dashboard') loadDashboard();
         if(pageId === 'users') loadUsers();
         if(pageId === 'withdrawals') loadWithdrawals();
@@ -212,6 +210,23 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
         if(pageId === 'orders') loadOrders();
         if(pageId === 'signin') loadSigninRewards();
     }
+
+    // 绑定导航菜单事件
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const pageId = item.getAttribute('data-page');
+            if(pageId) showPage(pageId);
+        });
+    });
+
+    // 绑定按钮事件
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    document.getElementById('searchBtn')?.addEventListener('click', searchUsers);
+    document.getElementById('clearBtn')?.addEventListener('click', clearSearch);
+    document.getElementById('addUserBtn')?.addEventListener('click', openAddUserModal);
+    document.getElementById('createUserBtn')?.addEventListener('click', createUser);
+    document.getElementById('closeModalBtn')?.addEventListener('click', closeAddUserModal);
+    document.getElementById('distributeBonusBtn')?.addEventListener('click', distributeBonus);
 
     async function loadDashboard() {
         try {
@@ -225,7 +240,7 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
             document.getElementById('statPending').innerText = withdrawals?.length || 0;
             const { data: orders } = await sb.from('order_history').select('*');
             document.getElementById('statOrders').innerText = orders?.length || 0;
-        } catch(e) { console.error(e); alert('Error loading dashboard: ' + e.message); }
+        } catch(e) { console.error(e); alert('Error: ' + e.message); }
     }
 
     async function loadUsers() {
@@ -244,15 +259,28 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
                     row.insertCell(1).innerText = u.username;
                     row.insertCell(2).innerHTML = `€${(u.balance || 0).toFixed(2)}`;
                     row.insertCell(3).innerText = userOrders.length;
-                    row.insertCell(4).innerHTML = `<select onchange="updateVip('${u.uid}', this.value)">
+                    row.insertCell(4).innerHTML = `<select class="vip-select" data-uid="${u.uid}">
                         <option value="1" ${u.vip_level===1?'selected':''}>Normal</option>
                         <option value="2" ${u.vip_level===2?'selected':''}>VIP</option>
                         <option value="3" ${u.vip_level===3?'selected':''}>SVIP</option>
                     </select>`;
-                    row.insertCell(5).innerHTML = `<button onclick="addBalance('${u.uid}')">Deposit</button>
-                        <button onclick="cutBalance('${u.uid}')">Cut</button>
-                        <button class="danger" onclick="delUser('${u.uid}')">Delete</button>`;
+                    row.insertCell(5).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}">Deposit</button>
+                        <button class="cut-btn" data-uid="${u.uid}">Cut</button>
+                        <button class="danger delete-btn" data-uid="${u.uid}">Delete</button>`;
                 }
+                // 绑定动态按钮事件
+                document.querySelectorAll('.vip-select').forEach(sel => {
+                    sel.addEventListener('change', (e) => updateVip(sel.getAttribute('data-uid'), sel.value));
+                });
+                document.querySelectorAll('.deposit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => addBalance(btn.getAttribute('data-uid')));
+                });
+                document.querySelectorAll('.cut-btn').forEach(btn => {
+                    btn.addEventListener('click', () => cutBalance(btn.getAttribute('data-uid')));
+                });
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => delUser(btn.getAttribute('data-uid')));
+                });
             }
         } catch(e) { alert('Error: ' + e.message); }
     }
@@ -328,9 +356,15 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
                 row.insertCell(2).innerHTML = `€${(w.amount || 0).toFixed(2)}`;
                 row.insertCell(3).innerText = w.wallet_address || '-';
                 row.insertCell(4).innerText = new Date(w.request_date).toLocaleString();
-                row.insertCell(5).innerHTML = `<button class="success" onclick="approveWd(${w.id}, '${w.uid}', ${w.amount})">Approve</button>
-                    <button class="danger" onclick="rejectWd(${w.id})">Reject</button>`;
+                row.insertCell(5).innerHTML = `<button class="approve-btn" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}">Approve</button>
+                    <button class="reject-btn" data-id="${w.id}">Reject</button>`;
             }
+            document.querySelectorAll('.approve-btn').forEach(btn => {
+                btn.addEventListener('click', () => approveWd(btn.getAttribute('data-id'), btn.getAttribute('data-uid'), parseFloat(btn.getAttribute('data-amt'))));
+            });
+            document.querySelectorAll('.reject-btn').forEach(btn => {
+                btn.addEventListener('click', () => rejectWd(btn.getAttribute('data-id')));
+            });
         }
     }
 
@@ -361,13 +395,19 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
         if(div && vips) {
             div.innerHTML = '';
             for(let v of vips) {
-                div.innerHTML += `<div style="background:#1a1f3a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                const container = document.createElement('div');
+                container.style.cssText = 'background:#1a1f3a; padding:15px; border-radius:8px; margin-bottom:15px;';
+                container.innerHTML = `
                     <h3>${v.rank_name} (Level ${v.level})</h3>
                     <div>Orders Limit: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:100px"></div>
                     <div>Commission Rate (%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:100px"></div>
-                    <button onclick="saveVip(${v.level})" style="margin-top:10px">Save</button>
-                </div>`;
+                    <button class="save-vip-btn" data-level="${v.level}" style="margin-top:10px">Save</button>
+                `;
+                div.appendChild(container);
             }
+            document.querySelectorAll('.save-vip-btn').forEach(btn => {
+                btn.addEventListener('click', () => saveVip(btn.getAttribute('data-level')));
+            });
         }
     }
 
@@ -421,10 +461,16 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
         if(div && rewards) {
             div.innerHTML = '';
             for(let r of rewards) {
-                div.innerHTML += `<div style="margin-bottom:10px">Day ${r.day}: 
+                const container = document.createElement('div');
+                container.style.marginBottom = '10px';
+                container.innerHTML = `Day ${r.day}: 
                     <input type="number" id="reward_${r.day}" value="${r.amount}" style="width:100px"> €
-                    <button onclick="saveReward(${r.day})">Save</button></div>`;
+                    <button class="save-reward-btn" data-day="${r.day}">Save</button>`;
+                div.appendChild(container);
             }
+            document.querySelectorAll('.save-reward-btn').forEach(btn => {
+                btn.addEventListener('click', () => saveReward(btn.getAttribute('data-day')));
+            });
         }
     }
 
@@ -441,8 +487,7 @@ const sb = supabase.createClient(SB_URL, SB_KEY);
         }
     }
 
-    if(localStorage.getItem('admin_logged_in') !== 'true') window.location.href = 'admin-login.html';
-    
+    // 初始化
     loadDashboard();
 </script>
 </body>
