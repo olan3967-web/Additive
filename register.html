@@ -6,24 +6,25 @@
     <title>ADDITIVE - Register</title>
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .register-container { width: 100%; padding: 20px; position: relative; z-index: 1; }
         .register-card {
-            background: rgba(20,25,50,0.85);
+            background: rgba(20, 30, 55, 0.85);
             backdrop-filter: blur(20px);
             border-radius: 32px;
             padding: 42px 40px;
             max-width: 480px;
             margin: 0 auto;
-            border: 1px solid rgba(255,255,255,0.12);
+            border: 1px solid rgba(201, 176, 149, 0.25);
             box-shadow: 0 25px 45px -12px rgba(0,0,0,0.5);
         }
-        .logo { font-size: 34px; font-weight: 800; text-align: center; margin-bottom: 8px; color: #fff; }
-        .logo span { color: #8ca3ff; }
-        .subtitle { text-align: center; color: #aaa; margin-bottom: 32px; font-size: 14px; }
+        .logo { font-size: 34px; font-weight: 800; text-align: center; margin-bottom: 8px; color: #ffffff; }
+        .logo span { color: #C9B095; }
+        .subtitle { text-align: center; color: #a0a8c0; margin-bottom: 32px; font-size: 14px; }
         .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #ccc; font-size: 13px; }
-        .form-group label i { margin-right: 8px; color: #8ca3ff; }
+        .form-group label { display: block; margin-bottom: 8px; color: #a0a8c0; font-size: 13px; }
+        .form-group label i { margin-right: 8px; color: #C9B095; }
         .form-group input {
             width: 100%;
             background: rgba(0,0,0,0.4);
@@ -34,14 +35,14 @@
             font-size: 14px;
             outline: none;
         }
-        .form-group input:focus { border-color: #8ca3ff; box-shadow: 0 0 0 3px rgba(140,163,255,0.15); }
+        .form-group input:focus { border-color: #C9B095; box-shadow: 0 0 0 3px rgba(201,176,149,0.15); }
         .register-btn {
             width: 100%;
-            background: linear-gradient(135deg, #2f3e7a, #1f2a50);
-            border: none;
+            background: rgba(201, 176, 149, 0.15);
+            border: 1px solid rgba(201, 176, 149, 0.3);
             padding: 14px;
             border-radius: 40px;
-            color: white;
+            color: #C9B095;
             font-weight: 700;
             font-size: 16px;
             cursor: pointer;
@@ -52,9 +53,9 @@
             margin-top: 24px;
             transition: 0.2s;
         }
-        .register-btn:hover { transform: scale(1.02); background: linear-gradient(135deg, #3e5090, #2a3768); }
-        .login-link { text-align: center; margin-top: 24px; font-size: 13px; color: #aaa; }
-        .login-link a { color: #8ca3ff; text-decoration: none; }
+        .register-btn:hover { transform: scale(1.02); background: rgba(201,176,149,0.25); color: #ffd700; }
+        .login-link { text-align: center; margin-top: 24px; font-size: 13px; color: #a0a8c0; }
+        .login-link a { color: #C9B095; text-decoration: none; }
         .error-message { text-align: center; margin-top: 16px; font-size: 13px; min-height: 40px; }
     </style>
 </head>
@@ -74,114 +75,131 @@
     </div>
 
     <script>
-        // 生成顺序 UID (100001, 100002, 100003...)
+        // Supabase 配置
+        const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         function generateUID() {
-            let members = JSON.parse(localStorage.getItem('additive_members') || '[]');
-            if (members.length === 0) {
-                return '100001';
-            }
-            let maxUID = 100000;
-            members.forEach(m => {
-                let num = parseInt(m.uid);
-                if (num > maxUID) maxUID = num;
-            });
-            return (maxUID + 1).toString();
+            // 获取现有最大 UID 的逻辑在注册时动态查询
+            return null; // 实际在注册函数中处理
         }
         
-        // 生成6位随机邀请码（大写字母+数字）
-        function generateInviteCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = '';
-            for (let i = 0; i < 6; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return code;
+        function generateInviteCode(username) {
+            const base = username.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6);
+            if (base.length < 3) return 'USER' + Math.floor(Math.random() * 10000);
+            return base + Math.floor(Math.random() * 1000);
         }
         
-        function showMessage(msg, isError=true){
-            const d=document.getElementById('registerError');
-            d.innerText=msg;
-            d.style.color=isError?'#ff8080':'#4ade80';
-            setTimeout(()=>{if(d.innerText===msg) d.innerText='';},3000);
+        function showMessage(msg, isError = true) {
+            const d = document.getElementById('registerError');
+            d.innerText = msg;
+            d.style.color = isError ? '#ff8080' : '#4ade80';
+            setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 3000);
         }
         
-        function handleRegister(){
+        async function handleRegister() {
             const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value;
             const inviteCode = document.getElementById('regInviteCode').value.trim();
             const pin = document.getElementById('regPin').value;
             
-            if(!username || username.length<3){ showMessage('Username must be at least 3 characters'); return; }
-            if(!password || password.length<4){ showMessage('Password must be at least 4 characters'); return; }
-            if(!pin || pin.length!==4 || isNaN(pin)){ showMessage('Withdrawal PIN must be 4 digits'); return; }
+            if (!username || username.length < 3) { showMessage('Username must be at least 3 characters'); return; }
+            if (!password || password.length < 4) { showMessage('Password must be at least 4 characters'); return; }
+            if (!pin || pin.length !== 4 || isNaN(pin)) { showMessage('Withdrawal PIN must be 4 digits'); return; }
             
-            let members = JSON.parse(localStorage.getItem('additive_members') || '[]');
-            if(members.find(m=>m.username===username)){ showMessage('Username already exists'); return; }
+            // 检查用户名是否已存在
+            const { data: existing } = await supabase
+                .from('users')
+                .select('username')
+                .eq('username', username)
+                .single();
             
+            if (existing) { showMessage('Username already exists'); return; }
+            
+            // 获取最大 UID
+            const { data: maxUidData } = await supabase
+                .from('users')
+                .select('uid')
+                .order('uid', { ascending: false })
+                .limit(1);
+            
+            let newUid = '100001';
+            if (maxUidData && maxUidData.length > 0) {
+                newUid = (parseInt(maxUidData[0].uid) + 1).toString();
+            }
+            
+            // 处理邀请码
             let invitedBy = '';
             let invitedByUsername = '';
-            
-            if(inviteCode){
-                const inviter = members.find(m => m.inviteCode === inviteCode);
-                if(inviter){
+            if (inviteCode) {
+                const { data: inviter } = await supabase
+                    .from('users')
+                    .select('uid, username')
+                    .eq('invite_code', inviteCode)
+                    .single();
+                
+                if (inviter) {
                     invitedBy = inviter.uid;
                     invitedByUsername = inviter.username;
-                    inviter.balance = (inviter.balance || 0) + 10;
+                    // 给邀请人奖励 €10
+                    const { data: inviterData } = await supabase
+                        .from('users')
+                        .select('balance')
+                        .eq('uid', inviter.uid)
+                        .single();
                     
-                    let deposits = JSON.parse(localStorage.getItem('additive_deposits') || '[]');
-                    deposits.push({ id: deposits.length+1, uid: inviter.uid, username: inviter.username, amount: 10, date: new Date().toISOString(), type: 'referral_bonus' });
-                    localStorage.setItem('additive_deposits', JSON.stringify(deposits));
+                    const newBalance = (inviterData?.balance || 0) + 10;
+                    await supabase
+                        .from('users')
+                        .update({ balance: newBalance })
+                        .eq('uid', inviter.uid);
                     
-                    let codes = JSON.parse(localStorage.getItem('additive_invitationCodes') || '[]');
-                    const ce = codes.find(c => c.code === inviteCode);
-                    if(ce) ce.usedCount = (ce.usedCount || 0) + 1;
-                    else codes.push({ code: inviteCode, ownerUid: inviter.uid, ownerUsername: inviter.username, usedCount: 1, rewardPerSignup: 10 });
-                    localStorage.setItem('additive_invitationCodes', JSON.stringify(codes));
+                    // 记录奖励充值
+                    await supabase
+                        .from('deposits')
+                        .insert([{ uid: inviter.uid, username: inviter.username, amount: 10, type: 'referral_bonus' }]);
+                    
                     showMessage('Invitation code accepted!', false);
                 } else {
                     showMessage('Invitation code not found', false);
                 }
             }
             
-            localStorage.setItem('additive_members', JSON.stringify(members));
+            // 生成邀请码
+            const newInviteCode = generateInviteCode(username);
             
-            const newUID = generateUID();
-            const newInviteCode = generateInviteCode();
+            // 创建新用户
+            const { data: newUser, error } = await supabase
+                .from('users')
+                .insert([{
+                    uid: newUid,
+                    username: username,
+                    password: password,
+                    pin: pin,
+                    balance: 0,
+                    trial_bonus_amount: 0,
+                    vip_level: 1,
+                    invite_code: newInviteCode,
+                    invited_by: invitedBy,
+                    invited_by_username: invitedByUsername,
+                    total_orders: 0,
+                    is_active: true
+                }])
+                .select()
+                .single();
             
-            const newMember = {
-                uid: newUID,
-                username: username,
-                password: password,
-                pin: pin,
-                balance: 0,
-                commissionRate: 5,
-                vipLevel: 1,
-                inviteCode: newInviteCode,
-                invitedBy: invitedBy,
-                invitedByUsername: invitedByUsername,
-                totalOrders: 0,
-                createdAt: new Date().toISOString(),
-                isActive: true
-            };
-            
-            members.push(newMember);
-            localStorage.setItem('additive_members', JSON.stringify(members));
-            
-            // 添加邀请码记录
-            let codes = JSON.parse(localStorage.getItem('additive_invitationCodes') || '[]');
-            if(!codes.find(c => c.code === newInviteCode)){
-                codes.push({ code: newInviteCode, ownerUid: newUID, ownerUsername: username, usedCount: 0, rewardPerSignup: 10 });
-                localStorage.setItem('additive_invitationCodes', JSON.stringify(codes));
+            if (error) {
+                showMessage('Registration failed: ' + error.message);
+                return;
             }
             
-            let deposits = JSON.parse(localStorage.getItem('additive_deposits') || '[]');
-            deposits.push({ id: deposits.length+1, uid: newUID, username: username, amount: 0, date: new Date().toISOString(), type: 'registration' });
-            localStorage.setItem('additive_deposits', JSON.stringify(deposits));
-            
+            // 保存登录状态
             localStorage.setItem('currentUser', JSON.stringify({
-                uid: newUID,
+                uid: newUid,
                 username: username,
                 balance: 0,
+                trialBonusAmount: 0,
                 commissionRate: 5,
                 vipLevel: 1,
                 inviteCode: newInviteCode,
@@ -190,10 +208,17 @@
             }));
             
             showMessage('Registration successful! Redirecting...', false);
-            setTimeout(()=>{ window.location.href='dashboard.html'; },1500);
+            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
         }
         
-        if(localStorage.getItem('currentUser')){ try{ if(JSON.parse(localStorage.getItem('currentUser')).isLoggedIn) window.location.href='dashboard.html'; }catch(e){} }
+        // 检查是否已登录
+        const currentUser = localStorage.getItem('currentUser');
+        if (currentUser) {
+            try {
+                const user = JSON.parse(currentUser);
+                if (user.isLoggedIn) window.location.href = 'dashboard.html';
+            } catch(e) {}
+        }
     </script>
 </body>
 </html>
