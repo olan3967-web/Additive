@@ -6,6 +6,7 @@
     <title>ADDITIVE - Start</title>
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* 电脑版默认样式 - 8:2 布局 */
         .start-hero { margin-bottom: 24px; }
@@ -33,7 +34,6 @@
             flex-wrap: wrap;
         }
         
-        /* 电脑版左侧视频区域 - 占8份 */
         .left-col {
             flex: 8;
             background: #0E1838;
@@ -45,7 +45,6 @@
             border: 1px solid rgba(201, 176, 149, 0.2);
             overflow: hidden;
         }
-        /* 电脑版右侧卡片 - 占2份 */
         .right-col {
             flex: 2;
         }
@@ -77,7 +76,6 @@
             border-radius: 24px;
         }
         
-        /* ========== 黑金奢华大卡片样式 ========== */
         .big-card {
             background: linear-gradient(145deg, rgba(20, 30, 55, 0.8), rgba(10, 18, 43, 0.9));
             border: 1px solid rgba(201, 176, 149, 0.35);
@@ -166,7 +164,6 @@
             box-shadow: 0 5px 15px rgba(201, 176, 149, 0.3);
         }
         
-        /* 精选酒店 */
         .featured-section { margin-top: 20px; }
         .featured-title { font-size: 16px; font-weight: 500; color: #C9B095; margin-bottom: 14px; letter-spacing: 1px; }
         .marquee-images { overflow: hidden; white-space: nowrap; background: #0E1838; border-radius: 20px; padding: 20px 0; position: relative; }
@@ -177,7 +174,6 @@
         .hotel-img-item .hotel-name { display: block; font-size: 13px; color: #C9B095; margin-top: 10px; font-weight: 500; }
         @keyframes scrollImages { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         
-        /* 升级卡片脉冲发光 */
         @keyframes pulseGlow { 0% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); } 50% { box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12); border-color: rgba(201, 176, 149, 0.5); } 100% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); } }
         .upgrade-card-pulse { background: rgba(20, 30, 55, 0.6); backdrop-filter: blur(12px); border-radius: 28px; padding: 24px; transition: all 0.3s ease; animation: pulseGlow 2.5s ease-in-out infinite; border: 1px solid rgba(201, 176, 149, 0.3); margin-top: 32px; }
         .upgrade-card-pulse:hover { animation: none; transform: translateY(-4px); box-shadow: inset 0 0 30px rgba(201, 176, 149, 0.3), 0 0 20px rgba(201, 176, 149, 0.2); border-color: rgba(201, 176, 149, 0.7); }
@@ -251,39 +247,12 @@
         .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.3s ease; }
         .progress-text { text-align: center; margin-top: 12px; font-size: 13px; color: #C9B095; }
         
-        /* 手机版样式 */
         @media (max-width: 768px) {
             .menu-toggle { display: block; }
             .two-columns { flex-direction: column; gap: 20px; }
-            .left-col {
-                flex: auto;
-                width: 100vw;
-                position: relative;
-                left: 50%;
-                right: 50%;
-                margin-left: -50vw;
-                margin-right: -50vw;
-                background: transparent;
-                border: none;
-                border-radius: 0;
-                min-height: auto;
-                overflow: visible;
-                padding: 0;
-                margin-top: 0;
-                margin-bottom: 0;
-            }
+            .left-col { flex: auto; width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; background: transparent; border: none; border-radius: 0; min-height: auto; overflow: visible; padding: 0; margin-top: 0; margin-bottom: 0; }
             .left-col #videoContainer { width: 100%; min-height: auto; margin: 0; padding: 0; }
-            #videoContainer video,
-            #videoContainer img {
-                border-radius: 0;
-                object-fit: contain;
-                min-height: auto;
-                max-height: 220px;
-                width: 100%;
-                margin: 0;
-                padding: 0;
-                display: block;
-            }
+            #videoContainer video, #videoContainer img { border-radius: 0; object-fit: contain; min-height: auto; max-height: 220px; width: 100%; margin: 0; padding: 0; display: block; }
             .right-col { flex: auto; padding: 0 16px; }
             .start-hero { margin-bottom: 12px; padding: 0 16px; }
             .start-hero h1 { font-size: 22px; }
@@ -380,38 +349,303 @@
     <div id="orderModal" class="modal-overlay"><div class="order-modal"><div class="modal-header"><h2><i class="fas fa-tasks"></i> PENDING</h2><button class="modal-close" onclick="closeOrderModal()">&times;</button></div><div class="modal-body" id="modalContent"></div></div></div>
 
     <script>
-        function toggleMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('active'); if (menuBtn) menuBtn.classList.toggle('hidden'); }
-        function closeMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('active'); if (menuBtn) menuBtn.classList.remove('hidden'); }
-        if (document.querySelectorAll('.nav-item')) { document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', () => { if (window.innerWidth <= 768) closeMenu(); }); }); }
+        // Supabase 配置
+        const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        function toggleMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.toggle('open'); 
+            if (overlay) overlay.classList.toggle('active'); 
+            if (menuBtn) menuBtn.classList.toggle('hidden'); 
+        }
+        function closeMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.remove('open'); 
+            if (overlay) overlay.classList.remove('active'); 
+            if (menuBtn) menuBtn.classList.remove('hidden'); 
+        }
+        if (document.querySelectorAll('.nav-item')) { 
+            document.querySelectorAll('.nav-item').forEach(link => { 
+                link.addEventListener('click', () => { if (window.innerWidth <= 768) closeMenu(); }); 
+            }); 
+        }
 
         let currentOrder = null;
         let selectedRating = 0;
         let currentUserBalance = 0;
         let currentUserTrialBonus = 0;
 
-        function generateRandomOrderCode() { const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; return letters[Math.floor(Math.random()*26)] + letters[Math.floor(Math.random()*26)] + (Math.floor(Math.random()*90000)+10000); }
-        function getOrdersFromAdmin() { const adminData = localStorage.getItem('additive_admin_full_data'); if(adminData) { try { const data = JSON.parse(adminData); if(data.orders && data.orders.length > 0) return data.orders; } catch(e) {} } return []; }
-        function getUserBalance() { const userStr = localStorage.getItem('currentUser'); if(userStr) { try { return JSON.parse(userStr).balance || 0; } catch(e) {} } return 0; }
-        function getUserTrialBonus() { const userStr = localStorage.getItem('currentUser'); if(userStr) { try { return JSON.parse(userStr).trialBonusAmount || 0; } catch(e) {} } return 0; }
-        function getUserOrderCount() { const userStr = localStorage.getItem('currentUser'); if(userStr) { try { const user = JSON.parse(userStr); const history = JSON.parse(localStorage.getItem('additive_order_history') || '[]'); return history.filter(o => o.uid === user.uid).length; } catch(e) {} } return 0; }
-        function getVipSettings() { const saved = localStorage.getItem('additive_vip_settings'); if(saved) { try { return JSON.parse(saved); } catch(e) {} } return [{ level: 1, ordersLimit: 30, commissionRate: 0.51 }]; }
-        function getUserOrdersLimit() { const userStr = localStorage.getItem('currentUser'); if(userStr) { try { const user = JSON.parse(userStr); const vipLevel = user.vipLevel || 1; const vipSettings = getVipSettings(); const vip = vipSettings.find(v => v.level === vipLevel); return vip ? vip.ordersLimit : 30; } catch(e) {} } return 30; }
-        function getUserCommissionRate() { const userStr = localStorage.getItem('currentUser'); if(userStr) { try { const user = JSON.parse(userStr); const vipLevel = user.vipLevel || 1; const vipSettings = getVipSettings(); const vip = vipSettings.find(v => v.level === vipLevel); return vip ? vip.commissionRate / 100 : 0.0051; } catch(e) {} } return 0.0051; }
-        function getAvailableOrders() { const all = getOrdersFromAdmin(); const total = currentUserBalance + currentUserTrialBonus; return all.filter(o => (o.price || 0) <= total); }
-        function getRandomAvailableOrder() { const av = getAvailableOrders(); if(av.length === 0) return null; return av[Math.floor(Math.random() * av.length)]; }
+        function generateRandomOrderCode() { 
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; 
+            return letters[Math.floor(Math.random()*26)] + letters[Math.floor(Math.random()*26)] + (Math.floor(Math.random()*90000)+10000); 
+        }
         
-        function loadUserData() { currentUserBalance = getUserBalance(); currentUserTrialBonus = getUserTrialBonus(); document.getElementById('statBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`; document.getElementById('statTrialBonus').innerHTML = `€${currentUserTrialBonus.toFixed(2)}`; const history = JSON.parse(localStorage.getItem('additive_order_history') || '[]'); const userStr = localStorage.getItem('currentUser'); if(userStr) { try { const user = JSON.parse(userStr); const userOrders = history.filter(o => o.uid === user.uid); const totalCommission = userOrders.reduce((s, o) => s + (o.commission || 0), 0); document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`; document.getElementById('totalOrders').innerText = userOrders.length; } catch(e) {} } }
+        function getOrdersFromAdmin() { 
+            const adminData = localStorage.getItem('additive_admin_full_data'); 
+            if(adminData) { 
+                try { 
+                    const data = JSON.parse(adminData); 
+                    if(data.orders && data.orders.length > 0) return data.orders; 
+                } catch(e) {} 
+            } 
+            return []; 
+        }
         
-        function loadAnimatedConfig() { const animatedData = localStorage.getItem('additive_animated_data'); if (animatedData) { try { return JSON.parse(animatedData); } catch(e) {} } return { videoUrl: '', featuredHotels: [] }; }
-        function loadVideo() { const config = loadAnimatedConfig(); const videoContainer = document.getElementById('videoContainer'); if (videoContainer && config.videoUrl) { const url = config.videoUrl; if (url.endsWith('.mp4') || url.includes('.mp4') || url.includes('video')) { videoContainer.innerHTML = `<video src="${url}" autoplay loop muted playsinline></video>`; } else { videoContainer.innerHTML = `<img src="${url}" alt="video" onerror="this.parentElement.innerHTML='<div class=\\'video-placeholder\\'><i class=\\'fas fa-play-circle\\'></i><p>动态视频区域</p><small>可上传 MP4 / GIF</small></div>'">`; } } else if (videoContainer) { videoContainer.innerHTML = '<div class="video-placeholder"><i class="fas fa-play-circle"></i><p>动态视频区域</p><small>可上传 MP4 / GIF</small></div>'; } }
-        function loadHotels() { const config = loadAnimatedConfig(); const container = document.getElementById('hotelImagesContainer'); if (container && config.featuredHotels && config.featuredHotels.length > 0) { container.innerHTML = ''; config.featuredHotels.forEach(hotel => { const div = document.createElement('div'); div.className = 'hotel-img-item'; const imgUrl = hotel.image && hotel.image.trim() !== '' ? hotel.image : 'https://placehold.co/180x110/0E1838/C9B095?text=Hotel'; div.innerHTML = `<img src="${imgUrl}" alt="${hotel.name}" style="width:180px; height:110px; border-radius:16px; object-fit:cover;"><span class="hotel-name">${hotel.name}</span>`; container.appendChild(div); }); const items = container.innerHTML; container.innerHTML = items + items; } else if (container) { const defaultHotels = ['ROSEWOOD', 'DOUBLETREE', 'SHANGRI-LA', 'FOUR SEASONS', 'CAPELLA', 'RAFFLES']; container.innerHTML = ''; defaultHotels.forEach(hotel => { const div = document.createElement('div'); div.className = 'hotel-img-item'; div.innerHTML = `<img src="https://placehold.co/180x110/0E1838/C9B095?text=${hotel.substring(0,2)}" alt="${hotel}" style="width:180px; height:110px; border-radius:16px; object-fit:cover;"><span class="hotel-name">${hotel}</span>`; container.appendChild(div); }); const items = container.innerHTML; container.innerHTML = items + items; } }
+        function getUserBalance() { 
+            const userStr = localStorage.getItem('currentUser'); 
+            if(userStr) { 
+                try { return JSON.parse(userStr).balance || 0; } catch(e) {} 
+            } 
+            return 0; 
+        }
         
-        function openOrderModal() { if (getUserOrderCount() >= getUserOrdersLimit()) { alert('Order limit reached'); return; } loadUserData(); const available = getAvailableOrders(); if (available.length === 0) { alert('No available orders'); return; } const order = getRandomAvailableOrder(); if (!order) return; currentOrder = order; selectedRating = 0; const randomCode = generateRandomOrderCode(); const price = order.price || 0; const commissionRate = getUserCommissionRate(); const commission = price * commissionRate; document.getElementById('modalContent').innerHTML = `<div class="order-image">${order.imageUrl ? `<img src="${order.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel order-image-placeholder\\'></i>'">` : '<i class="fas fa-hotel order-image-placeholder"></i>'}</div><div class="order-name">${order.accommodationName || 'Hotel Task'}</div><div class="order-code"><i class="fas fa-tag"></i> ${randomCode}</div><div class="order-details"><div class="detail-row"><span class="detail-label">Price</span><span class="detail-value price">€${price.toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)} (${(commissionRate*100).toFixed(2)}%)</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value" style="color:#C9B095;">€${(price + commission).toFixed(2)}</span></div></div><div class="star-rating-premium" id="starRating"><span class="star-premium" data-rating="1"><i class="fas fa-star"></i></span><span class="star-premium" data-rating="2"><i class="fas fa-star"></i></span><span class="star-premium" data-rating="3"><i class="fas fa-star"></i></span><span class="star-premium" data-rating="4"><i class="fas fa-star"></i></span><span class="star-premium" data-rating="5"><i class="fas fa-star"></i></span></div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>`; document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const rating = parseInt(this.getAttribute('data-rating')); selectedRating = rating; document.querySelectorAll('.star-premium').forEach((s, idx) => { if (idx < rating) s.classList.add('active'); else s.classList.remove('active'); }); })); currentOrder.displayOrderCode = randomCode; currentOrder.commissionAmount = commission; document.getElementById('orderModal').classList.add('active'); }
-        function closeOrderModal() { document.getElementById('orderModal').classList.remove('active'); currentOrder = null; selectedRating = 0; }
-        function submitOrder() { if (selectedRating === 0) { alert('Please select a rating'); return; } const userStr = localStorage.getItem('currentUser'); if (!userStr) { window.location.href = 'signin.html'; return; } const user = JSON.parse(userStr); const price = currentOrder.price || 0; const commission = currentOrder.commissionAmount; const totalAvailable = (user.balance || 0) + (user.trialBonusAmount || 0); if (totalAvailable < price) { alert('Insufficient funds!'); closeOrderModal(); return; } const pc = document.getElementById('progressContainer'); const pb = document.getElementById('progressBar'); const pt = document.getElementById('progressText'); pc.style.display = 'block'; pb.style.width = '0%'; pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing payment...'; pb.style.width = '25%'; setTimeout(() => { const members = JSON.parse(localStorage.getItem('additive_members') || '[]'); const member = members.find(m => m.uid === user.uid); if (member) { let remainingPrice = price; if (member.trialBonusAmount && member.trialBonusAmount > 0) { const use = Math.min(member.trialBonusAmount, remainingPrice); member.trialBonusAmount -= use; remainingPrice -= use; } if (remainingPrice > 0) member.balance -= remainingPrice; localStorage.setItem('additive_members', JSON.stringify(members)); user.balance = member.balance; user.trialBonusAmount = member.trialBonusAmount; localStorage.setItem('currentUser', JSON.stringify(user)); } pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching Offer...'; pb.style.width = '50%'; setTimeout(() => { pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting Order...'; pb.style.width = '75%'; setTimeout(() => { pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width = '100%'; setTimeout(() => { const members2 = JSON.parse(localStorage.getItem('additive_members') || '[]'); const member2 = members2.find(m => m.uid === user.uid); if (member2) { member2.balance += price + commission; localStorage.setItem('additive_members', JSON.stringify(members2)); user.balance = member2.balance; user.trialBonusAmount = member2.trialBonusAmount; localStorage.setItem('currentUser', JSON.stringify(user)); } const orderHistory = JSON.parse(localStorage.getItem('additive_order_history') || '[]'); orderHistory.push({ id: Date.now(), uid: user.uid, username: user.username, orderCode: currentOrder.displayOrderCode, accommodationName: currentOrder.accommodationName, price: price, commission: commission, rating: selectedRating, status: 'completed', date: new Date().toISOString() }); localStorage.setItem('additive_order_history', JSON.stringify(orderHistory)); loadUserData(); closeOrderModal(); }, 500); }, 1500); }, 1500); }, 1000); }
-        function checkLogin() { if (!localStorage.getItem('currentUser')) window.location.href = 'signin.html'; }
+        function getUserTrialBonus() { 
+            const userStr = localStorage.getItem('currentUser'); 
+            if(userStr) { 
+                try { return JSON.parse(userStr).trialBonusAmount || 0; } catch(e) {} 
+            } 
+            return 0; 
+        }
         
-        checkLogin(); loadUserData(); loadVideo(); loadHotels();
+        function getUserOrderCount() { 
+            const userStr = localStorage.getItem('currentUser'); 
+            if(userStr) { 
+                try { 
+                    const user = JSON.parse(userStr); 
+                    const history = JSON.parse(localStorage.getItem('additive_order_history') || '[]'); 
+                    return history.filter(o => o.uid === user.uid).length; 
+                } catch(e) {} 
+            } 
+            return 0; 
+        }
+        
+        function getVipSettings() { 
+            const saved = localStorage.getItem('additive_vip_settings'); 
+            if(saved) { 
+                try { return JSON.parse(saved); } catch(e) {} 
+            } 
+            return [{ level: 1, ordersLimit: 30, commissionRate: 0.51 }]; 
+        }
+        
+        function getUserOrdersLimit() { 
+            const userStr = localStorage.getItem('currentUser'); 
+            if(userStr) { 
+                try { 
+                    const user = JSON.parse(userStr); 
+                    const vipLevel = user.vipLevel || 1; 
+                    const vipSettings = getVipSettings(); 
+                    const vip = vipSettings.find(v => v.level === vipLevel); 
+                    return vip ? vip.ordersLimit : 30; 
+                } catch(e) {} 
+            } 
+            return 30; 
+        }
+        
+        function getUserCommissionRate() { 
+            const userStr = localStorage.getItem('currentUser'); 
+            if(userStr) { 
+                try { 
+                    const user = JSON.parse(userStr); 
+                    const vipLevel = user.vipLevel || 1; 
+                    const vipSettings = getVipSettings(); 
+                    const vip = vipSettings.find(v => v.level === vipLevel); 
+                    return vip ? vip.commissionRate / 100 : 0.0051; 
+                } catch(e) {} 
+            } 
+            return 0.0051; 
+        }
+        
+        function getAvailableOrders() { 
+            const all = getOrdersFromAdmin(); 
+            const total = currentUserBalance + currentUserTrialBonus; 
+            return all.filter(o => (o.price || 0) <= total); 
+        }
+        
+        function getRandomAvailableOrder() { 
+            const av = getAvailableOrders(); 
+            if(av.length === 0) return null; 
+            return av[Math.floor(Math.random() * av.length)]; 
+        }
+        
+        function loadUserData() { 
+            currentUserBalance = getUserBalance(); 
+            currentUserTrialBonus = getUserTrialBonus(); 
+            document.getElementById('statBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`; 
+            document.getElementById('statTrialBonus').innerHTML = `€${currentUserTrialBonus.toFixed(2)}`; 
+            const history = JSON.parse(localStorage.getItem('additive_order_history') || '[]'); 
+            const userStr = localStorage.getItem('currentUser'); 
+            if(userStr) { 
+                try { 
+                    const user = JSON.parse(userStr); 
+                    const userOrders = history.filter(o => o.uid === user.uid); 
+                    const totalCommission = userOrders.reduce((s, o) => s + (o.commission || 0), 0); 
+                    document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`; 
+                    document.getElementById('totalOrders').innerText = userOrders.length; 
+                } catch(e) {} 
+            } 
+        }
+        
+        // 从 Supabase 加载动画配置
+        async function loadAnimatedConfig() {
+            try {
+                const { data, error } = await sb.from('animated_settings').select('*').eq('id', 1).single();
+                if(error && error.code === 'PGRST116') {
+                    console.log('No animated settings found, using defaults');
+                    return;
+                }
+                if(data) {
+                    // 加载视频
+                    if(data.video_url) {
+                        const videoContainer = document.getElementById('videoContainer');
+                        if(videoContainer) {
+                            const url = data.video_url;
+                            if(url.endsWith('.mp4') || url.includes('.mp4') || url.includes('video')) {
+                                videoContainer.innerHTML = `<video src="${url}" autoplay loop muted playsinline></video>`;
+                            } else {
+                                videoContainer.innerHTML = `<img src="${url}" alt="video" onerror="this.parentElement.innerHTML='<div class=\\'video-placeholder\\'><i class=\\'fas fa-play-circle\\'></i><p>动态视频区域</p><small>可上传 MP4 / GIF</small></div>'">`;
+                            }
+                        }
+                    }
+                    
+                    // 加载精选酒店
+                    if(data.featured_hotels && data.featured_hotels.length > 0) {
+                        const container = document.getElementById('hotelImagesContainer');
+                        if(container) {
+                            container.innerHTML = '';
+                            data.featured_hotels.forEach(hotel => {
+                                const div = document.createElement('div');
+                                div.className = 'hotel-img-item';
+                                const imgUrl = hotel.image && hotel.image.trim() !== '' ? hotel.image : 'https://placehold.co/180x110/0E1838/C9B095?text=Hotel';
+                                div.innerHTML = `<img src="${imgUrl}" alt="${hotel.name}" style="width:180px; height:110px; border-radius:16px; object-fit:cover;"><span class="hotel-name">${escapeHtml(hotel.name)}</span>`;
+                                container.appendChild(div);
+                            });
+                            // 双倍内容实现无缝滚动
+                            const items = container.innerHTML;
+                            container.innerHTML = items + items;
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error('Error loading animated config:', e);
+            }
+        }
+        
+        function escapeHtml(str) {
+            if(!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if(m === '&') return '&amp;';
+                if(m === '<') return '&lt;';
+                if(m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        function openOrderModal() { 
+            if(getUserOrderCount() >= getUserOrdersLimit()) { 
+                alert('Order limit reached'); 
+                return; 
+            } 
+            loadUserData(); 
+            const available = getAvailableOrders(); 
+            if(available.length === 0) { 
+                alert('No available orders'); 
+                return; 
+            } 
+            const order = getRandomAvailableOrder(); 
+            if(!order) return; 
+            currentOrder = order; 
+            selectedRating = 0; 
+            const randomCode = generateRandomOrderCode(); 
+            const price = order.price || 0; 
+            const commissionRate = getUserCommissionRate(); 
+            const commission = price * commissionRate; 
+            document.getElementById('modalContent').innerHTML = `<div class="order-image">${order.imageUrl ? `<img src="${order.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel order-image-placeholder\\'></i>'">` : '<i class="fas fa-hotel order-image-placeholder"></i>'}</div><div class="order-name">${order.accommodationName || 'Hotel Task'}</div><div class="order-code"><i class="fas fa-tag"></i> ${randomCode}</div><div class="order-details"><div class="detail-row"><span class="detail-label">Price</span><span class="detail-value price">€${price.toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)} (${(commissionRate*100).toFixed(2)}%)</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)}</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value" style="color:#C9B095;">€${(price + commission).toFixed(2)}</span></div></div><div class="star-rating-premium" id="starRating"><span class="star-premium" data-rating="1"><i class="fas fa-star"></i></span><span class="star-premium" data-rating="2"><i class="fas fa-star"></i></span><span class="star-premium" data-rating="3"><i class="fas fa-star"></i></span><span class="star-premium" data-rating="4"><i class="fas fa-star"></i></span><span class="star-premium" data-rating="5"><i class="fas fa-star"></i></span></div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>`; 
+            document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const rating = parseInt(this.getAttribute('data-rating')); selectedRating = rating; document.querySelectorAll('.star-premium').forEach((s, idx) => { if (idx < rating) s.classList.add('active'); else s.classList.remove('active'); }); })); 
+            currentOrder.displayOrderCode = randomCode; 
+            currentOrder.commissionAmount = commission; 
+            document.getElementById('orderModal').classList.add('active'); 
+        }
+        
+        function closeOrderModal() { 
+            document.getElementById('orderModal').classList.remove('active'); 
+            currentOrder = null; 
+            selectedRating = 0; 
+        }
+        
+        function submitOrder() { 
+            if (selectedRating === 0) { alert('Please select a rating'); return; } 
+            const userStr = localStorage.getItem('currentUser'); 
+            if (!userStr) { window.location.href = 'signin.html'; return; } 
+            const user = JSON.parse(userStr); 
+            const price = currentOrder.price || 0; 
+            const commission = currentOrder.commissionAmount; 
+            const totalAvailable = (user.balance || 0) + (user.trialBonusAmount || 0); 
+            if (totalAvailable < price) { alert('Insufficient funds!'); closeOrderModal(); return; } 
+            const pc = document.getElementById('progressContainer'); 
+            const pb = document.getElementById('progressBar'); 
+            const pt = document.getElementById('progressText'); 
+            pc.style.display = 'block'; 
+            pb.style.width = '0%'; 
+            pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing payment...'; 
+            pb.style.width = '25%'; 
+            setTimeout(() => { 
+                const members = JSON.parse(localStorage.getItem('additive_members') || '[]'); 
+                const member = members.find(m => m.uid === user.uid); 
+                if (member) { 
+                    let remainingPrice = price; 
+                    if (member.trialBonusAmount && member.trialBonusAmount > 0) { 
+                        const use = Math.min(member.trialBonusAmount, remainingPrice); 
+                        member.trialBonusAmount -= use; 
+                        remainingPrice -= use; 
+                    } 
+                    if (remainingPrice > 0) member.balance -= remainingPrice; 
+                    localStorage.setItem('additive_members', JSON.stringify(members)); 
+                    user.balance = member.balance; 
+                    user.trialBonusAmount = member.trialBonusAmount; 
+                    localStorage.setItem('currentUser', JSON.stringify(user)); 
+                } 
+                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching Offer...'; 
+                pb.style.width = '50%'; 
+                setTimeout(() => { 
+                    pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting Order...'; 
+                    pb.style.width = '75%'; 
+                    setTimeout(() => { 
+                        pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!'; 
+                        pb.style.width = '100%'; 
+                        setTimeout(() => { 
+                            const members2 = JSON.parse(localStorage.getItem('additive_members') || '[]'); 
+                            const member2 = members2.find(m => m.uid === user.uid); 
+                            if (member2) { 
+                                member2.balance += price + commission; 
+                                localStorage.setItem('additive_members', JSON.stringify(members2)); 
+                                user.balance = member2.balance; 
+                                user.trialBonusAmount = member2.trialBonusAmount; 
+                                localStorage.setItem('currentUser', JSON.stringify(user)); 
+                            } 
+                            const orderHistory = JSON.parse(localStorage.getItem('additive_order_history') || '[]'); 
+                            orderHistory.push({ id: Date.now(), uid: user.uid, username: user.username, orderCode: currentOrder.displayOrderCode, accommodationName: currentOrder.accommodationName, price: price, commission: commission, rating: selectedRating, status: 'completed', date: new Date().toISOString() }); 
+                            localStorage.setItem('additive_order_history', JSON.stringify(orderHistory)); 
+                            loadUserData(); 
+                            closeOrderModal(); 
+                        }, 500); 
+                    }, 1500); 
+                }, 1500); 
+            }, 1000); 
+        }
+        
+        function checkLogin() { 
+            if (!localStorage.getItem('currentUser')) window.location.href = 'signin.html'; 
+        }
+        
+        checkLogin(); 
+        loadUserData(); 
+        loadAnimatedConfig();
     </script>
 </body>
 </html>
