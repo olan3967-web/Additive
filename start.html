@@ -463,16 +463,32 @@
             return letters[Math.floor(Math.random()*26)] + letters[Math.floor(Math.random()*26)] + (Math.floor(Math.random()*90000)+10000); 
         }
         
-        function getOrdersFromAdmin() { 
-            const adminData = localStorage.getItem('additive_admin_full_data'); 
-            if(adminData) { 
-                try { 
-                    const data = JSON.parse(adminData); 
-                    if(data.orders && data.orders.length > 0) return data.orders; 
-                } catch(e) {} 
-            } 
-            return []; 
+        async function getOrdersFromAdmin() {
+    try {
+        // 从 Supabase orders_pool 表读取所有可用订单
+        const { data, error } = await sb
+            .from('orders_pool')
+            .select('*')
+            .eq('status', 'available');
+        
+        if (error) {
+            console.error('获取订单失败:', error);
+            return [];
         }
+        
+        // 转换为前端需要的格式
+        return data.map(order => ({
+            orderCode: order.order_code,
+            accommodationName: order.accommodation_name,
+            price: order.price,
+            imageUrl: order.image_url,
+            status: order.status
+        }));
+    } catch(e) {
+        console.error('获取订单异常:', e);
+        return [];
+    }
+}
         
         async function loadUserData() {
             const user = getCurrentUser();
@@ -546,10 +562,10 @@
         }
         
         async function getAvailableOrders() {
-            const all = getOrdersFromAdmin();
-            const total = currentUserBalance + currentUserTrialBonus;
-            return all.filter(o => (o.price || 0) <= total);
-        }
+    const all = await getOrdersFromAdmin();
+    const total = currentUserBalance + currentUserTrialBonus;
+    return all.filter(o => (o.price || 0) <= total);
+}
         
         function getRandomAvailableOrder() { 
             const av = getAvailableOrders(); 
@@ -614,20 +630,23 @@
         }
         
         async function openOrderModal() {
-            const orderCount = parseInt(document.getElementById('totalOrders').innerText) || 0;
-            const ordersLimit = await getUserOrdersLimit();
-            if(orderCount >= ordersLimit) { 
-                alert('Order limit reached'); 
-                return; 
-            } 
-            await loadUserData();
-            const available = await getAvailableOrders(); 
-            if(available.length === 0) { 
-                alert('No available orders'); 
-                return; 
-            } 
-            const order = getRandomAvailableOrder(); 
-            if(!order) return; 
+    const orderCount = parseInt(document.getElementById('totalOrders').innerText) || 0;
+    const ordersLimit = await getUserOrdersLimit();
+    if(orderCount >= ordersLimit) { 
+        alert('Order limit reached'); 
+        return; 
+    } 
+    await loadUserData();
+    
+    // 获取可用订单（从 Supabase orders_pool）
+    const available = await getAvailableOrders(); 
+    if(available.length === 0) { 
+        alert('No available orders'); 
+        return; 
+    } 
+    
+    const order = available[Math.floor(Math.random() * available.length)]; 
+    if(!order) return; 
             currentOrder = order; 
             selectedRating = 0; 
             const randomCode = generateRandomOrderCode(); 
