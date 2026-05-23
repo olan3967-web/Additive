@@ -162,25 +162,50 @@
         function getOrderHistory() { return JSON.parse(localStorage.getItem('additive_order_history') || '[]'); }
         
         function renderBalanceHistory() {
-            const container = document.getElementById('balanceHistory');
-            const user = getCurrentUser(); if (!user) return;
-            const deposits = getDeposits(); const withdrawals = getWithdrawals();
-            let records = [];
-            deposits.forEach(d => { if (d.uid === user.uid && d.type !== 'registration' && d.type !== 'referral_bonus') {
-                let typeName = '', icon = '';
-                if (d.type === 'manual') { typeName = 'Deposit'; icon = 'fas fa-plus-circle'; }
-                else if (d.type === 'bonus_credit') { typeName = 'Bonus Credit'; icon = 'fas fa-star'; }
-                else if (d.type === 'order_commission') { typeName = 'Order Commission'; icon = 'fas fa-chart-line'; }
-                else if (d.type === 'trial_bonus') { typeName = 'Trial Bonus Added'; icon = 'fas fa-gift'; }
-                else return;
-                records.push({ id: d.id, date: d.date, type: typeName, amount: d.amount, icon: icon, isPositive: true });
-            } });
-            withdrawals.forEach(w => { if (w.uid === user.uid) { records.push({ id: w.id, date: w.requestDate, type: w.status === 'approved' ? 'Withdrawal' : `Withdrawal (${w.status})`, amount: w.amount, icon: 'fas fa-arrow-right-to-bracket', isPositive: false }); } });
-            records.sort((a, b) => new Date(b.date) - new Date(a.date));
-            if (records.length === 0) { container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No balance history found.</p></div>'; return; }
-            container.innerHTML = '';
-            records.forEach(r => { const date = new Date(r.date); const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString(); const amountClass = r.isPositive ? 'positive' : 'negative'; const symbol = r.isPositive ? '+' : '-'; const item = document.createElement('div'); item.className = 'history-item'; item.innerHTML = `<div class="history-info"><i class="${r.icon}" style="color: ${r.isPositive ? '#4ade80' : '#ff8888'}"></i><div><div class="history-title">${r.type}</div><div class="history-date">${formattedDate}</div></div></div><div class="history-amount ${amountClass}">${symbol}€${r.amount.toFixed(2)}</div>`; container.appendChild(item); });
+    const container = document.getElementById('balanceHistory');
+    const user = getCurrentUser(); if (!user) return;
+    const deposits = getDeposits(); 
+    const withdrawals = getWithdrawals();
+    let records = [];
+    
+    deposits.forEach(d => { 
+        if (d.uid === user.uid) {
+            let typeName = '', icon = '';
+            if (d.type === 'manual') { typeName = 'Deposit'; icon = 'fas fa-plus-circle'; }
+            else if (d.type === 'deposit_bonus') { typeName = 'Deposit Bonus'; icon = 'fas fa-star'; }
+            else if (d.type === 'order_commission') { typeName = 'Order Commission'; icon = 'fas fa-chart-line'; }
+            else if (d.type === 'trial_bonus') { typeName = 'Trial Bonus Added'; icon = 'fas fa-gift'; }
+            else if (d.type === 'referral_bonus') { typeName = 'Referral Bonus'; icon = 'fas fa-user-friends'; }
+            else return;
+            records.push({ id: d.id, date: d.date, type: typeName, amount: d.amount, icon: icon, isPositive: true });
         }
+    });
+    
+    withdrawals.forEach(w => { 
+        if (w.uid === user.uid) { 
+            records.push({ id: w.id, date: w.requestDate, type: w.status === 'approved' ? 'Withdrawal' : `Withdrawal (${w.status})`, amount: w.amount, icon: 'fas fa-arrow-right-to-bracket', isPositive: false }); 
+        } 
+    });
+    
+    records.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    if (records.length === 0) { 
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No balance history found.</p></div>'; 
+        return; 
+    }
+    
+    container.innerHTML = '';
+    records.forEach(r => { 
+        const date = new Date(r.date); 
+        const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString(); 
+        const amountClass = r.isPositive ? 'positive' : 'negative'; 
+        const symbol = r.isPositive ? '+' : '-'; 
+        const item = document.createElement('div'); 
+        item.className = 'history-item'; 
+        item.innerHTML = `<div class="history-info"><i class="${r.icon}" style="color: ${r.isPositive ? '#4ade80' : '#ff8888'}"></i><div><div class="history-title">${r.type}</div><div class="history-date">${formattedDate}</div></div></div><div class="history-amount ${amountClass}">${symbol}€${r.amount.toFixed(2)}</div>`; 
+        container.appendChild(item); 
+    });
+}
         
         function renderOrdersHistory() {
             const container = document.getElementById('ordersHistory');
