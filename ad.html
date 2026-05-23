@@ -3,491 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADDITIVE Admin</title>
+    <title>ADDITIVE 管理后台</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0a0f2a; font-family: Arial, sans-serif; color: #fff; }
-        .app { display: flex; }
-        .sidebar {
-            width: 220px;
-            background: #0f1424;
+        body {
+            background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #eef5ff;
             min-height: 100vh;
-            padding: 20px;
-            position: fixed;
         }
-        .main { flex: 1; margin-left: 220px; padding: 20px; }
-        .logo { font-size: 22px; font-weight: bold; margin-bottom: 30px; }
-        .logo span { color: #8ca3ff; }
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1a1f3a; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #8ca3ff; border-radius: 10px; }
+
+        /* 布局 */
+        .app { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: 280px;
+            background: rgba(15, 20, 36, 0.8);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(140, 163, 255, 0.2);
+            padding: 24px 16px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 10;
+        }
+        .main {
+            flex: 1;
+            margin-left: 280px;
+            padding: 28px 36px;
+        }
+        .logo {
+            font-size: 26px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #8ca3ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 40px;
+            padding-left: 12px;
+        }
+        .logo span { color: #8ca3ff; background: none; -webkit-background-clip: unset; }
+        /* 导航菜单 */
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 8px;
+            gap: 14px;
+            padding: 12px 18px;
+            margin: 6px 0;
+            border-radius: 16px;
+            color: #b9c3e6;
             cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
         }
-        .nav-item:hover { background: #1a1f3a; }
-        .nav-item.active { background: #2f3e7a; }
-        .page { display: none; }
+        .nav-item i { width: 24px; font-size: 1.2rem; }
+        .nav-item:hover { background: rgba(140, 163, 255, 0.15); color: white; }
+        .nav-item.active {
+            background: linear-gradient(95deg, #2f3e7a, #1e2a5a);
+            color: white;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.3);
+            border-left: 3px solid #8ca3ff;
+        }
+        /* 页面容器 */
+        .page { display: none; animation: fadeIn 0.25s ease; }
         .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 卡片与统计 */
         .card {
-            background: #0f1424;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            background: rgba(18, 24, 46, 0.65);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            padding: 24px;
+            margin-bottom: 28px;
+            border: 1px solid rgba(140, 163, 255, 0.2);
+            transition: all 0.25s;
         }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #2a2e4a; }
-        button {
-            background: #2f3e7a;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            color: #fff;
-            cursor: pointer;
-            margin: 2px;
-        }
-        button.danger { background: #7a2f2f; }
-        button.success { background: #2f7a3e; }
-        input, select {
-            background: #1a1f3a;
-            border: 1px solid #2a2e4a;
-            padding: 8px;
-            border-radius: 6px;
-            color: #fff;
-        }
-        .stats {
+        .card:hover { border-color: rgba(140, 163, 255, 0.5); transform: translateY(-2px); }
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 22px;
+            margin-bottom: 32px;
         }
         .stat-card {
-            background: #0f1424;
-            padding: 20px;
-            border-radius: 12px;
+            background: rgba(10, 14, 30, 0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 24px;
+            padding: 22px 16px;
             text-align: center;
+            border: 1px solid rgba(140, 163, 255, 0.2);
         }
-        .stat-number { font-size: 28px; font-weight: bold; color: #ffd966; }
-        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .search-input { flex: 1; min-width: 150px; }
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
+        .stat-card i { font-size: 34px; color: #8ca3ff; margin-bottom: 12px; display: block; }
+        .stat-number { font-size: 34px; font-weight: 800; color: #ffdd99; margin-top: 8px; }
+        
+        /* ----- 专门美化 input / select ----- */
+        input, select, textarea {
+            background: #0e132e;
+            border: 1px solid #2e3a6e;
+            border-radius: 20px;
+            padding: 10px 18px;
+            color: #f0f3ff;
+            font-size: 14px;
+            transition: all 0.2s;
+            outline: none;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #8ca3ff;
+            box-shadow: 0 0 0 3px rgba(140, 163, 255, 0.2);
+            background: #111834;
+        }
+        /* 下拉箭头自定义 */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238ca3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 36px;
+        }
+        button {
+            background: linear-gradient(95deg, #2f3e7a, #1f2c56);
+            border: none;
+            border-radius: 40px;
+            padding: 8px 20px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            visibility: hidden;
+            gap: 8px;
         }
-        .modal.active { visibility: visible; }
+        button:hover { transform: translateY(-2px); filter: brightness(1.05); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+        button.danger { background: #9b2f2f; }
+        button.success { background: #2f6b3a; }
+        
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 14px 10px; border-bottom: 1px solid rgba(140,163,255,0.15); }
+        .data-table th { color: #8ca3ff; font-weight: 600; }
+        .search-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+        
+        .modal {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000; visibility: hidden; opacity: 0; transition: 0.2s;
+        }
+        .modal.active { visibility: visible; opacity: 1; }
         .modal-content {
-            background: #0f1424;
-            padding: 30px;
-            border-radius: 16px;
-            width: 350px;
+            background: #101633; border-radius: 36px; padding: 28px; width: 400px;
+            border: 1px solid #8ca3ff; box-shadow: 0 20px 35px -10px black;
+        }
+        @media (max-width: 800px) {
+            .sidebar { width: 260px; transform: translateX(-100%); position: fixed; transition: 0.2s; }
+            .sidebar.open { transform: translateX(0); }
+            .main { margin-left: 0; padding: 20px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
 <body>
 <div class="app">
-    <div class="sidebar">
-        <div class="logo">ADDITIVE<span>®</span></div>
-        <div class="nav-item" data-page="dashboard">📊 Dashboard</div>
-        <div class="nav-item" data-page="users">👥 Users</div>
-        <div class="nav-item" data-page="withdrawals">💰 Withdrawals</div>
-        <div class="nav-item" data-page="vip">👑 VIP Settings</div>
-        <div class="nav-item" data-page="bonus">🎁 Bonus</div>
-        <div class="nav-item" data-page="orders">📋 Orders</div>
-        <div class="nav-item" data-page="signin">✅ Sign In Rewards</div>
-        <div style="margin-top: 30px;">
-            <button id="logoutBtn" style="width:100%; background:#7a2f2f;">🚪 Logout</button>
-        </div>
+    <div class="sidebar" id="sidebar">
+        <div class="logo">ADDITIVE<span>®</span> ADMIN</div>
+        <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i> 仪表板</div>
+        <div class="nav-item" data-page="users"><i class="fas fa-users"></i> 用户管理</div>
+        <div class="nav-item" data-page="withdrawals"><i class="fas fa-money-bill-wave"></i> 提现审核</div>
+        <div class="nav-item" data-page="vip"><i class="fas fa-crown"></i> VIP 配置</div>
+        <div class="nav-item" data-page="bonus"><i class="fas fa-gift"></i> 奖金发放</div>
+        <div class="nav-item" data-page="orders"><i class="fas fa-list-ul"></i> 订单记录</div>
+        <div class="nav-item" data-page="signin"><i class="fas fa-calendar-check"></i> 签到奖励</div>
+        <div class="nav-item" data-page="content"><i class="fas fa-file-alt"></i> 内容管理</div>
+        <div style="margin-top: 40px;"><button id="logoutBtn" style="width:100%; background:#7a2f2f;"><i class="fas fa-sign-out-alt"></i> 退出登录</button></div>
     </div>
 
     <div class="main">
+        <!-- 仪表板 -->
         <div id="page_dashboard" class="page active">
-            <div class="stats">
-                <div class="stat-card"><div>Total Users</div><div class="stat-number" id="statUsers">0</div></div>
-                <div class="stat-card"><div>Total Balance</div><div class="stat-number" id="statBalance">€0</div></div>
-                <div class="stat-card"><div>Pending Withdrawals</div><div class="stat-number" id="statPending">0</div></div>
-                <div class="stat-card"><div>Total Orders</div><div class="stat-number" id="statOrders">0</div></div>
+            <div class="stats-grid">
+                <div class="stat-card"><i class="fas fa-user-friends"></i><div>总用户数</div><div class="stat-number" id="statUsers">0</div></div>
+                <div class="stat-card"><i class="fas fa-coins"></i><div>总余额 (€)</div><div class="stat-number" id="statBalance">0</div></div>
+                <div class="stat-card"><i class="fas fa-clock"></i><div>待处理提现</div><div class="stat-number" id="statPending">0</div></div>
+                <div class="stat-card"><i class="fas fa-shopping-cart"></i><div>总订单量</div><div class="stat-number" id="statOrders">0</div></div>
             </div>
-            <div class="card">✅ Connected to Supabase. Click sidebar menu to manage.</div>
+            <div class="card">✅ 管理后台已连接 Supabase，所有功能正常。左侧菜单快速导航。</div>
         </div>
 
+        <!-- 用户管理 -->
         <div id="page_users" class="page">
             <div class="card">
                 <div class="search-bar">
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search by UID or Username">
-                    <button id="searchBtn">Search</button>
-                    <button id="clearBtn">Clear</button>
-                    <button id="addUserBtn">+ Add User</button>
+                    <input type="text" id="searchInput" placeholder="🔍 根据 UID 或用户名搜索" class="search-input">
+                    <button id="searchBtn"><i class="fas fa-search"></i> 搜索</button>
+                    <button id="clearBtn"><i class="fas fa-eraser"></i> 清除</button>
+                    <button id="addUserBtn"><i class="fas fa-user-plus"></i> 创建用户</button>
                 </div>
                 <div style="overflow-x:auto">
-                    <table>
-                        <thead><tr><th>UID</th><th>Username</th><th>Balance</th><th>Orders</th><th>VIP</th><th>Actions</th></tr></thead>
+                    <table class="data-table">
+                        <thead><tr><th>UID</th><th>用户名</th><th>余额 (€)</th><th>订单数</th><th>VIP等级</th><th>操作</th></tr></thead>
                         <tbody id="usersTableBody"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div id="page_withdrawals" class="page">
-            <div class="card">
-                <h3>Pending Withdrawals</h3>
-                <div style="overflow-x:auto">
-                    <table><thead><tr><th>UID</th><th>Username</th><th>Amount</th><th>Wallet</th><th>Date</th><th>Actions</th></tr></thead>
-                    <tbody id="withdrawalsTableBody"></tbody></table>
-                </div>
-            </div>
-        </div>
-
-        <div id="page_vip" class="page">
-            <div class="card"><h3>VIP Settings</h3><div id="vipSettingsDiv"></div></div>
-        </div>
-
-        <div id="page_bonus" class="page">
-            <div class="card">
-                <h3>Distribute Bonus</h3>
-                <div style="margin-bottom:10px"><label>Amount (€):</label> <input type="number" id="bonusAmount" value="10" style="width:150px"></div>
-                <div style="margin-bottom:10px"><label>User UID (empty = all):</label> <input type="text" id="bonusTarget" style="width:200px"></div>
-                <button id="distributeBonusBtn">Send Bonus</button>
-            </div>
-        </div>
-
-        <div id="page_orders" class="page">
-            <div class="card">
-                <h3>Order History</h3>
-                <div style="overflow-x:auto">
-                    <table><thead><tr><th>ID</th><th>UID</th><th>Username</th><th>Order Code</th><th>Hotel</th><th>Price</th><th>Commission</th><th>Date</th></tr></thead>
-                    <tbody id="ordersTableBody"></tbody></table>
-                </div>
-            </div>
-        </div>
-
-        <div id="page_signin" class="page">
-            <div class="card"><h3>Sign In Rewards</h3><div id="signinRewardsDiv"></div></div>
-        </div>
+        <!-- 提现审核 -->
+        <div id="page_withdrawals" class="page"><div class="card"><h3>⏳ 待处理提现</h3><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>UID</th><th>用户名</th><th>金额</th><th>钱包地址</th><th>申请时间</th><th>操作</th></tr></thead><tbody id="withdrawalsTableBody"></tbody></table></div></div></div>
+        <!-- VIP配置 -->
+        <div id="page_vip" class="page"><div class="card"><h3>👑 VIP 等级参数</h3><div id="vipSettingsDiv"></div></div></div>
+        <!-- 奖金发放 -->
+        <div id="page_bonus" class="page"><div class="card"><h3>🎁 批量 / 单人奖金</h3><div style="display:flex; gap:16px; flex-wrap:wrap; align-items:end;"><div><label>金额 (€)</label><input type="number" id="bonusAmount" value="10"></div><div><label>目标UID (空=全用户)</label><input type="text" id="bonusTarget" placeholder="留空则发给所有人"></div><button id="distributeBonusBtn"><i class="fas fa-gift"></i> 立即发放</button></div></div></div>
+        <!-- 订单记录 -->
+        <div id="page_orders" class="page"><div class="card"><h3>📦 历史订单 (最近100条)</h3><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>ID</th><th>UID</th><th>用户名</th><th>订单号</th><th>酒店名</th><th>价格</th><th>佣金</th><th>日期</th></tr></thead><tbody id="ordersTableBody"></tbody></table></div></div></div>
+        <!-- 签到奖励配置 -->
+        <div id="page_signin" class="page"><div class="card"><h3>📅 每日签到奖励金额</h3><div id="signinRewardsDiv"></div></div></div>
+        <!-- 内容管理 -->
+        <div id="page_content" class="page"><div class="card"><h3>📄 条款 / 规则管理</h3><textarea id="termsContent" rows="3" placeholder="服务条款" style="width:100%"></textarea><br><br><textarea id="platformRules" rows="3" placeholder="平台规则" style="width:100%"></textarea><br><br><button id="saveContentBtn"><i class="fas fa-save"></i> 保存内容</button></div></div>
     </div>
 </div>
 
-<div id="addUserModal" class="modal">
-    <div class="modal-content">
-        <h3>Create New User</h3>
-        <input type="text" id="newUsername" placeholder="Username" style="width:100%; margin:10px 0; padding:10px">
-        <input type="password" id="newPassword" placeholder="Password" style="width:100%; margin:10px 0; padding:10px">
-        <button id="createUserBtn">Create</button>
-        <button id="closeModalBtn">Cancel</button>
-    </div>
-</div>
+<!-- 添加用户弹窗 -->
+<div id="addUserModal" class="modal"><div class="modal-content"><h3>➕ 新建用户</h3><input type="text" id="newUsername" placeholder="用户名" style="width:100%; margin:12px 0"><input type="password" id="newPassword" placeholder="密码" style="width:100%; margin-bottom:20px"><button id="createUserBtn">创建</button><button id="closeModalBtn" style="background:#4a5568;">取消</button></div></div>
 
 <script>
+    // ---------- Supabase ----------
     const SB_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
     const SB_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
     const sb = supabase.createClient(SB_URL, SB_KEY);
     
     let searchKeyword = '';
 
-    // 页面切换函数
+    // 页面切换
     function showPage(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById('page_' + pageId).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
         if(activeNav) activeNav.classList.add('active');
-        
         if(pageId === 'dashboard') loadDashboard();
         if(pageId === 'users') loadUsers();
         if(pageId === 'withdrawals') loadWithdrawals();
         if(pageId === 'vip') loadVipSettings();
         if(pageId === 'orders') loadOrders();
         if(pageId === 'signin') loadSigninRewards();
+        if(pageId === 'content') loadContent();
     }
-
-    // 绑定导航菜单事件
     document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const pageId = item.getAttribute('data-page');
-            if(pageId) showPage(pageId);
-        });
+        item.addEventListener('click', () => showPage(item.getAttribute('data-page')));
     });
-
-    // 绑定按钮事件
-    document.getElementById('logoutBtn')?.addEventListener('click', logout);
-    document.getElementById('searchBtn')?.addEventListener('click', searchUsers);
-    document.getElementById('clearBtn')?.addEventListener('click', clearSearch);
-    document.getElementById('addUserBtn')?.addEventListener('click', openAddUserModal);
+    document.getElementById('logoutBtn')?.addEventListener('click', () => { if(confirm('退出登录？')){ localStorage.removeItem('admin_logged_in'); window.location.href = 'alogin.html'; } });
+    document.getElementById('searchBtn')?.addEventListener('click', () => { searchKeyword = document.getElementById('searchInput').value; loadUsers(); });
+    document.getElementById('clearBtn')?.addEventListener('click', () => { document.getElementById('searchInput').value = ''; searchKeyword = ''; loadUsers(); });
+    document.getElementById('addUserBtn')?.addEventListener('click', () => document.getElementById('addUserModal').classList.add('active'));
+    document.getElementById('closeModalBtn')?.addEventListener('click', () => document.getElementById('addUserModal').classList.remove('active'));
     document.getElementById('createUserBtn')?.addEventListener('click', createUser);
-    document.getElementById('closeModalBtn')?.addEventListener('click', closeAddUserModal);
     document.getElementById('distributeBonusBtn')?.addEventListener('click', distributeBonus);
+    document.getElementById('saveContentBtn')?.addEventListener('click', saveContent);
 
-    async function loadDashboard() {
-        try {
-            const { data: users } = await sb.from('users').select('*');
-            if(users) {
-                document.getElementById('statUsers').innerText = users.length;
-                const total = users.reduce((s,u) => s + (u.balance || 0), 0);
-                document.getElementById('statBalance').innerText = '€' + total.toFixed(2);
+    async function loadDashboard(){
+        const {data:users}=await sb.from('users').select('*');
+        if(users){
+            document.getElementById('statUsers').innerText=users.length;
+            const total=users.reduce((s,u)=>s+(u.balance||0),0);
+            document.getElementById('statBalance').innerText='€'+total.toFixed(2);
+        }
+        const {data:wd}=await sb.from('withdrawals').select('*').eq('status','pending');
+        document.getElementById('statPending').innerText=wd?.length||0;
+        const {data:orders}=await sb.from('order_history').select('*');
+        document.getElementById('statOrders').innerText=orders?.length||0;
+    }
+    async function loadUsers(){
+        let query=sb.from('users').select('*').order('created_at',{ascending:false});
+        if(searchKeyword) query=query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
+        const {data:users}=await query;
+        const {data:allOrders}=await sb.from('order_history').select('*');
+        const tbody=document.getElementById('usersTableBody');
+        if(tbody&&users){
+            tbody.innerHTML='';
+            for(let u of users){
+                const userOrders=allOrders?.filter(o=>o.uid===u.uid).length||0;
+                const row=tbody.insertRow();
+                row.insertCell(0).innerText=u.uid;
+                row.insertCell(1).innerText=u.username;
+                row.insertCell(2).innerHTML=`€${(u.balance||0).toFixed(2)}`;
+                row.insertCell(3).innerText=userOrders;
+                row.insertCell(4).innerHTML=`<select class="vip-select" data-uid="${u.uid}"><option value="1" ${u.vip_level==1?'selected':''}>Normal</option><option value="2" ${u.vip_level==2?'selected':''}>VIP</option><option value="3" ${u.vip_level==3?'selected':''}>SVIP</option></select>`;
+                row.insertCell(5).innerHTML=`<button class="deposit-btn" data-uid="${u.uid}">充值</button><button class="cut-btn" data-uid="${u.uid}">扣款</button><button class="danger delete-btn" data-uid="${u.uid}">删除</button>`;
             }
-            const { data: withdrawals } = await sb.from('withdrawals').select('*').eq('status', 'pending');
-            document.getElementById('statPending').innerText = withdrawals?.length || 0;
-            const { data: orders } = await sb.from('order_history').select('*');
-            document.getElementById('statOrders').innerText = orders?.length || 0;
-        } catch(e) { console.error(e); alert('Error: ' + e.message); }
-    }
-
-    async function loadUsers() {
-        try {
-            let query = sb.from('users').select('*').order('created_at', { ascending: false });
-            if(searchKeyword) query = query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
-            const { data: users } = await query;
-            const { data: allOrders } = await sb.from('order_history').select('*');
-            const tbody = document.getElementById('usersTableBody');
-            if(tbody && users) {
-                tbody.innerHTML = '';
-                for(let u of users) {
-                    const userOrders = allOrders?.filter(o => o.uid === u.uid) || [];
-                    const row = tbody.insertRow();
-                    row.insertCell(0).innerText = u.uid;
-                    row.insertCell(1).innerText = u.username;
-                    row.insertCell(2).innerHTML = `€${(u.balance || 0).toFixed(2)}`;
-                    row.insertCell(3).innerText = userOrders.length;
-                    row.insertCell(4).innerHTML = `<select class="vip-select" data-uid="${u.uid}">
-                        <option value="1" ${u.vip_level===1?'selected':''}>Normal</option>
-                        <option value="2" ${u.vip_level===2?'selected':''}>VIP</option>
-                        <option value="3" ${u.vip_level===3?'selected':''}>SVIP</option>
-                    </select>`;
-                    row.insertCell(5).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}">Deposit</button>
-                        <button class="cut-btn" data-uid="${u.uid}">Cut</button>
-                        <button class="danger delete-btn" data-uid="${u.uid}">Delete</button>`;
-                }
-                // 绑定动态按钮事件
-                document.querySelectorAll('.vip-select').forEach(sel => {
-                    sel.addEventListener('change', (e) => updateVip(sel.getAttribute('data-uid'), sel.value));
-                });
-                document.querySelectorAll('.deposit-btn').forEach(btn => {
-                    btn.addEventListener('click', () => addBalance(btn.getAttribute('data-uid')));
-                });
-                document.querySelectorAll('.cut-btn').forEach(btn => {
-                    btn.addEventListener('click', () => cutBalance(btn.getAttribute('data-uid')));
-                });
-                document.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.addEventListener('click', () => delUser(btn.getAttribute('data-uid')));
-                });
-            }
-        } catch(e) { alert('Error: ' + e.message); }
-    }
-
-    async function updateVip(uid, level) {
-        await sb.from('users').update({ vip_level: parseInt(level) }).eq('uid', uid);
-        alert('VIP updated');
-    }
-
-    async function addBalance(uid) {
-        const amt = parseFloat(prompt('Amount (€):'));
-        if(isNaN(amt) || amt <= 0) return;
-        const { data: user } = await sb.from('users').select('balance, username').eq('uid', uid).single();
-        await sb.from('users').update({ balance: (user.balance || 0) + amt }).eq('uid', uid);
-        await sb.from('deposits').insert([{ uid, username: user.username, amount: amt, type: 'manual' }]);
-        loadUsers(); loadDashboard();
-        alert(`+€${amt}`);
-    }
-
-    async function cutBalance(uid) {
-        const amt = parseFloat(prompt('Amount to cut (€):'));
-        if(isNaN(amt) || amt <= 0) return;
-        const { data: user } = await sb.from('users').select('balance').eq('uid', uid).single();
-        if((user.balance || 0) < amt) { alert('Insufficient balance'); return; }
-        await sb.from('users').update({ balance: (user.balance || 0) - amt }).eq('uid', uid);
-        loadUsers(); loadDashboard();
-        alert(`-€${amt}`);
-    }
-
-    async function delUser(uid) {
-        if(confirm('Delete permanently?')) {
-            await sb.from('users').delete().eq('uid', uid);
-            await sb.from('order_history').delete().eq('uid', uid);
-            await sb.from('deposits').delete().eq('uid', uid);
-            await sb.from('withdrawals').delete().eq('uid', uid);
-            loadUsers(); loadDashboard();
-            alert('Deleted');
+            document.querySelectorAll('.vip-select').forEach(sel=>sel.addEventListener('change',()=>updateVip(sel.dataset.uid,sel.value)));
+            document.querySelectorAll('.deposit-btn').forEach(btn=>btn.addEventListener('click',()=>addBalance(btn.dataset.uid)));
+            document.querySelectorAll('.cut-btn').forEach(btn=>btn.addEventListener('click',()=>cutBalance(btn.dataset.uid)));
+            document.querySelectorAll('.delete-btn').forEach(btn=>btn.addEventListener('click',()=>delUser(btn.dataset.uid)));
         }
     }
-
-    function searchUsers() { searchKeyword = document.getElementById('searchInput').value.trim(); loadUsers(); }
-    function clearSearch() { searchKeyword = ''; document.getElementById('searchInput').value = ''; loadUsers(); }
-    function openAddUserModal() { document.getElementById('addUserModal').classList.add('active'); }
-    function closeAddUserModal() { document.getElementById('addUserModal').classList.remove('active'); }
-
-    async function createUser() {
-        const username = document.getElementById('newUsername').value.trim();
-        const pwd = document.getElementById('newPassword').value;
-        if(!username || !pwd) { alert('Username and password required'); return; }
-        const { data: exist } = await sb.from('users').select('username').eq('username', username).single();
-        if(exist) { alert('Username exists'); return; }
-        const { data: maxUid } = await sb.from('users').select('uid').order('uid', { ascending: false }).limit(1);
-        let newUid = '100001';
-        if(maxUid && maxUid.length) newUid = (parseInt(maxUid[0].uid) + 1).toString();
-        const code = Math.random().toString(36).substring(2,8).toUpperCase();
-        const { error } = await sb.from('users').insert([{ uid: newUid, username, password: pwd, invite_code: code, balance: 0, vip_level: 1 }]);
-        if(error) { alert(error.message); return; }
-        loadUsers(); closeAddUserModal();
-        alert(`User ${username} created`);
-        document.getElementById('newUsername').value = '';
-        document.getElementById('newPassword').value = '';
-    }
-
-    async function loadWithdrawals() {
-        const { data: wd } = await sb.from('withdrawals').select('*').eq('status', 'pending').order('request_date', { ascending: false });
-        const tbody = document.getElementById('withdrawalsTableBody');
-        if(tbody && wd) {
-            tbody.innerHTML = '';
-            for(let w of wd) {
-                const row = tbody.insertRow();
-                row.insertCell(0).innerText = w.uid;
-                row.insertCell(1).innerText = w.username;
-                row.insertCell(2).innerHTML = `€${(w.amount || 0).toFixed(2)}`;
-                row.insertCell(3).innerText = w.wallet_address || '-';
-                row.insertCell(4).innerText = new Date(w.request_date).toLocaleString();
-                row.insertCell(5).innerHTML = `<button class="approve-btn" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}">Approve</button>
-                    <button class="reject-btn" data-id="${w.id}">Reject</button>`;
-            }
-            document.querySelectorAll('.approve-btn').forEach(btn => {
-                btn.addEventListener('click', () => approveWd(btn.getAttribute('data-id'), btn.getAttribute('data-uid'), parseFloat(btn.getAttribute('data-amt'))));
-            });
-            document.querySelectorAll('.reject-btn').forEach(btn => {
-                btn.addEventListener('click', () => rejectWd(btn.getAttribute('data-id')));
-            });
-        }
-    }
-
-    async function approveWd(id, uid, amt) {
-        if(confirm(`Approve €${amt}?`)) {
-            await sb.from('withdrawals').update({ status: 'approved', processed_date: new Date() }).eq('id', id);
-            loadWithdrawals(); loadDashboard();
-            alert('Approved');
-        }
-    }
-
-    async function rejectWd(id) {
-        if(confirm('Reject?')) {
-            const { data: w } = await sb.from('withdrawals').select('uid, amount').eq('id', id).single();
-            if(w) {
-                const { data: user } = await sb.from('users').select('balance').eq('uid', w.uid).single();
-                await sb.from('users').update({ balance: (user.balance || 0) + w.amount }).eq('uid', w.uid);
-            }
-            await sb.from('withdrawals').update({ status: 'rejected', processed_date: new Date() }).eq('id', id);
-            loadWithdrawals(); loadDashboard();
-            alert('Rejected, funds returned');
-        }
-    }
-
-    async function loadVipSettings() {
-        const { data: vips } = await sb.from('vip_settings').select('*').order('level');
-        const div = document.getElementById('vipSettingsDiv');
-        if(div && vips) {
-            div.innerHTML = '';
-            for(let v of vips) {
-                const container = document.createElement('div');
-                container.style.cssText = 'background:#1a1f3a; padding:15px; border-radius:8px; margin-bottom:15px;';
-                container.innerHTML = `
-                    <h3>${v.rank_name} (Level ${v.level})</h3>
-                    <div>Orders Limit: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:100px"></div>
-                    <div>Commission Rate (%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:100px"></div>
-                    <button class="save-vip-btn" data-level="${v.level}" style="margin-top:10px">Save</button>
-                `;
-                div.appendChild(container);
-            }
-            document.querySelectorAll('.save-vip-btn').forEach(btn => {
-                btn.addEventListener('click', () => saveVip(btn.getAttribute('data-level')));
-            });
-        }
-    }
-
-    async function saveVip(level) {
-        const limit = parseInt(document.getElementById(`limit_${level}`).value);
-        const rate = parseFloat(document.getElementById(`rate_${level}`).value);
-        await sb.from('vip_settings').update({ orders_limit: limit, commission_rate: rate }).eq('level', level);
-        alert('Saved');
-    }
-
-    async function distributeBonus() {
-        const amt = parseFloat(document.getElementById('bonusAmount').value);
-        const target = document.getElementById('bonusTarget').value.trim();
-        if(isNaN(amt) || amt <= 0) { alert('Invalid amount'); return; }
-        if(target) {
-            const { data: user } = await sb.from('users').select('balance').eq('uid', target).single();
-            if(user) {
-                await sb.from('users').update({ balance: (user.balance || 0) + amt }).eq('uid', target);
-                alert(`Added €${amt} to ${target}`);
-            } else alert('User not found');
-        } else {
-            const { data: users } = await sb.from('users').select('uid, balance');
-            for(let u of users) await sb.from('users').update({ balance: (u.balance || 0) + amt }).eq('uid', u.uid);
-            alert(`Added €${amt} to all users`);
-        }
-        loadUsers(); loadDashboard();
-    }
-
-    async function loadOrders() {
-        const { data: orders } = await sb.from('order_history').select('*').order('date', { ascending: false }).limit(100);
-        const tbody = document.getElementById('ordersTableBody');
-        if(tbody && orders) {
-            tbody.innerHTML = '';
-            for(let o of orders) {
-                const row = tbody.insertRow();
-                row.insertCell(0).innerText = o.id;
-                row.insertCell(1).innerText = o.uid;
-                row.insertCell(2).innerText = o.username;
-                row.insertCell(3).innerText = o.order_code || '-';
-                row.insertCell(4).innerText = o.accommodation_name || '-';
-                row.insertCell(5).innerHTML = `€${(o.price || 0).toFixed(2)}`;
-                row.insertCell(6).innerHTML = `€${(o.commission || 0).toFixed(2)}`;
-                row.insertCell(7).innerText = new Date(o.date).toLocaleString();
-            }
-        }
-    }
-
-    async function loadSigninRewards() {
-        const { data: rewards } = await sb.from('signin_rewards').select('*').order('day');
-        const div = document.getElementById('signinRewardsDiv');
-        if(div && rewards) {
-            div.innerHTML = '';
-            for(let r of rewards) {
-                const container = document.createElement('div');
-                container.style.marginBottom = '10px';
-                container.innerHTML = `Day ${r.day}: 
-                    <input type="number" id="reward_${r.day}" value="${r.amount}" style="width:100px"> €
-                    <button class="save-reward-btn" data-day="${r.day}">Save</button>`;
-                div.appendChild(container);
-            }
-            document.querySelectorAll('.save-reward-btn').forEach(btn => {
-                btn.addEventListener('click', () => saveReward(btn.getAttribute('data-day')));
-            });
-        }
-    }
-
-    async function saveReward(day) {
-        const amt = parseFloat(document.getElementById(`reward_${day}`).value);
-        await sb.from('signin_rewards').update({ amount: amt }).eq('day', day);
-        alert(`Day ${day} saved`);
-    }
-
-    function logout() {
-        if(confirm('Logout?')) {
-            localStorage.removeItem('admin_logged_in');
-            window.location.href = 'admin-login.html';
-        }
-    }
-
-    // 初始化
+    async function updateVip(uid,level){ await sb.from('users').update({vip_level:parseInt(level)}).eq('uid',uid); alert('VIP已更新'); loadUsers(); }
+    async function addBalance(uid){ let amt=prompt('充值金额 (€):'); if(!amt||isNaN(amt)) return; amt=parseFloat(amt); const {data:user}=await sb.from('users').select('balance,username').eq('uid',uid).single(); await sb.from('users').update({balance:(user.balance||0)+amt}).eq('uid',uid); await sb.from('deposits').insert([{uid,username:user.username,amount:amt,type:'manual'}]); loadUsers(); loadDashboard(); alert(`+€${amt}`); }
+    async function cutBalance(uid){ let amt=prompt('扣款金额 (€):'); if(!amt||isNaN(amt)) return; amt=parseFloat(amt); const {data:user}=await sb.from('users').select('balance').eq('uid',uid).single(); if((user.balance||0)<amt){alert('余额不足');return;} await sb.from('users').update({balance:(user.balance||0)-amt}).eq('uid',uid); loadUsers(); loadDashboard(); alert(`-€${amt}`); }
+    async function delUser(uid){ if(confirm('永久删除用户？')){ await sb.from('users').delete().eq('uid',uid); await sb.from('order_history').delete().eq('uid',uid); await sb.from('deposits').delete().eq('uid',uid); await sb.from('withdrawals').delete().eq('uid',uid); loadUsers(); loadDashboard(); alert('已删除'); } }
+    async function createUser(){ const username=document.getElementById('newUsername').value.trim(); const pwd=document.getElementById('newPassword').value; if(!username||!pwd){alert('用户名密码必填');return;} const {data:exist}=await sb.from('users').select('username').eq('username',username).single(); if(exist){alert('用户名已存在');return;} const {data:max}=await sb.from('users').select('uid').order('uid',{ascending:false}).limit(1); let newUid='100001'; if(max&&max.length) newUid=(parseInt(max[0].uid)+1).toString(); const code=Math.random().toString(36).substring(2,8).toUpperCase(); const {error}=await sb.from('users').insert([{uid:newUid,username,password:pwd,invite_code:code,balance:0,vip_level:1}]); if(error){alert(error.message);return;} loadUsers(); document.getElementById('addUserModal').classList.remove('active'); alert(`用户 ${username} 创建成功`); }
+    async function loadWithdrawals(){ const {data:wd}=await sb.from('withdrawals').select('*').eq('status','pending'); const tbody=document.getElementById('withdrawalsTableBody'); if(tbody){ tbody.innerHTML=''; for(let w of wd||[]){ const row=tbody.insertRow(); row.insertCell(0).innerText=w.uid; row.insertCell(1).innerText=w.username; row.insertCell(2).innerHTML=`€${(w.amount||0).toFixed(2)}`; row.insertCell(3).innerText=w.wallet_address||'-'; row.insertCell(4).innerText=new Date(w.request_date).toLocaleString(); row.insertCell(5).innerHTML=`<button class="approve-btn" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}">批准</button><button class="reject-btn" data-id="${w.id}">拒绝</button>`; } document.querySelectorAll('.approve-btn').forEach(btn=>btn.addEventListener('click',()=>approveWd(btn.dataset.id,btn.dataset.uid,parseFloat(btn.dataset.amt)))); document.querySelectorAll('.reject-btn').forEach(btn=>btn.addEventListener('click',()=>rejectWd(btn.dataset.id))); } }
+    async function approveWd(id,uid,amt){ if(confirm(`批准 €${amt} 提现？`)){ await sb.from('withdrawals').update({status:'approved',processed_date:new Date()}).eq('id',id); loadWithdrawals(); loadDashboard(); alert('已批准'); } }
+    async function rejectWd(id){ if(confirm('拒绝该提现？')){ const {data:w}=await sb.from('withdrawals').select('uid,amount').eq('id',id).single(); if(w){ const {data:user}=await sb.from('users').select('balance').eq('uid',w.uid).single(); await sb.from('users').update({balance:(user.balance||0)+w.amount}).eq('uid',w.uid); } await sb.from('withdrawals').update({status:'rejected',processed_date:new Date()}).eq('id',id); loadWithdrawals(); loadDashboard(); alert('已拒绝，金额已退回'); } }
+    async function loadVipSettings(){ const {data:vips}=await sb.from('vip_settings').select('*').order('level'); const div=document.getElementById('vipSettingsDiv'); if(div){ div.innerHTML=''; for(let v of vips||[]){ div.innerHTML+=`<div style="background:#0e132e; border-radius:24px; padding:20px; margin-bottom:20px;"><h3>${v.rank_name} (Lv.${v.level})</h3><div>每日订单上限: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:130px;"></div><div>佣金比率(%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:110px;"></div><button class="save-vip" data-level="${v.level}">保存配置</button></div>`; } document.querySelectorAll('.save-vip').forEach(btn=>btn.addEventListener('click',()=>saveVip(btn.dataset.level))); } }
+    async function saveVip(level){ const limit=parseInt(document.getElementById(`limit_${level}`).value); const rate=parseFloat(document.getElementById(`rate_${level}`).value); await sb.from('vip_settings').update({orders_limit:limit,commission_rate:rate}).eq('level',level); alert('VIP参数已更新'); }
+    async function distributeBonus(){ const amt=parseFloat(document.getElementById('bonusAmount').value); const target=document.getElementById('bonusTarget').value.trim(); if(!amt||amt<=0){alert('请输入有效金额');return;} if(target){ const {data:user}=await sb.from('users').select('balance').eq('uid',target).single(); if(user){ await sb.from('users').update({balance:(user.balance||0)+amt}).eq('uid',target); alert(`已给用户 ${target} 发放 €${amt}`); }else alert('用户不存在'); } else { const {data:users}=await sb.from('users').select('uid,balance'); for(let u of users) await sb.from('users').update({balance:(u.balance||0)+amt}).eq('uid',u.uid); alert(`已给全体用户发放 €${amt}`); } loadUsers(); loadDashboard(); }
+    async function loadOrders(){ const {data:orders}=await sb.from('order_history').select('*').order('date',{ascending:false}).limit(500); const tbody=document.getElementById('ordersTableBody'); if(tbody){ tbody.innerHTML=''; for(let o of orders||[]){ const row=tbody.insertRow(); row.insertCell(0).innerText=o.id; row.insertCell(1).innerText=o.uid; row.insertCell(2).innerText=o.username; row.insertCell(3).innerText=o.order_code||'-'; row.insertCell(4).innerText=o.accommodation_name||'-'; row.insertCell(5).innerHTML=`€${(o.price||0).toFixed(2)}`; row.insertCell(6).innerHTML=`€${(o.commission||0).toFixed(2)}`; row.insertCell(7).innerText=new Date(o.date).toLocaleString(); } } }
+    async function loadSigninRewards(){ const {data:rewards}=await sb.from('signin_rewards').select('*').order('day'); const div=document.getElementById('signinRewardsDiv'); if(div){ div.innerHTML=''; for(let r of rewards||[]){ div.innerHTML+=`<div style="margin-bottom:12px;">Day ${r.day}: <input type="number" id="reward_${r.day}" value="${r.amount}" style="width:110px;"> € <button class="saveReward" data-day="${r.day}">保存</button></div>`; } document.querySelectorAll('.saveReward').forEach(btn=>btn.addEventListener('click',()=>saveReward(btn.dataset.day))); } }
+    async function saveReward(day){ const amt=parseFloat(document.getElementById(`reward_${day}`).value); await sb.from('signin_rewards').update({amount:amt}).eq('day',day); alert(`Day ${day} 奖励金额已更新`); }
+    async function loadContent(){ const {data:content}=await sb.from('system_content').select('*').limit(1).single(); if(content){ document.getElementById('termsContent').value=content.terms||''; document.getElementById('platformRules').value=content.platform_rules||''; } }
+    async function saveContent(){ const terms=document.getElementById('termsContent').value; const rules=document.getElementById('platformRules').value; await sb.from('system_content').update({terms,platform_rules:rules,updated_at:new Date()}).eq('id',1); alert('内容已保存'); }
+    // 检查登录
+    if(localStorage.getItem('admin_logged_in')!=='true') window.location.href='alogin.html';
     loadDashboard();
 </script>
 </body>
