@@ -165,14 +165,53 @@
         }
         
         .featured-section { margin-top: 20px; }
-        .featured-title { font-size: 16px; font-weight: 500; color: #C9B095; margin-bottom: 14px; letter-spacing: 1px; }
-        .marquee-images { overflow: hidden; white-space: nowrap; background: #0E1838; border-radius: 20px; padding: 20px 0; position: relative; }
-        .marquee-images-content { display: inline-block; animation: scrollImages 35s linear infinite; }
-        .hotel-img-item { display: inline-block; margin: 0 12px; text-align: center; vertical-align: middle; }
-        .hotel-img-item img { width: 180px; height: 110px; border-radius: 16px; object-fit: cover; border: 1px solid rgba(201, 176, 149, 0.3); background: #0A122B; transition: all 0.3s; }
-        .hotel-img-item img:hover { transform: scale(1.03); border-color: #C9B095; }
-        .hotel-img-item .hotel-name { display: block; font-size: 13px; color: #C9B095; margin-top: 10px; font-weight: 500; }
-        @keyframes scrollImages { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.featured-title { font-size: 16px; font-weight: 500; color: #C9B095; margin-bottom: 14px; letter-spacing: 1px; }
+.marquee-images { 
+    overflow: hidden; 
+    white-space: nowrap; 
+    background: #0E1838; 
+    border-radius: 20px; 
+    padding: 20px 0; 
+    position: relative; 
+}
+.marquee-images-content { 
+    display: inline-block; 
+    animation: scrollImages 35s linear infinite; 
+}
+.hotel-img-item { 
+    display: inline-block; 
+    margin: 0 12px; 
+    text-align: center; 
+    vertical-align: middle;
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.hotel-img-item img { 
+    width: 180px; 
+    height: 110px; 
+    border-radius: 16px; 
+    object-fit: cover;
+    object-position: center;
+    background: #ffffff;
+    display: block;
+}
+.hotel-img-item .hotel-name { 
+    display: block; 
+    font-size: 13px; 
+    color: #333; 
+    margin-top: 8px; 
+    margin-bottom: 8px;
+    font-weight: 600;
+    background: #ffffff;
+    padding: 4px;
+    border-radius: 8px;
+}
+@keyframes scrollImages { 
+    0% { transform: translateX(0); } 
+    100% { transform: translateX(-50%); } 
+}
         
         @keyframes pulseGlow { 0% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); } 50% { box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12); border-color: rgba(201, 176, 149, 0.5); } 100% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); } }
         .upgrade-card-pulse { background: rgba(20, 30, 55, 0.6); backdrop-filter: blur(12px); border-radius: 28px; padding: 24px; transition: all 0.3s ease; animation: pulseGlow 2.5s ease-in-out infinite; border: 1px solid rgba(201, 176, 149, 0.3); margin-top: 32px; }
