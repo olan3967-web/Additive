@@ -6,15 +6,15 @@
     <title>ADDITIVE - Membership</title>
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
     <style>
         .membership-header { margin-bottom: 24px; }
         .membership-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .membership-header p { color: #7a85a5; font-size: 13px; line-height: 1.5; }
-        
         .membership-two-columns { display: flex; gap: 32px; margin-bottom: 32px; flex-wrap: wrap; }
         .membership-left { flex: 1; min-width: 260px; }
         .membership-right { flex: 2; min-width: 300px; }
-        
         .current-membership-card {
             background: linear-gradient(145deg, #0F1C3F, #0A122B);
             border-radius: 24px;
@@ -29,12 +29,9 @@
         .stat-label { color: #a0a8c0; font-size: 13px; }
         .stat-value { color: #ffffff; font-weight: 600; font-size: 15px; }
         .stat-value.highlight { color: #4ade80; }
-        
         .premium-upgrade { background: rgba(201,176,149,0.08); border-radius: 16px; padding: 16px; margin-top: 16px; border: 1px solid rgba(201,176,149,0.15); }
         .premium-upgrade p { font-size: 12px; color: #a0a8c0; margin-bottom: 12px; }
         .btn-contact-support { background: rgba(201,176,149,0.15); border: 1px solid rgba(201,176,149,0.3); padding: 8px 16px; border-radius: 40px; color: #C9B095; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
-        .btn-contact-support:hover { background: rgba(201,176,149,0.25); }
-        
         .tiers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
         .tier-card {
             background: rgba(20, 30, 55, 0.6);
@@ -60,7 +57,6 @@
         .tier-stat { text-align: center; flex: 1; }
         .tier-stat .stat-label { font-size: 9px; color: #a0a8c0; display: block; margin-bottom: 3px; }
         .tier-stat .stat-value { font-size: 14px; font-weight: 700; color: #ffffff; }
-        
         .upgrade-card-pulse {
             margin-top: 32px;
             background: rgba(20, 30, 55, 0.6);
@@ -74,7 +70,6 @@
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
-        
         @media (max-width: 1000px) { .tiers-grid { grid-template-columns: 1fr; } .membership-two-columns { flex-direction: column; } }
     </style>
 </head>
@@ -135,21 +130,87 @@
     </div>
 
     <script>
-        function toggleMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('active'); if (menuBtn) menuBtn.classList.toggle('hidden'); }
-        function closeMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('active'); if (menuBtn) menuBtn.classList.remove('hidden'); }
-        if (document.querySelectorAll('.nav-item')) { document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', () => { if (window.innerWidth <= 768) closeMenu(); }); }); }
+        function toggleMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.toggle('open'); 
+            if (overlay) overlay.classList.toggle('active'); 
+            if (menuBtn) menuBtn.classList.toggle('hidden'); 
+        }
+        function closeMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.remove('open'); 
+            if (overlay) overlay.classList.remove('active'); 
+            if (menuBtn) menuBtn.classList.remove('hidden'); 
+        }
 
-        let vipSettings = [
-            { level: 1, rankName: "Normal", ordersLimit: 30, commissionRate: 0.51, depositRequirement: 50, features: ["Default daily access", "Standard commission rate", "Standard order limit"] },
-            { level: 2, rankName: "VIP", ordersLimit: 30, commissionRate: 0.8, depositRequirement: 500, features: ["Higher commission rate per order", "Better account benefits", "Priority support access"] },
-            { level: 3, rankName: "SVIP", ordersLimit: 35, commissionRate: 1.5, depositRequirement: 5000, features: ["Maximum commission rate", "Premium level benefits", "Exclusive priority services"] }
-        ];
-        function loadVipSettings() { const saved = localStorage.getItem('additive_vip_settings'); if(saved) { try { const data = JSON.parse(saved); vipSettings = vipSettings.map((v, idx) => { const savedVip = data.find(d => d.level === (idx + 1)); if(savedVip) return { ...v, ordersLimit: savedVip.ordersLimit, commissionRate: savedVip.commissionRate }; return v; }); } catch(e) {} } }
-        function getCurrentUser() { const userStr = localStorage.getItem('currentUser'); if (!userStr) { window.location.href = 'signin.html'; return null; } try { return JSON.parse(userStr); } catch(e) { window.location.href = 'signin.html'; return null; } }
-        function getUserOrderCount(uid) { const history = JSON.parse(localStorage.getItem('additive_order_history') || '[]'); return history.filter(o => o.uid === uid).length; }
-        function renderMembership() { const user = getCurrentUser(); if (!user) return; const userVipLevel = user.vipLevel || 1; const userOrders = getUserOrderCount(user.uid); const currentVip = vipSettings.find(v => v.level === userVipLevel) || vipSettings[0]; document.getElementById('currentTierName').innerText = currentVip.rankName; document.getElementById('currentOrders').innerHTML = `${userOrders} / ${currentVip.ordersLimit}`; document.getElementById('currentRate').innerHTML = `${currentVip.commissionRate}%`; const tiersGrid = document.getElementById('tiersGrid'); tiersGrid.innerHTML = ''; vipSettings.forEach(vip => { const isCurrent = vip.level === userVipLevel; const card = document.createElement('div'); card.className = 'tier-card'; if (isCurrent) card.classList.add('current-tier'); card.innerHTML = `${isCurrent ? '<div class="current-badge">CURRENT</div>' : ''}<div class="tier-name">${vip.rankName}</div><div class="tier-sub">${vip.rankName}</div><div class="deposit-requirement"><span class="label">Deposit requirement</span><span class="value">€${vip.depositRequirement}</span></div><div class="tier-description">${vip.rankName} membership benefits</div><ul class="tier-features">${vip.features.map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}</ul><div class="tier-stats"><div class="tier-stat"><span class="stat-label">Orders Limit</span><span class="stat-value">${vip.ordersLimit}</span></div><div class="tier-stat"><span class="stat-label">Commission Rate</span><span class="stat-value">${vip.commissionRate}%</span></div></div>`; tiersGrid.appendChild(card); }); }
+        let vipSettings = [];
+
+        async function loadVipSettings() {
+            const { data, error } = await sb
+                .from('vip_settings')
+                .select('*')
+                .order('level', { ascending: true });
+            
+            if (error) {
+                vipSettings = [
+                    { level: 1, rankName: "Normal", ordersLimit: 30, commissionRate: 0.51 },
+                    { level: 2, rankName: "VIP", ordersLimit: 30, commissionRate: 0.8 },
+                    { level: 3, rankName: "SVIP", ordersLimit: 35, commissionRate: 1.5 }
+                ];
+            } else {
+                vipSettings = data;
+            }
+        }
+        
+        async function getUserOrderCount(uid) {
+            const { data: orders } = await sb
+                .from('order_history')
+                .select('id', { count: 'exact' })
+                .eq('uid', uid);
+            return orders?.length || 0;
+        }
+        
+        async function renderMembership() {
+            const user = checkLogin();
+            if (!user) return;
+            
+            const userVipLevel = user.vipLevel || 1;
+            const userOrders = await getUserOrderCount(user.uid);
+            const currentVip = vipSettings.find(v => v.level === userVipLevel) || vipSettings[0];
+            
+            document.getElementById('currentTierName').innerText = currentVip.rankName;
+            document.getElementById('currentOrders').innerHTML = `${userOrders} / ${currentVip.ordersLimit}`;
+            document.getElementById('currentRate').innerHTML = `${currentVip.commissionRate}%`;
+            
+            const tiersGrid = document.getElementById('tiersGrid');
+            tiersGrid.innerHTML = '';
+            
+            vipSettings.forEach(vip => {
+                const isCurrent = vip.level === userVipLevel;
+                const card = document.createElement('div');
+                card.className = 'tier-card';
+                if (isCurrent) card.classList.add('current-tier');
+                
+                const features = [
+                    `${vip.commissionRate}% commission rate`,
+                    `${vip.ordersLimit} orders per day`,
+                    vip.level >= 2 ? 'Priority support' : 'Standard support',
+                    vip.level >= 3 ? 'Premium benefits' : ''
+                ].filter(f => f);
+                
+                card.innerHTML = `${isCurrent ? '<div class="current-badge">CURRENT</div>' : ''}<div class="tier-name">${vip.rankName}</div><div class="tier-sub">${vip.rankName}</div><div class="tier-description">${vip.rankName} membership benefits</div><ul class="tier-features">${features.map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}</ul><div class="tier-stats"><div class="tier-stat"><span class="stat-label">Orders Limit</span><span class="stat-value">${vip.ordersLimit}</span></div><div class="tier-stat"><span class="stat-label">Commission Rate</span><span class="stat-value">${vip.commissionRate}%</span></div></div>`;
+                tiersGrid.appendChild(card);
+            });
+        }
+        
         function contactSupport() { window.location.href = 'chat.html'; }
-        loadVipSettings(); renderMembership();
+        
+        loadVipSettings();
+        renderMembership();
     </script>
 </body>
 </html>

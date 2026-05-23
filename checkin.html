@@ -6,15 +6,15 @@
     <title>ADDITIVE - Check In</title>
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
     <style>
         .checkin-header { margin-bottom: 24px; }
         .checkin-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .checkin-header p { color: #7a85a5; font-size: 13px; }
-        
         .two-columns { display: flex; gap: 32px; flex-wrap: wrap; }
         .left-column { flex: 1.2; }
         .right-column { flex: 0.8; }
-        
         .days-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 24px; }
         .day-card {
             background: rgba(20, 30, 55, 0.6);
@@ -29,7 +29,6 @@
         .day-num { font-size: 11px; color: #a0a8c0; margin-bottom: 6px; }
         .day-reward { font-size: 14px; font-weight: 700; color: #ffffff; }
         .day-card.completed .day-reward { color: #4ade80; }
-        
         .claim-btn {
             background: rgba(201, 176, 149, 0.15);
             border: 1px solid rgba(201, 176, 149, 0.3);
@@ -45,7 +44,6 @@
         }
         .claim-btn.disabled { opacity: 0.5; cursor: not-allowed; }
         .claim-warning { font-size: 11px; color: #ffaa66; line-height: 1.4; }
-        
         .total-rewards-card {
             background: rgba(20, 30, 55, 0.7);
             border-radius: 20px;
@@ -56,7 +54,6 @@
         }
         .total-label { font-size: 12px; color: #a0a8c0; letter-spacing: 1px; margin-bottom: 8px; }
         .total-value { font-size: 40px; font-weight: 800; color: #C9B095; }
-        
         .streak-card {
             background: rgba(20, 30, 55, 0.7);
             border-radius: 20px;
@@ -69,7 +66,6 @@
         .streak-progress { background: rgba(255,255,255,0.1); border-radius: 30px; height: 8px; overflow: hidden; margin-bottom: 10px; }
         .streak-bar { background: linear-gradient(90deg, #C9B095, #d4c8a0); width: 0%; height: 100%; border-radius: 30px; transition: width 0.5s; }
         .streak-text { font-size: 24px; font-weight: 700; color: #ffffff; }
-        
         .rules-card {
             background: rgba(20, 30, 55, 0.5);
             border-radius: 20px;
@@ -80,7 +76,6 @@
         .rule-item { margin-bottom: 14px; }
         .rule-title { font-weight: 700; margin-bottom: 4px; color: #C9B095; font-size: 12px; }
         .rule-desc { font-size: 11px; color: #a0a8c0; line-height: 1.4; }
-        
         .upgrade-card-pulse {
             margin-top: 32px;
             background: rgba(20, 30, 55, 0.6);
@@ -94,7 +89,6 @@
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
-        
         @media (max-width: 1000px) { .days-grid { grid-template-columns: repeat(3, 1fr); } .two-columns { flex-direction: column; } }
         @media (max-width: 700px) { .days-grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
@@ -158,19 +152,168 @@
     </div>
 
     <script>
-        function toggleMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('active'); if (menuBtn) menuBtn.classList.toggle('hidden'); }
-        function closeMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('active'); if (menuBtn) menuBtn.classList.remove('hidden'); }
-        if (document.querySelectorAll('.nav-item')) { document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', () => { if (window.innerWidth <= 768) closeMenu(); }); }); }
+        function toggleMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.toggle('open'); 
+            if (overlay) overlay.classList.toggle('active'); 
+            if (menuBtn) menuBtn.classList.toggle('hidden'); 
+        }
+        function closeMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.remove('open'); 
+            if (overlay) overlay.classList.remove('active'); 
+            if (menuBtn) menuBtn.classList.remove('hidden'); 
+        }
 
-        function loadRewards() { const admin = localStorage.getItem('additive_admin_full_data'); if(admin) { try { const data = JSON.parse(admin); if(data.signInRewards) return data.signInRewards; } catch(e) {} } return [{day:1,amount:10},{day:2,amount:30},{day:3,amount:50},{day:4,amount:90},{day:5,amount:110},{day:6,amount:200}]; }
-        let signInRewards = loadRewards();
-        function loadData() { const saved = localStorage.getItem('additive_checkin'); if(saved) { const data = JSON.parse(saved); return {streak:data.streak||0,lastClaimDate:data.lastClaimDate||null,claimedDays:data.claimedDays||[]}; } return {streak:0,lastClaimDate:null,claimedDays:[]}; }
-        function saveData(streak,lastClaimDate,claimedDays) { localStorage.setItem('additive_checkin',JSON.stringify({streak,lastClaimDate,claimedDays})); }
-        function hasClaimedToday(last){ if(!last) return false; return new Date().toDateString()===new Date(last).toDateString(); }
-        function isConsecutive(last){ if(!last) return false; const today=new Date(); const yesterday=new Date(today); yesterday.setDate(yesterday.getDate()-1); return new Date(last).toDateString()===yesterday.toDateString(); }
-        function render(){ const {streak,lastClaimDate,claimedDays}=loadData(); const hasClaimed=hasClaimedToday(lastClaimDate); const total=signInRewards.reduce((s,r)=>s+r.amount,0); document.getElementById('totalRewards').innerText='€'+total; const grid=document.getElementById('daysGrid'); grid.innerHTML=''; signInRewards.forEach((r,idx)=>{ const dayNum=r.day; const isClaimed=claimedDays.includes(dayNum); const isToday=(streak+1)===dayNum&&!hasClaimed; const div=document.createElement('div'); div.className='day-card'; if(isClaimed) div.classList.add('completed'); if(isToday) div.classList.add('today'); div.innerHTML=`<div class="day-num">Day ${dayNum}</div><div class="day-reward">€${r.amount}</div>`; grid.appendChild(div); }); const percent=(streak/signInRewards.length)*100; document.getElementById('streakBar').style.width=percent+'%'; document.getElementById('streakText').innerHTML=`${streak}/${signInRewards.length} Days`; const claimBtn=document.getElementById('claimBtn'); const nextDay=streak+1; const canClaim=!hasClaimed&&nextDay<=signInRewards.length; if(canClaim){ claimBtn.classList.remove('disabled'); claimBtn.disabled=false; document.getElementById('claimWarning').innerHTML=`Complete <strong>${signInRewards.length} consecutive days</strong> to claim.`; } else if(hasClaimed){ claimBtn.classList.add('disabled'); claimBtn.disabled=true; document.getElementById('claimWarning').innerHTML=`Already claimed today. Come back tomorrow.`; } else { claimBtn.classList.add('disabled'); claimBtn.disabled=true; document.getElementById('claimWarning').innerHTML=`Complete Day ${streak+1} to continue.`; } }
-        function addReward(amount){ const user=JSON.parse(localStorage.getItem('currentUser')||'{}'); if(user.uid){ const members=JSON.parse(localStorage.getItem('additive_members')||'[]'); const m=members.find(x=>x.uid===user.uid); if(m){ m.balance=(m.balance||0)+amount; localStorage.setItem('additive_members',JSON.stringify(members)); user.balance=m.balance; localStorage.setItem('currentUser',JSON.stringify(user)); } } }
-        function handleClaim(){ const {streak,lastClaimDate,claimedDays}=loadData(); const hasClaimed=hasClaimedToday(lastClaimDate); const nextDay=streak+1; if(hasClaimed){ alert('Already claimed today'); return; } if(nextDay>signInRewards.length){ alert('Completed all days!'); return; } if(streak>0&&!isConsecutive(lastClaimDate)){ const amount=signInRewards[0].amount; addReward(amount); saveData(1,new Date().toISOString(),[1]); render(); alert(`Day 1 claimed! +€${amount}`); return; } const amount=signInRewards[nextDay-1].amount; addReward(amount); saveData(streak+1,new Date().toISOString(),[...claimedDays,nextDay]); render(); alert(`Day ${nextDay} claimed! +€${amount}`); }
+        let signInRewards = [];
+        let userOrderCount = 0;
+
+        async function loadRewards() {
+            const { data, error } = await sb
+                .from('signin_rewards')
+                .select('*')
+                .order('day', { ascending: true });
+            
+            if (error) {
+                signInRewards = [{day:1,amount:10},{day:2,amount:30},{day:3,amount:50},{day:4,amount:90},{day:5,amount:110},{day:6,amount:200}];
+            } else {
+                signInRewards = data;
+            }
+        }
+        
+        function loadData() {
+            const saved = localStorage.getItem('additive_checkin');
+            if(saved) {
+                const data = JSON.parse(saved);
+                return {streak: data.streak || 0, lastClaimDate: data.lastClaimDate || null, claimedDays: data.claimedDays || []};
+            }
+            return {streak: 0, lastClaimDate: null, claimedDays: []};
+        }
+        
+        function saveData(streak, lastClaimDate, claimedDays) {
+            localStorage.setItem('additive_checkin', JSON.stringify({streak, lastClaimDate, claimedDays}));
+        }
+        
+        function hasClaimedToday(last){
+            if(!last) return false;
+            return new Date().toDateString() === new Date(last).toDateString();
+        }
+        
+        function isConsecutive(last){
+            if(!last) return false;
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return new Date(last).toDateString() === yesterday.toDateString();
+        }
+        
+        async function getUserOrderCountFromDB() {
+            const user = getCurrentUser();
+            if (!user) return 0;
+            
+            const { data: orders } = await sb
+                .from('order_history')
+                .select('id', { count: 'exact' })
+                .eq('uid', user.uid);
+            
+            return orders?.length || 0;
+        }
+        
+        async function addReward(amount) {
+            const user = getCurrentUser();
+            if(!user) return;
+            
+            const { data: userData } = await sb
+                .from('users')
+                .select('balance')
+                .eq('uid', user.uid)
+                .single();
+            
+            const newBalance = (userData?.balance || 0) + amount;
+            await updateUserBalance(user.uid, newBalance);
+        }
+        
+        async function render() {
+            const {streak, lastClaimDate, claimedDays} = loadData();
+            const hasClaimed = hasClaimedToday(lastClaimDate);
+            userOrderCount = await getUserOrderCountFromDB();
+            
+            const total = signInRewards.reduce((s, r) => s + r.amount, 0);
+            document.getElementById('totalRewards').innerText = '€' + total;
+            
+            const grid = document.getElementById('daysGrid');
+            grid.innerHTML = '';
+            
+            signInRewards.forEach((r, idx) => {
+                const dayNum = r.day;
+                const isClaimed = claimedDays.includes(dayNum);
+                const isToday = (streak + 1) === dayNum && !hasClaimed;
+                const div = document.createElement('div');
+                div.className = 'day-card';
+                if(isClaimed) div.classList.add('completed');
+                if(isToday) div.classList.add('today');
+                div.innerHTML = `<div class="day-num">Day ${dayNum}</div><div class="day-reward">€${r.amount}</div>`;
+                grid.appendChild(div);
+            });
+            
+            const percent = (streak / signInRewards.length) * 100;
+            document.getElementById('streakBar').style.width = percent + '%';
+            document.getElementById('streakText').innerHTML = `${streak}/${signInRewards.length} Days`;
+            
+            const claimBtn = document.getElementById('claimBtn');
+            const nextDay = streak + 1;
+            const canClaim = !hasClaimed && nextDay <= signInRewards.length && userOrderCount >= 30;
+            
+            if(canClaim) {
+                claimBtn.classList.remove('disabled');
+                claimBtn.disabled = false;
+                document.getElementById('claimWarning').innerHTML = `Complete <strong>30 orders</strong> to unlock reward claims. You have ${userOrderCount}/30.`;
+            } else if(hasClaimed) {
+                claimBtn.classList.add('disabled');
+                claimBtn.disabled = true;
+                document.getElementById('claimWarning').innerHTML = `Already claimed today. Come back tomorrow.`;
+            } else if(userOrderCount < 30) {
+                claimBtn.classList.add('disabled');
+                claimBtn.disabled = true;
+                document.getElementById('claimWarning').innerHTML = `Complete ${30 - userOrderCount} more orders to unlock rewards.`;
+            } else {
+                claimBtn.classList.add('disabled');
+                claimBtn.disabled = true;
+                document.getElementById('claimWarning').innerHTML = `Complete Day ${streak + 1} to continue.`;
+            }
+        }
+        
+        async function handleClaim() {
+            const {streak, lastClaimDate, claimedDays} = loadData();
+            const hasClaimed = hasClaimedToday(lastClaimDate);
+            const nextDay = streak + 1;
+            
+            if(hasClaimed) { alert('Already claimed today'); return; }
+            if(nextDay > signInRewards.length) { alert('Completed all days!'); return; }
+            if(userOrderCount < 30) { alert(`Need 30 orders to claim rewards. You have ${userOrderCount}/30.`); return; }
+            
+            if(streak > 0 && !isConsecutive(lastClaimDate)) {
+                const amount = signInRewards[0].amount;
+                await addReward(amount);
+                saveData(1, new Date().toISOString(), [1]);
+                await render();
+                alert(`Day 1 claimed! +€${amount}`);
+                return;
+            }
+            
+            const amount = signInRewards[nextDay - 1].amount;
+            await addReward(amount);
+            saveData(streak + 1, new Date().toISOString(), [...claimedDays, nextDay]);
+            await render();
+            alert(`Day ${nextDay} claimed! +€${amount}`);
+        }
+        
+        checkLogin();
+        loadRewards();
         render();
     </script>
 </body>

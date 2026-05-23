@@ -6,11 +6,12 @@
     <title>ADDITIVE - History</title>
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
     <style>
         .page-header { margin-bottom: 24px; }
         .page-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
         .subhead { color: #7a85a5; font-size: 13px; max-width: 500px; }
-        
         .history-tabs {
             display: flex;
             gap: 8px;
@@ -35,7 +36,6 @@
             background: rgba(201, 176, 149, 0.15);
             color: #C9B095;
         }
-        
         .history-list {
             background: rgba(20, 30, 55, 0.4);
             backdrop-filter: blur(8px);
@@ -45,10 +45,6 @@
             max-height: 450px;
             overflow-y: auto;
         }
-        .history-list::-webkit-scrollbar { width: 6px; }
-        .history-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
-        .history-list::-webkit-scrollbar-thumb { background: rgba(201,176,149,0.3); border-radius: 10px; }
-        
         .history-item {
             display: flex;
             justify-content: space-between;
@@ -66,21 +62,15 @@
         .history-amount { font-weight: 600; font-size: 16px; }
         .history-amount.positive { color: #4ade80; }
         .history-amount.negative { color: #ff8888; }
-        
         .empty-state { text-align: center; padding: 60px 40px; color: #a0a8c0; }
         .empty-state i { font-size: 56px; color: #C9B095; margin-bottom: 16px; display: block; opacity: 0.5; }
-        
-        .order-detail-row { display: flex; flex-direction: column; gap: 4px; }
         .order-stats { display: flex; gap: 16px; font-size: 11px; color: #a0a8c0; flex-wrap: wrap; }
-        .order-stats span { display: flex; align-items: center; gap: 4px; }
-        
         .upgrade-card-pulse {
             margin-top: 32px;
             background: rgba(20, 30, 55, 0.6);
             backdrop-filter: blur(12px);
             border-radius: 28px;
             padding: 24px;
-            transition: all 0.3s ease;
             animation: pulseGlow 2.5s ease-in-out infinite;
             border: 1px solid rgba(201, 176, 149, 0.3);
         }
@@ -88,12 +78,6 @@
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
-        .btn-upgrade:hover { background: rgba(201,176,149,0.25); color: #ffd700; }
-        
-        @media (max-width: 800px) {
-            .history-item { flex-direction: column; align-items: flex-start; gap: 12px; }
-            .page-header h1 { font-size: 24px; }
-        }
     </style>
 </head>
 <body>
@@ -152,79 +136,127 @@
     </div>
 
     <script>
-        function toggleMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('active'); if (menuBtn) menuBtn.classList.toggle('hidden'); }
-        function closeMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('active'); if (menuBtn) menuBtn.classList.remove('hidden'); }
-        if (document.querySelectorAll('.nav-item')) { document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', () => { if (window.innerWidth <= 768) closeMenu(); }); }); }
-
-        function getCurrentUser() { const userStr = localStorage.getItem('currentUser'); if (!userStr) { window.location.href = 'signin.html'; return null; } try { return JSON.parse(userStr); } catch(e) { window.location.href = 'signin.html'; return null; } }
-        function getDeposits() { return JSON.parse(localStorage.getItem('additive_deposits') || '[]'); }
-        function getWithdrawals() { return JSON.parse(localStorage.getItem('additive_withdrawals') || '[]'); }
-        function getOrderHistory() { return JSON.parse(localStorage.getItem('additive_order_history') || '[]'); }
-        
-        function renderBalanceHistory() {
-    const container = document.getElementById('balanceHistory');
-    const user = getCurrentUser(); if (!user) return;
-    const deposits = getDeposits(); 
-    const withdrawals = getWithdrawals();
-    let records = [];
-    
-    deposits.forEach(d => { 
-        if (d.uid === user.uid) {
-            let typeName = '', icon = '';
-            if (d.type === 'manual') { typeName = 'Deposit'; icon = 'fas fa-plus-circle'; }
-            else if (d.type === 'deposit_bonus') { typeName = 'Deposit Bonus'; icon = 'fas fa-star'; }
-            else if (d.type === 'order_commission') { typeName = 'Order Commission'; icon = 'fas fa-chart-line'; }
-            else if (d.type === 'trial_bonus') { typeName = 'Trial Bonus Added'; icon = 'fas fa-gift'; }
-            else if (d.type === 'referral_bonus') { typeName = 'Referral Bonus'; icon = 'fas fa-user-friends'; }
-            else return;
-            records.push({ id: d.id, date: d.date, type: typeName, amount: d.amount, icon: icon, isPositive: true });
+        function toggleMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.toggle('open'); 
+            if (overlay) overlay.classList.toggle('active'); 
+            if (menuBtn) menuBtn.classList.toggle('hidden'); 
         }
-    });
-    
-    withdrawals.forEach(w => { 
-        if (w.uid === user.uid) { 
-            records.push({ id: w.id, date: w.requestDate, type: w.status === 'approved' ? 'Withdrawal' : `Withdrawal (${w.status})`, amount: w.amount, icon: 'fas fa-arrow-right-to-bracket', isPositive: false }); 
-        } 
-    });
-    
-    records.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    if (records.length === 0) { 
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No balance history found.</p></div>'; 
-        return; 
-    }
-    
-    container.innerHTML = '';
-    records.forEach(r => { 
-        const date = new Date(r.date); 
-        const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString(); 
-        const amountClass = r.isPositive ? 'positive' : 'negative'; 
-        const symbol = r.isPositive ? '+' : '-'; 
-        const item = document.createElement('div'); 
-        item.className = 'history-item'; 
-        item.innerHTML = `<div class="history-info"><i class="${r.icon}" style="color: ${r.isPositive ? '#4ade80' : '#ff8888'}"></i><div><div class="history-title">${r.type}</div><div class="history-date">${formattedDate}</div></div></div><div class="history-amount ${amountClass}">${symbol}€${r.amount.toFixed(2)}</div>`; 
-        container.appendChild(item); 
-    });
-}
-        
-        function renderOrdersHistory() {
-            const container = document.getElementById('ordersHistory');
-            const user = getCurrentUser(); if (!user) return;
-            const orders = getOrderHistory(); const userOrders = orders.filter(o => o.uid === user.uid);
-            if (userOrders.length === 0) { container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>No orders found.</p></div>'; return; }
-            userOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
+        function closeMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.remove('open'); 
+            if (overlay) overlay.classList.remove('active'); 
+            if (menuBtn) menuBtn.classList.remove('hidden'); 
+        }
+
+        async function renderBalanceHistory() {
+            const container = document.getElementById('balanceHistory');
+            const user = checkLogin();
+            if (!user) return;
+            
+            const deposits = await fetchUserDeposits(user.uid);
+            const { data: withdrawals } = await sb
+                .from('withdrawals')
+                .select('*')
+                .eq('uid', user.uid)
+                .order('request_date', { ascending: false });
+            
+            let records = [];
+            
+            deposits.forEach(d => {
+                let typeName = '', icon = '';
+                if (d.type === 'manual') { typeName = 'Deposit'; icon = 'fas fa-plus-circle'; }
+                else if (d.type === 'deposit_bonus') { typeName = 'Deposit Bonus'; icon = 'fas fa-star'; }
+                else if (d.type === 'order_commission') { typeName = 'Order Commission'; icon = 'fas fa-chart-line'; }
+                else if (d.type === 'trial_bonus') { typeName = 'Trial Bonus Added'; icon = 'fas fa-gift'; }
+                else if (d.type === 'referral_bonus') { typeName = 'Referral Bonus'; icon = 'fas fa-user-friends'; }
+                else return;
+                records.push({ id: d.id, date: d.created_at, type: typeName, amount: d.amount, icon: icon, isPositive: true });
+            });
+            
+            withdrawals?.forEach(w => {
+                records.push({ id: w.id, date: w.request_date, type: w.status === 'approved' ? 'Withdrawal' : `Withdrawal (${w.status})`, amount: w.amount, icon: 'fas fa-arrow-right-to-bracket', isPositive: false });
+            });
+            
+            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (records.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No balance history found.</p></div>';
+                return;
+            }
+            
             container.innerHTML = '';
-            userOrders.forEach(order => { const date = new Date(order.date); const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString(); const rating = order.rating || 0; let starsHtml = ''; for (let i = 1; i <= 5; i++) { starsHtml += `<i class="fas fa-star" style="color: ${i <= rating ? '#C9B095' : '#4a5578'}; font-size: 11px;"></i>`; } const item = document.createElement('div'); item.className = 'history-item'; item.innerHTML = `<div class="history-info"><i class="fas fa-hotel" style="color: #C9B095;"></i><div><div class="history-title">${order.accommodationName || 'Hotel Task'} <span class="history-tag">${order.orderCode || 'N/A'}</span></div><div class="order-stats"><span><i class="fas fa-tag"></i> ${order.orderCode || 'N/A'}</span><span><i class="fas fa-star"></i> ${starsHtml}</span><span><i class="fas fa-calendar"></i> ${formattedDate}</span></div></div></div><div class="order-detail-row"><div class="history-amount positive">+€${(order.commission || 0).toFixed(2)}</div><div class="history-date">Price: €${(order.price || 0).toFixed(2)}</div></div>`; container.appendChild(item); });
+            records.forEach(r => {
+                const date = new Date(r.date);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                const amountClass = r.isPositive ? 'positive' : 'negative';
+                const symbol = r.isPositive ? '+' : '-';
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `<div class="history-info"><i class="${r.icon}" style="color: ${r.isPositive ? '#4ade80' : '#ff8888'}"></i><div><div class="history-title">${r.type}</div><div class="history-date">${formattedDate}</div></div></div><div class="history-amount ${amountClass}">${symbol}€${r.amount.toFixed(2)}</div>`;
+                container.appendChild(item);
+            });
+        }
+        
+        async function renderOrdersHistory() {
+            const container = document.getElementById('ordersHistory');
+            const user = checkLogin();
+            if (!user) return;
+            
+            const orders = await fetchUserOrders(user.uid, 100);
+            
+            if (orders.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"></i><p>No orders found.</p></div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            orders.forEach(order => {
+                const date = new Date(order.date);
+                const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                const rating = order.rating || 0;
+                let starsHtml = '';
+                for (let i = 1; i <= 5; i++) {
+                    starsHtml += `<i class="fas fa-star" style="color: ${i <= rating ? '#C9B095' : '#4a5578'}; font-size: 11px;"></i>`;
+                }
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `<div class="history-info"><i class="fas fa-hotel" style="color: #C9B095;"></i><div><div class="history-title">${order.accommodation_name || 'Hotel Task'} <span class="history-tag">${order.order_code || 'N/A'}</span></div><div class="order-stats"><span><i class="fas fa-tag"></i> ${order.order_code || 'N/A'}</span><span><i class="fas fa-star"></i> ${starsHtml}</span><span><i class="fas fa-calendar"></i> ${formattedDate}</span></div></div></div><div class="order-detail-row"><div class="history-amount positive">+€${(order.commission || 0).toFixed(2)}</div><div class="history-date">Price: €${(order.price || 0).toFixed(2)}</div></div>`;
+                container.appendChild(item);
+            });
         }
         
         function setupTabs() {
             const tabs = document.querySelectorAll('.tab-btn');
-            const balanceDiv = document.getElementById('balanceHistory'); const ordersDiv = document.getElementById('ordersHistory');
-            tabs.forEach(tab => { tab.addEventListener('click', () => { const tabName = tab.getAttribute('data-tab'); tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active'); if (tabName === 'balance') { balanceDiv.style.display = 'block'; ordersDiv.style.display = 'none'; renderBalanceHistory(); } else { balanceDiv.style.display = 'none'; ordersDiv.style.display = 'block'; renderOrdersHistory(); } }); });
+            const balanceDiv = document.getElementById('balanceHistory');
+            const ordersDiv = document.getElementById('ordersHistory');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.getAttribute('data-tab');
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    if (tabName === 'balance') {
+                        balanceDiv.style.display = 'block';
+                        ordersDiv.style.display = 'none';
+                        renderBalanceHistory();
+                    } else {
+                        balanceDiv.style.display = 'none';
+                        ordersDiv.style.display = 'block';
+                        renderOrdersHistory();
+                    }
+                });
+            });
         }
         
-        function checkLogin() { if (!localStorage.getItem('currentUser')) window.location.href = 'signin.html'; }
-        checkLogin(); setupTabs(); renderBalanceHistory(); renderOrdersHistory();
+        checkLogin();
+        setupTabs();
+        renderBalanceHistory();
+        renderOrdersHistory();
     </script>
 </body>
 </html>
