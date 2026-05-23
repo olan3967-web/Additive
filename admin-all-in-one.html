@@ -3,508 +3,488 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADDITIVE Admin - Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>ADDITIVE Admin</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #0a0f2a 0%, #0f0a2a 100%);
-            font-family: 'Inter', -apple-system, sans-serif;
-            color: #fff;
-        }
-        .admin-container { display: flex; min-height: 100vh; }
-        .admin-sidebar {
-            width: 260px;
-            background: rgba(10,15,42,0.95);
-            border-right: 1px solid rgba(255,255,255,0.08);
-            padding: 24px 16px;
+        body { background: #0a0f2a; font-family: Arial, sans-serif; color: #fff; }
+        .app { display: flex; }
+        .sidebar {
+            width: 220px;
+            background: #0f1424;
+            min-height: 100vh;
+            padding: 20px;
             position: fixed;
-            height: 100vh;
-            overflow-y: auto;
         }
-        .admin-logo { font-size: 24px; font-weight: 800; margin-bottom: 32px; padding-left: 12px; }
-        .admin-logo span { color: #8ca3ff; }
-        .admin-logo small { font-size: 10px; color: #5a6388; }
-        .nav-link {
+        .main { flex: 1; margin-left: 220px; padding: 20px; }
+        .logo { font-size: 22px; font-weight: bold; margin-bottom: 30px; }
+        .logo span { color: #8ca3ff; }
+        .nav-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            color: #aaa;
-            cursor: pointer;
-            margin-bottom: 4px;
-        }
-        .nav-link:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .nav-link.active { background: #2f3e7a; color: #fff; }
-        .nav-link i { width: 22px; }
-        .logout-btn {
-            width: 100%;
-            background: rgba(255,80,80,0.15);
-            border: none;
+            gap: 10px;
             padding: 10px;
-            border-radius: 10px;
-            color: #ff8888;
+            margin: 5px 0;
+            border-radius: 8px;
             cursor: pointer;
-            margin-top: 30px;
+        }
+        .nav-item:hover { background: #1a1f3a; }
+        .nav-item.active { background: #2f3e7a; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .card {
+            background: #0f1424;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #2a2e4a; }
+        button {
+            background: #2f3e7a;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            margin: 2px;
+        }
+        button.danger { background: #7a2f2f; }
+        button.success { background: #2f7a3e; }
+        input, select {
+            background: #1a1f3a;
+            border: 1px solid #2a2e4a;
+            padding: 8px;
+            border-radius: 6px;
+            color: #fff;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #0f1424;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-number { font-size: 28px; font-weight: bold; color: #ffd966; }
+        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-input { flex: 1; }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            z-index: 1000;
+            visibility: hidden;
         }
-        .admin-main { flex: 1; margin-left: 260px; padding: 28px 36px; }
-        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
-        .admin-header h1 { font-size: 26px; }
-        .header-btn {
-            background: #2f3e7a;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 30px;
-            color: white;
-            cursor: pointer;
-        }
-        .section { display: none; }
-        .section.active { display: block; }
-        .setting-card {
-            background: rgba(20,25,50,0.6);
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; margin-bottom: 30px; }
-        .stat-card {
-            background: rgba(20,25,50,0.7);
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-        }
-        .stat-card i { font-size: 32px; color: #8ca3ff; margin-bottom: 10px; display: block; }
-        .stat-num { font-size: 28px; font-weight: 800; color: #ffd966; }
-        .form-row { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
-        .form-input, input, select, textarea {
+        .modal.active { visibility: visible; }
+        .modal-content {
             background: #0f1424;
-            border: 1px solid #2a3560;
-            border-radius: 12px;
-            padding: 10px 14px;
-            color: white;
-            flex: 1;
-            min-width: 150px;
+            padding: 30px;
+            border-radius: 16px;
+            width: 350px;
         }
-        .btn-primary, button.btn-success, button.btn-danger, button.btn-warning {
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        .btn-primary { background: #2f3e7a; color: white; }
-        .btn-success { background: rgba(74,222,128,0.2); color: #4ade80; }
-        .btn-danger { background: rgba(255,80,80,0.2); color: #ff8888; }
-        .btn-warning { background: rgba(255,170,102,0.2); color: #ffaa66; }
-        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .data-table th, .data-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
-        .data-table th { color: #8ca3ff; }
-        .table-container { overflow-x: auto; max-height: 500px; overflow-y: auto; }
-        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .search-input { flex: 1; background: #0f1424; border-radius: 30px; padding: 10px 16px; color: white; border: 1px solid #2a3560; }
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;
-            z-index: 2000; visibility: hidden; opacity: 0; transition: 0.2s;
-        }
-        .modal-overlay.active { visibility: visible; opacity: 1; }
-        .modal-card { background: #12172e; border-radius: 24px; width: 380px; padding: 24px; }
-        .toast {
-            position: fixed; bottom: 30px; right: 30px; background: #1a1f3a;
-            padding: 12px 20px; border-radius: 30px; border-left: 3px solid #4ade80;
-            z-index: 9999; display: none;
-        }
-        .toast.show { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-        @media (max-width: 800px) { .admin-sidebar { width: 220px; } .admin-main { margin-left: 220px; padding: 16px; } .stats-grid { grid-template-columns: repeat(2,1fr); } }
     </style>
 </head>
 <body>
-<div class="admin-container">
-    <aside class="admin-sidebar">
-        <div class="admin-logo">ADDITIVE<span>®</span><small>ADMIN</small></div>
-        <nav>
-            <div class="nav-link" onclick="showSection('dashboard')"><i class="fas fa-chart-line"></i> Dashboard</div>
-            <div class="nav-link" onclick="showSection('users')"><i class="fas fa-users"></i> Users</div>
-            <div class="nav-link" onclick="showSection('vip')"><i class="fas fa-crown"></i> VIP Settings</div>
-            <div class="nav-link" onclick="showSection('withdrawals')"><i class="fas fa-money-bill-wave"></i> Withdrawals</div>
-            <div class="nav-link" onclick="showSection('trialBonus')"><i class="fas fa-gift"></i> Trial Bonus</div>
-            <div class="nav-link" onclick="showSection('bonusCredit')"><i class="fas fa-star"></i> Bonus Credit</div>
-            <div class="nav-link" onclick="showSection('orderList')"><i class="fas fa-list"></i> Order List</div>
-            <div class="nav-link" onclick="showSection('signinRewards')"><i class="fas fa-calendar-check"></i> Sign In Rewards</div>
-            <div class="nav-link" onclick="showSection('content')"><i class="fas fa-file-alt"></i> Content</div>
-        </nav>
-        <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    </aside>
-
-    <main class="admin-main">
-        <div class="admin-header">
-            <h1 id="sectionTitle">Dashboard</h1>
-            <button class="header-btn" onclick="refreshCurrent()"><i class="fas fa-sync-alt"></i> Refresh</button>
+<div class="app">
+    <div class="sidebar">
+        <div class="logo">ADDITIVE<span>®</span></div>
+        <div class="nav-item active" onclick="showPage('dashboard')">📊 Dashboard</div>
+        <div class="nav-item" onclick="showPage('users')">👥 Users</div>
+        <div class="nav-item" onclick="showPage('withdrawals')">💰 Withdrawals</div>
+        <div class="nav-item" onclick="showPage('vip')">👑 VIP Settings</div>
+        <div class="nav-item" onclick="showPage('bonus')">🎁 Bonus</div>
+        <div class="nav-item" onclick="showPage('orders')">📋 Orders</div>
+        <div class="nav-item" onclick="showPage('signin')">✅ Sign In Rewards</div>
+        <div style="margin-top: 30px;">
+            <button onclick="logout()" style="width:100%; background:#7a2f2f;">🚪 Logout</button>
         </div>
+    </div>
 
-        <div id="dashboard" class="section active">
-            <div class="stats-grid">
-                <div class="stat-card"><i class="fas fa-users"></i><div>Total Members</div><div class="stat-num" id="totalMembers">0</div></div>
-                <div class="stat-card"><i class="fas fa-dollar-sign"></i><div>Total Balance</div><div class="stat-num" id="totalBalance">€0</div></div>
-                <div class="stat-card"><i class="fas fa-clock"></i><div>Pending Withdrawals</div><div class="stat-num" id="pendingWithdrawals">0</div></div>
-                <div class="stat-card"><i class="fas fa-chart-line"></i><div>Total Orders</div><div class="stat-num" id="totalOrders">0</div></div>
+    <div class="main">
+        <!-- Dashboard -->
+        <div id="page_dashboard" class="page active">
+            <div class="stats">
+                <div class="stat-card"><div>Total Users</div><div class="stat-number" id="statUsers">0</div></div>
+                <div class="stat-card"><div>Total Balance</div><div class="stat-number" id="statBalance">€0</div></div>
+                <div class="stat-card"><div>Pending Withdrawals</div><div class="stat-number" id="statPending">0</div></div>
+                <div class="stat-card"><div>Total Orders</div><div class="stat-number" id="statOrders">0</div></div>
             </div>
-            <div class="setting-card"><h3>System Status</h3><p>Connected to Supabase. Click menu items to manage users, withdrawals, and settings.</p></div>
+            <div class="card">✅ Connected to Supabase. Use sidebar menu to manage.</div>
         </div>
 
-        <div id="users" class="section">
-            <div class="setting-card">
+        <!-- Users -->
+        <div id="page_users" class="page">
+            <div class="card">
                 <div class="search-bar">
-                    <input type="text" id="searchUid" placeholder="Search by UID or Username..." class="search-input">
-                    <button class="btn-primary" onclick="searchMember()">Search</button>
-                    <button class="btn-primary" onclick="clearSearch()">Clear</button>
-                    <button class="btn-primary" onclick="openAddUserModal()">+ Add User</button>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search by UID or Username">
+                    <button onclick="searchUsers()">Search</button>
+                    <button onclick="clearSearch()">Clear</button>
+                    <button onclick="openAddUserModal()">+ Add User</button>
                 </div>
-                <div class="table-container">
-                    <table class="data-table">
+                <div style="overflow-x:auto">
+                    <table>
                         <thead><tr><th>UID</th><th>Username</th><th>Balance</th><th>Orders</th><th>VIP</th><th>Actions</th></tr></thead>
-                        <tbody id="membersTableBody"></tbody>
+                        <tbody id="usersTableBody"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div id="vip" class="section"><div class="setting-card"><h3>VIP Settings</h3><div id="vipSettingsList"></div></div></div>
-        <div id="withdrawals" class="section"><div class="setting-card"><h3>Pending Withdrawals</h3><div class="table-container"><table class="data-table"><thead><tr><th>UID</th><th>Username</th><th>Amount</th><th>Wallet</th><th>Date</th><th>Actions</th></tr></thead><tbody id="pendingBody"></tbody></table></div></div></div>
-        <div id="trialBonus" class="section"><div class="setting-card"><h3>Trial Bonus</h3><div class="table-container"><table class="data-table"><thead><tr><th>UID</th><th>Username</th><th>Balance</th><th>Trial Bonus</th><th>Actions</th></tr></thead><tbody id="trialMembersBody"></tbody></table></div></div></div>
-        <div id="bonusCredit" class="section"><div class="setting-card"><h3>Bonus Credit</h3><div class="form-row"><label>Amount (€):</label><input type="number" id="bonusAmount" class="form-input" value="10"></div><div class="form-row"><label>User UID (empty=all):</label><input type="text" id="targetUid" class="form-input" placeholder="Leave empty for all"></div><button class="btn-primary" onclick="distributeBonus()">Distribute</button></div></div>
-        <div id="orderList" class="section"><div class="setting-card"><h3>Order History</h3><div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>UID</th><th>Username</th><th>Order Code</th><th>Hotel</th><th>Price</th><th>Commission</th><th>Date</th></tr></thead><tbody id="ordersListBody"></tbody></table></div></div></div>
-        <div id="signinRewards" class="section"><div class="setting-card"><h3>Sign In Rewards</h3><div id="signinDaysList"></div></div></div>
-        <div id="content" class="section"><div class="setting-card"><h3>Legal Content</h3><div class="form-row"><label>T&C:</label><textarea id="termsContent" rows="3" class="form-input" style="width:100%"></textarea></div><div class="form-row"><label>Platform Rules:</label><textarea id="platformRules" rows="3" class="form-input" style="width:100%"></textarea></div><div class="form-row"><label>Privacy:</label><textarea id="privacySecurity" rows="3" class="form-input" style="width:100%"></textarea></div><button class="btn-primary" onclick="saveContent()">Save</button></div></div>
-    </main>
-</div>
+        <!-- Withdrawals -->
+        <div id="page_withdrawals" class="page">
+            <div class="card">
+                <h3>Pending Withdrawals</h3>
+                <div style="overflow-x:auto">
+                    <table>
+                        <thead><tr><th>UID</th><th>Username</th><th>Amount</th><th>Wallet</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody id="withdrawalsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-<div id="addUserModal" class="modal-overlay">
-    <div class="modal-card">
-        <h3>Create New User</h3>
-        <input type="text" id="modalUserName" placeholder="Username" style="width:100%; margin-bottom:12px; padding:10px;">
-        <input type="password" id="modalUserPassword" placeholder="Password" style="width:100%; margin-bottom:12px; padding:10px;">
-        <button class="btn-primary" onclick="createUser()">Create</button>
-        <button class="btn-primary" onclick="closeAddUserModal()">Cancel</button>
+        <!-- VIP Settings -->
+        <div id="page_vip" class="page">
+            <div class="card">
+                <h3>VIP Settings</h3>
+                <div id="vipSettingsDiv"></div>
+            </div>
+        </div>
+
+        <!-- Bonus -->
+        <div id="page_bonus" class="page">
+            <div class="card">
+                <h3>Distribute Bonus</h3>
+                <div style="margin-bottom:10px">
+                    <label>Amount (€):</label>
+                    <input type="number" id="bonusAmount" value="10" style="width:150px">
+                </div>
+                <div style="margin-bottom:10px">
+                    <label>User UID (empty = all):</label>
+                    <input type="text" id="bonusTarget" style="width:200px">
+                </div>
+                <button onclick="distributeBonus()">Send Bonus</button>
+            </div>
+        </div>
+
+        <!-- Orders -->
+        <div id="page_orders" class="page">
+            <div class="card">
+                <h3>Order History</h3>
+                <div style="overflow-x:auto">
+                    <table>
+                        <thead><tr><th>ID</th><th>UID</th><th>Username</th><th>Order Code</th><th>Hotel</th><th>Price</th><th>Commission</th><th>Date</th></tr></thead>
+                        <tbody id="ordersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sign In Rewards -->
+        <div id="page_signin" class="page">
+            <div class="card">
+                <h3>Sign In Rewards</h3>
+                <div id="signinRewardsDiv"></div>
+            </div>
+        </div>
     </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<!-- Add User Modal -->
+<div id="addUserModal" class="modal">
+    <div class="modal-content">
+        <h3>Create New User</h3>
+        <input type="text" id="newUsername" placeholder="Username" style="width:100%; margin:10px 0; padding:10px">
+        <input type="password" id="newPassword" placeholder="Password" style="width:100%; margin:10px 0; padding:10px">
+        <button onclick="createUser()">Create</button>
+        <button onclick="closeAddUserModal()">Cancel</button>
+    </div>
+</div>
 
 <script>
-    (function() {
-        const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-        window._supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    })();
-    
-    const supabase = window._supabase;
+    // Supabase config
+    const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     let currentSearch = '';
 
     function showToast(msg, isError = false) {
-        const toast = document.getElementById('toast');
-        toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
-        toast.style.borderLeftColor = isError ? '#ff8888' : '#4ade80';
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
+        alert(msg);
     }
 
-    function showSection(sectionId) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(sectionId).classList.add('active');
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        if(event && event.target) {
-            const clicked = event.target.closest('.nav-link');
-            if(clicked) clicked.classList.add('active');
-        }
-        const titles = { dashboard:'Dashboard', users:'Users', vip:'VIP Settings', withdrawals:'Withdrawals', trialBonus:'Trial Bonus', bonusCredit:'Bonus Credit', orderList:'Order List', signinRewards:'Sign In Rewards', content:'Content' };
-        document.getElementById('sectionTitle').innerText = titles[sectionId] || sectionId;
-        
-        if(sectionId === 'dashboard') loadDashboard();
-        if(sectionId === 'users') loadUsers();
-        if(sectionId === 'vip') loadVipSettings();
-        if(sectionId === 'withdrawals') loadWithdrawals();
-        if(sectionId === 'trialBonus') loadTrialMembers();
-        if(sectionId === 'orderList') loadOrdersList();
-        if(sectionId === 'signinRewards') loadSigninRewards();
-        if(sectionId === 'content') loadContent();
-    }
-
-    function refreshCurrent() {
-        const active = document.querySelector('.section.active').id;
-        if(active === 'dashboard') loadDashboard();
-        if(active === 'users') loadUsers();
-        if(active === 'vip') loadVipSettings();
-        if(active === 'withdrawals') loadWithdrawals();
-        if(active === 'trialBonus') loadTrialMembers();
-        if(active === 'orderList') loadOrdersList();
-        if(active === 'signinRewards') loadSigninRewards();
-        showToast('Refreshed');
+    function showPage(pageId) {
+        // Hide all pages
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page_' + pageId).classList.add('active');
+        // Update nav active state
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        event.target.closest('.nav-item').classList.add('active');
+        // Load data
+        if(pageId === 'dashboard') loadDashboard();
+        if(pageId === 'users') loadUsers();
+        if(pageId === 'withdrawals') loadWithdrawals();
+        if(pageId === 'vip') loadVipSettings();
+        if(pageId === 'bonus') {}
+        if(pageId === 'orders') loadOrders();
+        if(pageId === 'signin') loadSigninRewards();
     }
 
     async function loadDashboard() {
-        const { data: users } = await supabase.from('users').select('*');
+        const { data: users } = await _supabase.from('users').select('*');
         if(users) {
-            document.getElementById('totalMembers').innerText = users.length;
-            const totalBalance = users.reduce((s, u) => s + (u.balance || 0), 0);
-            document.getElementById('totalBalance').innerText = '€' + totalBalance.toFixed(2);
+            document.getElementById('statUsers').innerText = users.length;
+            const totalBalance = users.reduce((s,u) => s + (u.balance || 0), 0);
+            document.getElementById('statBalance').innerText = '€' + totalBalance.toFixed(2);
         }
-        const { data: withdrawals } = await supabase.from('withdrawals').select('*').eq('status', 'pending');
-        document.getElementById('pendingWithdrawals').innerText = withdrawals?.length || 0;
-        const { data: orders } = await supabase.from('order_history').select('*');
-        document.getElementById('totalOrders').innerText = orders?.length || 0;
+        const { data: withdrawals } = await _supabase.from('withdrawals').select('*').eq('status', 'pending');
+        document.getElementById('statPending').innerText = withdrawals?.length || 0;
+        const { data: orders } = await _supabase.from('order_history').select('*');
+        document.getElementById('statOrders').innerText = orders?.length || 0;
     }
 
     async function loadUsers() {
-        let query = supabase.from('users').select('*').order('created_at', { ascending: false });
-        if(currentSearch) query = query.or(`uid.ilike.%${currentSearch}%,username.ilike.%${currentSearch}%`);
+        let query = _supabase.from('users').select('*').order('created_at', { ascending: false });
+        if(currentSearch) {
+            query = query.or(`uid.ilike.%${currentSearch}%,username.ilike.%${currentSearch}%`);
+        }
         const { data: users } = await query;
-        const { data: orders } = await supabase.from('order_history').select('*');
-        const tbody = document.getElementById('membersTableBody');
+        const { data: allOrders } = await _supabase.from('order_history').select('*');
+        const tbody = document.getElementById('usersTableBody');
         if(tbody && users) {
             tbody.innerHTML = '';
-            for(const u of users) {
-                const userOrders = orders?.filter(o => o.uid === u.uid) || [];
+            for(let u of users) {
+                const userOrders = allOrders?.filter(o => o.uid === u.uid) || [];
                 const row = tbody.insertRow();
                 row.insertCell(0).innerText = u.uid;
                 row.insertCell(1).innerText = u.username;
-                row.insertCell(2).innerHTML = `<span style="color:#4ade80;">€${(u.balance || 0).toFixed(2)}</span>`;
+                row.insertCell(2).innerHTML = `€${(u.balance || 0).toFixed(2)}`;
                 row.insertCell(3).innerText = userOrders.length;
-                row.insertCell(4).innerHTML = `<select onchange="updateVip('${u.uid}', this.value)"><option value="1" ${u.vip_level===1?'selected':''}>Normal</option><option value="2" ${u.vip_level===2?'selected':''}>VIP</option><option value="3" ${u.vip_level===3?'selected':''}>SVIP</option></select>`;
-                row.insertCell(5).innerHTML = `<button class="btn-success" onclick="addBalance('${u.uid}')">Deposit</button> <button class="btn-warning" onclick="removeBalance('${u.uid}')">Cut</button> <button class="btn-danger" onclick="deleteUser('${u.uid}')">Delete</button>`;
+                row.insertCell(4).innerHTML = `<select onchange="updateVipLevel('${u.uid}', this.value)">
+                    <option value="1" ${u.vip_level === 1 ? 'selected' : ''}>Normal</option>
+                    <option value="2" ${u.vip_level === 2 ? 'selected' : ''}>VIP</option>
+                    <option value="3" ${u.vip_level === 3 ? 'selected' : ''}>SVIP</option>
+                </select>`;
+                row.insertCell(5).innerHTML = `
+                    <button onclick="deposit('${u.uid}')">Deposit</button>
+                    <button onclick="cut('${u.uid}')">Cut</button>
+                    <button class="danger" onclick="deleteUser('${u.uid}')">Delete</button>
+                `;
             }
         }
     }
 
-    async function updateVip(uid, level) {
-        await supabase.from('users').update({ vip_level: parseInt(level) }).eq('uid', uid);
-        showToast('VIP updated');
+    async function updateVipLevel(uid, level) {
+        await _supabase.from('users').update({ vip_level: parseInt(level) }).eq('uid', uid);
+        alert('VIP updated');
     }
 
-    async function addBalance(uid) {
+    async function deposit(uid) {
         const amount = parseFloat(prompt('Enter amount (€):'));
         if(isNaN(amount) || amount <= 0) return;
-        const { data: user } = await supabase.from('users').select('balance, username').eq('uid', uid).single();
-        await supabase.from('users').update({ balance: (user.balance || 0) + amount }).eq('uid', uid);
-        await supabase.from('deposits').insert([{ uid, username: user.username, amount, type: 'manual' }]);
+        const { data: user } = await _supabase.from('users').select('balance, username').eq('uid', uid).single();
+        await _supabase.from('users').update({ balance: (user.balance || 0) + amount }).eq('uid', uid);
+        await _supabase.from('deposits').insert([{ uid, username: user.username, amount, type: 'manual' }]);
         loadUsers(); loadDashboard();
-        showToast(`+€${amount}`);
+        alert(`Added €${amount}`);
     }
 
-    async function removeBalance(uid) {
+    async function cut(uid) {
         const amount = parseFloat(prompt('Enter amount to cut (€):'));
         if(isNaN(amount) || amount <= 0) return;
-        const { data: user } = await supabase.from('users').select('balance').eq('uid', uid).single();
-        if((user.balance || 0) < amount) { showToast('Insufficient balance', true); return; }
-        await supabase.from('users').update({ balance: (user.balance || 0) - amount }).eq('uid', uid);
+        const { data: user } = await _supabase.from('users').select('balance').eq('uid', uid).single();
+        if((user.balance || 0) < amount) { alert('Insufficient balance'); return; }
+        await _supabase.from('users').update({ balance: (user.balance || 0) - amount }).eq('uid', uid);
         loadUsers(); loadDashboard();
-        showToast(`-€${amount}`);
+        alert(`Removed €${amount}`);
     }
 
     async function deleteUser(uid) {
         if(confirm('Delete this user permanently?')) {
-            await supabase.from('users').delete().eq('uid', uid);
-            await supabase.from('order_history').delete().eq('uid', uid);
-            await supabase.from('deposits').delete().eq('uid', uid);
-            await supabase.from('withdrawals').delete().eq('uid', uid);
+            await _supabase.from('users').delete().eq('uid', uid);
+            await _supabase.from('order_history').delete().eq('uid', uid);
+            await _supabase.from('deposits').delete().eq('uid', uid);
+            await _supabase.from('withdrawals').delete().eq('uid', uid);
             loadUsers(); loadDashboard();
-            showToast('User deleted');
+            alert('User deleted');
         }
     }
 
-    function searchMember() { currentSearch = document.getElementById('searchUid').value.trim(); loadUsers(); }
-    function clearSearch() { currentSearch = ''; document.getElementById('searchUid').value = ''; loadUsers(); }
-    function openAddUserModal() { document.getElementById('addUserModal').classList.add('active'); }
-    function closeAddUserModal() { document.getElementById('addUserModal').classList.remove('active'); }
+    function searchUsers() {
+        currentSearch = document.getElementById('searchInput').value.trim();
+        loadUsers();
+    }
+
+    function clearSearch() {
+        currentSearch = '';
+        document.getElementById('searchInput').value = '';
+        loadUsers();
+    }
+
+    function openAddUserModal() {
+        document.getElementById('addUserModal').classList.add('active');
+    }
+
+    function closeAddUserModal() {
+        document.getElementById('addUserModal').classList.remove('active');
+    }
 
     async function createUser() {
-        const username = document.getElementById('modalUserName').value.trim();
-        const password = document.getElementById('modalUserPassword').value;
-        if(!username || !password) { showToast('Username and password required', true); return; }
-        const { data: existing } = await supabase.from('users').select('username').eq('username', username).single();
-        if(existing) { showToast('Username exists', true); return; }
-        const { data: maxUid } = await supabase.from('users').select('uid').order('uid', { ascending: false }).limit(1);
+        const username = document.getElementById('newUsername').value.trim();
+        const password = document.getElementById('newPassword').value;
+        if(!username || !password) { alert('Username and password required'); return; }
+        const { data: existing } = await _supabase.from('users').select('username').eq('username', username).single();
+        if(existing) { alert('Username exists'); return; }
+        const { data: maxUid } = await _supabase.from('users').select('uid').order('uid', { ascending: false }).limit(1);
         let newUid = '100001';
         if(maxUid && maxUid.length > 0) newUid = (parseInt(maxUid[0].uid) + 1).toString();
         const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const { error } = await supabase.from('users').insert([{ uid: newUid, username, password, invite_code: inviteCode, balance: 0, vip_level: 1 }]);
-        if(error) { showToast(error.message, true); return; }
+        const { error } = await _supabase.from('users').insert([{
+            uid: newUid, username, password, invite_code: inviteCode, balance: 0, vip_level: 1
+        }]);
+        if(error) { alert(error.message); return; }
         loadUsers(); closeAddUserModal();
-        showToast(`User ${username} created`);
-        document.getElementById('modalUserName').value = '';
-        document.getElementById('modalUserPassword').value = '';
+        alert(`User ${username} created`);
+        document.getElementById('newUsername').value = '';
+        document.getElementById('newPassword').value = '';
     }
 
     async function loadWithdrawals() {
-        const { data: withdrawals } = await supabase.from('withdrawals').select('*').eq('status', 'pending');
-        const tbody = document.getElementById('pendingBody');
+        const { data: withdrawals } = await _supabase.from('withdrawals').select('*').eq('status', 'pending').order('request_date', { ascending: false });
+        const tbody = document.getElementById('withdrawalsTableBody');
         if(tbody && withdrawals) {
             tbody.innerHTML = '';
-            for(const w of withdrawals) {
+            for(let w of withdrawals) {
                 const row = tbody.insertRow();
                 row.insertCell(0).innerText = w.uid;
                 row.insertCell(1).innerText = w.username;
-                row.insertCell(2).innerHTML = `<span style="color:#ffaa66;">€${(w.amount || 0).toFixed(2)}</span>`;
+                row.insertCell(2).innerHTML = `€${(w.amount || 0).toFixed(2)}`;
                 row.insertCell(3).innerText = w.wallet_address || '-';
                 row.insertCell(4).innerText = new Date(w.request_date).toLocaleString();
-                row.insertCell(5).innerHTML = `<button class="btn-success" onclick="approveWithdrawal(${w.id}, '${w.uid}', ${w.amount})">Approve</button> <button class="btn-danger" onclick="rejectWithdrawal(${w.id})">Reject</button>`;
+                row.insertCell(5).innerHTML = `
+                    <button class="success" onclick="approveWithdrawal(${w.id}, '${w.uid}', ${w.amount})">Approve</button>
+                    <button class="danger" onclick="rejectWithdrawal(${w.id})">Reject</button>
+                `;
             }
         }
     }
 
     async function approveWithdrawal(id, uid, amount) {
         if(confirm(`Approve €${amount} withdrawal?`)) {
-            await supabase.from('withdrawals').update({ status: 'approved', processed_date: new Date() }).eq('id', id);
+            await _supabase.from('withdrawals').update({ status: 'approved', processed_date: new Date() }).eq('id', id);
             loadWithdrawals(); loadDashboard();
-            showToast('Approved');
+            alert('Approved');
         }
     }
 
     async function rejectWithdrawal(id) {
         if(confirm('Reject this withdrawal?')) {
-            const { data: w } = await supabase.from('withdrawals').select('uid, amount').eq('id', id).single();
+            const { data: w } = await _supabase.from('withdrawals').select('uid, amount').eq('id', id).single();
             if(w) {
-                const { data: user } = await supabase.from('users').select('balance').eq('uid', w.uid).single();
-                await supabase.from('users').update({ balance: (user.balance || 0) + w.amount }).eq('uid', w.uid);
+                const { data: user } = await _supabase.from('users').select('balance').eq('uid', w.uid).single();
+                await _supabase.from('users').update({ balance: (user.balance || 0) + w.amount }).eq('uid', w.uid);
             }
-            await supabase.from('withdrawals').update({ status: 'rejected', processed_date: new Date() }).eq('id', id);
+            await _supabase.from('withdrawals').update({ status: 'rejected', processed_date: new Date() }).eq('id', id);
             loadWithdrawals(); loadDashboard();
-            showToast('Rejected, funds returned');
+            alert('Rejected, funds returned');
         }
     }
 
-    async function loadTrialMembers() {
-        const { data: users } = await supabase.from('users').select('uid, username, balance, trial_bonus_amount');
-        const tbody = document.getElementById('trialMembersBody');
-        if(tbody && users) {
-            tbody.innerHTML = '';
-            for(const u of users) {
-                const row = tbody.insertRow();
-                row.insertCell(0).innerText = u.uid;
-                row.insertCell(1).innerText = u.username;
-                row.insertCell(2).innerHTML = `<span style="color:#4ade80;">€${(u.balance || 0).toFixed(2)}</span>`;
-                row.insertCell(3).innerHTML = `<span style="color:#ffaa66;">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
-                row.insertCell(4).innerHTML = `<button class="btn-primary" onclick="addTrialBonus('${u.uid}')">Add Trial Bonus</button>`;
+    async function loadVipSettings() {
+        const { data: vips } = await _supabase.from('vip_settings').select('*').order('level');
+        const div = document.getElementById('vipSettingsDiv');
+        if(div && vips) {
+            div.innerHTML = '';
+            for(let v of vips) {
+                div.innerHTML += `
+                    <div style="background:#1a1f3a; padding:15px; border-radius:8px; margin-bottom:15px;">
+                        <h3>${v.rank_name} (Level ${v.level})</h3>
+                        <div>Orders Limit: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:100px"></div>
+                        <div>Commission Rate (%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:100px"></div>
+                        <button onclick="saveVipSetting(${v.level})" style="margin-top:10px">Save</button>
+                    </div>
+                `;
             }
         }
     }
 
-    async function addTrialBonus(uid) {
-        const amount = parseFloat(prompt('Enter trial bonus amount (€):'));
-        if(isNaN(amount) || amount <= 0) return;
-        const { data: user } = await supabase.from('users').select('trial_bonus_amount').eq('uid', uid).single();
-        await supabase.from('users').update({ trial_bonus_amount: (user.trial_bonus_amount || 0) + amount }).eq('uid', uid);
-        loadTrialMembers();
-        showToast(`+€${amount} trial bonus`);
+    async function saveVipSetting(level) {
+        const ordersLimit = parseInt(document.getElementById(`limit_${level}`).value);
+        const commissionRate = parseFloat(document.getElementById(`rate_${level}`).value);
+        await _supabase.from('vip_settings').update({ orders_limit: ordersLimit, commission_rate: commissionRate }).eq('level', level);
+        alert('Saved');
     }
 
     async function distributeBonus() {
         const amount = parseFloat(document.getElementById('bonusAmount').value);
-        const targetUid = document.getElementById('targetUid').value.trim();
-        if(isNaN(amount) || amount <= 0) { showToast('Invalid amount', true); return; }
+        const targetUid = document.getElementById('bonusTarget').value.trim();
+        if(isNaN(amount) || amount <= 0) { alert('Invalid amount'); return; }
         if(targetUid) {
-            const { data: user } = await supabase.from('users').select('balance').eq('uid', targetUid).single();
+            const { data: user } = await _supabase.from('users').select('balance').eq('uid', targetUid).single();
             if(user) {
-                await supabase.from('users').update({ balance: (user.balance || 0) + amount }).eq('uid', targetUid);
-                showToast(`Added €${amount} to ${targetUid}`);
-            } else { showToast('User not found', true); }
+                await _supabase.from('users').update({ balance: (user.balance || 0) + amount }).eq('uid', targetUid);
+                alert(`Added €${amount} to ${targetUid}`);
+            } else { alert('User not found'); }
         } else {
-            const { data: users } = await supabase.from('users').select('uid, balance');
-            for(const u of users) {
-                await supabase.from('users').update({ balance: (u.balance || 0) + amount }).eq('uid', u.uid);
+            const { data: users } = await _supabase.from('users').select('uid, balance');
+            for(let u of users) {
+                await _supabase.from('users').update({ balance: (u.balance || 0) + amount }).eq('uid', u.uid);
             }
-            showToast(`Added €${amount} to all users`);
+            alert(`Added €${amount} to all users`);
         }
         loadUsers(); loadDashboard();
     }
 
-    async function loadOrdersList() {
-        const { data: orders } = await supabase.from('order_history').select('*').order('date', { ascending: false }).limit(100);
-        const tbody = document.getElementById('ordersListBody');
+    async function loadOrders() {
+        const { data: orders } = await _supabase.from('order_history').select('*').order('date', { ascending: false }).limit(100);
+        const tbody = document.getElementById('ordersTableBody');
         if(tbody && orders) {
             tbody.innerHTML = '';
-            for(const o of orders) {
+            for(let o of orders) {
                 const row = tbody.insertRow();
                 row.insertCell(0).innerText = o.id;
                 row.insertCell(1).innerText = o.uid;
                 row.insertCell(2).innerText = o.username;
                 row.insertCell(3).innerText = o.order_code || '-';
                 row.insertCell(4).innerText = o.accommodation_name || '-';
-                row.insertCell(5).innerHTML = `<span style="color:#ffaa66;">€${(o.price || 0).toFixed(2)}</span>`;
-                row.insertCell(6).innerHTML = `<span style="color:#4ade80;">€${(o.commission || 0).toFixed(2)}</span>`;
+                row.insertCell(5).innerHTML = `€${(o.price || 0).toFixed(2)}`;
+                row.insertCell(6).innerHTML = `€${(o.commission || 0).toFixed(2)}`;
                 row.insertCell(7).innerText = new Date(o.date).toLocaleString();
             }
         }
     }
 
     async function loadSigninRewards() {
-        const { data: rewards } = await supabase.from('signin_rewards').select('*').order('day');
-        const container = document.getElementById('signinDaysList');
-        if(container && rewards) {
-            container.innerHTML = '';
-            for(const r of rewards) {
-                const div = document.createElement('div');
-                div.className = 'form-row';
-                div.innerHTML = `<span style="width:70px;">Day ${r.day}:</span><input type="number" id="reward_${r.day}" value="${r.amount}" class="form-input" style="width:120px;"> €<button class="btn-primary" onclick="updateReward(${r.day})">Save</button>`;
-                container.appendChild(div);
+        const { data: rewards } = await _supabase.from('signin_rewards').select('*').order('day');
+        const div = document.getElementById('signinRewardsDiv');
+        if(div && rewards) {
+            div.innerHTML = '';
+            for(let r of rewards) {
+                div.innerHTML += `
+                    <div style="margin-bottom:10px">
+                        Day ${r.day}: <input type="number" id="reward_${r.day}" value="${r.amount}" style="width:100px"> €
+                        <button onclick="saveSigninReward(${r.day})">Save</button>
+                    </div>
+                `;
             }
         }
     }
 
-    async function updateReward(day) {
+    async function saveSigninReward(day) {
         const amount = parseFloat(document.getElementById(`reward_${day}`).value);
-        await supabase.from('signin_rewards').update({ amount }).eq('day', day);
-        showToast(`Day ${day} updated`);
-    }
-
-    async function loadVipSettings() {
-        const { data: vips } = await supabase.from('vip_settings').select('*').order('level');
-        const container = document.getElementById('vipSettingsList');
-        if(container && vips) {
-            container.innerHTML = '';
-            for(const v of vips) {
-                const div = document.createElement('div');
-                div.className = 'setting-card';
-                div.innerHTML = `<h3>${v.rank_name} (Level ${v.level})</h3>
-                    <div class="form-row">Orders Limit: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" class="form-input" style="width:120px;"></div>
-                    <div class="form-row">Commission Rate (%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" class="form-input" style="width:120px;"></div>
-                    <button class="btn-primary" onclick="updateVipSetting(${v.level})">Save</button>`;
-                container.appendChild(div);
-            }
-        }
-    }
-
-    async function updateVipSetting(level) {
-        const ordersLimit = parseInt(document.getElementById(`limit_${level}`).value);
-        const commissionRate = parseFloat(document.getElementById(`rate_${level}`).value);
-        await supabase.from('vip_settings').update({ orders_limit: ordersLimit, commission_rate: commissionRate }).eq('level', level);
-        showToast('VIP settings saved');
-    }
-
-    async function loadContent() {
-        const { data: content } = await supabase.from('system_content').select('*').limit(1).single();
-        if(content) {
-            document.getElementById('termsContent').value = content.terms || '';
-            document.getElementById('platformRules').value = content.platform_rules || '';
-            document.getElementById('privacySecurity').value = content.privacy_security || '';
-        }
-    }
-
-    async function saveContent() {
-        await supabase.from('system_content').update({
-            terms: document.getElementById('termsContent').value,
-            platform_rules: document.getElementById('platformRules').value,
-            privacy_security: document.getElementById('privacySecurity').value,
-            updated_at: new Date()
-        }).eq('id', 1);
-        showToast('Content saved');
+        await _supabase.from('signin_rewards').update({ amount }).eq('day', day);
+        alert(`Day ${day} saved`);
     }
 
     function logout() {
@@ -514,10 +494,12 @@
         }
     }
 
+    // Check login
     if(localStorage.getItem('admin_logged_in') !== 'true') {
         window.location.href = 'admin-login.html';
     }
 
+    // Initial load
     loadDashboard();
 </script>
 </body>
