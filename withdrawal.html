@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ADDITIVE - Withdrawal</title>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .page-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .page-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; }
+        .step-indicator { font-size: 12px; color: #C9B095; background: rgba(201,176,149,0.15); padding: 4px 12px; border-radius: 30px; }
+        
+        .balance-info-card {
+            background: rgba(20, 30, 55, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+        }
+        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(201,176,149,0.08); }
+        .info-row:last-child { border-bottom: none; }
+        .balance-amount-large { font-size: 22px; font-weight: 700; color: #C9B095; }
+        
+        .amount-section { margin-bottom: 20px; }
+        .amount-section label { font-weight: 600; display: block; margin-bottom: 6px; color: #ffffff; font-size: 14px; }
+        .amount-hint { font-size: 12px; color: #a0a8c0; margin-bottom: 12px; }
+        .amount-input-wrapper { position: relative; margin-bottom: 10px; }
+        .amount-input-wrapper input { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid #2a3560; border-radius: 60px; padding: 14px 20px; font-size: 24px; font-weight: 600; color: white; outline: none; }
+        .amount-input-wrapper input:focus { border-color: #C9B095; }
+        .currency { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 22px; color: #C9B095; }
+        .amount-limits { display: flex; gap: 20px; font-size: 11px; color: #a0a8c0; }
+        
+        .quick-amounts { display: flex; gap: 10px; margin-bottom: 24px; flex-wrap: wrap; }
+        .quick-amount { background: rgba(201,176,149,0.1); border: 1px solid rgba(201,176,149,0.2); padding: 8px 20px; border-radius: 40px; color: #C9B095; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .quick-amount:hover { background: rgba(201,176,149,0.2); }
+        
+        .security-note { background: rgba(74,222,128,0.05); border: 1px solid rgba(74,222,128,0.2); border-radius: 16px; padding: 14px 18px; display: flex; gap: 12px; margin-bottom: 24px; }
+        .security-note i { font-size: 24px; color: #4ade80; }
+        .security-note p { font-size: 11px; color: #a0a8c0; margin-top: 4px; }
+        
+        .continue-btn { width: 100%; background: rgba(201,176,149,0.15); border: 1px solid rgba(201,176,149,0.3); padding: 14px; border-radius: 60px; color: #C9B095; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 32px; transition: 0.2s; }
+        .continue-btn:hover { background: rgba(201,176,149,0.25); transform: scale(1.01); }
+        
+        .upgrade-card-pulse {
+            background: rgba(20, 30, 55, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            padding: 24px;
+            animation: pulseGlow 2.5s ease-in-out infinite;
+            border: 1px solid rgba(201, 176, 149, 0.3);
+        }
+        @keyframes pulseGlow { 0% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } 50% { box-shadow: inset 0 0 25px rgba(201,176,149,0.25), 0 0 15px rgba(201,176,149,0.12); border-color: rgba(201,176,149,0.5); } 100% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } }
+        .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
+        .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
+        .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
+        
+        @media (max-width: 800px) { .main { padding: 16px; } }
+    </style>
+</head>
+<body>
+    <div class="menu-overlay" onclick="closeMenu()"></div>
+
+    <div class="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <div class="logo">ADDITIVE</div>
+                <nav class="nav">
+                    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
+                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
+                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
+                    <a href="withdrawal.html" class="nav-item active"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
+                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
+                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
+                </nav>
+            </div>
+            <div class="sidebar-upgrade-card">
+                <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
+                <div class="sidebar-upgrade-title">Upgrade your membership</div>
+                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+                <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </aside>
+
+        <main class="main" style="max-width: 600px;">
+            <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <div class="page-header">
+                <h1>WITHDRAWAL</h1>
+                <div class="step-indicator"><i class="fas fa-circle"></i> STEP 1 OF 2</div>
+            </div>
+
+            <div class="balance-info-card">
+                <div class="info-row"><span><i class="fas fa-wallet"></i> WITHDRAW from balance</span><span class="balance-amount-large" id="displayBalance">€0.00</span></div>
+                <div class="info-row"><span><i class="fas fa-user"></i> USER</span><span id="displayUsername">---</span></div>
+                <div class="info-row"><span><i class="fas fa-check-circle"></i> Available</span><span id="displayAvailable">€0.00</span></div>
+            </div>
+
+            <div class="amount-section">
+                <label>AMOUNT</label>
+                <p class="amount-hint">Select how much you want to withdraw from your available balance</p>
+                <div class="amount-input-wrapper"><input type="number" id="amountInput" placeholder="0" value="50"><span class="currency">€</span></div>
+                <div class="amount-limits"><span>Minimum: €10</span><span id="availableHint">Available: €0.00</span></div>
+            </div>
+
+            <div class="quick-amounts">
+                <button class="quick-amount" data-value="10">€10</button>
+                <button class="quick-amount" data-value="100">€100</button>
+                <button class="quick-amount" data-value="1000">€1,000</button>
+                <button class="quick-amount" data-value="10000">€10,000</button>
+            </div>
+
+            <div class="security-note"><i class="fas fa-shield-alt"></i><div><strong>SECURE WITHDRAWAL</strong><p>Withdrawals are reviewed securely. Make sure your amount is correct before continuing.</p></div></div>
+
+            <button class="continue-btn" onclick="requestWithdrawal()">Continue <i class="fas fa-arrow-right"></i></button>
+
+            <div class="upgrade-card-pulse">
+                <div class="upgrade-title">✨ Upgrade your membership</div>
+                <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+                <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('active'); if (menuBtn) menuBtn.classList.toggle('hidden'); }
+        function closeMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('active'); if (menuBtn) menuBtn.classList.remove('hidden'); }
+        if (document.querySelectorAll('.nav-item')) { document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', () => { if (window.innerWidth <= 768) closeMenu(); }); }); }
+
+        let currentUserBalance = 0;
+        function loadUserData() {
+            const userStr = localStorage.getItem('currentUser');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    currentUserBalance = user.balance || 0;
+                    document.getElementById('displayBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
+                    document.getElementById('displayUsername').innerText = user.username;
+                    document.getElementById('displayAvailable').innerHTML = `€${currentUserBalance.toFixed(2)}`;
+                    document.getElementById('availableHint').innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
+                } catch(e) {}
+            }
+        }
+        function requestWithdrawal() {
+            const amount = parseFloat(document.getElementById('amountInput').value);
+            const minAmount = 10;
+            if (isNaN(amount) || amount < minAmount) { alert(`Minimum withdrawal amount is €${minAmount}`); return; }
+            if (amount > currentUserBalance) { alert('Insufficient balance'); return; }
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) { window.location.href = 'signin.html'; return; }
+            const user = JSON.parse(userStr);
+            const withdrawals = JSON.parse(localStorage.getItem('additive_withdrawals') || '[]');
+            withdrawals.push({ id: withdrawals.length + 1, uid: user.uid, username: user.username, amount: amount, walletAddress: "0x" + Math.random().toString(36).substring(2, 10), status: 'pending', requestDate: new Date().toISOString(), processedDate: null });
+            localStorage.setItem('additive_withdrawals', JSON.stringify(withdrawals));
+            alert(`Withdrawal request of €${amount} submitted for approval.`);
+            document.getElementById('amountInput').value = '';
+        }
+        document.querySelectorAll('.quick-amount').forEach(btn => { btn.addEventListener('click', () => { document.getElementById('amountInput').value = btn.getAttribute('data-value'); }); });
+        loadUserData();
+    </script>
+</body>
+</html>
