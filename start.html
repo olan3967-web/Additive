@@ -493,48 +493,60 @@
         
         // 从 Supabase 加载动画配置
         async function loadAnimatedConfig() {
-            try {
-                const { data, error } = await sb.from('animated_settings').select('*').eq('id', 1).single();
-                if(error && error.code === 'PGRST116') {
-                    console.log('No animated settings found, using defaults');
-                    return;
-                }
-                if(data) {
-                    // 加载视频
-                    if(data.video_url) {
-                        const videoContainer = document.getElementById('videoContainer');
-                        if(videoContainer) {
-                            const url = data.video_url;
-                            if(url.endsWith('.mp4') || url.includes('.mp4') || url.includes('video')) {
-                                videoContainer.innerHTML = `<video src="${url}" autoplay loop muted playsinline></video>`;
-                            } else {
-                                videoContainer.innerHTML = `<img src="${url}" alt="video" onerror="this.parentElement.innerHTML='<div class=\\'video-placeholder\\'><i class=\\'fas fa-play-circle\\'></i><p>动态视频区域</p><small>可上传 MP4 / GIF</small></div>'">`;
-                            }
-                        }
-                    }
-                    
-                    // 加载精选酒店
-                    if(data.featured_hotels && data.featured_hotels.length > 0) {
-                        const container = document.getElementById('hotelImagesContainer');
-                        if(container) {
-                            container.innerHTML = '';
-                            data.featured_hotels.forEach(hotel => {
-                                const div = document.createElement('div');
-                                div.className = 'hotel-img-item';
-                                const imgUrl = hotel.image && hotel.image.trim() !== '' ? hotel.image : 'https://placehold.co/180x110/0E1838/C9B095?text=Hotel';
-                                div.innerHTML = `<img src="${imgUrl}" alt="${hotel.name}" style="width:180px; height:110px; border-radius:16px; object-fit:cover;"><span class="hotel-name">${escapeHtml(hotel.name)}</span>`;
-                                container.appendChild(div);
-                            });
-                            // 双倍内容实现无缝滚动
-                            const items = container.innerHTML;
-                            container.innerHTML = items + items;
-                        }
+    try {
+        const { data, error } = await sb.from('animated_settings').select('*').eq('id', 1).single();
+        if(error && error.code === 'PGRST116') {
+            console.log('No animated settings found');
+            return;
+        }
+        if(data) {
+            // 加载视频
+            if(data.video_url) {
+                const videoContainer = document.getElementById('videoContainer');
+                if(videoContainer) {
+                    const url = data.video_url;
+                    if(url.endsWith('.mp4') || url.includes('.mp4')) {
+                        videoContainer.innerHTML = `<video src="${url}" autoplay loop muted playsinline style="width:100%; border-radius:24px;"></video>`;
+                    } else {
+                        videoContainer.innerHTML = `<img src="${url}" style="width:100%; border-radius:24px;" onerror="this.parentElement.innerHTML='<div class=\\'video-placeholder\\'><i class=\\'fas fa-play-circle\\'></i><p>视频加载失败</p></div>'">`;
                     }
                 }
-            } catch(e) {
-                console.error('Error loading animated config:', e);
+            }
+            
+            // 加载精选酒店
+            if(data.featured_hotels && data.featured_hotels.length > 0) {
+                const container = document.getElementById('hotelImagesContainer');
+                if(container) {
+                    container.innerHTML = '';
+                    for(let hotel of data.featured_hotels) {
+                        const div = document.createElement('div');
+                        div.className = 'hotel-img-item';
+                        let imgUrl = hotel.image || '';
+                        
+                        // 如果图片 URL 是相对路径，补全完整 URL
+                        if(imgUrl && !imgUrl.startsWith('http')) {
+                            imgUrl = `https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/hotel-images/${imgUrl}`;
+                        }
+                        
+                        div.innerHTML = `
+                            <img src="${imgUrl}" 
+                                 alt="${hotel.name}" 
+                                 style="width:180px; height:110px; border-radius:16px; object-fit:contain; background:#0E1838; padding:8px;"
+                                 onerror="this.onerror=null; this.src='https://placehold.co/180x110/0E1838/C9B095?text=No+Image'; this.style.objectFit='cover';">
+                            <span class="hotel-name">${escapeHtml(hotel.name)}</span>
+                        `;
+                        container.appendChild(div);
+                    }
+                    // 双倍内容实现无缝滚动
+                    const items = container.innerHTML;
+                    container.innerHTML = items + items;
+                }
             }
         }
+    } catch(e) {
+        console.error('Error loading animated config:', e);
+    }
+}
         
         function escapeHtml(str) {
             if(!str) return '';
