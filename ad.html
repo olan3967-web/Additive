@@ -309,34 +309,66 @@
 
     // ========== ORDER POOL (订单池管理) ==========
     async function loadOrderPool() {
-        let query = sb.from('orders_pool').select('*').order('id', { ascending: false });
+    console.log("Loading order pool...");
+    try {
+        let query = sb.from('orders_pool').select('*').order('id', { ascending: false }).limit(5000);
+        
         if(poolSearchKeyword) {
             query = query.or(`order_code.ilike.%${poolSearchKeyword}%,accommodation_name.ilike.%${poolSearchKeyword}%`);
         }
+        
         const { data: orders, error } = await query;
-        if(error) { console.error(error); return; }
+        
+        if(error) {
+            console.error("Query error:", error);
+            alert('Error loading orders: ' + error.message);
+            return;
+        }
+        
+        console.log("Loaded orders:", orders?.length);
+        
         const tbody = document.getElementById('orderPoolTableBody');
         if(tbody) {
             tbody.innerHTML = '';
-            for(let o of orders || []) {
+            if(!orders || orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No orders found</td></tr>';
+                return;
+            }
+            
+            for(let o of orders) {
                 const row = tbody.insertRow();
                 row.insertCell(0).innerText = o.id;
                 row.insertCell(1).innerText = o.order_code || '-';
                 row.insertCell(2).innerText = o.accommodation_name || '-';
                 row.insertCell(3).innerHTML = `€${(o.price || 0).toFixed(2)}`;
-                row.insertCell(4).innerHTML = `<a href="${o.image_url || '#'}" target="_blank" style="color:#8ca3ff;">View</a>`;
+                row.insertCell(4).innerHTML = o.image_url ? `<a href="${o.image_url}" target="_blank" style="color:#8ca3ff;">View</a>` : '-';
                 row.insertCell(5).innerHTML = `<span style="color:${o.status === 'available' ? '#4ade80' : '#ff8888'}">${o.status || 'available'}</span>`;
-                row.insertCell(5).innerHTML = `<span style="color:${o.status === 'available' ? '#4ade80' : '#ff8888'}">${o.status || 'available'}</span>`;
-                row.insertCell(6).innerHTML = `<button class="edit-order-btn" data-id="${o.id}" data-code="${o.order_code}" data-name="${o.accommodation_name}" data-price="${o.price}" data-image="${o.image_url || ''}" data-status="${o.status || 'available'}" style="background:#2f7a3e;">Edit</button> <button class="delete-order-btn" data-id="${o.id}" class="danger">Delete</button>`;
+                row.insertCell(6).innerHTML = `<button class="edit-order-btn" data-id="${o.id}" data-code="${o.order_code || ''}" data-name="${o.accommodation_name || ''}" data-price="${o.price || 0}" data-image="${o.image_url || ''}" data-status="${o.status || 'available'}" style="background:#2f7a3e;">Edit</button> <button class="delete-order-btn" data-id="${o.id}" class="danger">Delete</button>`;
             }
+            
+            // 绑定编辑和删除按钮事件
             document.querySelectorAll('.edit-order-btn').forEach(btn => {
-                btn.addEventListener('click', () => openEditOrderModal(btn.dataset.id, btn.dataset.code, btn.dataset.name, btn.dataset.price, btn.dataset.image, btn.dataset.status));
+                btn.addEventListener('click', () => {
+                    openEditOrderModal(
+                        btn.getAttribute('data-id'),
+                        btn.getAttribute('data-code'),
+                        btn.getAttribute('data-name'),
+                        btn.getAttribute('data-price'),
+                        btn.getAttribute('data-image'),
+                        btn.getAttribute('data-status')
+                    );
+                });
             });
+            
             document.querySelectorAll('.delete-order-btn').forEach(btn => {
-                btn.addEventListener('click', () => deleteOrder(btn.dataset.id));
+                btn.addEventListener('click', () => deleteOrder(btn.getAttribute('data-id')));
             });
         }
+    } catch(e) {
+        console.error("Exception:", e);
+        alert('Error: ' + e.message);
     }
+}
 
     function openEditOrderModal(id, code, name, price, image, status) {
         document.getElementById('modalOrderTitle').innerText = 'Edit Order';
