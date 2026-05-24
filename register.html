@@ -57,6 +57,7 @@
         .login-link { text-align: center; margin-top: 24px; font-size: 13px; color: #a0a8c0; }
         .login-link a { color: #C9B095; text-decoration: none; }
         .error-message { text-align: center; margin-top: 16px; font-size: 13px; min-height: 40px; }
+        .success-message { text-align: center; margin-top: 16px; font-size: 13px; color: #4ade80; }
     </style>
 </head>
 <body>
@@ -64,6 +65,7 @@
         <div class="register-card">
             <div class="logo">ADDITIVE<span>®</span></div>
             <div class="subtitle">Create your account</div>
+            <div class="form-group"><label><i class="fas fa-phone"></i> Phone Number</label><input type="tel" id="regPhone" placeholder="Enter your phone number"></div>
             <div class="form-group"><label><i class="fas fa-user"></i> Username</label><input type="text" id="regUsername" placeholder="Username (min 3 chars)"></div>
             <div class="form-group"><label><i class="fas fa-lock"></i> Password</label><input type="password" id="regPassword" placeholder="Password (min 4 chars)"></div>
             <div class="form-group"><label><i class="fas fa-qrcode"></i> Invitation Code (optional)</label><input type="text" id="regInviteCode" placeholder="Enter invite code"></div>
@@ -78,137 +80,158 @@
         // Supabase 配置
         const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function generateUID() {
-            // 获取现有最大 UID 的逻辑在注册时动态查询
-            return null; // 实际在注册函数中处理
-        }
-        
-        function generateInviteCode(username) {
-            const base = username.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6);
-            if (base.length < 3) return 'USER' + Math.floor(Math.random() * 10000);
-            return base + Math.floor(Math.random() * 1000);
+        // 生成6位随机邀请码 (大写字母+数字)
+        function generateInviteCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
         }
         
         function showMessage(msg, isError = true) {
             const d = document.getElementById('registerError');
             d.innerText = msg;
-            d.style.color = isError ? '#ff8080' : '#4ade80';
-            setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 3000);
+            d.className = isError ? 'error-message' : 'success-message';
+            setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 4000);
         }
         
         async function handleRegister() {
+            const phone = document.getElementById('regPhone').value.trim();
             const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value;
             const inviteCode = document.getElementById('regInviteCode').value.trim();
             const pin = document.getElementById('regPin').value;
             
+            // 验证输入
+            if (!phone) { showMessage('Please enter phone number'); return; }
             if (!username || username.length < 3) { showMessage('Username must be at least 3 characters'); return; }
             if (!password || password.length < 4) { showMessage('Password must be at least 4 characters'); return; }
             if (!pin || pin.length !== 4 || isNaN(pin)) { showMessage('Withdrawal PIN must be 4 digits'); return; }
             
-            // 检查用户名是否已存在
-            const { data: existing } = await supabase
-                .from('users')
-                .select('username')
-                .eq('username', username)
-                .single();
+            showMessage('Checking...', false);
             
-            if (existing) { showMessage('Username already exists'); return; }
-            
-            // 获取最大 UID
-            const { data: maxUidData } = await supabase
-                .from('users')
-                .select('uid')
-                .order('uid', { ascending: false })
-                .limit(1);
-            
-            let newUid = '100001';
-            if (maxUidData && maxUidData.length > 0) {
-                newUid = (parseInt(maxUidData[0].uid) + 1).toString();
-            }
-            
-            // 处理邀请码
-            let invitedBy = '';
-            let invitedByUsername = '';
-            if (inviteCode) {
-                const { data: inviter } = await supabase
+            try {
+                // 检查用户名是否已存在
+                const { data: existingUser, error: checkError } = await sb
                     .from('users')
-                    .select('uid, username')
-                    .eq('invite_code', inviteCode)
+                    .select('username')
+                    .eq('username', username)
+                    .maybeSingle();
+                
+                if (existingUser) { 
+                    showMessage('Username already exists'); 
+                    return; 
+                }
+                
+                // 获取最大 UID
+                const { data: maxUidData, error: uidError } = await sb
+                    .from('users')
+                    .select('uid')
+                    .order('uid', { ascending: false })
+                    .limit(1);
+                
+                let newUid = '100001';
+                if (maxUidData && maxUidData.length > 0 && maxUidData[0].uid) {
+                    newUid = (parseInt(maxUidData[0].uid) + 1).toString();
+                }
+                
+                // 处理邀请码 - 查找邀请人
+                let invitedBy = '';
+                let invitedByUsername = '';
+                let referralBonusAdded = false;
+                
+                if (inviteCode) {
+                    const { data: inviter, error: inviterError } = await sb
+                        .from('users')
+                        .select('uid, username, balance')
+                        .eq('invite_code', inviteCode)
+                        .maybeSingle();
+                    
+                    if (inviter) {
+                        invitedBy = inviter.uid;
+                        invitedByUsername = inviter.username;
+                        
+                        // 给邀请人奖励 €10
+                        const newBalance = (inviter.balance || 0) + 10;
+                        const { error: updateError } = await sb
+                            .from('users')
+                            .update({ balance: newBalance })
+                            .eq('uid', inviter.uid);
+                        
+                        if (!updateError) {
+                            // 记录奖励充值
+                            await sb
+                                .from('deposits')
+                                .insert([{ 
+                                    uid: inviter.uid, 
+                                    username: inviter.username, 
+                                    amount: 10, 
+                                    type: 'referral_bonus',
+                                    created_at: new Date().toISOString()
+                                }]);
+                            referralBonusAdded = true;
+                            showMessage('Invitation code accepted! +€10 for referrer', false);
+                        }
+                    } else {
+                        showMessage('Invitation code not found, continuing without it', false);
+                    }
+                }
+                
+                // 生成新用户的邀请码
+                const newInviteCode = generateInviteCode();
+                
+                // 创建新用户
+                const { data: newUser, error: insertError } = await sb
+                    .from('users')
+                    .insert([{
+                        uid: newUid,
+                        phone: phone,
+                        username: username,
+                        password: password,
+                        pin: pin,
+                        balance: 0,
+                        trial_bonus_amount: 0,
+                        vip_level: 1,
+                        invite_code: newInviteCode,
+                        invited_by: invitedBy,
+                        invited_by_username: invitedByUsername,
+                        total_orders: 0,
+                        is_active: true,
+                        created_at: new Date().toISOString()
+                    }])
+                    .select()
                     .single();
                 
-                if (inviter) {
-                    invitedBy = inviter.uid;
-                    invitedByUsername = inviter.username;
-                    // 给邀请人奖励 €10
-                    const { data: inviterData } = await supabase
-                        .from('users')
-                        .select('balance')
-                        .eq('uid', inviter.uid)
-                        .single();
-                    
-                    const newBalance = (inviterData?.balance || 0) + 10;
-                    await supabase
-                        .from('users')
-                        .update({ balance: newBalance })
-                        .eq('uid', inviter.uid);
-                    
-                    // 记录奖励充值
-                    await supabase
-                        .from('deposits')
-                        .insert([{ uid: inviter.uid, username: inviter.username, amount: 10, type: 'referral_bonus' }]);
-                    
-                    showMessage('Invitation code accepted!', false);
-                } else {
-                    showMessage('Invitation code not found', false);
+                if (insertError) {
+                    console.error('Insert error:', insertError);
+                    showMessage('Registration failed: ' + insertError.message);
+                    return;
                 }
-            }
-            
-            // 生成邀请码
-            const newInviteCode = generateInviteCode(username);
-            
-            // 创建新用户
-            const { data: newUser, error } = await supabase
-                .from('users')
-                .insert([{
+                
+                // 保存登录状态到 localStorage
+                localStorage.setItem('currentUser', JSON.stringify({
                     uid: newUid,
                     username: username,
-                    password: password,
-                    pin: pin,
                     balance: 0,
-                    trial_bonus_amount: 0,
-                    vip_level: 1,
-                    invite_code: newInviteCode,
-                    invited_by: invitedBy,
-                    invited_by_username: invitedByUsername,
-                    total_orders: 0,
-                    is_active: true
-                }])
-                .select()
-                .single();
-            
-            if (error) {
-                showMessage('Registration failed: ' + error.message);
-                return;
+                    trialBonusAmount: 0,
+                    commissionRate: 0.51,
+                    vipLevel: 1,
+                    inviteCode: newInviteCode,
+                    isLoggedIn: true,
+                    loginTime: Date.now()
+                }));
+                
+                showMessage('Registration successful! Redirecting...', false);
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+                
+            } catch (err) {
+                console.error('Registration error:', err);
+                showMessage('Error: ' + err.message);
             }
-            
-            // 保存登录状态
-            localStorage.setItem('currentUser', JSON.stringify({
-                uid: newUid,
-                username: username,
-                balance: 0,
-                trialBonusAmount: 0,
-                commissionRate: 5,
-                vipLevel: 1,
-                inviteCode: newInviteCode,
-                isLoggedIn: true,
-                loginTime: Date.now()
-            }));
-            
-            showMessage('Registration successful! Redirecting...', false);
-            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
         }
         
         // 检查是否已登录
@@ -219,6 +242,11 @@
                 if (user.isLoggedIn) window.location.href = 'dashboard.html';
             } catch(e) {}
         }
+        
+        // 回车提交
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleRegister();
+        });
     </script>
 </body>
 </html>
