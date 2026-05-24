@@ -7,7 +7,7 @@
 }
 
 body {
-    background: #0A122B;
+    background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     color: #ffffff;
     min-height: 100vh;
@@ -23,6 +23,7 @@ body {
 .sidebar {
     width: 280px;
     background: rgba(10, 18, 43, 0.95);
+    backdrop-filter: blur(16px);
     border-right: 1px solid rgba(201, 176, 149, 0.2);
     padding: 32px 20px;
     position: sticky;
@@ -31,7 +32,7 @@ body {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    z-index: 1000;  /* 确保高于 overlay */
+    z-index: 1000;
 }
 
 .sidebar-top {
@@ -84,7 +85,82 @@ body {
     border-left: 2px solid #C9B095;
 }
 
-/* ========== 主内容区 - 强制左对齐 ========== */
+/* ========== 侧边栏底部升级卡片 ========== */
+.sidebar-upgrade-card {
+    margin-top: 20px;
+    padding: 24px 20px;
+    background: rgba(20, 30, 55, 0.6);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    text-align: left;
+    border: 1px solid rgba(201, 176, 149, 0.3);
+    flex-shrink: 0;
+}
+
+@keyframes pulseGlow {
+    0% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); }
+    50% { box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12); border-color: rgba(201, 176, 149, 0.5); }
+    100% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); }
+}
+
+.sidebar-upgrade-card {
+    animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+.sidebar-upgrade-card:hover {
+    animation: none;
+    transform: translateY(-2px);
+}
+
+.sidebar-premium-badge {
+    display: inline-block;
+    background: #C9B095;
+    border: 1px solid #C9B095;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #0A122B;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+}
+
+.sidebar-upgrade-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 12px;
+}
+
+.sidebar-upgrade-desc {
+    font-size: 12px;
+    color: #7a85a5;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.sidebar-upgrade-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(201, 176, 149, 0.1);
+    border: 1px solid rgba(201, 176, 149, 0.4);
+    padding: 8px 20px;
+    border-radius: 30px;
+    text-decoration: none;
+    color: #C9B095;
+    font-weight: 600;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+.sidebar-upgrade-btn:hover {
+    background: rgba(201, 176, 149, 0.2);
+    color: #ffd700;
+    transform: translateX(2px);
+}
+
+/* ========== 主内容区 ========== */
 .main {
     flex: 1;
     padding: 32px 40px;
@@ -221,7 +297,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 2000;
     visibility: hidden;
     opacity: 0;
     transition: all 0.3s ease;
@@ -274,19 +350,6 @@ body {
     padding: 24px;
 }
 
-/* ========== 响应式 ========== */
-@media (max-width: 1000px) {
-    .sidebar {
-        width: 240px;
-    }
-    .main {
-        padding: 24px;
-    }
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
 /* ========== 移动端汉堡菜单 ========== */
 .menu-toggle {
     display: none;
@@ -316,13 +379,31 @@ body {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.6);
-    z-index: 998;  /* 低于侧边栏的 z-index */
-    pointer-events: auto;  /* 允许点击关闭 */
+    z-index: 999;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 1000px) {
+    .sidebar {
+        width: 240px;
+    }
+    .main {
+        padding: 24px;
+    }
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
     .menu-toggle {
         display: block;
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 1002;
     }
     
     .sidebar {
@@ -330,13 +411,18 @@ body {
         left: -280px;
         top: 0;
         transition: left 0.3s ease;
-        z-index: 1000;
+        z-index: 1001;
         width: 280px;
         height: 100%;
+        background: rgba(10, 18, 43, 0.98);
     }
     
     .sidebar.open {
         left: 0;
+    }
+    
+    .menu-overlay {
+        z-index: 1000;
     }
     
     .menu-overlay.active {
@@ -345,85 +431,11 @@ body {
     
     .main {
         padding: 16px 20px;
+        margin-top: 60px;
     }
     
     /* 手机版菜单项垂直排列 */
     .nav {
         flex-direction: column;
     }
-}
-
-/* ========== 侧边栏底部升级卡片 ========== */
-.sidebar-upgrade-card {
-    margin-top: 20px;
-    padding: 24px 20px;
-    background: rgba(20, 30, 55, 0.6);
-    backdrop-filter: blur(12px);
-    border-radius: 20px;
-    text-align: left;
-    border: 1px solid rgba(201, 176, 149, 0.3);
-    flex-shrink: 0;
-}
-
-@keyframes pulseGlow {
-    0% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); }
-    50% { box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12); border-color: rgba(201, 176, 149, 0.5); }
-    100% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); }
-}
-
-.sidebar-upgrade-card {
-    animation: pulseGlow 2.5s ease-in-out infinite;
-}
-
-.sidebar-upgrade-card:hover {
-    animation: none;
-    transform: translateY(-2px);
-}
-
-.sidebar-premium-badge {
-    display: inline-block;
-    background: #C9B095;
-    border: 1px solid #C9B095;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #0A122B;
-    letter-spacing: 1px;
-    margin-bottom: 14px;
-}
-
-.sidebar-upgrade-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #ffffff;
-    margin-bottom: 12px;
-}
-
-.sidebar-upgrade-desc {
-    font-size: 12px;
-    color: #7a85a5;
-    line-height: 1.6;
-    margin-bottom: 20px;
-}
-
-.sidebar-upgrade-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(201, 176, 149, 0.1);
-    border: 1px solid rgba(201, 176, 149, 0.4);
-    padding: 8px 20px;
-    border-radius: 30px;
-    text-decoration: none;
-    color: #C9B095;
-    font-weight: 600;
-    font-size: 13px;
-    transition: 0.2s;
-}
-
-.sidebar-upgrade-btn:hover {
-    background: rgba(201, 176, 149, 0.2);
-    color: #ffd700;
-    transform: translateX(2px);
 }
