@@ -311,7 +311,15 @@
                 document.getElementById('statTrialBonus').innerHTML = `€${displayTrialBonus.toFixed(2)}`;
                 document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`;
                 document.getElementById('totalOrders').innerText = orderCount;
-                document.getElementById('statPending').innerHTML = `€0.00`;
+                // 获取待处理提现金额（pending状态的提现）
+const { data: pendingWithdrawals } = await sb
+    .from('withdrawals')
+    .select('amount')
+    .eq('uid', user.uid)
+    .eq('status', 'pending');
+
+const totalPending = pendingWithdrawals?.reduce((sum, w) => sum + (w.amount || 0), 0) || 0;
+document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)}`;
                 
                 // 计算使用体验金完成的订单数和佣金
                 // 假设：所有使用体验金完成的订单，都是价格 <= 体验金额度
