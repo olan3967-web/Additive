@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="toast.css">
     <script src="toast.js"></script>
     <style>
-        /* 保留原有样式 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
@@ -525,40 +524,50 @@
         }
     }
     
-    // 充值（带奖励金额）
+    // 充值（带奖励金额）- 使用自定义弹窗
     async function depositBalance(uid) {
-        const amount = parseFloat(prompt('充值金额 (€):'));
-        if(isNaN(amount) || amount <= 0) return;
-        const bonus = parseFloat(prompt('奖励金额 (€) (可选，默认0):'));
-        const bonusAmount = isNaN(bonus) ? 0 : bonus;
-        const totalAmount = amount + bonusAmount;
-        
-        const { data: user } = await sb.from('users').select('balance, username').eq('uid', uid).single();
-        const newBalance = (user.balance || 0) + totalAmount;
-        await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
-        
-        if(amount > 0) {
-            await sb.from('deposits').insert([{ uid, username: user.username, amount: amount, type: 'manual' }]);
-        }
-        if(bonusAmount > 0) {
-            await sb.from('deposits').insert([{ uid, username: user.username, amount: bonusAmount, type: 'deposit_bonus' }]);
-        }
-        loadUsers(); loadDashboard();
-        showToast(`充值 €${amount}，奖励 €${bonusAmount}，总计添加 €${totalAmount}`, 'success');
+        showPrompt('充值金额', '请输入充值金额 (€)', async (amountInput) => {
+            const amount = parseFloat(amountInput);
+            if(isNaN(amount) || amount <= 0) {
+                showToast('请输入有效金额', 'error');
+                return;
+            }
+            showPrompt('奖励金额', '请输入奖励金额 (€)（可选，默认0）', async (bonusInput) => {
+                const bonusAmount = parseFloat(bonusInput) || 0;
+                const totalAmount = amount + bonusAmount;
+                
+                const { data: user } = await sb.from('users').select('balance, username').eq('uid', uid).single();
+                const newBalance = (user.balance || 0) + totalAmount;
+                await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
+                
+                if(amount > 0) {
+                    await sb.from('deposits').insert([{ uid, username: user.username, amount: amount, type: 'manual' }]);
+                }
+                if(bonusAmount > 0) {
+                    await sb.from('deposits').insert([{ uid, username: user.username, amount: bonusAmount, type: 'deposit_bonus' }]);
+                }
+                loadUsers(); loadDashboard();
+                showToast(`充值 €${amount}，奖励 €${bonusAmount}，总计添加 €${totalAmount}`, 'success');
+            });
+        });
     }
     
     async function cutBalance(uid){
-        let amt=prompt('扣款金额 (€):');
-        if(!amt) return;
-        amt=parseFloat(amt);
-        const {data:user}=await sb.from('users').select('balance').eq('uid',uid).single();
-        if((user.balance||0)<amt){
-            showToast('余额不足', 'error');
-            return;
-        }
-        await sb.from('users').update({balance:(user.balance||0)-amt}).eq('uid',uid);
-        loadUsers(); loadDashboard();
-        showToast(`-€${amt}`, 'success');
+        showPrompt('扣款金额', '请输入扣款金额 (€)', async (amtInput) => {
+            const amt = parseFloat(amtInput);
+            if(!amt || isNaN(amt) || amt <= 0) {
+                showToast('请输入有效金额', 'error');
+                return;
+            }
+            const {data:user}=await sb.from('users').select('balance').eq('uid',uid).single();
+            if((user.balance||0) < amt){
+                showToast('余额不足', 'error');
+                return;
+            }
+            await sb.from('users').update({balance:(user.balance||0)-amt}).eq('uid',uid);
+            loadUsers(); loadDashboard();
+            showToast(`-€${amt}`, 'success');
+        });
     }
     
     async function updateVip(uid, level){ 
@@ -803,7 +812,7 @@
             allOrders = allData;
             document.getElementById('statOrderPool').innerText = allOrders.length;
             renderOrderPoolPage();
-        } catch(e) { console.error(e); if(tbody) tbody.innerHTML = `<tr><td colspan="7">错误: ${e.message}</td></tr>`; }
+        } catch(e) { console.error(e); if(tbody) tbody.innerHTML = `<table><td colspan="7">错误: ${e.message}</td></tr>`; }
     }
     
     function renderOrderPoolPage() {
@@ -1058,18 +1067,20 @@
     }
     
     async function addSigninDay() {
-        const newDay = prompt('请输入新的签到日数 (例如: 7)');
-        if(!newDay || isNaN(newDay)) return;
-        const amount = prompt(`请输入 Day ${newDay} 的奖励金额 (€)`);
-        if(!amount || isNaN(amount)) return;
-        
-        const { error } = await sb.from('signin_rewards').insert([{ day: parseInt(newDay), amount: parseFloat(amount) }]);
-        if(error) {
-            showToast('添加失败: ' + error.message, 'error');
-        } else {
-            showToast('添加成功', 'success');
-            loadSigninRewards();
-        }
+        showPrompt('添加签到日', '请输入新的签到日数 (例如: 7)', async (newDay) => {
+            if(!newDay || isNaN(newDay)) return;
+            showPrompt('设置奖励金额', `请输入 Day ${newDay} 的奖励金额 (€)`, async (amount) => {
+                if(!amount || isNaN(amount)) return;
+                
+                const { error } = await sb.from('signin_rewards').insert([{ day: parseInt(newDay), amount: parseFloat(amount) }]);
+                if(error) {
+                    showToast('添加失败: ' + error.message, 'error');
+                } else {
+                    showToast('添加成功', 'success');
+                    loadSigninRewards();
+                }
+            });
+        });
     }
     
     document.getElementById('addSigninDayBtn')?.addEventListener('click', addSigninDay);
