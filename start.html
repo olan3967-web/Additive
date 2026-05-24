@@ -73,10 +73,18 @@
         .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.2s ease; }
         .progress-text { text-align: center; margin-top: 12px; font-size: 13px; color: #C9B095; }
         @media (max-width: 768px) {
-    .menu-toggle { display: block; }
+    .menu-toggle { 
+        display: block;
+        position: relative;
+        left: 0;
+        margin-bottom: 16px;
+        margin-left: 16px;
+        width: fit-content;
+    }
+    
     .two-columns { flex-direction: column; gap: 20px; }
     
-    /* 视频区域 - 全屏无缝隙，完整显示 */
+    /* 视频区域 - 全屏无缝隙 */
     .left-col {
         flex: auto;
         width: 100%;
@@ -122,10 +130,8 @@
         padding: 0 16px; 
     }
     
-    /* 确保所有内容容器无外边距 */
     .main {
-        padding: 0 !important;
-        margin: 0 !important;
+        padding-top: 0 !important;
     }
     
     .app {
