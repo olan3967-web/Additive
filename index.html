@@ -1,11 +1,494 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>ADDITIVE</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ADDITIVE | The Hotel Performance Marketing Agency</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #ffffff;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+
+        /* ========== HEADER ========== */
+        .site-header {
+            padding: 24px 0;
+            border-bottom: 1px solid rgba(201, 176, 149, 0.15);
+            background: rgba(10, 18, 43, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #ffffff;
+            text-decoration: none;
+        }
+        .logo span {
+            color: #C9B095;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: #a0a8c0;
+            transition: 0.2s;
+        }
+        .nav-links a:hover {
+            color: #C9B095;
+        }
+        .btn-outline {
+            border: 1px solid rgba(201, 176, 149, 0.4);
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #C9B095;
+            background: transparent;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .btn-outline:hover {
+            background: rgba(201, 176, 149, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* ========== HERO ========== */
+        .hero {
+            padding: 80px 0 60px;
+        }
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -1px;
+            max-width: 900px;
+        }
+        .hero h1 span {
+            color: #C9B095;
+        }
+        .hero p {
+            font-size: 18px;
+            color: #a0a8c0;
+            max-width: 680px;
+            margin: 24px 0 32px;
+            line-height: 1.5;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #C9B095, #b8944a);
+            border: none;
+            padding: 14px 36px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 16px;
+            color: #0A122B;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+        .btn-primary:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+
+        /* ========== TRUSTED ROW ========== */
+        .trusted-row {
+            border-top: 1px solid rgba(201, 176, 149, 0.15);
+            border-bottom: 1px solid rgba(201, 176, 149, 0.15);
+            padding: 32px 0;
+            margin: 40px 0 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        .trusted-item {
+            font-size: 14px;
+            font-weight: 500;
+            color: #a0a8c0;
+            letter-spacing: 0.3px;
+        }
+
+        /* ========== TESTIMONIALS ========== */
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 64px 0 32px;
+        }
+        .section-title span {
+            color: #C9B095;
+        }
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+            margin-bottom: 64px;
+        }
+        .testimonial-card {
+            background: rgba(20, 30, 55, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 28px;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+            transition: all 0.3s;
+        }
+        .testimonial-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(201, 176, 149, 0.3);
+        }
+        .testimonial-text {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #c0c8e0;
+            margin-bottom: 24px;
+            font-style: italic;
+        }
+        .testimonial-author {
+            font-weight: 700;
+            color: #C9B095;
+            margin-bottom: 4px;
+        }
+        .testimonial-title {
+            font-size: 13px;
+            color: #7a85a5;
+        }
+
+        /* ========== STATS GRID ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin: 48px 0 40px;
+        }
+        .stat-card {
+            background: rgba(20, 30, 55, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 28px 20px;
+            text-align: center;
+            border: 1px solid rgba(201, 176, 149, 0.1);
+        }
+        .stat-number {
+            font-size: 42px;
+            font-weight: 800;
+            color: #C9B095;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: #a0a8c0;
+        }
+
+        /* ========== FEATURE 2-COLUMN ========== */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: start;
+            margin: 80px 0;
+        }
+        .feature-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .feature-title span {
+            color: #C9B095;
+        }
+        .feature-desc {
+            color: #a0a8c0;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .feature-list {
+            list-style: none;
+        }
+        .feature-list li {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #c0c8e0;
+        }
+        .feature-list i {
+            color: #C9B095;
+            font-size: 18px;
+            width: 24px;
+        }
+
+        /* ========== CTA ========== */
+        .cta-section {
+            background: linear-gradient(145deg, rgba(20, 30, 55, 0.8), rgba(10, 18, 43, 0.9));
+            border-radius: 32px;
+            padding: 64px 48px;
+            margin: 60px 0;
+            text-align: center;
+            border: 1px solid rgba(201, 176, 149, 0.25);
+        }
+        .cta-section h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .cta-section p {
+            font-size: 16px;
+            color: #a0a8c0;
+            max-width: 550px;
+            margin: 0 auto 32px;
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            border-top: 1px solid rgba(201, 176, 149, 0.1);
+            padding: 48px 0 32px;
+            font-size: 12px;
+            color: #5a6388;
+            text-align: center;
+        }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            color: #7a85a5;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .footer-links a:hover {
+            color: #C9B095;
+        }
+
+        /* ========== 波浪背景 ========== */
+        .waves-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        @media (max-width: 900px) {
+            .container { padding: 0 20px; }
+            .hero h1 { font-size: 38px; }
+            .testimonial-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .feature-grid { grid-template-columns: 1fr; gap: 48px; }
+        }
+        @media (max-width: 600px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 32px; }
+            .cta-section { padding: 40px 24px; }
+            .section-title { font-size: 28px; }
+        }
+    </style>
 </head>
 <body>
-    <h1>ADDITIVE Platform</h1>
-    <a href="login.html">Login</a>
-    <a href="register.html">Register</a>
+    <!-- 波浪背景 Canvas -->
+    <canvas id="wavesBg" class="waves-bg"></canvas>
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="#" class="logo">ADDITIVE<span>®</span></a>
+            <div class="nav-links">
+                <a href="register.html" class="btn-outline">Register</a>
+                <a href="signin.html" class="btn-outline">Sign In</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Hero 区域 -->
+            <div class="hero">
+                <h1>Digital hotel marketing.<br><span>Measurable, precise & specialized.</span></h1>
+                <p>Hotels are facing a new reality: high advertising costs, shrinking profit margins, ever shorter bookings. Standard solutions and traditional agencies reach their limits here. A new level of precision and performance is needed.</p>
+                <p style="font-size: 16px; margin-top: -20px; margin-bottom: 32px; color: #C9B095;">ADDITIVE is the first specialized performance marketing agency for hotels. With a clear focus on measurable results and more direct bookings through data.</p>
+                <button class="btn-primary" onclick="location.href='register.html'"><i class="fas fa-arrow-right"></i> Get started</button>
+            </div>
+
+            <!-- Trusted by row -->
+            <div class="trusted-row">
+                <span class="trusted-item">Trusted Marketing Partner</span>
+                <span class="trusted-item">for over 500 Hotels across Europe</span>
+                <span class="trusted-item">⭐ 4.9 / 5 Client Rating</span>
+            </div>
+
+            <!-- 客户评价 -->
+            <h2 class="section-title">What our <span>partners say</span></h2>
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <div class="testimonial-text">“With ADDITIVE, we have really found a good partner who has excellent marketing skills.”</div>
+                    <div class="testimonial-author">Berger Family</div>
+                    <div class="testimonial-title">Mountain Resort Feuerberg, Carinthia</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-text">“The collaboration is always professional, friendly and based on facts. We are very grateful to the team for their top performance.”</div>
+                    <div class="testimonial-author">Madreiter Family</div>
+                    <div class="testimonial-title">Der Löwe, Salzburg</div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-text">“We have already received numerous bookings. As a company, ADDITIVE has shown what modern hotel marketing really looks like.”</div>
+                    <div class="testimonial-author">Bettina Ortner-Zwicklbauer</div>
+                    <div class="testimonial-title">Ortner's Resort, Bavaria</div>
+                </div>
+            </div>
+
+            <!-- 案例数据卡片 -->
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-number">2,251</div><div class="stat-label">Reservations in just one year</div></div>
+                <div class="stat-card"><div class="stat-number">75%</div><div class="stat-label">Reservations from new guests</div></div>
+                <div class="stat-card"><div class="stat-number">1,920%</div><div class="stat-label">ROI for clients</div></div>
+                <div class="stat-card"><div class="stat-number">+500</div><div class="stat-label">Hotels across Europe</div></div>
+            </div>
+
+            <!-- Marketing Excellence meets Technology -->
+            <div class="feature-grid">
+                <div>
+                    <h2 class="feature-title">Marketing Excellence <br><span>meets Technology.</span></h2>
+                    <p class="feature-desc">We combine high-end marketing campaigns with advanced data analysis and proprietary technology that shows for the first time which measures really work.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check-circle"></i> 100% specialized in performance, no "full service" philosophy</li>
+                        <li><i class="fas fa-check-circle"></i> +80 specialized experts in digital hotel marketing</li>
+                        <li><i class="fas fa-check-circle"></i> 20 years of experience in online marketing and software</li>
+                    </ul>
+                </div>
+                <div>
+                    <h2 class="feature-title">Not clicks, but <span>revenue.</span></h2>
+                    <p class="feature-desc">Our marketing solutions are 100% optimized for performance. What matters? Turnover, reservations, profitability and a predictable occupancy for your hotel business.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-chart-line"></i> Balancing seasonality gaps in a targeted manner</li>
+                        <li><i class="fas fa-chart-pie"></i> Reliably evaluate campaign effectiveness thanks to ROI</li>
+                        <li><i class="fas fa-euro-sign"></i> Invest advertising budget where reservations occur</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Use data. Don't rely on gut feelings. -->
+            <div class="feature-grid" style="margin-top: 0;">
+                <div>
+                    <h2 class="feature-title">Use data. <span>Don't rely on gut feelings.</span></h2>
+                    <p class="feature-desc">Our marketing system analyses guest behavior and reservation data in real time and enables targeted marketing with a clear focus: More bookings and higher ROI.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-chart-simple"></i> 24/7 Measurability and transparency instead of marketing black box</li>
+                        <li><i class="fas fa-chart-simple"></i> No superficial marketing figures, but hotel-specific KPIs</li>
+                        <li><i class="fas fa-calendar"></i> Individual campaign optimization based on your hotel occupancy</li>
+                    </ul>
+                </div>
+                <div>
+                    <h2 class="feature-title">Our Numbers <br><span>Tell a Clear Story.</span></h2>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                        <div><div style="font-size: 28px; font-weight: 800; color: #C9B095;">€30M</div><div style="font-size: 12px; color: #a0a8c0;">managed ad budget</div></div>
+                        <div><div style="font-size: 28px; font-weight: 800; color: #C9B095;">960%</div><div style="font-size: 12px; color: #a0a8c0;">average ROI</div></div>
+                        <div><div style="font-size: 28px; font-weight: 800; color: #C9B095;">€500M</div><div style="font-size: 12px; color: #a0a8c0;">generated value</div></div>
+                        <div><div style="font-size: 28px; font-weight: 800; color: #C9B095;">+50</div><div style="font-size: 12px; color: #a0a8c0;">partners & agencies</div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA 区域 -->
+            <div class="cta-section">
+                <h2>Your strategic partner for measurable marketing success.</h2>
+                <p>Over 500 hotels already place their trust in our technology and expertise. You too can leverage the first data-driven and performance-oriented marketing system developed specifically for the hotel industry.</p>
+                <button class="btn-primary" onclick="location.href='register.html'"><i class="fas fa-arrow-right"></i> Start now</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-links">
+                <a href="#">Imprint</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms & Conditions</a>
+                <a href="#">Contact</a>
+            </div>
+            <div>© 2025 ADDITIVE – The Hotel Performance Marketing Agency</div>
+        </div>
+    </footer>
+
+    <!-- 波浪效果脚本 -->
+    <script>
+    (function() {
+        const canvas = document.getElementById('wavesBg');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let time = 0;
+        
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        
+        function animate() {
+            time += 0.02;
+            ctx.fillStyle = '#0a0f2a';
+            ctx.fillRect(0, 0, width, height);
+            
+            for(let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                for(let x = 0; x <= width; x += 10) {
+                    const y = height * (0.4 + i * 0.2) + Math.sin(x * 0.01 + time * (1 + i * 0.5)) * 30 + Math.cos(x * 0.02 + time) * 15;
+                    if(x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = `rgba(201, 176, 149, ${0.12 - i * 0.02})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    })();
+    </script>
 </body>
 </html>
