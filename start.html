@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
     <style>
-        /* 样式保持不变 - 省略重复代码，使用之前正常的样式 */
+        /* 样式保持不变 - 使用之前正常的样式 */
         .start-hero { margin-bottom: 24px; }
         .start-hero h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .start-hero p { color: #7a85a5; font-size: 13px; margin-bottom: 0; }
@@ -132,7 +132,8 @@
         function toggleMenu() { const s=document.getElementById('sidebar'), o=document.querySelector('.menu-overlay'), m=document.getElementById('menuToggleBtn'); if(s)s.classList.toggle('open'); if(o)o.classList.toggle('active'); if(m)m.classList.toggle('hidden'); }
         function closeMenu() { const s=document.getElementById('sidebar'), o=document.querySelector('.menu-overlay'), m=document.getElementById('menuToggleBtn'); if(s)s.classList.remove('open'); if(o)o.classList.remove('active'); if(m)m.classList.remove('hidden'); }
         
-        let currentOrder = null, selectedRating = 0, currentUserBalance = 0, currentUserTrialBonus = 0, currentUserUid = null;
+        let currentOrder = null, selectedRating = 0, currentUserBalance = 0, currentUserUid = null;
+        let displayTrialBonus = 0;  // 前端固定显示的体验金金额
         let ordersCache = null;
         
         function generateRandomOrderCode() { const l='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; return l[Math.floor(Math.random()*26)]+l[Math.floor(Math.random()*26)]+(Math.floor(Math.random()*90000)+10000); }
@@ -154,19 +155,17 @@
             } catch(e) { console.error('获取订单异常:', e); return []; }
         }
         
-        // 刷新显示（体验金卡片不扣除，只刷新余额）
-        async function refreshDisplay() {
+        // 刷新余额显示（体验金保持固定显示值）
+        async function refreshBalanceDisplay() {
             const user = getCurrentUser();
             if (!user) return;
-            const { data: userData } = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
+            const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
             if (userData) {
                 currentUserBalance = userData.balance || 0;
-                currentUserTrialBonus = userData.trial_bonus_amount || 0;
                 document.getElementById('statBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
-                // 体验金卡片显示数据库中的值（不显示扣除）
-                document.getElementById('statTrialBonus').innerHTML = `€${currentUserTrialBonus.toFixed(2)}`;
+                // 体验金卡片保持固定显示值，不随数据库变化
+                document.getElementById('statTrialBonus').innerHTML = `€${displayTrialBonus.toFixed(2)}`;
                 user.balance = currentUserBalance;
-                user.trialBonusAmount = currentUserTrialBonus;
                 localStorage.setItem('currentUser', JSON.stringify(user));
             }
         }
@@ -179,25 +178,28 @@
                 const { data: userData } = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
                 if (userData) {
                     currentUserBalance = userData.balance || 0;
-                    currentUserTrialBonus = userData.trial_bonus_amount || 0;
+                    // 保存体验金初始值（前端固定显示）
+                    if (displayTrialBonus === 0) {
+                        displayTrialBonus = userData.trial_bonus_amount || 0;
+                    }
                     user.balance = currentUserBalance;
-                    user.trialBonusAmount = currentUserTrialBonus;
                     localStorage.setItem('currentUser', JSON.stringify(user));
                 }
                 const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
                 const totalCommission = orders?.reduce((s,o)=>s+(o.commission||0),0) || 0;
                 const orderCount = orders?.length || 0;
                 document.getElementById('statBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
-                document.getElementById('statTrialBonus').innerHTML = `€${currentUserTrialBonus.toFixed(2)}`;
+                document.getElementById('statTrialBonus').innerHTML = `€${displayTrialBonus.toFixed(2)}`;
                 document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`;
                 document.getElementById('totalOrders').innerText = orderCount;
                 document.getElementById('statPending').innerHTML = `€0.00`;
                 
-                // 检查是否达到30单，扣除所有体验金
-                if (orderCount >= 30 && currentUserTrialBonus > 0) {
+                // 完成30单后，一次性扣除所有体验金
+                if (orderCount >= 30 && displayTrialBonus > 0) {
                     await sb.from('users').update({ trial_bonus_amount: 0 }).eq('uid', user.uid);
-                    await refreshDisplay();
-                    console.log('已完成30单，体验金已扣除');
+                    displayTrialBonus = 0;
+                    document.getElementById('statTrialBonus').innerHTML = `€0.00`;
+                    console.log('已完成30单，体验金已全部扣除');
                 }
             } catch(e) { console.error('加载数据失败:', e); }
         }
@@ -246,12 +248,10 @@
             } catch(e) { console.error(e); }
         }
         
-        // 预加载订单
         async function preloadOrders() {
             await getOrdersFromAdmin();
         }
         
-        // 打开订单弹窗
         async function openOrderModal() {
             const orderCount = parseInt(document.getElementById('totalOrders').innerText) || 0;
             const ordersLimit = await getUserOrdersLimit();
@@ -265,7 +265,9 @@
             
             await loadUserData();
             const allOrders = await getOrdersFromAdmin();
-            const available = allOrders.filter(o => (o.price || 0) <= (currentUserBalance + currentUserTrialBonus));
+            // 可用金额 = 余额 + 体验金（实际扣款会用体验金优先）
+            const totalAvailable = currentUserBalance + displayTrialBonus;
+            const available = allOrders.filter(o => (o.price || 0) <= totalAvailable);
             
             if(available.length === 0) { 
                 document.getElementById('modalContent').innerHTML = '<div style="text-align:center; padding:40px;">No available orders</div>';
@@ -320,17 +322,24 @@
             if(!user){window.location.href='signin.html';return;}
             const price = currentOrder.price||0;
             const commission = currentOrder.commissionAmount;
-            const totalAvailable = currentUserBalance + currentUserTrialBonus;
+            const totalAvailable = currentUserBalance + displayTrialBonus;
             if(totalAvailable<price){alert('Insufficient funds!');closeOrderModal();return;}
             
             const pc = document.getElementById('progressContainer'), pb = document.getElementById('progressBar'), pt = document.getElementById('progressText');
             pc.style.display='block'; pb.style.width='0%'; pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing payment...'; pb.style.width='25%';
             
             setTimeout(async()=>{
-                // 扣款逻辑：优先使用体验金（但前端不显示扣除）
+                // 扣款逻辑：从数据库真实扣除（优先用体验金，不够再用余额）
+                // 注意：前端 displayTrialBonus 不变
                 let remainingPrice = price;
-                let newBalance = currentUserBalance;
-                let newTrialBonus = currentUserTrialBonus;
+                
+                // 先获取当前数据库中的体验金和余额
+                const { data: currentData } = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
+                let dbTrialBonus = currentData?.trial_bonus_amount || 0;
+                let dbBalance = currentData?.balance || 0;
+                
+                let newTrialBonus = dbTrialBonus;
+                let newBalance = dbBalance;
                 
                 if (newTrialBonus > 0) {
                     const useFromTrial = Math.min(newTrialBonus, remainingPrice);
@@ -341,13 +350,10 @@
                     newBalance -= remainingPrice;
                 }
                 
-                // 更新数据库（扣款）
+                // 更新数据库
                 await updateUserBalance(user.uid, newBalance, newTrialBonus);
                 currentUserBalance = newBalance;
-                currentUserTrialBonus = newTrialBonus;
-                
-                // 刷新显示（体验金卡片保持原有金额，不显示扣除）
-                await refreshDisplay();
+                await refreshBalanceDisplay();
                 
                 pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Searching Offer...'; pb.style.width='50%';
                 
@@ -355,11 +361,11 @@
                     pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting Order...'; pb.style.width='75%';
                     
                     setTimeout(async()=>{
-                        // 订单完成后：只加佣金到 balance
+                        // 订单完成后：只加佣金到余额
                         const finalBalance = currentUserBalance + commission;
-                        await updateUserBalance(user.uid, finalBalance, currentUserTrialBonus);
+                        await updateUserBalance(user.uid, finalBalance, newTrialBonus);
                         currentUserBalance = finalBalance;
-                        await refreshDisplay();
+                        await refreshBalanceDisplay();
                         
                         // 保存订单历史
                         await sb.from('order_history').insert([{
@@ -378,19 +384,15 @@
                         await loadUserData();
                         
                         pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
-                        setTimeout(()=>{ 
-                            closeOrderModal(); 
-                        }, 300);
+                        setTimeout(()=>{ closeOrderModal(); }, 300);
                     }, 1000);
                 }, 1000);
             }, 500);
         }
         
-        // 绑定按钮事件
         document.getElementById('startNowBtn').addEventListener('click', () => openOrderModal());
         
         preloadOrders();
-        
         if(!localStorage.getItem('currentUser')) window.location.href='signin.html';
         loadUserData();
         loadAnimatedConfig();
