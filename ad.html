@@ -676,10 +676,24 @@
     }
     
     async function updateVip(uid, level){ 
-        await sb.from('users').update({ vip_level: parseInt(level) }).eq('uid', uid); 
-        showToast('VIP已更新', 'success');
-        loadUsers(); 
+    const newLevel = parseInt(level);
+    console.log('Updating VIP:', uid, 'to level', newLevel);
+    
+    const { data, error } = await sb
+        .from('users')
+        .update({ vip_level: newLevel })
+        .eq('uid', uid)
+        .select();
+    
+    if (error) {
+        console.error('Update error:', error);
+        showToast('VIP更新失败: ' + error.message, 'error');
+    } else {
+        console.log('Update success:', data);
+        showToast('VIP已更新为 ' + (newLevel === 1 ? 'Normal' : newLevel === 2 ? 'VIP' : 'SVIP'), 'success');
+        loadUsers(); // 刷新用户列表
     }
+}
     
     async function delUser(uid){ 
         showConfirm('确认删除', '永久删除用户？此操作不可恢复', async () => {
