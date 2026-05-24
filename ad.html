@@ -223,6 +223,29 @@
             border: 1px solid #8ca3ff;
         }
         
+        /* 订单池图片预览 */
+        .order-image-preview {
+            width: 60px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #8ca3ff;
+            cursor: pointer;
+        }
+        
+        /* 内容管理样式 */
+        .content-item {
+            background: #0e132e;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .content-title-input {
+            width: 100%;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
         @media (max-width: 1000px) {
             .sidebar { width: 260px; transform: translateX(-100%); position: fixed; transition: 0.2s; z-index: 100; }
             .sidebar.open { transform: translateX(0); }
@@ -244,6 +267,20 @@
         @media (max-width: 1000px) {
             .menu-toggle { display: block; }
             .main { margin-left: 0; padding-top: 70px; }
+        }
+        
+        .reset-orders-btn {
+            background: #7a5f2f;
+            padding: 4px 10px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+        .reset-orders-btn:hover { background: #9a7f3f; }
+        
+        .query-orders-btn {
+            background: #2f6b3a;
+            padding: 4px 12px;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -285,13 +322,13 @@
                 <div class="search-bar">
                     <input type="text" id="searchUserInput" class="search-input" placeholder="🔍 搜索 UID 或用户名...">
                     <button id="searchUserBtn"><i class="fas fa-search"></i> 搜索</button>
-                    <button id="clearUserBtn"><i class="fas fa-eraser"></i> 清除</button>
+                    <button id="refreshUserBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
                     <button id="addUserBtn" class="success"><i class="fas fa-user-plus"></i> 创建用户</button>
                 </div>
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
-                            <tr><th>UID</th><th>用户名</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>操作</th>
+                            <tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>操作</th></tr>
                         </thead>
                         <tbody id="usersTableBody"></tbody>
                     </table>
@@ -305,12 +342,12 @@
                 <div class="search-bar">
                     <input type="text" id="trialSearchUid" class="search-input" placeholder="🔍 搜索 UID">
                     <button id="trialSearchBtn"><i class="fas fa-search"></i> 搜索</button>
-                    <button id="trialClearBtn"><i class="fas fa-eraser"></i> 清除</button>
+                    <button id="trialRefreshBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
                 </div>
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
-                            <tr><th>UID</th><th>用户名</th><th>当前体验金 (€)</th><th>调整金额 (€)</th><th>操作</th>
+                            <tr><th>UID</th><th>用户名</th><th>当前体验金 (€)</th><th>调整金额 (€)</th><th>操作</th></tr>
                         </thead>
                         <tbody id="trialTableBody"></tbody>
                     </table>
@@ -320,7 +357,11 @@
 
         <!-- 提现审核 -->
         <div id="page_withdrawals" class="page">
-            <div class="card"><h3><i class="fas fa-spinner fa-pulse"></i> 待处理提现</h3>
+            <div class="card">
+                <div class="search-bar" style="justify-content: space-between;">
+                    <h3 style="margin:0;"><i class="fas fa-spinner fa-pulse"></i> 待处理提现</h3>
+                    <button id="refreshWithdrawalsBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
+                </div>
                 <div class="table-container"><table class="data-table"><thead><tr><th>UID</th><th>用户名</th><th>金额</th><th>钱包地址</th><th>申请时间</th><th>操作</th></tr></thead><tbody id="withdrawalsTableBody"></tbody></table></div>
             </div>
         </div>
@@ -332,8 +373,26 @@
 
         <!-- 订单记录 -->
         <div id="page_orders" class="page">
-            <div class="card"><h3><i class="fas fa-history"></i> 用户订单历史</h3>
-                <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>UID</th><th>用户名</th><th>订单号</th><th>酒店名</th><th>价格</th><th>佣金</th><th>日期</th></tr></thead><tbody id="ordersTableBody"></tbody></table></div>
+            <div class="card">
+                <div class="search-bar" style="justify-content: space-between;">
+                    <h3 style="margin:0;"><i class="fas fa-history"></i> 用户订单历史</h3>
+                    <button id="refreshOrdersListBtn"><i class="fas fa-sync-alt"></i> 刷新用户列表</button>
+                </div>
+                <div class="table-container" style="max-height: 300px;">
+                    <table class="data-table">
+                        <thead><tr><th>UID</th><th>用户名</th><th>操作</th></tr></thead>
+                        <tbody id="userListForOrders"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 20px;">
+                    <h4>订单记录详情</h4>
+                    <div class="table-container" style="max-height: 300px;">
+                        <table class="data-table">
+                            <thead><tr><th>订单号</th><th>酒店名</th><th>价格</th><th>佣金</th><th>日期</th></tr></thead>
+                            <tbody id="ordersDetailTableBody"><tr><td colspan="5" style="text-align:center;">点击上方"查询订单记录"查看详情</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -343,9 +402,8 @@
                 <div class="search-bar">
                     <input type="text" id="poolSearchInput" class="search-input" placeholder="🔍 搜索订单号或酒店名...">
                     <button id="poolSearchBtn"><i class="fas fa-search"></i> 搜索</button>
-                    <button id="poolClearBtn"><i class="fas fa-eraser"></i> 清除</button>
+                    <button id="poolRefreshBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
                     <button id="addOrderBtn" class="success"><i class="fas fa-plus"></i> 添加订单</button>
-                    <button id="refreshPoolBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
                 </div>
                 <div class="table-container" style="max-height: 550px;">
                     <table class="data-table" style="min-width: 800px;">
@@ -404,10 +462,12 @@
 
         <!-- 内容管理 -->
         <div id="page_content" class="page">
-            <div class="card"><h3><i class="fas fa-file-contract"></i> 法律内容管理</h3>
-                <div><label>服务条款</label><textarea id="termsContent" rows="4" style="width:100%"></textarea></div>
-                <div style="margin-top: 15px;"><label>平台规则</label><textarea id="platformRules" rows="4" style="width:100%"></textarea></div>
-                <button id="saveContentBtn" style="margin-top: 15px;"><i class="fas fa-save"></i> 保存内容</button>
+            <div class="card">
+                <div class="search-bar" style="justify-content: space-between;">
+                    <h3><i class="fas fa-file-contract"></i> 法律内容管理</h3>
+                    <button id="addContentBtn" class="success"><i class="fas fa-plus"></i> 添加内容</button>
+                </div>
+                <div id="contentListContainer"></div>
             </div>
         </div>
     </div>
@@ -417,6 +477,7 @@
 <div id="addUserModal" class="modal-overlay">
     <div class="modal-card">
         <h3><i class="fas fa-user-plus"></i> 创建新用户</h3>
+        <input type="text" id="newPhone" placeholder="手机号" style="width:100%; margin:10px 0; padding:12px;">
         <input type="text" id="newUsername" placeholder="用户名" style="width:100%; margin:10px 0; padding:12px;">
         <input type="password" id="newPassword" placeholder="密码" style="width:100%; margin:10px 0; padding:12px;">
         <div style="display: flex; gap: 12px; margin-top: 20px;">
@@ -443,6 +504,32 @@
     </div>
 </div>
 
+<!-- Re-upload Image Modal -->
+<div id="reuploadModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3><i class="fas fa-upload"></i> 重新上传图片</h3>
+        <input type="file" id="reuploadFile" accept="image/*" style="width:100%; margin:15px 0; padding:10px;">
+        <div id="reuploadPreview" style="text-align: center; margin-bottom: 15px;"></div>
+        <div style="display: flex; gap: 12px;">
+            <button id="confirmReuploadBtn" class="success">确认上传</button>
+            <button id="cancelReuploadBtn">取消</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Content Modal -->
+<div id="addContentModal" class="modal-overlay">
+    <div class="modal-card">
+        <h3><i class="fas fa-plus"></i> 添加内容</h3>
+        <div style="margin-bottom: 15px;"><label>标题</label><input type="text" id="contentTitle" style="width:100%" placeholder="例如: 服务条款"></div>
+        <div style="margin-bottom: 15px;"><label>内容</label><textarea id="contentBody" rows="6" style="width:100%" placeholder="输入详细内容..."></textarea></div>
+        <div style="display: flex; gap: 12px;">
+            <button id="saveContentItemBtn" class="success">保存</button>
+            <button id="closeContentModalBtn">取消</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
@@ -455,6 +542,9 @@
     const pageSize = 50;
     let featuredHotels = [];
     let trialSearchKeyword = '';
+    let currentQueryUid = null;
+    let systemContents = [];
+    let editingContentId = null;
     
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
     
@@ -470,11 +560,11 @@
         if(pageId === 'trial') loadTrialUsers();
         if(pageId === 'withdrawals') loadWithdrawals();
         if(pageId === 'vip') loadVipSettings();
-        if(pageId === 'orders') loadOrders();
-        if(pageId === 'orderpool') loadOrderPool();
+        if(pageId === 'orders') loadUserListForOrders();
+        if(pageId === 'orderpool') loadAllOrdersFromDB();
         if(pageId === 'animated') loadAnimatedSettings();
         if(pageId === 'signin') loadSigninRewards();
-        if(pageId === 'content') loadContent();
+        if(pageId === 'content') loadContentList();
         
         if(window.innerWidth <= 1000) toggleSidebar();
     }
@@ -511,20 +601,35 @@
                 const row = tbody.insertRow();
                 row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
                 row.insertCell(1).innerText = u.username;
-                row.insertCell(2).innerHTML = `<span class="text-green">€${(u.balance || 0).toFixed(2)}</span>`;
-                row.insertCell(3).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
-                row.insertCell(4).innerText = userOrders;
-                row.insertCell(5).innerHTML = `<select class="vip-select" data-uid="${u.uid}"><option value="1" ${u.vip_level==1?'selected':''}>Normal</option><option value="2" ${u.vip_level==2?'selected':''}>VIP</option><option value="3" ${u.vip_level==3?'selected':''}>SVIP</option></select>`;
-                row.insertCell(6).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}"><i class="fas fa-plus-circle"></i> 充值</button> <button class="cut-btn" data-uid="${u.uid}"><i class="fas fa-minus-circle"></i> 扣款</button> <button class="delete-btn" data-uid="${u.uid}" class="danger"><i class="fas fa-trash"></i> 删除</button>`;
+                row.insertCell(2).innerHTML = `<span class="badge">${u.invite_code || '-'}</span>`;
+                row.insertCell(3).innerText = u.invited_by_username || '-';
+                row.insertCell(4).innerHTML = `<span class="text-green">€${(u.balance || 0).toFixed(2)}</span>`;
+                row.insertCell(5).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
+                row.insertCell(6).innerHTML = `${userOrders}/30 <button class="reset-orders-btn" data-uid="${u.uid}"><i class="fas fa-undo-alt"></i> 重置</button>`;
+                row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}"><option value="1" ${u.vip_level==1?'selected':''}>Normal</option><option value="2" ${u.vip_level==2?'selected':''}>VIP</option><option value="3" ${u.vip_level==3?'selected':''}>SVIP</option></select>`;
+                row.insertCell(8).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}"><i class="fas fa-plus-circle"></i> 充值</button> <button class="cut-btn" data-uid="${u.uid}"><i class="fas fa-minus-circle"></i> 扣款</button> <button class="delete-btn" data-uid="${u.uid}" class="danger"><i class="fas fa-trash"></i> 删除</button>`;
             }
             document.querySelectorAll('.vip-select').forEach(sel => sel.addEventListener('change', () => updateVip(sel.dataset.uid, sel.value)));
             document.querySelectorAll('.deposit-btn').forEach(btn => btn.addEventListener('click', () => depositBalance(btn.dataset.uid)));
             document.querySelectorAll('.cut-btn').forEach(btn => btn.addEventListener('click', () => cutBalance(btn.dataset.uid)));
             document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => delUser(btn.dataset.uid)));
+            document.querySelectorAll('.reset-orders-btn').forEach(btn => btn.addEventListener('click', () => resetUserOrders(btn.dataset.uid)));
         }
     }
     
-    // 充值（带奖励金额）- 使用自定义弹窗
+    // 重置用户订单（删除所有订单历史）
+    async function resetUserOrders(uid) {
+        showConfirm('确认重置', '重置后该用户订单数将归0，订单记录将被删除，是否继续？', async () => {
+            const { error } = await sb.from('order_history').delete().eq('uid', uid);
+            if(error) {
+                showToast('重置失败: ' + error.message, 'error');
+            } else {
+                showToast('订单已重置', 'success');
+                loadUsers();
+            }
+        });
+    }
+    
     async function depositBalance(uid) {
         showPrompt('充值金额', '请输入充值金额 (€)', async (amountInput) => {
             const amount = parseFloat(amountInput);
@@ -588,16 +693,26 @@
     }
     
     document.getElementById('searchUserBtn')?.addEventListener('click', () => { searchKeyword = document.getElementById('searchUserInput').value; loadUsers(); });
-    document.getElementById('clearUserBtn')?.addEventListener('click', () => { document.getElementById('searchUserInput').value = ''; searchKeyword = ''; loadUsers(); });
+    document.getElementById('refreshUserBtn')?.addEventListener('click', () => { document.getElementById('searchUserInput').value = ''; searchKeyword = ''; loadUsers(); });
     document.getElementById('addUserBtn')?.addEventListener('click', () => document.getElementById('addUserModal').classList.add('active'));
     document.getElementById('closeUserModalBtn')?.addEventListener('click', () => document.getElementById('addUserModal').classList.remove('active'));
     document.getElementById('createUserBtn')?.addEventListener('click', createUser);
     
+    function generateInviteCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for(let i = 0; i < 6; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+    }
+    
     async function createUser(){ 
-        const username=document.getElementById('newUsername').value.trim(); 
-        const pwd=document.getElementById('newPassword').value; 
-        if(!username||!pwd){
-            showToast('用户名密码必填', 'error');
+        const phone = document.getElementById('newPhone').value.trim();
+        const username = document.getElementById('newUsername').value.trim(); 
+        const pwd = document.getElementById('newPassword').value; 
+        if(!phone || !username || !pwd){
+            showToast('手机号、用户名、密码必填', 'error');
             return;
         } 
         const {data:exist}=await sb.from('users').select('username').eq('username',username).single(); 
@@ -608,14 +723,26 @@
         const {data:max}=await sb.from('users').select('uid').order('uid',{ascending:false}).limit(1); 
         let newUid='100001'; 
         if(max&&max.length) newUid=(parseInt(max[0].uid)+1).toString(); 
-        const code=Math.random().toString(36).substring(2,8).toUpperCase(); 
-        const {error}=await sb.from('users').insert([{uid:newUid,username,password:pwd,invite_code:code,balance:0,vip_level:1,trial_bonus_amount:0}]); 
+        const inviteCode = generateInviteCode();
+        const {error}=await sb.from('users').insert([{
+            uid:newUid,
+            phone: phone,
+            username,
+            password:pwd,
+            invite_code:inviteCode,
+            balance:0,
+            vip_level:1,
+            trial_bonus_amount:0
+        }]); 
         if(error){
             showToast(error.message, 'error');
             return;
         } 
         loadUsers(); document.getElementById('addUserModal').classList.remove('active'); 
         showToast(`用户 ${username} 创建成功`, 'success');
+        document.getElementById('newPhone').value = '';
+        document.getElementById('newUsername').value = '';
+        document.getElementById('newPassword').value = '';
     }
     
     // ========== 体验金管理 ==========
@@ -702,7 +829,7 @@
         trialSearchKeyword = document.getElementById('trialSearchUid').value;
         loadTrialUsers();
     });
-    document.getElementById('trialClearBtn')?.addEventListener('click', () => {
+    document.getElementById('trialRefreshBtn')?.addEventListener('click', () => {
         document.getElementById('trialSearchUid').value = '';
         trialSearchKeyword = '';
         loadTrialUsers();
@@ -727,6 +854,8 @@
             document.querySelectorAll('.reject-btn').forEach(btn=>btn.addEventListener('click',()=>rejectWd(btn.dataset.id))); 
         } 
     }
+    
+    document.getElementById('refreshWithdrawalsBtn')?.addEventListener('click', () => { loadWithdrawals(); loadDashboard(); });
     
     async function approveWd(id,uid,amt){ 
         showConfirm('批准提现', `批准 €${amt} 提现？`, async () => {
@@ -760,6 +889,7 @@
                     <h3>${v.rank_name} <span class="badge">Lv.${v.level}</span></h3>
                     <div>每日订单上限: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:130px;"></div>
                     <div>佣金比率(%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:110px;"></div>
+                    <div>需充值金额(€): <input type="number" id="deposit_${v.level}" value="${v.required_deposit || 0}" step="0.01" style="width:130px;" placeholder="达到该等级所需充值"></div>
                     <button class="save-vip" data-level="${v.level}" style="margin-top:10px">保存配置</button>
                 </div>`; 
             } 
@@ -770,29 +900,54 @@
     async function saveVip(level){ 
         const limit=parseInt(document.getElementById(`limit_${level}`).value); 
         const rate=parseFloat(document.getElementById(`rate_${level}`).value); 
-        await sb.from('vip_settings').update({orders_limit:limit,commission_rate:rate}).eq('level',level); 
+        const requiredDeposit=parseFloat(document.getElementById(`deposit_${level}`).value) || 0;
+        await sb.from('vip_settings').update({orders_limit:limit,commission_rate:rate,required_deposit:requiredDeposit}).eq('level',level); 
         showToast('VIP参数已更新', 'success');
     }
     
-    // ========== 订单历史 ==========
-    async function loadOrders(){ 
-        const {data:orders}=await sb.from('order_history').select('*').order('date',{ascending:false}).limit(200); 
-        const tbody=document.getElementById('ordersTableBody'); 
-        if(tbody){ 
-            tbody.innerHTML=''; 
-            for(let o of orders||[]){ 
-                const row=tbody.insertRow(); 
-                row.insertCell(0).innerText=o.id; 
-                row.insertCell(1).innerText=o.uid; 
-                row.insertCell(2).innerText=o.username; 
-                row.insertCell(3).innerText=o.order_code||'-'; 
-                row.insertCell(4).innerText=o.accommodation_name||'-'; 
-                row.insertCell(5).innerHTML=`<span class="text-gold">€${(o.price||0).toFixed(2)}</span>`; 
-                row.insertCell(6).innerHTML=`<span class="text-green">€${(o.commission||0).toFixed(2)}</span>`; 
-                row.insertCell(7).innerText=new Date(o.date).toLocaleString(); 
-            } 
-        } 
+    // ========== 订单记录 ==========
+    async function loadUserListForOrders() {
+        const { data: users } = await sb.from('users').select('uid, username').order('created_at', { ascending: false });
+        const tbody = document.getElementById('userListForOrders');
+        if(tbody && users) {
+            tbody.innerHTML = '';
+            for(let u of users) {
+                const row = tbody.insertRow();
+                row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
+                row.insertCell(1).innerText = u.username;
+                row.insertCell(2).innerHTML = `<button class="query-orders-btn" data-uid="${u.uid}" data-name="${u.username}"><i class="fas fa-search"></i> 查询订单记录</button>`;
+            }
+            document.querySelectorAll('.query-orders-btn').forEach(btn => {
+                btn.addEventListener('click', () => queryUserOrders(btn.dataset.uid, btn.dataset.name));
+            });
+        }
     }
+    
+    async function queryUserOrders(uid, username) {
+        currentQueryUid = uid;
+        const { data: orders } = await sb.from('order_history').select('*').eq('uid', uid).order('date', { ascending: false });
+        const tbody = document.getElementById('ordersDetailTableBody');
+        if(tbody) {
+            if(!orders || orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">用户 ${username} 暂无订单记录</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            for(let o of orders) {
+                const row = tbody.insertRow();
+                row.insertCell(0).innerText = o.order_code || '-';
+                row.insertCell(1).innerText = o.accommodation_name || '-';
+                row.insertCell(2).innerHTML = `<span class="text-gold">€${(o.price || 0).toFixed(2)}</span>`;
+                row.insertCell(3).innerHTML = `<span class="text-green">€${(o.commission || 0).toFixed(2)}</span>`;
+                row.insertCell(4).innerText = new Date(o.date).toLocaleString();
+            }
+        }
+    }
+    
+    document.getElementById('refreshOrdersListBtn')?.addEventListener('click', () => {
+        loadUserListForOrders();
+        if(currentQueryUid) queryUserOrders(currentQueryUid, '');
+    });
     
     // ========== 订单池 ==========
     async function loadAllOrdersFromDB() {
@@ -812,7 +967,7 @@
             allOrders = allData;
             document.getElementById('statOrderPool').innerText = allOrders.length;
             renderOrderPoolPage();
-        } catch(e) { console.error(e); if(tbody) tbody.innerHTML = `<table><td colspan="7">错误: ${e.message}</td></tr>`; }
+        } catch(e) { console.error(e); if(tbody) tbody.innerHTML = `<tr><td colspan="7">错误: ${e.message}</td></tr>`; }
     }
     
     function renderOrderPoolPage() {
@@ -834,7 +989,8 @@
                 row.insertCell(1).innerHTML = `<span class="badge">${o.order_code || '-'}</span>`;
                 row.insertCell(2).innerText = o.accommodation_name || '-';
                 row.insertCell(3).innerHTML = `<span class="text-gold">€${(o.price || 0).toFixed(2)}</span>`;
-                row.insertCell(4).innerHTML = o.image_url ? `<a href="${o.image_url}" target="_blank" style="color:#8ca3ff;">查看图片</a>` : '-';
+                // 直接显示图片
+                row.insertCell(4).innerHTML = o.image_url ? `<img src="${o.image_url}" class="order-image-preview" onerror="this.src='https://placehold.co/60x45/1a1f3a/8ca3ff?text=No+Image'" onclick="window.open('${o.image_url}','_blank')">` : '-';
                 row.insertCell(5).innerHTML = `<span class="${o.status === 'available' ? 'text-green' : 'text-red'}">${o.status || 'available'}</span>`;
                 row.insertCell(6).innerHTML = `<button class="edit-order-btn" data-id="${o.id}" data-code="${o.order_code||''}" data-name="${o.accommodation_name||''}" data-price="${o.price||0}" data-image="${o.image_url||''}" data-status="${o.status||'available'}" class="success"><i class="fas fa-edit"></i> 编辑</button> <button class="delete-order-btn" data-id="${o.id}" class="danger"><i class="fas fa-trash"></i> 删除</button>`;
             }
@@ -903,9 +1059,8 @@
     }
     
     document.getElementById('poolSearchBtn')?.addEventListener('click', () => { poolSearchKeyword = document.getElementById('poolSearchInput').value; currentPage = 1; renderOrderPoolPage(); });
-    document.getElementById('poolClearBtn')?.addEventListener('click', () => { document.getElementById('poolSearchInput').value = ''; poolSearchKeyword = ''; currentPage = 1; renderOrderPoolPage(); });
+    document.getElementById('poolRefreshBtn')?.addEventListener('click', () => { document.getElementById('poolSearchInput').value = ''; poolSearchKeyword = ''; currentPage = 1; loadAllOrdersFromDB(); });
     document.getElementById('addOrderBtn')?.addEventListener('click', openAddOrderModal);
-    document.getElementById('refreshPoolBtn')?.addEventListener('click', () => loadAllOrdersFromDB());
     document.getElementById('saveOrderBtn')?.addEventListener('click', saveOrder);
     document.getElementById('cancelOrderBtn')?.addEventListener('click', () => document.getElementById('orderModal').classList.remove('active'));
     
@@ -941,7 +1096,10 @@
                     <input type="text" class="hotel-name-edit" data-index="${index}" value="${escapeHtml(hotel.name || '')}" placeholder="酒店名称">
                     <input type="text" class="hotel-image-edit" data-index="${index}" value="${escapeHtml(hotel.image || '')}" placeholder="图片 URL">
                 </div>
-                <button class="delete-hotel-btn" data-index="${index}" style="background:#7a2f2f;"><i class="fas fa-trash"></i> 删除</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="reupload-hotel-btn" data-index="${index}" style="background:#2f6b3a;"><i class="fas fa-upload"></i> 重新上传</button>
+                    <button class="delete-hotel-btn" data-index="${index}" style="background:#7a2f2f;"><i class="fas fa-trash"></i> 删除</button>
+                </div>
             `;
             container.appendChild(div);
         });
@@ -954,7 +1112,48 @@
         document.querySelectorAll('.delete-hotel-btn').forEach(btn => {
             btn.addEventListener('click', () => { featuredHotels.splice(parseInt(btn.dataset.index), 1); renderHotelsList(); });
         });
+        document.querySelectorAll('.reupload-hotel-btn').forEach(btn => {
+            btn.addEventListener('click', () => openReuploadModal(parseInt(btn.dataset.index)));
+        });
     }
+    
+    let reuploadIndex = null;
+    function openReuploadModal(index) {
+        reuploadIndex = index;
+        document.getElementById('reuploadModal').classList.add('active');
+        document.getElementById('reuploadPreview').innerHTML = '';
+        document.getElementById('reuploadFile').value = '';
+    }
+    
+    document.getElementById('confirmReuploadBtn')?.addEventListener('click', async () => {
+        const fileInput = document.getElementById('reuploadFile');
+        const file = fileInput.files[0];
+        if(!file || reuploadIndex === null) {
+            showToast('请选择图片文件', 'error');
+            return;
+        }
+        
+        const fileName = `hotels/${Date.now()}_${file.name}`;
+        const { data, error } = await sb.storage.from('hotel-images').upload(fileName, file);
+        
+        if(error) {
+            showToast('上传失败: ' + error.message, 'error');
+            return;
+        }
+        
+        const { data: urlData } = sb.storage.from('hotel-images').getPublicUrl(fileName);
+        const publicUrl = urlData.publicUrl;
+        
+        featuredHotels[reuploadIndex].image = publicUrl;
+        renderHotelsList();
+        document.getElementById('reuploadModal').classList.remove('active');
+        showToast('图片已更新', 'success');
+    });
+    
+    document.getElementById('cancelReuploadBtn')?.addEventListener('click', () => {
+        document.getElementById('reuploadModal').classList.remove('active');
+        reuploadIndex = null;
+    });
     
     function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m) { if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m; }); }
     
@@ -1086,22 +1285,100 @@
     document.getElementById('addSigninDayBtn')?.addEventListener('click', addSigninDay);
     
     // ========== 内容管理 ==========
-    async function loadContent(){ 
-        const {data:content}=await sb.from('system_content').select('*').limit(1).single(); 
-        if(content){ 
-            document.getElementById('termsContent').value=content.terms||''; 
-            document.getElementById('platformRules').value=content.platform_rules||''; 
-        } 
+    async function loadContentList() {
+        const { data: contents, error } = await sb.from('system_content').select('*').order('id');
+        if(error) {
+            console.error(error);
+            return;
+        }
+        systemContents = contents || [];
+        renderContentList();
     }
-    document.getElementById('saveContentBtn')?.addEventListener('click', saveContent);
-    async function saveContent(){ 
-        await sb.from('system_content').update({
-            terms:document.getElementById('termsContent').value,
-            platform_rules:document.getElementById('platformRules').value,
-            updated_at:new Date()
-        }).eq('id',1); 
-        showToast('内容已保存', 'success');
+    
+    function renderContentList() {
+        const container = document.getElementById('contentListContainer');
+        if(!container) return;
+        if(systemContents.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无内容，点击"添加内容"开始</div>';
+            return;
+        }
+        container.innerHTML = '';
+        systemContents.forEach(content => {
+            const div = document.createElement('div');
+            div.className = 'content-item';
+            div.innerHTML = `
+                <input type="text" class="content-title-input" data-id="${content.id}" value="${escapeHtml(content.title || '')}" placeholder="标题">
+                <textarea rows="4" data-id="${content.id}" class="content-body-textarea" placeholder="内容" style="width:100%; margin-bottom:10px;">${escapeHtml(content.content || '')}</textarea>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button class="save-content-btn" data-id="${content.id}" class="success"><i class="fas fa-save"></i> 保存</button>
+                    <button class="delete-content-btn" data-id="${content.id}" class="danger"><i class="fas fa-trash"></i> 删除</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        
+        document.querySelectorAll('.save-content-btn').forEach(btn => {
+            btn.addEventListener('click', () => saveContentItem(btn.dataset.id));
+        });
+        document.querySelectorAll('.delete-content-btn').forEach(btn => {
+            btn.addEventListener('click', () => deleteContentItem(btn.dataset.id));
+        });
     }
+    
+    async function saveContentItem(id) {
+        const titleInput = document.querySelector(`.content-title-input[data-id="${id}"]`);
+        const bodyTextarea = document.querySelector(`.content-body-textarea[data-id="${id}"]`);
+        const title = titleInput?.value || '';
+        const content = bodyTextarea?.value || '';
+        
+        const { error } = await sb.from('system_content').update({ title: title, content: content, updated_at: new Date() }).eq('id', id);
+        if(error) {
+            showToast('保存失败: ' + error.message, 'error');
+        } else {
+            showToast('保存成功', 'success');
+            loadContentList();
+        }
+    }
+    
+    async function deleteContentItem(id) {
+        showConfirm('确认删除', '确定删除此内容吗？', async () => {
+            const { error } = await sb.from('system_content').delete().eq('id', id);
+            if(error) {
+                showToast('删除失败: ' + error.message, 'error');
+            } else {
+                showToast('已删除', 'success');
+                loadContentList();
+            }
+        });
+    }
+    
+    function openAddContentModal() {
+        document.getElementById('contentTitle').value = '';
+        document.getElementById('contentBody').value = '';
+        document.getElementById('addContentModal').classList.add('active');
+    }
+    
+    async function saveNewContent() {
+        const title = document.getElementById('contentTitle').value.trim();
+        const content = document.getElementById('contentBody').value.trim();
+        if(!title || !content) {
+            showToast('请填写标题和内容', 'error');
+            return;
+        }
+        
+        const { error } = await sb.from('system_content').insert([{ title: title, content: content, created_at: new Date(), updated_at: new Date() }]);
+        if(error) {
+            showToast('添加失败: ' + error.message, 'error');
+        } else {
+            showToast('添加成功', 'success');
+            document.getElementById('addContentModal').classList.remove('active');
+            loadContentList();
+        }
+    }
+    
+    document.getElementById('addContentBtn')?.addEventListener('click', openAddContentModal);
+    document.getElementById('saveContentItemBtn')?.addEventListener('click', saveNewContent);
+    document.getElementById('closeContentModalBtn')?.addEventListener('click', () => document.getElementById('addContentModal').classList.remove('active'));
     
     // ========== 退出登录 ==========
     document.getElementById('logoutBtn')?.addEventListener('click', () => { 
