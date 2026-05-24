@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
     <style>
-        /* 样式保持不变 - 使用之前正常的样式 */
+        /* 样式保持不变 - 省略重复代码，直接使用之前的样式 */
         .start-hero { margin-bottom: 24px; }
         .start-hero h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .start-hero p { color: #7a85a5; font-size: 13px; margin-bottom: 0; }
@@ -133,8 +133,10 @@
         function closeMenu() { const s=document.getElementById('sidebar'), o=document.querySelector('.menu-overlay'), m=document.getElementById('menuToggleBtn'); if(s)s.classList.remove('open'); if(o)o.classList.remove('active'); if(m)m.classList.remove('hidden'); }
         
         let currentOrder = null, selectedRating = 0, currentUserBalance = 0, currentUserUid = null;
-        let displayTrialBonus = 0;  // 前端固定显示的体验金金额
+        let displayTrialBonus = 0;  // 前端显示的体验金金额
         let ordersCache = null;
+        let trialOrdersCount = 0;    // 使用体验金完成的订单数（用于佣金计算）
+        let totalTrialCommission = 0; // 使用体验金获得的总佣金
         
         function generateRandomOrderCode() { const l='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; return l[Math.floor(Math.random()*26)]+l[Math.floor(Math.random()*26)]+(Math.floor(Math.random()*90000)+10000); }
         
@@ -155,7 +157,7 @@
             } catch(e) { console.error('获取订单异常:', e); return []; }
         }
         
-        // 刷新余额显示（体验金保持固定显示值）
+        // 刷新余额显示
         async function refreshBalanceDisplay() {
             const user = getCurrentUser();
             if (!user) return;
@@ -163,7 +165,6 @@
             if (userData) {
                 currentUserBalance = userData.balance || 0;
                 document.getElementById('statBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
-                // 体验金卡片保持固定显示值，不随数据库变化
                 document.getElementById('statTrialBonus').innerHTML = `€${displayTrialBonus.toFixed(2)}`;
                 user.balance = currentUserBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
@@ -178,14 +179,13 @@
                 const { data: userData } = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
                 if (userData) {
                     currentUserBalance = userData.balance || 0;
-                    // 保存体验金初始值（前端固定显示）
                     if (displayTrialBonus === 0) {
                         displayTrialBonus = userData.trial_bonus_amount || 0;
                     }
                     user.balance = currentUserBalance;
                     localStorage.setItem('currentUser', JSON.stringify(user));
                 }
-                const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
+                const { data: orders } = await sb.from('order_history').select('commission, price').eq('uid', user.uid);
                 const totalCommission = orders?.reduce((s,o)=>s+(o.commission||0),0) || 0;
                 const orderCount = orders?.length || 0;
                 document.getElementById('statBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
@@ -193,6 +193,27 @@
                 document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`;
                 document.getElementById('totalOrders').innerText = orderCount;
                 document.getElementById('statPending').innerHTML = `€0.00`;
+                
+                // 计算使用体验金完成的订单数和佣金
+                // 假设：所有使用体验金完成的订单，都是价格 <= 体验金额度
+                // 这个逻辑可以根据实际业务调整
+                if (displayTrialBonus > 0 && orders) {
+                    // 筛选出使用体验金完成的订单（这里简化：订单价格 <= 体验金总额）
+                    let remainingTrial = displayTrialBonus;
+                    let trialOrders = [];
+                    for (let o of orders) {
+                        if (remainingTrial > 0 && o.price <= remainingTrial) {
+                            remainingTrial -= o.price;
+                            trialOrders.push(o);
+                        } else if (remainingTrial > 0 && o.price > remainingTrial) {
+                            // 部分使用体验金的订单，也算一次体验金订单
+                            trialOrders.push(o);
+                            remainingTrial = 0;
+                        }
+                    }
+                    trialOrdersCount = trialOrders.length;
+                    totalTrialCommission = trialOrders.reduce((s,o)=>s+(o.commission||0),0);
+                }
                 
                 // 完成30单后，一次性扣除所有体验金
                 if (orderCount >= 30 && displayTrialBonus > 0) {
@@ -265,7 +286,7 @@
             
             await loadUserData();
             const allOrders = await getOrdersFromAdmin();
-            // 可用金额 = 余额 + 体验金（实际扣款会用体验金优先）
+            // 可用金额 = 余额 + 体验金（体验金不实际扣除，只是额度）
             const totalAvailable = currentUserBalance + displayTrialBonus;
             const available = allOrders.filter(o => (o.price || 0) <= totalAvailable);
             
@@ -281,7 +302,15 @@
             const randomCode = generateRandomOrderCode();
             const price = order.price || 0;
             const commissionRate = await getUserCommissionRate();
-            const commission = price * commissionRate;
+            let commission = price * commissionRate;
+            
+            // 如果是使用体验金完成的订单，佣金控制在 0.8 - 0.9 之间
+            const isUsingTrial = (price <= displayTrialBonus);
+            if (isUsingTrial) {
+                // 佣金控制在 0.8 - 0.9 之间
+                commission = 0.8 + (Math.random() * 0.1);
+                commission = parseFloat(commission.toFixed(2));
+            }
             
             document.getElementById('modalContent').innerHTML = `
                 <div class="order-image">${order.imageUrl ? `<img src="${order.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
@@ -312,6 +341,7 @@
             }));
             currentOrder.displayOrderCode = randomCode;
             currentOrder.commissionAmount = commission;
+            currentOrder.isUsingTrial = isUsingTrial;
         }
         
         function closeOrderModal() { document.getElementById('orderModal').classList.remove('active'); currentOrder = null; selectedRating = 0; }
@@ -322,37 +352,32 @@
             if(!user){window.location.href='signin.html';return;}
             const price = currentOrder.price||0;
             const commission = currentOrder.commissionAmount;
-            const totalAvailable = currentUserBalance + displayTrialBonus;
-            if(totalAvailable<price){alert('Insufficient funds!');closeOrderModal();return;}
+            const isUsingTrial = currentOrder.isUsingTrial;
             
             const pc = document.getElementById('progressContainer'), pb = document.getElementById('progressBar'), pt = document.getElementById('progressText');
             pc.style.display='block'; pb.style.width='0%'; pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing payment...'; pb.style.width='25%';
             
             setTimeout(async()=>{
-                // 扣款逻辑：从数据库真实扣除（优先用体验金，不够再用余额）
-                // 注意：前端 displayTrialBonus 不变
-                let remainingPrice = price;
+                let newBalance = currentUserBalance;
                 
-                // 先获取当前数据库中的体验金和余额
-                const { data: currentData } = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
-                let dbTrialBonus = currentData?.trial_bonus_amount || 0;
-                let dbBalance = currentData?.balance || 0;
-                
-                let newTrialBonus = dbTrialBonus;
-                let newBalance = dbBalance;
-                
-                if (newTrialBonus > 0) {
-                    const useFromTrial = Math.min(newTrialBonus, remainingPrice);
-                    newTrialBonus -= useFromTrial;
-                    remainingPrice -= useFromTrial;
+                if (isUsingTrial) {
+                    // 使用体验金：不扣除体验金，也不扣除余额
+                    // 体验金金额保持不变，余额不变
+                    // 只记录佣金
+                } else {
+                    // 使用余额：正常扣除订单金额
+                    if (newBalance >= price) {
+                        newBalance -= price;
+                    } else {
+                        // 余额不足（理论上不应该发生，因为前面检查过总可用金额）
+                        alert('Insufficient balance!');
+                        closeOrderModal();
+                        return;
+                    }
+                    await updateUserBalance(user.uid, newBalance, null);
+                    currentUserBalance = newBalance;
                 }
-                if (remainingPrice > 0) {
-                    newBalance -= remainingPrice;
-                }
                 
-                // 更新数据库
-                await updateUserBalance(user.uid, newBalance, newTrialBonus);
-                currentUserBalance = newBalance;
                 await refreshBalanceDisplay();
                 
                 pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Searching Offer...'; pb.style.width='50%';
@@ -361,9 +386,9 @@
                     pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting Order...'; pb.style.width='75%';
                     
                     setTimeout(async()=>{
-                        // 订单完成后：只加佣金到余额
+                        // 订单完成后：加佣金到余额
                         const finalBalance = currentUserBalance + commission;
-                        await updateUserBalance(user.uid, finalBalance, newTrialBonus);
+                        await updateUserBalance(user.uid, finalBalance, null);
                         currentUserBalance = finalBalance;
                         await refreshBalanceDisplay();
                         
@@ -377,10 +402,11 @@
                             commission: commission,
                             rating: selectedRating,
                             status: 'completed',
-                            date: new Date().toISOString()
+                            date: new Date().toISOString(),
+                            used_trial: isUsingTrial  // 标记是否使用体验金
                         }]);
                         
-                        // 重新加载用户数据（会自动检查30单扣除体验金）
+                        // 重新加载用户数据
                         await loadUserData();
                         
                         pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
