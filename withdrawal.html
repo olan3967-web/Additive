@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ADDITIVE - Withdrawal</title>
     <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="toast.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
+    <script src="toast.js"></script>
     <style>
         .page-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
         .page-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; }
@@ -51,6 +53,29 @@
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
+        
+        /* PIN 输入弹窗专用样式 */
+        .pin-input-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .pin-digit {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #2a3560;
+            border-radius: 12px;
+            color: white;
+            outline: none;
+        }
+        .pin-digit:focus {
+            border-color: #C9B095;
+        }
     </style>
 </head>
 <body>
@@ -139,6 +164,7 @@
         }
 
         let currentUserBalance = 0;
+        let currentUserPin = '';
         
         async function loadUserData() {
             const user = checkLogin();
@@ -147,6 +173,7 @@
             const freshUser = await syncUserData();
             if (freshUser) {
                 currentUserBalance = freshUser.balance || 0;
+                currentUserPin = freshUser.pin || '';
                 document.getElementById('displayBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
                 document.getElementById('displayUsername').innerText = freshUser.username;
                 document.getElementById('displayAvailable').innerHTML = `€${currentUserBalance.toFixed(2)}`;
@@ -154,36 +181,135 @@
             }
         }
         
+        // 自定义 PIN 输入弹窗
+        function showPinPrompt(title, callback) {
+            const modalHtml = `
+                <div id="pinModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
+                    <div class="modal-card" style="max-width: 360px;">
+                        <h3><i class="fas fa-lock"></i> ${title}</h3>
+                        <div class="pin-input-group">
+                            <input type="password" maxlength="1" class="pin-digit" id="pin1" autofocus>
+                            <input type="password" maxlength="1" class="pin-digit" id="pin2">
+                            <input type="password" maxlength="1" class="pin-digit" id="pin3">
+                            <input type="password" maxlength="1" class="pin-digit" id="pin4">
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 20px;">
+                            <button id="confirmPinBtn" class="success">确认</button>
+                            <button id="cancelPinBtn">取消</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const existingModal = document.getElementById('pinModal');
+            if(existingModal) existingModal.remove();
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            const modal = document.getElementById('pinModal');
+            const inputs = ['pin1', 'pin2', 'pin3', 'pin4'].map(id => document.getElementById(id));
+            
+            // 自动跳转下一个输入框
+            inputs.forEach((input, idx) => {
+                input.addEventListener('input', (e) => {
+                    if(e.target.value.length === 1 && idx < 3) {
+                        inputs[idx + 1].focus();
+                    }
+                });
+                input.addEventListener('keydown', (e) => {
+                    if(e.key === 'Backspace' && e.target.value.length === 0 && idx > 0) {
+                        inputs[idx - 1].focus();
+                    }
+                });
+            });
+            
+            const confirmBtn = document.getElementById('confirmPinBtn');
+            const cancelBtn = document.getElementById('cancelPinBtn');
+            
+            confirmBtn.onclick = () => {
+                const pin = inputs.map(i => i.value).join('');
+                modal.remove();
+                if(pin.length === 4 && !isNaN(pin)) {
+                    callback(pin);
+                } else {
+                    showToast('PIN must be 4 digits', 'error');
+                    callback(null);
+                }
+            };
+            
+            cancelBtn.onclick = () => {
+                modal.remove();
+                callback(null);
+            };
+        }
+        
         async function requestWithdrawal() {
             const user = getCurrentUser();
-            if (!user) { window.location.href = 'signin.html'; return; }
+            if (!user) { 
+                window.location.href = 'signin.html'; 
+                return; 
+            }
             
             const amount = parseFloat(document.getElementById('amountInput').value);
             const minAmount = 10;
             
-            if (isNaN(amount) || amount < minAmount) { alert(`Minimum withdrawal amount is €${minAmount}`); return; }
-            if (amount > currentUserBalance) { alert('Insufficient balance'); return; }
+            if (isNaN(amount) || amount < minAmount) { 
+                showToast(`Minimum withdrawal amount is €${minAmount}`, 'error');
+                return; 
+            }
+            if (amount > currentUserBalance) { 
+                showToast('Insufficient balance', 'error');
+                return; 
+            }
             
-            // 创建提现请求
-            const { error } = await sb
-                .from('withdrawals')
-                .insert([{ 
-                    uid: user.uid, 
-                    username: user.username, 
-                    amount: amount, 
-                    wallet_address: "0x" + Math.random().toString(36).substring(2, 10),
-                    status: 'pending',
-                    request_date: new Date().toISOString()
-                }]);
-            
-            if (error) {
-                alert('Withdrawal request failed: ' + error.message);
+            // 检查用户是否设置了 PIN
+            if (!currentUserPin || currentUserPin === '0000' || currentUserPin === '') {
+                showToast('Please set a withdrawal PIN in Settings first', 'warning');
+                setTimeout(() => { window.location.href = 'settings.html'; }, 1500);
                 return;
             }
             
-            alert(`Withdrawal request of €${amount} submitted for approval.`);
-            document.getElementById('amountInput').value = '';
-            loadUserData();
+            // 自定义 PIN 验证弹窗
+            showPinPrompt('Enter Withdrawal PIN', async (enteredPin) => {
+                if(!enteredPin) {
+                    showToast('Withdrawal cancelled', 'info');
+                    return;
+                }
+                
+                if(enteredPin !== currentUserPin) {
+                    showToast('Invalid PIN', 'error');
+                    return;
+                }
+                
+                // 确认提现金额
+                showConfirm('Confirm Withdrawal', `Are you sure you want to withdraw €${amount.toFixed(2)}?`, async () => {
+                    // 创建提现请求
+                    const { error } = await sb
+                        .from('withdrawals')
+                        .insert([{ 
+                            uid: user.uid, 
+                            username: user.username, 
+                            amount: amount, 
+                            wallet_address: "0x" + Math.random().toString(36).substring(2, 10),
+                            status: 'pending',
+                            request_date: new Date().toISOString()
+                        }]);
+                    
+                    if (error) {
+                        showToast('Withdrawal request failed: ' + error.message, 'error');
+                        return;
+                    }
+                    
+                    // 扣除用户余额
+                    const newBalance = currentUserBalance - amount;
+                    await updateUserBalance(user.uid, newBalance);
+                    currentUserBalance = newBalance;
+                    
+                    showToast(`Withdrawal request of €${amount.toFixed(2)} submitted for approval.`, 'success');
+                    document.getElementById('amountInput').value = '';
+                    loadUserData();
+                });
+            });
         }
         
         document.querySelectorAll('.quick-amount').forEach(btn => { 
