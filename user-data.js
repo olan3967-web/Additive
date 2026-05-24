@@ -65,6 +65,8 @@ async function syncUserData() {
         user.vipLevel = freshData.vip_level || 1;
         user.username = freshData.username;
         user.uid = freshData.uid;
+        user.pin = freshData.pin || '';  // 👈 添加这行：同步 PIN
+        user.inviteCode = freshData.invite_code || '';  // 👈 添加这行：同步邀请码
         localStorage.setItem('currentUser', JSON.stringify(user));
     }
     return user;

@@ -165,19 +165,43 @@
 
         let currentUserBalance = 0;
         let currentUserPin = '';
+        let currentUserUid = '';
         
         async function loadUserData() {
             const user = checkLogin();
             if (!user) return;
             
-            const freshUser = await syncUserData();
-            if (freshUser) {
-                currentUserBalance = freshUser.balance || 0;
-                currentUserPin = freshUser.pin || '';
+            // 直接从数据库获取最新数据，确保 PIN 是最新的
+            const { data: freshData, error } = await sb
+                .from('users')
+                .select('uid, username, balance, pin')
+                .eq('uid', user.uid)
+                .single();
+            
+            if (error) {
+                console.error('获取用户数据失败:', error);
+                return;
+            }
+            
+            if (freshData) {
+                currentUserUid = freshData.uid;
+                currentUserBalance = freshData.balance || 0;
+                currentUserPin = freshData.pin || '';
+                
+                // 同时更新 localStorage
+                const storedUser = getCurrentUser();
+                if (storedUser) {
+                    storedUser.balance = currentUserBalance;
+                    storedUser.pin = currentUserPin;
+                    localStorage.setItem('currentUser', JSON.stringify(storedUser));
+                }
+                
                 document.getElementById('displayBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
-                document.getElementById('displayUsername').innerText = freshUser.username;
+                document.getElementById('displayUsername').innerText = freshData.username;
                 document.getElementById('displayAvailable').innerHTML = `€${currentUserBalance.toFixed(2)}`;
                 document.getElementById('availableHint').innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
+                
+                console.log('用户数据加载完成 - PIN:', currentUserPin ? '已设置' : '未设置');
             }
         }
         
@@ -211,6 +235,7 @@
             
             // 自动跳转下一个输入框
             inputs.forEach((input, idx) => {
+                if (!input) return;
                 input.addEventListener('input', (e) => {
                     if(e.target.value.length === 1 && idx < 3) {
                         inputs[idx + 1].focus();
@@ -227,7 +252,7 @@
             const cancelBtn = document.getElementById('cancelPinBtn');
             
             confirmBtn.onclick = () => {
-                const pin = inputs.map(i => i.value).join('');
+                const pin = inputs.map(i => i ? i.value : '').join('');
                 modal.remove();
                 if(pin.length === 4 && !isNaN(pin)) {
                     callback(pin);
@@ -244,6 +269,9 @@
         }
         
         async function requestWithdrawal() {
+            // 每次提现前重新获取最新用户数据（确保 PIN 是最新的）
+            await loadUserData();
+            
             const user = getCurrentUser();
             if (!user) { 
                 window.location.href = 'signin.html'; 
@@ -263,9 +291,14 @@
             }
             
             // 检查用户是否设置了 PIN
-            if (!currentUserPin || currentUserPin === '0000' || currentUserPin === '') {
-                showToast('Please set a withdrawal PIN in Settings first', 'warning');
-                setTimeout(() => { window.location.href = 'settings.html'; }, 1500);
+            console.log('当前用户PIN:', currentUserPin);
+            
+            if (!currentUserPin || currentUserPin === '0000' || currentUserPin === '' || currentUserPin === 'null') {
+                showConfirm('PIN Not Set', 'You need to set a withdrawal PIN in Settings first. Go to Settings now?', (confirmed) => {
+                    if (confirmed) {
+                        window.location.href = 'settings.html';
+                    }
+                });
                 return;
             }
             
@@ -276,13 +309,18 @@
                     return;
                 }
                 
+                console.log('输入的PIN:', enteredPin);
+                console.log('数据库PIN:', currentUserPin);
+                
                 if(enteredPin !== currentUserPin) {
                     showToast('Invalid PIN', 'error');
                     return;
                 }
                 
                 // 确认提现金额
-                showConfirm('Confirm Withdrawal', `Are you sure you want to withdraw €${amount.toFixed(2)}?`, async () => {
+                showConfirm('Confirm Withdrawal', `Are you sure you want to withdraw €${amount.toFixed(2)}?`, async (confirmed) => {
+                    if (!confirmed) return;
+                    
                     // 创建提现请求
                     const { error } = await sb
                         .from('withdrawals')
@@ -305,6 +343,13 @@
                     await updateUserBalance(user.uid, newBalance);
                     currentUserBalance = newBalance;
                     
+                    // 更新 localStorage
+                    const storedUser = getCurrentUser();
+                    if (storedUser) {
+                        storedUser.balance = newBalance;
+                        localStorage.setItem('currentUser', JSON.stringify(storedUser));
+                    }
+                    
                     showToast(`Withdrawal request of €${amount.toFixed(2)} submitted for approval.`, 'success');
                     document.getElementById('amountInput').value = '';
                     loadUserData();
@@ -316,7 +361,16 @@
             btn.addEventListener('click', () => { document.getElementById('amountInput').value = btn.getAttribute('data-value'); }); 
         });
         
+        // 页面加载时获取用户数据
         loadUserData();
+        
+        // 调试函数 - 可在控制台输入 checkUserPin() 查看
+        window.checkUserPin = async function() {
+            const user = getCurrentUser();
+            console.log('LocalStorage user:', user);
+            const { data } = await sb.from('users').select('uid, username, pin').eq('uid', user?.uid).single();
+            console.log('Database user PIN:', data);
+        };
     </script>
 </body>
 </html>
