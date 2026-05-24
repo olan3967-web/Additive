@@ -223,7 +223,6 @@
             border: 1px solid #8ca3ff;
         }
         
-        /* 订单池图片预览 */
         .order-image-preview {
             width: 60px;
             height: 45px;
@@ -233,7 +232,6 @@
             cursor: pointer;
         }
         
-        /* 内容管理样式 */
         .content-item {
             background: #0e132e;
             border-radius: 16px;
@@ -244,6 +242,20 @@
             width: 100%;
             margin-bottom: 10px;
             font-weight: 600;
+        }
+        
+        .reset-orders-btn {
+            background: #7a5f2f;
+            padding: 4px 10px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+        .reset-orders-btn:hover { background: #9a7f3f; }
+        
+        .query-orders-btn {
+            background: #2f6b3a;
+            padding: 4px 12px;
+            font-size: 12px;
         }
         
         @media (max-width: 1000px) {
@@ -267,20 +279,6 @@
         @media (max-width: 1000px) {
             .menu-toggle { display: block; }
             .main { margin-left: 0; padding-top: 70px; }
-        }
-        
-        .reset-orders-btn {
-            background: #7a5f2f;
-            padding: 4px 10px;
-            font-size: 11px;
-            margin-left: 8px;
-        }
-        .reset-orders-btn:hover { background: #9a7f3f; }
-        
-        .query-orders-btn {
-            background: #2f6b3a;
-            padding: 4px 12px;
-            font-size: 12px;
         }
     </style>
 </head>
@@ -346,9 +344,7 @@
                 </div>
                 <div class="table-container">
                     <table class="data-table">
-                        <thead>
-                            <tr><th>UID</th><th>用户名</th><th>当前体验金 (€)</th><th>调整金额 (€)</th><th>操作</th></tr>
-                        </thead>
+                        <thead><tr><th>UID</th><th>用户名</th><th>当前体验金 (€)</th><th>调整金额 (€)</th><th>操作</th></tr></thead>
                         <tbody id="trialTableBody"></tbody>
                     </table>
                 </div>
@@ -544,7 +540,6 @@
     let trialSearchKeyword = '';
     let currentQueryUid = null;
     let systemContents = [];
-    let editingContentId = null;
     
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
     
@@ -573,6 +568,16 @@
         item.addEventListener('click', () => showPage(item.getAttribute('data-page')));
     });
     
+    function escapeHtml(str) {
+        if(!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
     // ========== Dashboard ==========
     async function loadDashboard() {
         const { data: users } = await sb.from('users').select('*');
@@ -589,46 +594,43 @@
     
     // ========== 用户管理 ==========
     async function loadUsers() {
-    let query = sb.from('users').select('*').order('created_at', { ascending: false });
-    if(searchKeyword) query = query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
-    const { data: users } = await query;
-    const { data: allOrders } = await sb.from('order_history').select('*');
-    const { data: vipSettings } = await sb.from('vip_settings').select('*');
-    
-    // 创建VIP等级到订单上限的映射
-    const vipLimitMap = {};
-    if (vipSettings) {
-        vipSettings.forEach(vip => {
-            vipLimitMap[vip.level] = vip.orders_limit;
-        });
-    }
-    
-    const tbody = document.getElementById('usersTableBody');
-    if(tbody && users) {
-        tbody.innerHTML = '';
-        for(let u of users) {
-            const userOrders = allOrders?.filter(o => o.uid === u.uid).length || 0;
-            const ordersLimit = vipLimitMap[u.vip_level] || 30;
-            const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
-            row.insertCell(1).innerText = u.username;
-            row.insertCell(2).innerHTML = `<span class="badge">${u.invite_code || '-'}</span>`;
-            row.insertCell(3).innerText = u.invited_by_username || '-';
-            row.insertCell(4).innerHTML = `<span class="text-green">€${(u.balance || 0).toFixed(2)}</span>`;
-            row.insertCell(5).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
-            row.insertCell(6).innerHTML = `${userOrders}/${ordersLimit} <button class="reset-orders-btn" data-uid="${u.uid}"><i class="fas fa-undo-alt"></i> 重置</button>`;
-            row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}"><option value="1" ${u.vip_level==1?'selected':''}>Normal</option><option value="2" ${u.vip_level==2?'selected':''}>VIP</option><option value="3" ${u.vip_level==3?'selected':''}>SVIP</option></select>`;
-            row.insertCell(8).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}"><i class="fas fa-plus-circle"></i> 充值</button> <button class="cut-btn" data-uid="${u.uid}"><i class="fas fa-minus-circle"></i> 扣款</button> <button class="delete-btn" data-uid="${u.uid}" class="danger"><i class="fas fa-trash"></i> 删除</button>`;
+        let query = sb.from('users').select('*').order('created_at', { ascending: false });
+        if(searchKeyword) query = query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
+        const { data: users } = await query;
+        const { data: allOrders } = await sb.from('order_history').select('*');
+        const { data: vipSettings } = await sb.from('vip_settings').select('*');
+        
+        const vipLimitMap = {};
+        if (vipSettings) {
+            vipSettings.forEach(vip => { vipLimitMap[vip.level] = vip.orders_limit; });
         }
-        document.querySelectorAll('.vip-select').forEach(sel => sel.addEventListener('change', () => updateVip(sel.dataset.uid, sel.value)));
-        document.querySelectorAll('.deposit-btn').forEach(btn => btn.addEventListener('click', () => depositBalance(btn.dataset.uid)));
-        document.querySelectorAll('.cut-btn').forEach(btn => btn.addEventListener('click', () => cutBalance(btn.dataset.uid)));
-        document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => delUser(btn.dataset.uid)));
-        document.querySelectorAll('.reset-orders-btn').forEach(btn => btn.addEventListener('click', () => resetUserOrders(btn.dataset.uid)));
+        
+        const tbody = document.getElementById('usersTableBody');
+        if(tbody && users) {
+            tbody.innerHTML = '';
+            for(let u of users) {
+                const userOrders = allOrders?.filter(o => o.uid === u.uid).length || 0;
+                const ordersLimit = vipLimitMap[u.vip_level] || 30;
+                const row = tbody.insertRow();
+                row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
+                row.insertCell(1).innerText = u.username;
+                row.insertCell(2).innerHTML = `<span class="badge">${u.invite_code || '-'}</span>`;
+                row.insertCell(3).innerText = u.invited_by_username || '-';
+                row.insertCell(4).innerHTML = `<span class="text-green">€${(u.balance || 0).toFixed(2)}</span>`;
+                row.insertCell(5).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
+                row.insertCell(6).innerHTML = `${userOrders}/${ordersLimit} <button class="reset-orders-btn" data-uid="${u.uid}"><i class="fas fa-undo-alt"></i> 重置</button>`;
+                row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}"><option value="1" ${u.vip_level==1?'selected':''}>Normal</option><option value="2" ${u.vip_level==2?'selected':''}>VIP</option><option value="3" ${u.vip_level==3?'selected':''}>SVIP</option></select>`;
+                row.insertCell(8).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}"><i class="fas fa-plus-circle"></i> 充值</button> <button class="cut-btn" data-uid="${u.uid}"><i class="fas fa-minus-circle"></i> 扣款</button> <button class="edit-user-btn" data-uid="${u.uid}" data-phone="${u.phone || ''}" data-username="${u.username}" data-pin="${u.pin || ''}"><i class="fas fa-edit"></i> 修改</button> <button class="delete-btn" data-uid="${u.uid}" class="danger"><i class="fas fa-trash"></i> 删除</button>`;
+            }
+            document.querySelectorAll('.vip-select').forEach(sel => sel.addEventListener('change', () => updateVip(sel.dataset.uid, sel.value)));
+            document.querySelectorAll('.deposit-btn').forEach(btn => btn.addEventListener('click', () => depositBalance(btn.dataset.uid)));
+            document.querySelectorAll('.cut-btn').forEach(btn => btn.addEventListener('click', () => cutBalance(btn.dataset.uid)));
+            document.querySelectorAll('.edit-user-btn').forEach(btn => btn.addEventListener('click', () => openEditUserModal(btn.dataset.uid, btn.dataset.phone, btn.dataset.username, btn.dataset.pin)));
+            document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => delUser(btn.dataset.uid)));
+            document.querySelectorAll('.reset-orders-btn').forEach(btn => btn.addEventListener('click', () => resetUserOrders(btn.dataset.uid)));
+        }
     }
-}
     
-    // 重置用户订单（删除所有订单历史）
     async function resetUserOrders(uid) {
         showConfirm('确认重置', '重置后该用户订单数将归0，订单记录将被删除，是否继续？', async () => {
             const { error } = await sb.from('order_history').delete().eq('uid', uid);
@@ -641,31 +643,66 @@
         });
     }
     
+    // 充值弹窗（合并充值金额和奖励金额）
     async function depositBalance(uid) {
-        showPrompt('充值金额', '请输入充值金额 (€)', async (amountInput) => {
-            const amount = parseFloat(amountInput);
-            if(isNaN(amount) || amount <= 0) {
-                showToast('请输入有效金额', 'error');
+        const modalHtml = `
+            <div id="depositModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
+                <div class="modal-card" style="max-width: 400px;">
+                    <h3><i class="fas fa-plus-circle"></i> 充值</h3>
+                    <div style="margin-bottom: 15px;">
+                        <label>充值金额 (€)</label>
+                        <input type="number" id="depositAmount" step="0.01" placeholder="0.00" style="width:100%; margin-top:5px; padding:10px;">
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label>奖励金额 (€)</label>
+                        <input type="number" id="bonusAmount" step="0.01" placeholder="0.00" style="width:100%; margin-top:5px; padding:10px;">
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="confirmDepositBtn" class="success">确认充值</button>
+                        <button id="cancelDepositBtn">取消</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const existingModal = document.getElementById('depositModal');
+        if(existingModal) existingModal.remove();
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        const modal = document.getElementById('depositModal');
+        const confirmBtn = document.getElementById('confirmDepositBtn');
+        const cancelBtn = document.getElementById('cancelDepositBtn');
+        
+        confirmBtn.onclick = async () => {
+            const amount = parseFloat(document.getElementById('depositAmount').value) || 0;
+            const bonusAmount = parseFloat(document.getElementById('bonusAmount').value) || 0;
+            
+            if(amount === 0 && bonusAmount === 0) {
+                showToast('请输入充值金额或奖励金额', 'error');
                 return;
             }
-            showPrompt('奖励金额', '请输入奖励金额 (€)（可选，默认0）', async (bonusInput) => {
-                const bonusAmount = parseFloat(bonusInput) || 0;
-                const totalAmount = amount + bonusAmount;
-                
-                const { data: user } = await sb.from('users').select('balance, username').eq('uid', uid).single();
-                const newBalance = (user.balance || 0) + totalAmount;
-                await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
-                
-                if(amount > 0) {
-                    await sb.from('deposits').insert([{ uid, username: user.username, amount: amount, type: 'manual' }]);
-                }
-                if(bonusAmount > 0) {
-                    await sb.from('deposits').insert([{ uid, username: user.username, amount: bonusAmount, type: 'deposit_bonus' }]);
-                }
-                loadUsers(); loadDashboard();
-                showToast(`充值 €${amount}，奖励 €${bonusAmount}，总计添加 €${totalAmount}`, 'success');
-            });
-        });
+            
+            const totalAmount = amount + bonusAmount;
+            
+            const { data: user } = await sb.from('users').select('balance, username').eq('uid', uid).single();
+            const newBalance = (user.balance || 0) + totalAmount;
+            await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
+            
+            if(amount > 0) {
+                await sb.from('deposits').insert([{ uid, username: user.username, amount: amount, type: 'manual', created_at: new Date().toISOString() }]);
+            }
+            if(bonusAmount > 0) {
+                await sb.from('deposits').insert([{ uid, username: user.username, amount: bonusAmount, type: 'deposit_bonus', created_at: new Date().toISOString() }]);
+            }
+            
+            modal.remove();
+            loadUsers();
+            loadDashboard();
+            showToast(`充值 €${amount.toFixed(2)}，奖励 €${bonusAmount.toFixed(2)}，总计 €${totalAmount.toFixed(2)}`, 'success');
+        };
+        
+        cancelBtn.onclick = () => { modal.remove(); };
     }
     
     async function cutBalance(uid){
@@ -686,16 +723,82 @@
         });
     }
     
-    async function updateVip(uid, level){ 
-    const newLevel = parseInt(level);
-    const { error } = await sb.from('users').update({ vip_level: newLevel }).eq('uid', uid);
-    if (error) {
-        showToast('VIP更新失败: ' + error.message, 'error');
-    } else {
-        showToast('VIP已更新', 'success');
-        loadUsers(); // 刷新用户列表，订单上限会重新计算
+    // 修改用户信息弹窗
+    function openEditUserModal(uid, phone, username, pin) {
+        const modalHtml = `
+            <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
+                <div class="modal-card" style="max-width: 400px;">
+                    <h3><i class="fas fa-edit"></i> 修改用户信息 - ${escapeHtml(username)}</h3>
+                    <div style="margin-bottom: 15px;">
+                        <label>Phone Number</label>
+                        <input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" style="width:100%; margin-top:5px; padding:10px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label>Login Password</label>
+                        <input type="password" id="editPassword" placeholder="留空则不修改" style="width:100%; margin-top:5px; padding:10px;">
+                        <small style="color:#a0a8c0;">留空表示不修改密码</small>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label>Withdrawal PIN (4 digits)</label>
+                        <input type="password" id="editPin" maxlength="4" value="${escapeHtml(pin || '')}" style="width:100%; margin-top:5px; padding:10px;">
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="confirmEditBtn" class="success">保存修改</button>
+                        <button id="cancelEditBtn">取消</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const existingModal = document.getElementById('editUserModal');
+        if(existingModal) existingModal.remove();
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        const modal = document.getElementById('editUserModal');
+        const confirmBtn = document.getElementById('confirmEditBtn');
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        
+        confirmBtn.onclick = async () => {
+            const newPhone = document.getElementById('editPhone').value.trim();
+            const newPassword = document.getElementById('editPassword').value;
+            const newPin = document.getElementById('editPin').value;
+            
+            const updateData = {};
+            if(newPhone) updateData.phone = newPhone;
+            if(newPassword && newPassword.length >= 4) updateData.password = newPassword;
+            if(newPin && newPin.length === 4 && !isNaN(newPin)) updateData.pin = newPin;
+            
+            if(Object.keys(updateData).length === 0) {
+                showToast('没有修改任何信息', 'warning');
+                modal.remove();
+                return;
+            }
+            
+            const { error } = await sb.from('users').update(updateData).eq('uid', uid);
+            
+            if(error) {
+                showToast('修改失败: ' + error.message, 'error');
+            } else {
+                showToast('用户信息已更新', 'success');
+                modal.remove();
+                loadUsers();
+            }
+        };
+        
+        cancelBtn.onclick = () => { modal.remove(); };
     }
-}
+    
+    async function updateVip(uid, level){ 
+        const newLevel = parseInt(level);
+        const { error } = await sb.from('users').update({ vip_level: newLevel }).eq('uid', uid);
+        if (error) {
+            showToast('VIP更新失败: ' + error.message, 'error');
+        } else {
+            showToast('VIP已更新', 'success');
+            loadUsers();
+        }
+    }
     
     async function delUser(uid){ 
         showConfirm('确认删除', '永久删除用户？此操作不可恢复', async () => {
@@ -823,7 +926,7 @@
             newAmount = currentAmount + amount;
             await sb.from('deposits').insert([{ uid: uid, username: user.username, amount: amount, type: 'trial_bonus' }]);
             showToast(`成功添加 €${amount} 体验金`, 'success');
-        } else if(action === 'cut') {
+        } else {
             if(currentAmount < amount) { 
                 showToast('体验金不足', 'error');
                 return; 
@@ -1005,7 +1108,6 @@
                 row.insertCell(1).innerHTML = `<span class="badge">${o.order_code || '-'}</span>`;
                 row.insertCell(2).innerText = o.accommodation_name || '-';
                 row.insertCell(3).innerHTML = `<span class="text-gold">€${(o.price || 0).toFixed(2)}</span>`;
-                // 直接显示图片
                 row.insertCell(4).innerHTML = o.image_url ? `<img src="${o.image_url}" class="order-image-preview" onerror="this.src='https://placehold.co/60x45/1a1f3a/8ca3ff?text=No+Image'" onclick="window.open('${o.image_url}','_blank')">` : '-';
                 row.insertCell(5).innerHTML = `<span class="${o.status === 'available' ? 'text-green' : 'text-red'}">${o.status || 'available'}</span>`;
                 row.insertCell(6).innerHTML = `<button class="edit-order-btn" data-id="${o.id}" data-code="${o.order_code||''}" data-name="${o.accommodation_name||''}" data-price="${o.price||0}" data-image="${o.image_url||''}" data-status="${o.status||'available'}" class="success"><i class="fas fa-edit"></i> 编辑</button> <button class="delete-order-btn" data-id="${o.id}" class="danger"><i class="fas fa-trash"></i> 删除</button>`;
@@ -1027,7 +1129,6 @@
         }
     }
     
-    function loadOrderPool() { loadAllOrdersFromDB(); }
     function openEditOrderModal(id, code, name, price, image, status) {
         document.getElementById('orderModalTitle').innerHTML = '<i class="fas fa-edit"></i> 编辑订单';
         document.getElementById('orderCode').value = code || ''; document.getElementById('hotelName').value = name || ''; document.getElementById('price').value = price || ''; document.getElementById('imageUrl').value = image || ''; document.getElementById('status').value = status || 'available'; document.getElementById('editId').value = id;
@@ -1170,8 +1271,6 @@
         document.getElementById('reuploadModal').classList.remove('active');
         reuploadIndex = null;
     });
-    
-    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m) { if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m; }); }
     
     async function saveVideo() {
         const videoUrl = document.getElementById('videoUrl').value.trim();
