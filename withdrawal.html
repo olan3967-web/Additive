@@ -53,6 +53,33 @@
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
+        
+        /* PIN 输入弹窗样式 */
+        .pin-modal-card {
+            max-width: 360px;
+            text-align: center;
+        }
+        .pin-input-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 24px 0;
+        }
+        .pin-digit {
+            width: 55px;
+            height: 65px;
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #2a3560;
+            border-radius: 12px;
+            color: white;
+            outline: none;
+        }
+        .pin-digit:focus {
+            border-color: #C9B095;
+        }
     </style>
 </head>
 <body>
@@ -180,19 +207,74 @@
             }
         }
         
-        async function requestWithdrawal() {
-            console.log('=== 提现函数被调用 ===');
+        // 自定义 PIN 输入弹窗
+        function showPinPrompt(callback) {
+            const modalHtml = `
+                <div id="pinModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
+                    <div class="modal-card pin-modal-card">
+                        <h3 style="margin-bottom: 16px;"><i class="fas fa-lock"></i> Enter Withdrawal PIN</h3>
+                        <div class="pin-input-group">
+                            <input type="password" maxlength="1" class="pin-digit" id="pin1" autofocus>
+                            <input type="password" maxlength="1" class="pin-digit" id="pin2">
+                            <input type="password" maxlength="1" class="pin-digit" id="pin3">
+                            <input type="password" maxlength="1" class="pin-digit" id="pin4">
+                        </div>
+                        <div style="display: flex; gap: 16px; justify-content: center; margin-top: 16px; margin-bottom: 8px;">
+                            <button id="confirmPinBtn" class="success">Confirm</button>
+                            <button id="cancelPinBtn">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
             
+            const existingModal = document.getElementById('pinModal');
+            if(existingModal) existingModal.remove();
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            const modal = document.getElementById('pinModal');
+            const inputs = ['pin1', 'pin2', 'pin3', 'pin4'].map(id => document.getElementById(id));
+            
+            inputs.forEach((input, idx) => {
+                if (!input) return;
+                input.addEventListener('input', (e) => {
+                    if(e.target.value.length === 1 && idx < 3) {
+                        inputs[idx + 1].focus();
+                    }
+                });
+                input.addEventListener('keydown', (e) => {
+                    if(e.key === 'Backspace' && e.target.value.length === 0 && idx > 0) {
+                        inputs[idx - 1].focus();
+                    }
+                });
+            });
+            
+            const confirmBtn = document.getElementById('confirmPinBtn');
+            const cancelBtn = document.getElementById('cancelPinBtn');
+            
+            confirmBtn.onclick = () => {
+                const pin = inputs.map(i => i ? i.value : '').join('');
+                modal.remove();
+                if(pin.length === 4 && !isNaN(pin)) {
+                    callback(pin);
+                } else {
+                    showToast('PIN must be 4 digits', 'error');
+                    callback(null);
+                }
+            };
+            
+            cancelBtn.onclick = () => {
+                modal.remove();
+                callback(null);
+            };
+        }
+        
+        async function requestWithdrawal() {
             // 重新获取最新数据
             await loadUserData();
             
             const amount = parseFloat(document.getElementById('amountInput').value);
             const minAmount = 10;
-            
-            console.log('提现金额:', amount);
-            console.log('当前余额:', currentUserBalance);
-            console.log('当前用户UID:', currentUserUid);
-            console.log('当前用户名:', currentUsername);
             
             if (isNaN(amount) || amount < minAmount) { 
                 showToast(`Minimum withdrawal amount is €${minAmount}`, 'error');
@@ -203,81 +285,93 @@
                 return; 
             }
             
-            // 使用原生 confirm 测试
-            const confirmed = confirm(`Withdraw €${amount.toFixed(2)} from your balance?`);
-            if (!confirmed) {
-                showToast('Withdrawal cancelled', 'info');
+            // 检查 PIN 是否设置
+            if (!currentUserPin || currentUserPin === '0000' || currentUserPin === '') {
+                showConfirm('PIN Not Set', 'You need to set a withdrawal PIN in Settings first. Go to Settings now?', function(confirmed) {
+                    if (confirmed) {
+                        window.location.href = 'settings.html';
+                    }
+                });
                 return;
             }
             
-            showToast('Processing withdrawal...', 'info');
-            
-            try {
-                // 1. 扣除余额
-                const newBalance = currentUserBalance - amount;
-                console.log('新余额:', newBalance);
-                
-                const { error: updateError } = await sb
-                    .from('users')
-                    .update({ balance: newBalance })
-                    .eq('uid', currentUserUid);
-                
-                if (updateError) {
-                    console.error('余额更新失败:', updateError);
-                    showToast('Failed to update balance: ' + updateError.message, 'error');
+            // 显示 PIN 输入弹窗
+            showPinPrompt(async function(enteredPin) {
+                if (!enteredPin) {
+                    showToast('Withdrawal cancelled', 'info');
                     return;
                 }
                 
-                console.log('余额更新成功');
-                
-                // 2. 创建提现记录
-                const walletAddr = `wd_${Date.now()}`;
-                const { data: withdrawalData, error: withdrawalError } = await sb
-                    .from('withdrawals')
-                    .insert({ 
-                        uid: currentUserUid, 
-                        username: currentUsername, 
-                        amount: amount, 
-                        wallet_address: walletAddr,
-                        status: 'pending',
-                        request_date: new Date().toISOString()
-                    })
-                    .select();
-                
-                if (withdrawalError) {
-                    console.error('提现记录创建失败:', withdrawalError);
-                    // 回滚余额
-                    await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUserUid);
-                    showToast('Withdrawal failed: ' + withdrawalError.message, 'error');
+                if (enteredPin !== currentUserPin) {
+                    showToast('Invalid PIN', 'error');
                     return;
                 }
                 
-                console.log('提现记录创建成功:', withdrawalData);
-                
-                // 3. 更新本地变量和页面
-                currentUserBalance = newBalance;
-                
-                document.getElementById('displayBalance').innerHTML = `€${newBalance.toFixed(2)}`;
-                document.getElementById('displayAvailable').innerHTML = `€${newBalance.toFixed(2)}`;
-                document.getElementById('availableHint').innerHTML = `Available: €${newBalance.toFixed(2)}`;
-                document.getElementById('amountInput').value = '';
-                
-                // 更新 localStorage
-                const storedUser = getCurrentUser();
-                if (storedUser) {
-                    storedUser.balance = newBalance;
-                    localStorage.setItem('currentUser', JSON.stringify(storedUser));
-                }
-                
-                showToast(`Withdrawal of €${amount.toFixed(2)} submitted successfully!`, 'success');
-                
-                // 刷新页面数据
-                setTimeout(() => loadUserData(), 1000);
-                
-            } catch (err) {
-                console.error('提现错误:', err);
-                showToast('Error: ' + err.message, 'error');
-            }
+                // 确认提现
+                showConfirm('Confirm Withdrawal', `Are you sure you want to withdraw €${amount.toFixed(2)}?`, async function(confirmed) {
+                    if (!confirmed) return;
+                    
+                    showToast('Processing withdrawal...', 'info');
+                    
+                    try {
+                        // 1. 扣除余额
+                        const newBalance = currentUserBalance - amount;
+                        
+                        const { error: updateError } = await sb
+                            .from('users')
+                            .update({ balance: newBalance })
+                            .eq('uid', currentUserUid);
+                        
+                        if (updateError) {
+                            showToast('Failed to update balance: ' + updateError.message, 'error');
+                            return;
+                        }
+                        
+                        // 2. 创建提现记录
+                        const walletAddr = `wd_${Date.now()}`;
+                        const { error: withdrawalError } = await sb
+                            .from('withdrawals')
+                            .insert({ 
+                                uid: currentUserUid, 
+                                username: currentUsername, 
+                                amount: amount, 
+                                wallet_address: walletAddr,
+                                status: 'pending',
+                                request_date: new Date().toISOString()
+                            });
+                        
+                        if (withdrawalError) {
+                            // 回滚余额
+                            await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUserUid);
+                            showToast('Withdrawal failed: ' + withdrawalError.message, 'error');
+                            return;
+                        }
+                        
+                        // 3. 更新本地变量和页面
+                        currentUserBalance = newBalance;
+                        
+                        document.getElementById('displayBalance').innerHTML = `€${newBalance.toFixed(2)}`;
+                        document.getElementById('displayAvailable').innerHTML = `€${newBalance.toFixed(2)}`;
+                        document.getElementById('availableHint').innerHTML = `Available: €${newBalance.toFixed(2)}`;
+                        document.getElementById('amountInput').value = '';
+                        
+                        // 更新 localStorage
+                        const storedUser = getCurrentUser();
+                        if (storedUser) {
+                            storedUser.balance = newBalance;
+                            localStorage.setItem('currentUser', JSON.stringify(storedUser));
+                        }
+                        
+                        showToast(`Withdrawal of €${amount.toFixed(2)} submitted successfully!`, 'success');
+                        
+                        setTimeout(() => loadUserData(), 1000);
+                        
+                    } catch (err) {
+                        console.error('Withdrawal error:', err);
+                        showToast('Error: ' + err.message, 'error');
+                    }
+                });
+            });
         }
         
         document.querySelectorAll('.quick-amount').forEach(btn => { 
