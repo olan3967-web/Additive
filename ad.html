@@ -589,33 +589,44 @@
     
     // ========== 用户管理 ==========
     async function loadUsers() {
-        let query = sb.from('users').select('*').order('created_at', { ascending: false });
-        if(searchKeyword) query = query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
-        const { data: users } = await query;
-        const { data: allOrders } = await sb.from('order_history').select('*');
-        const tbody = document.getElementById('usersTableBody');
-        if(tbody && users) {
-            tbody.innerHTML = '';
-            for(let u of users) {
-                const userOrders = allOrders?.filter(o => o.uid === u.uid).length || 0;
-                const row = tbody.insertRow();
-                row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
-                row.insertCell(1).innerText = u.username;
-                row.insertCell(2).innerHTML = `<span class="badge">${u.invite_code || '-'}</span>`;
-                row.insertCell(3).innerText = u.invited_by_username || '-';
-                row.insertCell(4).innerHTML = `<span class="text-green">€${(u.balance || 0).toFixed(2)}</span>`;
-                row.insertCell(5).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
-                row.insertCell(6).innerHTML = `${userOrders}/30 <button class="reset-orders-btn" data-uid="${u.uid}"><i class="fas fa-undo-alt"></i> 重置</button>`;
-                row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}"><option value="1" ${u.vip_level==1?'selected':''}>Normal</option><option value="2" ${u.vip_level==2?'selected':''}>VIP</option><option value="3" ${u.vip_level==3?'selected':''}>SVIP</option></select>`;
-                row.insertCell(8).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}"><i class="fas fa-plus-circle"></i> 充值</button> <button class="cut-btn" data-uid="${u.uid}"><i class="fas fa-minus-circle"></i> 扣款</button> <button class="delete-btn" data-uid="${u.uid}" class="danger"><i class="fas fa-trash"></i> 删除</button>`;
-            }
-            document.querySelectorAll('.vip-select').forEach(sel => sel.addEventListener('change', () => updateVip(sel.dataset.uid, sel.value)));
-            document.querySelectorAll('.deposit-btn').forEach(btn => btn.addEventListener('click', () => depositBalance(btn.dataset.uid)));
-            document.querySelectorAll('.cut-btn').forEach(btn => btn.addEventListener('click', () => cutBalance(btn.dataset.uid)));
-            document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => delUser(btn.dataset.uid)));
-            document.querySelectorAll('.reset-orders-btn').forEach(btn => btn.addEventListener('click', () => resetUserOrders(btn.dataset.uid)));
-        }
+    let query = sb.from('users').select('*').order('created_at', { ascending: false });
+    if(searchKeyword) query = query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
+    const { data: users } = await query;
+    const { data: allOrders } = await sb.from('order_history').select('*');
+    const { data: vipSettings } = await sb.from('vip_settings').select('*');
+    
+    // 创建VIP等级到订单上限的映射
+    const vipLimitMap = {};
+    if (vipSettings) {
+        vipSettings.forEach(vip => {
+            vipLimitMap[vip.level] = vip.orders_limit;
+        });
     }
+    
+    const tbody = document.getElementById('usersTableBody');
+    if(tbody && users) {
+        tbody.innerHTML = '';
+        for(let u of users) {
+            const userOrders = allOrders?.filter(o => o.uid === u.uid).length || 0;
+            const ordersLimit = vipLimitMap[u.vip_level] || 30;
+            const row = tbody.insertRow();
+            row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
+            row.insertCell(1).innerText = u.username;
+            row.insertCell(2).innerHTML = `<span class="badge">${u.invite_code || '-'}</span>`;
+            row.insertCell(3).innerText = u.invited_by_username || '-';
+            row.insertCell(4).innerHTML = `<span class="text-green">€${(u.balance || 0).toFixed(2)}</span>`;
+            row.insertCell(5).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
+            row.insertCell(6).innerHTML = `${userOrders}/${ordersLimit} <button class="reset-orders-btn" data-uid="${u.uid}"><i class="fas fa-undo-alt"></i> 重置</button>`;
+            row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}"><option value="1" ${u.vip_level==1?'selected':''}>Normal</option><option value="2" ${u.vip_level==2?'selected':''}>VIP</option><option value="3" ${u.vip_level==3?'selected':''}>SVIP</option></select>`;
+            row.insertCell(8).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}"><i class="fas fa-plus-circle"></i> 充值</button> <button class="cut-btn" data-uid="${u.uid}"><i class="fas fa-minus-circle"></i> 扣款</button> <button class="delete-btn" data-uid="${u.uid}" class="danger"><i class="fas fa-trash"></i> 删除</button>`;
+        }
+        document.querySelectorAll('.vip-select').forEach(sel => sel.addEventListener('change', () => updateVip(sel.dataset.uid, sel.value)));
+        document.querySelectorAll('.deposit-btn').forEach(btn => btn.addEventListener('click', () => depositBalance(btn.dataset.uid)));
+        document.querySelectorAll('.cut-btn').forEach(btn => btn.addEventListener('click', () => cutBalance(btn.dataset.uid)));
+        document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => delUser(btn.dataset.uid)));
+        document.querySelectorAll('.reset-orders-btn').forEach(btn => btn.addEventListener('click', () => resetUserOrders(btn.dataset.uid)));
+    }
+}
     
     // 重置用户订单（删除所有订单历史）
     async function resetUserOrders(uid) {
@@ -677,21 +688,12 @@
     
     async function updateVip(uid, level){ 
     const newLevel = parseInt(level);
-    console.log('Updating VIP:', uid, 'to level', newLevel);
-    
-    const { data, error } = await sb
-        .from('users')
-        .update({ vip_level: newLevel })
-        .eq('uid', uid)
-        .select();
-    
+    const { error } = await sb.from('users').update({ vip_level: newLevel }).eq('uid', uid);
     if (error) {
-        console.error('Update error:', error);
         showToast('VIP更新失败: ' + error.message, 'error');
     } else {
-        console.log('Update success:', data);
-        showToast('VIP已更新为 ' + (newLevel === 1 ? 'Normal' : newLevel === 2 ? 'VIP' : 'SVIP'), 'success');
-        loadUsers(); // 刷新用户列表
+        showToast('VIP已更新', 'success');
+        loadUsers(); // 刷新用户列表，订单上限会重新计算
     }
 }
     
