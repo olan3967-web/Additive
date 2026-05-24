@@ -23,9 +23,49 @@
             border: 1px solid rgba(201, 176, 149, 0.15);
         }
         .settings-section h3 { font-size: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; color: #C9B095; }
-        .uid-row { background: rgba(0,0,0,0.3); border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .uid-value { font-weight: 700; display: flex; align-items: center; gap: 10px; color: #ffffff; }
-        .copy-btn { background: rgba(201,176,149,0.15); border: none; padding: 4px 10px; border-radius: 20px; color: #C9B095; font-size: 11px; cursor: pointer; }
+        
+        /* UID 和邀请码卡片样式 */
+        .info-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #a0a8c0;
+        }
+        .info-value {
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ffffff;
+            font-size: 13px;
+        }
+        .copy-btn {
+            background: rgba(201,176,149,0.15);
+            border: none;
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: #C9B095;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .copy-btn:hover {
+            background: rgba(201,176,149,0.3);
+        }
+        
         .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(201,176,149,0.08); }
         .setting-item:last-child { border-bottom: none; }
         .setting-title { font-weight: 500; margin-bottom: 3px; color: #ffffff; font-size: 14px; }
@@ -91,7 +131,25 @@
             <div class="settings-grid">
                 <div class="settings-section">
                     <h3><i class="fas fa-user-circle"></i> ACCOUNT CENTER</h3>
-                    <div class="uid-row"><span>UID</span><div class="uid-value"><span id="displayUid">---</span><button class="copy-btn" onclick="copyUID()"><i class="fas fa-copy"></i> Copy</button></div></div>
+                    
+                    <!-- UID 和邀请码卡片 -->
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">UID</span>
+                            <div class="info-value">
+                                <span id="displayUid">---</span>
+                                <button class="copy-btn" onclick="copyUID()"><i class="fas fa-copy"></i> Copy</button>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Invitation Code</span>
+                            <div class="info-value">
+                                <span id="displayInviteCode">---</span>
+                                <button class="copy-btn" onclick="copyInviteCode()"><i class="fas fa-copy"></i> Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="setting-item"><div><div class="setting-title">Change Password</div><div class="setting-desc">Update your login password</div></div><button class="setting-action" onclick="changePassword()">→</button></div>
                     <div class="setting-item"><div><div class="setting-title">Set Withdrawal PIN</div><div class="setting-desc">Create a PIN to protect your withdrawals</div></div><button class="setting-action" onclick="setWithdrawalPin()">→</button></div>
                     <div class="setting-item"><div><div class="setting-title">Change Withdrawal PIN</div><div class="setting-desc">Update your withdrawal PIN</div></div><button class="setting-action" onclick="changeWithdrawalPin()">→</button></div>
@@ -139,6 +197,7 @@
             const freshUser = await syncUserData();
             if (freshUser) {
                 document.getElementById('displayUid').innerText = freshUser.uid;
+                document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
             }
         }
         
@@ -153,6 +212,12 @@
             const uid = document.getElementById('displayUid').innerText; 
             navigator.clipboard.writeText(uid); 
             showToast('UID copied: ' + uid, 'success');
+        }
+        
+        function copyInviteCode() { 
+            const inviteCode = document.getElementById('displayInviteCode').innerText; 
+            navigator.clipboard.writeText(inviteCode); 
+            showToast('Invitation code copied: ' + inviteCode, 'success');
         }
         
         async function changePassword() { 
