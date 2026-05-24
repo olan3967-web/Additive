@@ -5,9 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ADDITIVE - Settings</title>
     <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="toast.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
+    <script src="toast.js"></script>
     <style>
         .settings-header { margin-bottom: 24px; }
         .settings-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
@@ -45,6 +47,9 @@
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
+        .footer-links { margin-top: 32px; text-align: center; font-size: 11px; color: #5a6388; }
+        .footer-links a { color: #7a85a5; text-decoration: none; margin: 0 12px; }
+        .footer-links a:hover { color: #C9B095; }
         @media (max-width: 900px) { .settings-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -54,7 +59,7 @@
     <div class="app">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top">
-                <div class="logo">ADDITIVE<span>*</span></div>
+                <div class="logo">ADDITIVE<span>®</span></div>
                 <nav class="nav">
                     <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
                     <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
@@ -138,21 +143,29 @@
         }
         
         function logout() { 
-            if(confirm('Logout?')){ 
+            showConfirm('Logout', 'Are you sure you want to logout?', () => {
                 localStorage.removeItem('currentUser'); 
-                window.location.href='signin.html'; 
-            } 
+                window.location.href = 'signin.html';
+            });
         }
         
         function copyUID() { 
             const uid = document.getElementById('displayUid').innerText; 
             navigator.clipboard.writeText(uid); 
-            alert('UID copied: '+uid); 
+            showToast('UID copied: ' + uid, 'success');
         }
         
         async function changePassword() { 
-            const newPwd = prompt('New password (min 4 chars):'); 
-            if(newPwd && newPwd.length>=4){ 
+            showPrompt('Change Password', 'Enter new password (min 4 characters):', async (newPwd) => {
+                if(!newPwd) {
+                    showToast('Password change cancelled', 'info');
+                    return;
+                }
+                if(newPwd.length < 4) { 
+                    showToast('Password must be at least 4 characters', 'error');
+                    return; 
+                }
+                
                 const user = getCurrentUser();
                 if(user){ 
                     const { error } = await sb
@@ -161,13 +174,13 @@
                         .eq('uid', user.uid);
                     
                     if(error) {
-                        alert('Password change failed: ' + error.message);
+                        showToast('Password change failed: ' + error.message, 'error');
                         return;
                     }
-                    alert('Password changed! Please login again.'); 
-                    logout(); 
+                    showToast('Password changed! Please login again.', 'success');
+                    setTimeout(() => { logout(); }, 1500);
                 } 
-            } else if(newPwd) alert('Password must be 4+ chars'); 
+            });
         }
         
         async function setWithdrawalPin() { 
@@ -179,52 +192,71 @@
                     .eq('uid', user.uid)
                     .single();
                 
-                if(userData && userData.pin && userData.pin !== '0000'){ 
-                    alert('PIN already set. Use Change.'); 
+                if(userData && userData.pin && userData.pin !== '0000' && userData.pin !== ''){ 
+                    showToast('PIN already set. Use "Change Withdrawal PIN" instead.', 'warning'); 
                     return; 
                 } 
-                const pin=prompt('Set 4-digit PIN:'); 
-                if(pin && pin.length===4 && !isNaN(pin)){ 
-                    const { error } = await sb
-                        .from('users')
-                        .update({ pin: pin })
-                        .eq('uid', user.uid);
-                    
-                    if(error) alert('Failed to set PIN: ' + error.message);
-                    else alert('PIN set!'); 
-                } else if(pin) alert('PIN must be 4 digits'); 
+                
+                showPrompt('Set Withdrawal PIN', 'Enter 4-digit PIN:', (pin) => {
+                    if(!pin) {
+                        showToast('PIN setup cancelled', 'info');
+                        return;
+                    }
+                    if(pin && pin.length === 4 && !isNaN(pin)){ 
+                        sb.from('users').update({ pin: pin }).eq('uid', user.uid)
+                            .then(() => { showToast('PIN set successfully!', 'success'); })
+                            .catch(err => { showToast('Failed to set PIN: ' + err.message, 'error'); });
+                    } else { 
+                        showToast('PIN must be exactly 4 digits', 'error'); 
+                    }
+                });
             } 
         }
         
         async function changeWithdrawalPin() { 
             const user = getCurrentUser();
             if(user){ 
-                const old=prompt('Current PIN:'); 
-                const { data: userData } = await sb
-                    .from('users')
-                    .select('pin')
-                    .eq('uid', user.uid)
-                    .single();
-                
-                if(userData && userData.pin !== old){ 
-                    alert('Wrong PIN'); 
-                    return; 
-                } 
-                const newPin=prompt('New 4-digit PIN:'); 
-                if(newPin && newPin.length===4 && !isNaN(newPin)){ 
-                    const { error } = await sb
-                        .from('users')
-                        .update({ pin: newPin })
-                        .eq('uid', user.uid);
+                showPrompt('Change Withdrawal PIN', 'Enter current PIN:', async (oldPin) => {
+                    if(!oldPin) {
+                        showToast('PIN change cancelled', 'info');
+                        return;
+                    }
                     
-                    if(error) alert('Failed to change PIN: ' + error.message);
-                    else alert('PIN changed!'); 
-                } else if(newPin) alert('PIN must be 4 digits'); 
+                    const { data: userData } = await sb
+                        .from('users')
+                        .select('pin')
+                        .eq('uid', user.uid)
+                        .single();
+                    
+                    if(userData && userData.pin !== oldPin){ 
+                        showToast('Wrong current PIN', 'error');
+                        return; 
+                    }
+                    
+                    showPrompt('Change Withdrawal PIN', 'Enter new 4-digit PIN:', (newPin) => {
+                        if(!newPin) {
+                            showToast('PIN change cancelled', 'info');
+                            return;
+                        }
+                        if(newPin && newPin.length === 4 && !isNaN(newPin)){ 
+                            sb.from('users').update({ pin: newPin }).eq('uid', user.uid)
+                                .then(() => { showToast('PIN changed successfully!', 'success'); })
+                                .catch(err => { showToast('Failed to change PIN: ' + err.message, 'error'); });
+                        } else { 
+                            showToast('PIN must be exactly 4 digits', 'error'); 
+                        }
+                    });
+                });
             } 
         }
         
-        function contactSupport() { window.location.href='chat.html'; }
-        function changeLanguage() { alert('English only at this time.'); }
+        function contactSupport() { 
+            window.location.href = 'chat.html'; 
+        }
+        
+        function changeLanguage() { 
+            showToast('English only at this time.', 'info');
+        }
         
         loadSettings();
     </script>
