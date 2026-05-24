@@ -54,18 +54,17 @@
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
         
-        /* PIN 输入弹窗专用样式 */
         .pin-input-group {
             display: flex;
             gap: 12px;
             justify-content: center;
-            margin: 20px 0;
+            margin: 24px 0;
         }
         .pin-digit {
-            width: 50px;
-            height: 60px;
+            width: 55px;
+            height: 65px;
             text-align: center;
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 700;
             background: rgba(0,0,0,0.4);
             border: 1px solid #2a3560;
@@ -171,7 +170,6 @@
             const user = checkLogin();
             if (!user) return;
             
-            // 直接从数据库获取最新数据，确保 PIN 是最新的
             const { data: freshData, error } = await sb
                 .from('users')
                 .select('uid, username, balance, pin')
@@ -188,7 +186,6 @@
                 currentUserBalance = freshData.balance || 0;
                 currentUserPin = freshData.pin || '';
                 
-                // 同时更新 localStorage
                 const storedUser = getCurrentUser();
                 if (storedUser) {
                     storedUser.balance = currentUserBalance;
@@ -200,73 +197,64 @@
                 document.getElementById('displayUsername').innerText = freshData.username;
                 document.getElementById('displayAvailable').innerHTML = `€${currentUserBalance.toFixed(2)}`;
                 document.getElementById('availableHint').innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
-                
-                console.log('用户数据加载完成 - PIN:', currentUserPin ? '已设置' : '未设置');
             }
         }
         
         // 自定义 PIN 输入弹窗
-function showPinPrompt(title, callback) {
-    const modalHtml = `
-        <div id="pinModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
-            <div class="modal-card" style="max-width: 360px; text-align: center;">
-                <h3 style="margin-bottom: 16px;"><i class="fas fa-lock"></i> ${title}</h3>
-                <div class="pin-input-group" style="display: flex; gap: 12px; justify-content: center; margin: 24px 0;">
-                    <input type="password" maxlength="1" class="pin-digit" id="pin1" autofocus style="width: 55px; height: 65px; text-align: center; font-size: 32px; font-weight: 700; background: rgba(0,0,0,0.4); border: 1px solid #2a3560; border-radius: 12px; color: white; outline: none;">
-                    <input type="password" maxlength="1" class="pin-digit" id="pin2" style="width: 55px; height: 65px; text-align: center; font-size: 32px; font-weight: 700; background: rgba(0,0,0,0.4); border: 1px solid #2a3560; border-radius: 12px; color: white; outline: none;">
-                    <input type="password" maxlength="1" class="pin-digit" id="pin3" style="width: 55px; height: 65px; text-align: center; font-size: 32px; font-weight: 700; background: rgba(0,0,0,0.4); border: 1px solid #2a3560; border-radius: 12px; color: white; outline: none;">
-                    <input type="password" maxlength="1" class="pin-digit" id="pin4" style="width: 55px; height: 65px; text-align: center; font-size: 32px; font-weight: 700; background: rgba(0,0,0,0.4); border: 1px solid #2a3560; border-radius: 12px; color: white; outline: none;">
+        function showPinPrompt(title, callback) {
+            const modalHtml = `
+                <div id="pinModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
+                    <div class="modal-card" style="max-width: 360px; text-align: center;">
+                        <h3 style="margin-bottom: 16px;"><i class="fas fa-lock"></i> ${title}</h3>
+                        <div class="pin-input-group">
+                            <input type="password" maxlength="1" class="pin-digit" id="pin1" autofocus>
+                            <input type="password" maxlength="1" class="pin-digit" id="pin2">
+                            <input type="password" maxlength="1" class="pin-digit" id="pin3">
+                            <input type="password" maxlength="1" class="pin-digit" id="pin4">
+                        </div>
+                        <div style="display: flex; gap: 16px; justify-content: center; margin-top: 16px; margin-bottom: 8px;">
+                            <button id="confirmPinBtn" style="background: linear-gradient(95deg, #2f6b3a, #1f552c); border: none; border-radius: 40px; padding: 10px 28px; font-weight: 600; color: white; cursor: pointer;">Confirm</button>
+                            <button id="cancelPinBtn" style="background: linear-gradient(95deg, #2f3e7a, #1f2c56); border: none; border-radius: 40px; padding: 10px 28px; font-weight: 600; color: white; cursor: pointer;">Cancel</button>
+                        </div>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 16px; justify-content: center; margin-top: 16px; margin-bottom: 8px;">
-                    <button id="confirmPinBtn" style="background: linear-gradient(95deg, #2f6b3a, #1f552c); border: none; border-radius: 40px; padding: 10px 28px; font-weight: 600; color: white; cursor: pointer;">Confirm</button>
-                    <button id="cancelPinBtn" style="background: linear-gradient(95deg, #2f3e7a, #1f2c56); border: none; border-radius: 40px; padding: 10px 28px; font-weight: 600; color: white; cursor: pointer;">Cancel</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    const existingModal = document.getElementById('pinModal');
-    if(existingModal) existingModal.remove();
-    
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    const modal = document.getElementById('pinModal');
-    const inputs = ['pin1', 'pin2', 'pin3', 'pin4'].map(id => document.getElementById(id));
-    
-    // 自动跳转下一个输入框
-    inputs.forEach((input, idx) => {
-        if (!input) return;
-        input.addEventListener('input', (e) => {
-            if(e.target.value.length === 1 && idx < 3) {
-                inputs[idx + 1].focus();
-            }
-        });
-        input.addEventListener('keydown', (e) => {
-            if(e.key === 'Backspace' && e.target.value.length === 0 && idx > 0) {
-                inputs[idx - 1].focus();
-            }
-        });
-    });
-    
-    const confirmBtn = document.getElementById('confirmPinBtn');
-    const cancelBtn = document.getElementById('cancelPinBtn');
-    
-    confirmBtn.onclick = () => {
-        const pin = inputs.map(i => i ? i.value : '').join('');
-        modal.remove();
-        if(pin.length === 4 && !isNaN(pin)) {
-            callback(pin);
-        } else {
-            showToast('PIN must be 4 digits', 'error');
-            callback(null);
-        }
-    };
-    
-    cancelBtn.onclick = () => {
-        modal.remove();
-        callback(null);
-    };
-}
+            `;
+            
+            const existingModal = document.getElementById('pinModal');
+            if(existingModal) existingModal.remove();
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            const modal = document.getElementById('pinModal');
+            const inputs = ['pin1', 'pin2', 'pin3', 'pin4'].map(id => document.getElementById(id));
+            
+            inputs.forEach((input, idx) => {
+                if (!input) return;
+                input.addEventListener('input', (e) => {
+                    if(e.target.value.length === 1 && idx < 3) {
+                        inputs[idx + 1].focus();
+                    }
+                });
+                input.addEventListener('keydown', (e) => {
+                    if(e.key === 'Backspace' && e.target.value.length === 0 && idx > 0) {
+                        inputs[idx - 1].focus();
+                    }
+                });
+            });
+            
+            const confirmBtn = document.getElementById('confirmPinBtn');
+            const cancelBtn = document.getElementById('cancelPinBtn');
+            
+            confirmBtn.onclick = () => {
+                const pin = inputs.map(i => i ? i.value : '').join('');
+                modal.remove();
+                if(pin.length === 4 && !isNaN(pin)) {
+                    callback(pin);
+                } else {
+                    showToast('PIN must be 4 digits', 'error');
+                    callback(null);
+                }
+            };
             
             cancelBtn.onclick = () => {
                 modal.remove();
@@ -275,7 +263,7 @@ function showPinPrompt(title, callback) {
         }
         
         async function requestWithdrawal() {
-            // 每次提现前重新获取最新用户数据（确保 PIN 是最新的）
+            // 重新获取最新用户数据
             await loadUserData();
             
             const user = getCurrentUser();
@@ -297,10 +285,8 @@ function showPinPrompt(title, callback) {
             }
             
             // 检查用户是否设置了 PIN
-            console.log('当前用户PIN:', currentUserPin);
-            
             if (!currentUserPin || currentUserPin === '0000' || currentUserPin === '' || currentUserPin === 'null') {
-                showConfirm('PIN Not Set', 'You need to set a withdrawal PIN in Settings first. Go to Settings now?', (confirmed) => {
+                showConfirm('PIN Not Set', 'You need to set a withdrawal PIN in Settings first. Go to Settings now?', function(confirmed) {
                     if (confirmed) {
                         window.location.href = 'settings.html';
                     }
@@ -308,23 +294,20 @@ function showPinPrompt(title, callback) {
                 return;
             }
             
-            // 自定义 PIN 验证弹窗
-            showPinPrompt('Enter Withdrawal PIN', async (enteredPin) => {
+            // PIN 验证
+            showPinPrompt('Enter Withdrawal PIN', async function(enteredPin) {
                 if(!enteredPin) {
                     showToast('Withdrawal cancelled', 'info');
                     return;
                 }
-                
-                console.log('输入的PIN:', enteredPin);
-                console.log('数据库PIN:', currentUserPin);
                 
                 if(enteredPin !== currentUserPin) {
                     showToast('Invalid PIN', 'error');
                     return;
                 }
                 
-                // 确认提现金额
-                showConfirm('Confirm Withdrawal', `Are you sure you want to withdraw €${amount.toFixed(2)}?`, async (confirmed) => {
+                // 确认提现
+                showConfirm('Confirm Withdrawal', `Are you sure you want to withdraw €${amount.toFixed(2)}?`, async function(confirmed) {
                     if (!confirmed) return;
                     
                     // 创建提现请求
@@ -349,7 +332,6 @@ function showPinPrompt(title, callback) {
                     await updateUserBalance(user.uid, newBalance);
                     currentUserBalance = newBalance;
                     
-                    // 更新 localStorage
                     const storedUser = getCurrentUser();
                     if (storedUser) {
                         storedUser.balance = newBalance;
@@ -367,10 +349,8 @@ function showPinPrompt(title, callback) {
             btn.addEventListener('click', () => { document.getElementById('amountInput').value = btn.getAttribute('data-value'); }); 
         });
         
-        // 页面加载时获取用户数据
         loadUserData();
         
-        // 调试函数 - 可在控制台输入 checkUserPin() 查看
         window.checkUserPin = async function() {
             const user = getCurrentUser();
             console.log('LocalStorage user:', user);
