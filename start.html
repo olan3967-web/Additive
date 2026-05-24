@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
     <style>
-        /* 保留原有样式 - 精简但完整 */
+        /* 样式保持不变 - 省略重复代码，使用之前正常的样式 */
         .start-hero { margin-bottom: 24px; }
         .start-hero h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .start-hero p { color: #7a85a5; font-size: 13px; margin-bottom: 0; }
@@ -43,8 +43,7 @@
         @keyframes pulseGlow { 0% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08),0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } 50% { box-shadow: inset 0 0 25px rgba(201,176,149,0.25),0 0 15px rgba(201,176,149,0.12); border-color: rgba(201,176,149,0.5); } 100% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08),0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } }
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; margin-bottom: 20px; }
-        .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); transition: 0.2s; }
-        .btn-upgrade:hover { background: rgba(201,176,149,0.25); transform: scale(1.02); }
+        .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 10000; visibility: hidden; opacity: 0; transition: all 0.2s ease; }
         .modal-overlay.active { visibility: visible; opacity: 1; }
         .order-modal { background: linear-gradient(145deg, #12172e, #0e1225); border-radius: 32px; width: 500px; max-width: 90%; border: 1px solid rgba(201,176,149,0.3); overflow: hidden; }
@@ -67,8 +66,7 @@
         .star-premium:hover { transform: translateY(-3px); }
         .rating-text-premium { text-align: center; font-size: 13px; color: #c0c0d0; margin-bottom: 20px; }
         .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
-        .btn-submit { flex: 1; background: #C9B095; border: none; padding: 14px; border-radius: 40px; color: #0A122B; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-submit:hover { opacity: 0.85; transform: scale(1.02); }
+        .btn-submit { flex: 1; background: #C9B095; border: none; padding: 14px; border-radius: 40px; color: #0A122B; font-weight: 600; cursor: pointer; }
         .btn-close-modal { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); padding: 14px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; }
         #progressContainer { margin-top: 20px; display: none; }
         .progress-bar-bg { background: rgba(255,255,255,0.1); border-radius: 10px; height: 8px; overflow: hidden; }
@@ -135,11 +133,11 @@
         function closeMenu() { const s=document.getElementById('sidebar'), o=document.querySelector('.menu-overlay'), m=document.getElementById('menuToggleBtn'); if(s)s.classList.remove('open'); if(o)o.classList.remove('active'); if(m)m.classList.remove('hidden'); }
         
         let currentOrder = null, selectedRating = 0, currentUserBalance = 0, currentUserTrialBonus = 0, currentUserUid = null;
-        let ordersCache = null; // 缓存订单
+        let ordersCache = null;
         
         function generateRandomOrderCode() { const l='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; return l[Math.floor(Math.random()*26)]+l[Math.floor(Math.random()*26)]+(Math.floor(Math.random()*90000)+10000); }
         
-        // 从 Supabase orders_pool 读取订单（带缓存）
+        // 从 Supabase orders_pool 读取订单
         async function getOrdersFromAdmin() {
             if (ordersCache) return ordersCache;
             try {
@@ -156,8 +154,8 @@
             } catch(e) { console.error('获取订单异常:', e); return []; }
         }
         
-        // 刷新余额显示
-        async function refreshBalanceDisplay() {
+        // 刷新显示（体验金卡片不扣除，只刷新余额）
+        async function refreshDisplay() {
             const user = getCurrentUser();
             if (!user) return;
             const { data: userData } = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
@@ -165,6 +163,7 @@
                 currentUserBalance = userData.balance || 0;
                 currentUserTrialBonus = userData.trial_bonus_amount || 0;
                 document.getElementById('statBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
+                // 体验金卡片显示数据库中的值（不显示扣除）
                 document.getElementById('statTrialBonus').innerHTML = `€${currentUserTrialBonus.toFixed(2)}`;
                 user.balance = currentUserBalance;
                 user.trialBonusAmount = currentUserTrialBonus;
@@ -193,6 +192,13 @@
                 document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`;
                 document.getElementById('totalOrders').innerText = orderCount;
                 document.getElementById('statPending').innerHTML = `€0.00`;
+                
+                // 检查是否达到30单，扣除所有体验金
+                if (orderCount >= 30 && currentUserTrialBonus > 0) {
+                    await sb.from('users').update({ trial_bonus_amount: 0 }).eq('uid', user.uid);
+                    await refreshDisplay();
+                    console.log('已完成30单，体验金已扣除');
+                }
             } catch(e) { console.error('加载数据失败:', e); }
         }
         
@@ -240,12 +246,12 @@
             } catch(e) { console.error(e); }
         }
         
-        // 预加载订单，让点击立即响应
+        // 预加载订单
         async function preloadOrders() {
             await getOrdersFromAdmin();
         }
         
-        // 打开订单弹窗（优化：立即打开，异步加载数据）
+        // 打开订单弹窗
         async function openOrderModal() {
             const orderCount = parseInt(document.getElementById('totalOrders').innerText) || 0;
             const ordersLimit = await getUserOrdersLimit();
@@ -254,11 +260,9 @@
                 return; 
             }
             
-            // 先显示弹窗（loading状态）
             document.getElementById('modalContent').innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
             document.getElementById('orderModal').classList.add('active');
             
-            // 异步加载数据
             await loadUserData();
             const allOrders = await getOrdersFromAdmin();
             const available = allOrders.filter(o => (o.price || 0) <= (currentUserBalance + currentUserTrialBonus));
@@ -323,7 +327,7 @@
             pc.style.display='block'; pb.style.width='0%'; pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing payment...'; pb.style.width='25%';
             
             setTimeout(async()=>{
-                // 扣款逻辑：优先使用体验金
+                // 扣款逻辑：优先使用体验金（但前端不显示扣除）
                 let remainingPrice = price;
                 let newBalance = currentUserBalance;
                 let newTrialBonus = currentUserTrialBonus;
@@ -341,7 +345,9 @@
                 await updateUserBalance(user.uid, newBalance, newTrialBonus);
                 currentUserBalance = newBalance;
                 currentUserTrialBonus = newTrialBonus;
-                await refreshBalanceDisplay(); // 实时刷新显示
+                
+                // 刷新显示（体验金卡片保持原有金额，不显示扣除）
+                await refreshDisplay();
                 
                 pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Searching Offer...'; pb.style.width='50%';
                 
@@ -349,11 +355,11 @@
                     pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting Order...'; pb.style.width='75%';
                     
                     setTimeout(async()=>{
-                        // 订单完成后：只加佣金到 balance，体验金不恢复
+                        // 订单完成后：只加佣金到 balance
                         const finalBalance = currentUserBalance + commission;
                         await updateUserBalance(user.uid, finalBalance, currentUserTrialBonus);
                         currentUserBalance = finalBalance;
-                        await refreshBalanceDisplay();
+                        await refreshDisplay();
                         
                         // 保存订单历史
                         await sb.from('order_history').insert([{
@@ -368,20 +374,21 @@
                             date: new Date().toISOString()
                         }]);
                         
+                        // 重新加载用户数据（会自动检查30单扣除体验金）
+                        await loadUserData();
+                        
                         pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
                         setTimeout(()=>{ 
-                            loadUserData(); 
                             closeOrderModal(); 
                         }, 300);
-                    }, 1000);  // 减少 0.5 秒
-                }, 1000);  // 减少 0.5 秒
-            }, 500);  // 减少 0.5 秒
+                    }, 1000);
+                }, 1000);
+            }, 500);
         }
         
         // 绑定按钮事件
         document.getElementById('startNowBtn').addEventListener('click', () => openOrderModal());
         
-        // 预加载订单，让点击立即响应
         preloadOrders();
         
         if(!localStorage.getItem('currentUser')) window.location.href='signin.html';
