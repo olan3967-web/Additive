@@ -19,17 +19,6 @@
             min-height: 100vh;
         }
 
-        /* 全局粒子背景 */
-        .global-particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
         .app { position: relative; z-index: 1; }
 
         /* Header */
@@ -278,7 +267,7 @@
             border: 1px solid rgba(255,140,0,0.3);
         }
 
-        /* ========== 侧边栏和菜单样式（独立于 common.css） ========== */
+        /* ========== 侧边栏和菜单样式 ========== */
         .sidebar {
             position: fixed;
             left: -280px;
@@ -396,7 +385,7 @@
     </style>
 </head>
 <body>
-    <canvas id="globalParticles" class="global-particles"></canvas>
+    <!-- 注意：globalParticles Canvas 已删除 -->
     <div class="menu-overlay" id="menuOverlay"></div>
 
     <div class="app">
@@ -478,7 +467,7 @@
     </div>
 
     <script>
-        // 气泡特效
+        // 气泡特效（卡片内部）
         function startBubble(canvasId, wrapperId) {
             const canvas = document.getElementById(canvasId);
             const wrapper = document.getElementById(wrapperId);
@@ -506,27 +495,12 @@
             new ResizeObserver(() => { resize(); bubbles = []; }).observe(wrapper);
             resize(); animate();
         }
-        startBubble('bubbleCanvas1','card1'); startBubble('bubbleCanvas2','card2'); startBubble('bubbleCanvas3','card3'); startBubble('bubbleCanvas4','card4');
+        startBubble('bubbleCanvas1','card1');
+        startBubble('bubbleCanvas2','card2');
+        startBubble('bubbleCanvas3','card3');
+        startBubble('bubbleCanvas4','card4');
 
-        // 全局粒子
-        (function(){
-            const c = document.getElementById('globalParticles'), ctx = c.getContext('2d');
-            let w,h, parts=[];
-            const resize = () => { w = innerWidth; h = innerHeight; c.width = w; c.height = h; };
-            const create = () => ({ x: Math.random()*w, y: Math.random()*h, r: Math.random()*2+0.5, a: Math.random()*0.1+0.02, vx: (Math.random()-0.5)*0.2, vy: (Math.random()-0.5)*0.15 });
-            for(let i=0;i<60;i++) parts.push(create());
-            const animate = () => {
-                ctx.clearRect(0,0,w,h);
-                for(let p of parts){
-                    p.x+=p.vx; p.y+=p.vy;
-                    if(p.x<0) p.x=w; if(p.x>w) p.x=0; if(p.y<0) p.y=h; if(p.y>h) p.y=0;
-                    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fillStyle = `rgba(255,140,0,${p.a})`; ctx.fill();
-                }
-                requestAnimationFrame(animate);
-            };
-            window.onresize = () => { resize(); parts = []; for(let i=0;i<60;i++) parts.push(create()); };
-            resize(); animate();
-        })();
+        // 注意：全局粒子脚本已删除
 
         // 菜单控制
         const sidebar = document.getElementById('sidebar');
