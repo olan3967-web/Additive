@@ -34,10 +34,7 @@
             z-index: 0;
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 32px;
+        .app {
             position: relative;
             z-index: 1;
         }
@@ -50,6 +47,7 @@
             margin-bottom: 24px;
             flex-wrap: wrap;
             gap: 16px;
+            padding: 0 32px;
         }
         .welcome-header h1 {
             font-size: 24px;
@@ -87,6 +85,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             margin-bottom: 28px;
+            padding: 0 32px;
         }
         .card {
             background: rgba(20, 30, 55, 0.5);
@@ -125,6 +124,7 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 16px;
             margin-bottom: 32px;
+            padding: 0 32px;
         }
         .action-card {
             background: rgba(20, 30, 55, 0.5);
@@ -158,12 +158,13 @@
             color: #a0a8c0;
         }
 
-        /* ========== OVERVIEW 区域 - 火山橙渐变 + 飘浮气泡特效 ========== */
+        /* ========== OVERVIEW 区域 ========== */
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin: 32px 0 20px 0;
+            padding: 0 32px;
         }
         .section-header h3 {
             font-size: 18px;
@@ -182,7 +183,7 @@
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
             margin-bottom: 32px;
-            padding-bottom: 12px;
+            padding: 0 32px 12px 32px;
         }
         .stats-scroll::-webkit-scrollbar {
             height: 6px;
@@ -201,27 +202,32 @@
             white-space: nowrap;
         }
         
-        /* 卡片包装器 - 用于粒子 Canvas */
+        /* 卡片包装器 - 相对定位，用于 Canvas 绝对定位在卡片内部 */
         .stat-card-wrapper {
             position: relative;
             border-radius: 20px;
-            overflow: hidden;
             scroll-snap-align: start;
             min-width: 200px;
             display: inline-block;
             white-space: normal;
+            overflow: hidden;
         }
         
-        /* 火山橙渐变卡片样式 - 高度调矮 */
+        /* 火山橙渐变卡片样式 */
         .stat-card {
-            background: linear-gradient(135deg, #1c1c1c 0%, #3b2a1f 50%, #8b4513 100%);
+            background: linear-gradient(135deg, rgba(28,28,28,0.85) 0%, rgba(59,42,31,0.85) 50%, rgba(139,69,19,0.85) 100%);
             border-radius: 20px;
-            padding: 20px 20px;
+            padding: 20px 16px;
             text-align: center;
             border: 1px solid rgba(255, 140, 0, 0.3);
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             position: relative;
             z-index: 2;
+            backdrop-filter: blur(2px);
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             transition: all 0.3s;
         }
         .stat-card-wrapper:hover .stat-card {
@@ -270,12 +276,12 @@
             font-size: 24px;
         }
         .certificate-icon {
-            font-size: 40px;
+            font-size: 36px;
             color: #ff9f4a;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
-        /* 卡片内 Canvas - 最底层气泡特效 */
+        /* 卡片内 Canvas - 绝对定位在卡片内部 */
         .bubble-canvas {
             position: absolute;
             top: 0;
@@ -295,6 +301,7 @@
             border-radius: 20px;
             overflow: hidden;
             border: 1px solid rgba(255, 140, 0, 0.1);
+            margin: 0 32px;
         }
         .booking-item {
             display: flex;
@@ -349,6 +356,7 @@
             color: #5a6388;
             padding: 16px 0;
             border-top: 1px solid rgba(255, 140, 0, 0.1);
+            margin: 0 32px;
         }
 
         /* ========== 升级卡片 ========== */
@@ -365,7 +373,6 @@
             transition: all 0.3s ease;
             animation: pulseGlow 2.5s ease-in-out infinite;
             border: 1px solid rgba(255, 140, 0, 0.3);
-            margin-top: 28px;
         }
         .upgrade-title {
             font-size: 17px;
@@ -395,7 +402,14 @@
 
         /* ========== 手机版 ========== */
         @media (max-width: 768px) {
-            .container { padding: 0 20px; }
+            .welcome-header, .two-columns, .action-row, .section-header, .stats-scroll, .bookings-list, .footer-note {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+            .stats-scroll {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
             .two-columns {
                 grid-template-columns: 1fr;
                 gap: 16px;
@@ -417,13 +431,14 @@
                 min-width: 170px;
             }
             .stat-card {
-                padding: 16px 16px;
+                height: 160px;
+                padding: 16px 12px;
             }
             .stat-value {
                 font-size: 24px;
             }
             .certificate-icon {
-                font-size: 32px;
+                font-size: 30px;
             }
             .desktop-upgrade {
                 display: none;
@@ -431,6 +446,7 @@
             .mobile-upgrade-btn {
                 display: block;
                 margin-bottom: 20px;
+                padding: 0 16px;
             }
         }
 
@@ -607,16 +623,15 @@
     </div>
 
     <script>
-        // ========== 飘浮气泡特效（明显版） ==========
-        function initBubbleEffect(canvasId, wrapperId) {
-            const canvas = document.getElementById(canvasId);
-            const wrapper = document.getElementById(wrapperId);
+        // ========== 特效6：飘浮气泡（明显版）- 直接从预览代码移植 ==========
+        (function() {
+            const canvas = document.getElementById('bubbleCanvas1');
+            const wrapper = document.getElementById('card1');
             if (!canvas || !wrapper) return;
             
             const ctx = canvas.getContext('2d');
             let width, height;
             let bubbles = [];
-            let animationId = null;
             
             function resize() {
                 const rect = wrapper.getBoundingClientRect();
@@ -624,17 +639,15 @@
                 height = rect.height;
                 canvas.width = width;
                 canvas.height = height;
-                canvas.style.width = width + 'px';
-                canvas.style.height = height + 'px';
             }
             
             function createBubble() {
                 return {
                     x: Math.random() * width,
                     y: height + 15,
-                    radius: Math.random() * 10 + 5,      // 5-15px 气泡
-                    alpha: Math.random() * 0.35 + 0.15,   // 0.15-0.5 透明度
-                    speedY: -1.0 - Math.random() * 1.2,   // 上升速度
+                    radius: Math.random() * 12 + 6,
+                    alpha: Math.random() * 0.35 + 0.15,
+                    speedY: -1.2 - Math.random() * 1.5,
                     wobble: Math.random() * Math.PI * 2,
                     wobbleSpeed: 0.03 + Math.random() * 0.05
                 };
@@ -642,12 +655,11 @@
             
             function animate() {
                 if (!width || !height) {
-                    if (animationId) requestAnimationFrame(animate);
+                    requestAnimationFrame(animate);
                     return;
                 }
                 
-                // 生成新气泡
-                if (Math.random() < 0.04 && bubbles.length < 15) {
+                if (Math.random() < 0.05 && bubbles.length < 18) {
                     bubbles.push(createBubble());
                 }
                 
@@ -660,51 +672,130 @@
                     b.x += Math.sin(b.wobble) * 0.5;
                     b.alpha -= 0.002;
                     
-                    // 气泡填充
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = `rgba(255, 140, 0, ${b.alpha * 0.6})`;
+                    
                     ctx.beginPath();
                     ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(255, 140, 0, ${b.alpha * 0.5})`;
                     ctx.fill();
                     
-                    // 气泡边框
                     ctx.beginPath();
                     ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-                    ctx.strokeStyle = `rgba(255, 140, 0, ${b.alpha * 0.7})`;
-                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = `rgba(255, 140, 0, ${b.alpha * 0.8})`;
+                    ctx.lineWidth = 1.5;
                     ctx.stroke();
                     
-                    // 高光
                     ctx.beginPath();
                     ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.2, 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(255, 200, 100, ${b.alpha * 0.6})`;
                     ctx.fill();
                     
-                    if (b.y < -40 || b.alpha <= 0.01) {
+                    if (b.y < -40 || b.alpha <= 0.02) {
                         bubbles.splice(i, 1);
                     }
                 }
                 
-                animationId = requestAnimationFrame(animate);
+                ctx.shadowBlur = 0;
+                requestAnimationFrame(animate);
             }
             
             const observer = new ResizeObserver(() => {
                 resize();
-                // 重置气泡
                 bubbles = [];
             });
             observer.observe(wrapper);
-            
             resize();
             animate();
+        })();
+        
+        // 为其他3个卡片也添加相同的气泡特效
+        function initBubbleEffect(canvasId, wrapperId) {
+            const canvas = document.getElementById(canvasId);
+            const wrapper = document.getElementById(wrapperId);
+            if (!canvas || !wrapper) return;
             
-            return () => {
-                if (animationId) cancelAnimationFrame(animationId);
-                observer.disconnect();
-            };
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let bubbles = [];
+            
+            function resize() {
+                const rect = wrapper.getBoundingClientRect();
+                width = rect.width;
+                height = rect.height;
+                canvas.width = width;
+                canvas.height = height;
+            }
+            
+            function createBubble() {
+                return {
+                    x: Math.random() * width,
+                    y: height + 15,
+                    radius: Math.random() * 12 + 6,
+                    alpha: Math.random() * 0.35 + 0.15,
+                    speedY: -1.2 - Math.random() * 1.5,
+                    wobble: Math.random() * Math.PI * 2,
+                    wobbleSpeed: 0.03 + Math.random() * 0.05
+                };
+            }
+            
+            function animate() {
+                if (!width || !height) {
+                    requestAnimationFrame(animate);
+                    return;
+                }
+                
+                if (Math.random() < 0.05 && bubbles.length < 18) {
+                    bubbles.push(createBubble());
+                }
+                
+                ctx.clearRect(0, 0, width, height);
+                
+                for (let i = bubbles.length - 1; i >= 0; i--) {
+                    const b = bubbles[i];
+                    b.y += b.speedY;
+                    b.wobble += b.wobbleSpeed;
+                    b.x += Math.sin(b.wobble) * 0.5;
+                    b.alpha -= 0.002;
+                    
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = `rgba(255, 140, 0, ${b.alpha * 0.6})`;
+                    
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 140, 0, ${b.alpha * 0.5})`;
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255, 140, 0, ${b.alpha * 0.8})`;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.2, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 200, 100, ${b.alpha * 0.6})`;
+                    ctx.fill();
+                    
+                    if (b.y < -40 || b.alpha <= 0.02) {
+                        bubbles.splice(i, 1);
+                    }
+                }
+                
+                ctx.shadowBlur = 0;
+                requestAnimationFrame(animate);
+            }
+            
+            const observer = new ResizeObserver(() => {
+                resize();
+                bubbles = [];
+            });
+            observer.observe(wrapper);
+            resize();
+            animate();
         }
         
-        // 初始化所有卡片的气泡特效
-        initBubbleEffect('bubbleCanvas1', 'card1');
+        // 初始化其他3个卡片
         initBubbleEffect('bubbleCanvas2', 'card2');
         initBubbleEffect('bubbleCanvas3', 'card3');
         initBubbleEffect('bubbleCanvas4', 'card4');
