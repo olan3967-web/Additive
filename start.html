@@ -76,7 +76,7 @@
     .menu-toggle { display: block; }
     .two-columns { flex-direction: column; gap: 20px; }
     
-    /* 视频区域修复 - 不被裁剪 */
+    /* 视频区域 - 全屏无缝隙，完整显示 */
     .left-col {
         flex: auto;
         width: 100%;
@@ -88,10 +88,6 @@
         overflow: hidden;
         padding: 0;
         margin: 0;
-        left: 0;
-        right: 0;
-        margin-left: 0;
-        margin-right: 0;
     }
     
     .left-col #videoContainer {
@@ -105,7 +101,7 @@
     #videoContainer img {
         width: 100%;
         height: auto;
-        object-fit: contain;
+        object-fit: cover;
         display: block;
         margin: 0;
         padding: 0;
@@ -114,15 +110,26 @@
     
     .video-placeholder {
         width: 100%;
-        padding: 60px 20px;
+        padding: 80px 20px;
         background: #0a0f2a;
         border-radius: 0 !important;
         box-sizing: border-box;
+        text-align: center;
     }
     
     .right-col { 
         flex: auto; 
         padding: 0 16px; 
+    }
+    
+    /* 确保所有内容容器无外边距 */
+    .main {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .app {
+        overflow-x: hidden;
     }
     
     .start-hero { 
