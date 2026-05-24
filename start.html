@@ -73,12 +73,80 @@
         .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.2s ease; }
         .progress-text { text-align: center; margin-top: 12px; font-size: 13px; color: #C9B095; }
         @media (max-width: 768px) {
-            .menu-toggle { display: block; }
-            .two-columns { flex-direction: column; }
-            .left-col { flex: auto; width: 100vw; margin-left: -50vw; margin-right: -50vw; background: transparent; border: none; }
-            .right-col { flex: auto; padding: 0 16px; }
-            .hotel-img-item img { width: 120px; height: 75px; }
-        }
+    .menu-toggle { display: block; }
+    .two-columns { flex-direction: column; gap: 20px; }
+    
+    /* 视频区域 - 全屏无缝隙 */
+    .left-col {
+        flex: auto;
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        background: #000000;
+        border: none;
+        border-radius: 0;
+        min-height: auto;
+        overflow: hidden;
+        padding: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+    
+    .left-col #videoContainer {
+        width: 100%;
+        min-height: auto;
+        margin: 0;
+        padding: 0;
+    }
+    
+    #videoContainer video,
+    #videoContainer img {
+        width: 100%;
+        height: auto;
+        object-fit: cover;
+        min-height: 200px;
+        max-height: 280px;
+        display: block;
+        margin: 0;
+        padding: 0;
+        border-radius: 0;
+    }
+    
+    .video-placeholder {
+        width: 100%;
+        padding: 60px 20px;
+        background: #0a0f2a;
+    }
+    
+    .right-col { 
+        flex: auto; 
+        padding: 0 16px; 
+    }
+    
+    .start-hero { 
+        margin-bottom: 12px; 
+        padding: 0 16px; 
+    }
+    .start-hero h1 { font-size: 22px; }
+    .start-hero p { font-size: 11px; }
+    
+    .stats-grid { gap: 10px; margin-bottom: 16px; }
+    .stat-card { padding: 12px; }
+    .stat-value { font-size: 20px; }
+    .orders-row { padding: 12px 16px; margin-bottom: 16px; }
+    .orders-value { font-size: 20px; }
+    .start-btn { padding: 12px; font-size: 14px; }
+    .big-card { padding: 20px; }
+    
+    .hotel-img-item img { width: 120px; height: 75px; }
+    .upgrade-card-pulse { padding: 16px; margin: 20px 16px; }
+    .featured-section { padding: 0 16px; }
+    .featured-title { font-size: 14px; }
+    .marquee-images { padding: 12px 0; }
+}
     </style>
 </head>
 <body>
