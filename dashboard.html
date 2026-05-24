@@ -22,7 +22,7 @@
         .card { background: rgba(20, 30, 55, 0.5); backdrop-filter: blur(12px); border: 1px solid rgba(201, 170, 103, 0.15); border-radius: 24px; padding: 20px; transition: all 0.3s; }
         .card:hover { transform: translateY(-4px); border-color: rgba(201, 170, 103, 0.35); }
         
-        /* 四个快捷按钮 */
+        /* 四个快捷按钮 - 桌面版 */
         .action-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -61,15 +61,76 @@
             color: #a0a8c0;
         }
         
+        /* Overview 横向滚动区域 */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin: 28px 0 16px 0; }
         .section-header h3 { font-size: 16px; font-weight: 600; color: #ffffff; }
         .view-all { color: #C9AA67; text-decoration: none; font-size: 12px; }
-        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
-        .stat-card { background: rgba(20, 30, 55, 0.5); backdrop-filter: blur(8px); border-radius: 20px; padding: 16px; border: 1px solid rgba(201, 170, 103, 0.1); }
-        .stat-label { font-size: 11px; color: #a0a8c0; margin-bottom: 8px; }
-        .stat-value { font-size: 24px; font-weight: 700; color: #ffffff; }
-        .stat-tag { background: rgba(201, 170, 103, 0.1); display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; color: #C9AA67; }
-        .stat-btn { display: inline-block; background: rgba(201, 170, 103, 0.08); padding: 5px 12px; border-radius: 30px; font-size: 11px; text-decoration: none; color: #C9AA67; margin-top: 10px; }
+        
+        .stats-scroll {
+            overflow-x: auto;
+            white-space: nowrap;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 32px;
+            padding-bottom: 8px;
+        }
+        .stats-scroll::-webkit-scrollbar {
+            height: 4px;
+        }
+        .stats-scroll::-webkit-scrollbar-track {
+            background: rgba(201, 170, 103, 0.1);
+            border-radius: 4px;
+        }
+        .stats-scroll::-webkit-scrollbar-thumb {
+            background: #C9AA67;
+            border-radius: 4px;
+        }
+        .stats-row {
+            display: inline-flex;
+            gap: 16px;
+            white-space: nowrap;
+        }
+        .stat-card {
+            background: rgba(20, 30, 55, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 16px 20px;
+            border: 1px solid rgba(201, 170, 103, 0.1);
+            scroll-snap-align: start;
+            min-width: 160px;
+            display: inline-block;
+            white-space: normal;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #a0a8c0;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .stat-tag {
+            background: rgba(201, 170, 103, 0.1);
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            color: #C9AA67;
+            margin-top: 8px;
+        }
+        .stat-btn {
+            display: inline-block;
+            background: rgba(201, 170, 103, 0.08);
+            padding: 5px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            text-decoration: none;
+            color: #C9AA67;
+            margin-top: 10px;
+        }
+        
         .bookings-list { background: rgba(20, 30, 55, 0.4); backdrop-filter: blur(8px); border-radius: 20px; overflow: hidden; border: 1px solid rgba(201, 170, 103, 0.1); }
         .booking-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(201, 170, 103, 0.08); }
         .booking-info { display: flex; align-items: center; gap: 12px; }
@@ -81,13 +142,106 @@
         .empty-bookings { text-align: center; padding: 40px; color: #a0a8c0; }
         .empty-bookings i { font-size: 40px; color: #5a6388; margin-bottom: 10px; display: block; }
         .footer-note { margin-top: 40px; text-align: center; font-size: 11px; color: #5a6388; padding: 16px 0; border-top: 1px solid rgba(201, 170, 103, 0.1); }
+        
         @keyframes pulseGlow { 0% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); } 50% { box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12); border-color: rgba(201, 176, 149, 0.5); } 100% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); } }
         .upgrade-card-pulse { background: rgba(20, 30, 55, 0.6); backdrop-filter: blur(12px); border-radius: 24px; padding: 20px; transition: all 0.3s ease; animation: pulseGlow 2.5s ease-in-out infinite; border: 1px solid rgba(201, 176, 149, 0.3); margin-top: 28px; }
         .upgrade-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; color: #C9B095; }
         .upgrade-desc { font-size: 12px; color: #7a85a5; line-height: 1.4; margin-bottom: 16px; }
         .btn-upgrade { background: rgba(201, 176, 149, 0.15); padding: 8px 18px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(201, 176, 149, 0.3); }
-        @media (max-width: 1000px) { .two-columns { grid-template-columns: 1fr; } .stats-row { grid-template-columns: 1fr; } .action-row { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px) { .action-row { grid-template-columns: 1fr; } }
+        
+        /* ========== 桌面版默认样式 ========== */
+        @media (min-width: 769px) {
+            .mobile-only-upgrade {
+                display: none;
+            }
+        }
+        
+        /* ========== 手机版样式 ========== */
+        @media (max-width: 768px) {
+            /* 隐藏桌面版的 Upgrade 卡片 */
+            .desktop-upgrade {
+                display: none;
+            }
+            /* 显示手机版 Upgrade 按钮区域 */
+            .mobile-upgrade-btn {
+                display: block;
+                margin-bottom: 20px;
+            }
+            
+            .two-columns {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            /* 快捷按钮 - 4列等宽，图标缩小 */
+            .action-row {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+                margin-bottom: 24px;
+            }
+            .action-card {
+                padding: 10px 6px;
+            }
+            .action-card i {
+                font-size: 18px;
+                margin-bottom: 6px;
+            }
+            .action-text {
+                font-size: 12px;
+            }
+            .action-sub {
+                font-size: 9px;
+            }
+            
+            /* 统计卡片 - 可拖拽横向滚动 */
+            .stats-scroll {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            .stat-card {
+                min-width: 140px;
+                padding: 14px 16px;
+            }
+            .stat-value {
+                font-size: 20px;
+            }
+            
+            /* 隐藏桌面版 Upgrade 卡片内的内容 */
+            .card .upgrade-link-sm {
+                display: inline-block;
+            }
+        }
+        
+        /* 手机版专用 Upgrade 按钮 - 默认隐藏 */
+        .mobile-upgrade-btn {
+            display: none;
+        }
+        .mobile-upgrade-link {
+            background: rgba(201, 176, 149, 0.15);
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            padding: 10px 20px;
+            border-radius: 40px;
+            text-align: center;
+            display: block;
+            color: #C9B095;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 600px) {
+            .action-card i {
+                font-size: 16px;
+            }
+            .action-text {
+                font-size: 11px;
+            }
+            .stat-card {
+                min-width: 130px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -128,6 +282,7 @@
                 <div class="premium-tag"><i class="fas fa-gem"></i> PREMIUM ACCESS</div>
             </div>
 
+            <!-- 桌面版：两列布局（Balance + Upgrade卡片） -->
             <div class="two-columns">
                 <div class="card">
                     <div class="card-label"><i class="fas fa-wallet"></i> Available Balance</div>
@@ -137,11 +292,16 @@
                         <a href="membership.html" class="upgrade-link-sm">Upgrade Now →</a>
                     </div>
                 </div>
-                <div class="upgrade-card-pulse">
+                <div class="upgrade-card-pulse desktop-upgrade">
                     <div class="upgrade-title">✨ Upgrade your membership</div>
                     <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
                     <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
                 </div>
+            </div>
+
+            <!-- 手机版专用 Upgrade 按钮（隐藏桌面版升级卡片时显示） -->
+            <div class="mobile-upgrade-btn">
+                <a href="membership.html" class="mobile-upgrade-link">✨ Upgrade Membership →</a>
             </div>
 
             <!-- 四个快捷按钮：Withdraw / Start / History / Support -->
@@ -169,10 +329,26 @@
             </div>
 
             <div class="section-header"><h3>OVERVIEW</h3><a href="#" class="view-all">View all <i class="fas fa-chevron-right"></i></a></div>
-            <div class="stats-row">
-                <div class="stat-card"><div class="stat-label">Bonus</div><div class="stat-value">+15%</div><div class="stat-tag">VIP Level</div></div>
-                <div class="stat-card"><div class="stat-label">Weekly dividends</div><div class="stat-value" id="weeklyDividends">€0.00</div><a href="#" class="stat-btn">Click to view</a></div>
-                <div class="stat-card premium-stat"><div class="stat-label">PREMIUM ACCESS</div><div class="stat-small">Upgrade your membership</div><a href="membership.html" class="stat-btn">Upgrade Now</a></div>
+            
+            <!-- 横向滚动区域（手机版可拖拽，桌面版正常显示） -->
+            <div class="stats-scroll">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label">Bonus</div>
+                        <div class="stat-value">+15%</div>
+                        <div class="stat-tag">VIP Level</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Weekly dividends</div>
+                        <div class="stat-value" id="weeklyDividends">€0.00</div>
+                        <a href="#" class="stat-btn">Click to view</a>
+                    </div>
+                    <div class="stat-card premium-stat">
+                        <div class="stat-label">PREMIUM ACCESS</div>
+                        <div class="stat-value" style="font-size: 16px;">Upgrade</div>
+                        <a href="membership.html" class="stat-btn">Upgrade Now</a>
+                    </div>
+                </div>
             </div>
 
             <div class="section-header"><h3>RECENT BOOKINGS</h3><a href="history.html" class="view-all">View all <i class="fas fa-chevron-right"></i></a></div>
