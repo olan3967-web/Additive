@@ -390,12 +390,12 @@
             let commission = price * commissionRate;
             
             // 如果是使用体验金完成的订单，佣金控制在 0.8 - 0.9 之间
-            const isUsingTrial = (price <= displayTrialBonus);
-            if (isUsingTrial) {
-                // 佣金控制在 0.8 - 0.9 之间
-                commission = 0.8 + (Math.random() * 0.1);
-                commission = parseFloat(commission.toFixed(2));
-            }
+const isUsingTrial = (price <= displayTrialBonus);
+if (isUsingTrial) {
+    // 体验金订单：佣金 0.8 - 1.0 欧元之间
+    commission = 0.8 + (Math.random() * 0.2);
+    commission = parseFloat(commission.toFixed(2));
+}
             
             document.getElementById('modalContent').innerHTML = `
                 <div class="order-image">${order.imageUrl ? `<img src="${order.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
@@ -432,74 +432,78 @@
         function closeOrderModal() { document.getElementById('orderModal').classList.remove('active'); currentOrder = null; selectedRating = 0; }
         
         async function submitOrder() {
-            if(selectedRating===0){alert('Please select a rating');return;}
-            const user = getCurrentUser();
-            if(!user){window.location.href='signin.html';return;}
-            const price = currentOrder.price||0;
-            const commission = currentOrder.commissionAmount;
-            const isUsingTrial = currentOrder.isUsingTrial;
-            
-            const pc = document.getElementById('progressContainer'), pb = document.getElementById('progressBar'), pt = document.getElementById('progressText');
-            pc.style.display='block'; pb.style.width='0%'; pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing payment...'; pb.style.width='25%';
+    if(selectedRating===0){alert('Please select a rating');return;}
+    const user = getCurrentUser();
+    if(!user){window.location.href='signin.html';return;}
+    const price = currentOrder.price || 0;
+    const commission = currentOrder.commissionAmount;
+    const isUsingTrial = currentOrder.isUsingTrial;
+    
+    const pc = document.getElementById('progressContainer'), pb = document.getElementById('progressBar'), pt = document.getElementById('progressText');
+    pc.style.display='block'; pb.style.width='0%'; pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing payment...'; pb.style.width='25%';
+    
+    setTimeout(async()=>{
+        let newBalance = currentUserBalance;
+        
+        if (isUsingTrial) {
+            // 使用体验金：不扣除余额，体验金不变
+            // 体验金订单：只记录佣金，不涉及余额变动
+            // 注意：体验金不返还本金，因为本金是体验金出的
+            // 最终余额 = 原余额 + 佣金
+            newBalance = currentUserBalance + commission;
+        } else {
+            // 使用余额：正确逻辑
+            // 1. 扣除订单金额（冻结）
+            // 2. 订单完成后返还订单金额 + 佣金
+            // 净效果：余额 = 原余额 + 佣金
+            if (currentUserBalance >= price) {
+                // 先扣除订单金额
+                const afterDeduction = currentUserBalance - price;
+                // 订单完成后，返还本金+佣金
+                newBalance = afterDeduction + price + commission;
+            } else {
+                alert('Insufficient balance!');
+                closeOrderModal();
+                return;
+            }
+        }
+        
+        await refreshBalanceDisplay();
+        
+        pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Searching Offer...'; pb.style.width='50%';
+        
+        setTimeout(async()=>{
+            pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting Order...'; pb.style.width='75%';
             
             setTimeout(async()=>{
-                let newBalance = currentUserBalance;
-                
-                if (isUsingTrial) {
-                    // 使用体验金：不扣除体验金，也不扣除余额
-                    // 体验金金额保持不变，余额不变
-                    // 只记录佣金
-                } else {
-                    // 使用余额：正常扣除订单金额
-                    if (newBalance >= price) {
-                        newBalance -= price;
-                    } else {
-                        // 余额不足（理论上不应该发生，因为前面检查过总可用金额）
-                        alert('Insufficient balance!');
-                        closeOrderModal();
-                        return;
-                    }
-                    await updateUserBalance(user.uid, newBalance, null);
-                    currentUserBalance = newBalance;
-                }
-                
+                // 更新余额
+                await updateUserBalance(user.uid, newBalance, null);
+                currentUserBalance = newBalance;
                 await refreshBalanceDisplay();
                 
-                pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Searching Offer...'; pb.style.width='50%';
+                // 保存订单历史
+                await sb.from('order_history').insert([{
+                    uid: user.uid,
+                    username: user.username,
+                    order_code: currentOrder.displayOrderCode,
+                    accommodation_name: currentOrder.accommodationName,
+                    price: price,
+                    commission: commission,
+                    rating: selectedRating,
+                    status: 'completed',
+                    date: new Date().toISOString(),
+                    used_trial: isUsingTrial
+                }]);
                 
-                setTimeout(async()=>{
-                    pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting Order...'; pb.style.width='75%';
-                    
-                    setTimeout(async()=>{
-                        // 订单完成后：加佣金到余额
-                        const finalBalance = currentUserBalance + commission;
-                        await updateUserBalance(user.uid, finalBalance, null);
-                        currentUserBalance = finalBalance;
-                        await refreshBalanceDisplay();
-                        
-                        // 保存订单历史
-                        await sb.from('order_history').insert([{
-                            uid: user.uid,
-                            username: user.username,
-                            order_code: currentOrder.displayOrderCode,
-                            accommodation_name: currentOrder.accommodationName,
-                            price: price,
-                            commission: commission,
-                            rating: selectedRating,
-                            status: 'completed',
-                            date: new Date().toISOString(),
-                            used_trial: isUsingTrial  // 标记是否使用体验金
-                        }]);
-                        
-                        // 重新加载用户数据
-                        await loadUserData();
-                        
-                        pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
-                        setTimeout(()=>{ closeOrderModal(); }, 300);
-                    }, 1000);
-                }, 1000);
-            }, 500);
-        }
+                // 重新加载用户数据
+                await loadUserData();
+                
+                pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
+                setTimeout(()=>{ closeOrderModal(); }, 300);
+            }, 1000);
+        }, 1000);
+    }, 500);
+}
         
         document.getElementById('startNowBtn').addEventListener('click', () => openOrderModal());
         
