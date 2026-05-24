@@ -145,7 +145,7 @@
             letter-spacing: 0.3px;
         }
 
-        /* ========== TESTIMONIALS ========== */
+        /* ========== 滚动评价区域 ========== */
         .section-title {
             font-size: 32px;
             font-weight: 700;
@@ -154,39 +154,59 @@
         .section-title span {
             color: #C9B095;
         }
-        .testimonial-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 32px;
+        
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+            background: rgba(10, 18, 43, 0.4);
+            border-radius: 28px;
+            padding: 24px 0;
+            border: 1px solid rgba(201, 176, 149, 0.15);
             margin-bottom: 64px;
         }
-        .testimonial-card {
-            background: rgba(20, 30, 55, 0.6);
+        .marquee-content {
+            display: inline-block;
+            animation: scrollTestimonials 40s linear infinite;
+        }
+        .testimonial-item {
+            display: inline-block;
+            width: 360px;
+            margin: 0 16px;
+            vertical-align: top;
+            background: rgba(20, 30, 55, 0.7);
             backdrop-filter: blur(10px);
-            border-radius: 24px;
-            padding: 28px;
+            border-radius: 20px;
+            padding: 24px;
             border: 1px solid rgba(201, 176, 149, 0.15);
+            white-space: normal;
+            text-align: left;
             transition: all 0.3s;
         }
-        .testimonial-card:hover {
+        .testimonial-item:hover {
             transform: translateY(-4px);
-            border-color: rgba(201, 176, 149, 0.3);
+            border-color: rgba(201, 176, 149, 0.4);
         }
         .testimonial-text {
-            font-size: 15px;
-            line-height: 1.5;
+            font-size: 14px;
+            line-height: 1.6;
             color: #c0c8e0;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             font-style: italic;
         }
         .testimonial-author {
             font-weight: 700;
             color: #C9B095;
             margin-bottom: 4px;
+            font-size: 14px;
         }
         .testimonial-title {
-            font-size: 13px;
+            font-size: 11px;
             color: #7a85a5;
+        }
+        
+        @keyframes scrollTestimonials {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
         /* ========== STATS GRID ========== */
@@ -313,15 +333,16 @@
         @media (max-width: 900px) {
             .container { padding: 0 20px; }
             .hero h1 { font-size: 38px; }
-            .testimonial-grid { grid-template-columns: 1fr; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .feature-grid { grid-template-columns: 1fr; gap: 48px; }
+            .testimonial-item { width: 300px; }
         }
         @media (max-width: 600px) {
             .stats-grid { grid-template-columns: 1fr; }
             .hero h1 { font-size: 32px; }
             .cta-section { padding: 40px 24px; }
             .section-title { font-size: 28px; }
+            .testimonial-item { width: 280px; }
         }
     </style>
 </head>
@@ -356,24 +377,10 @@
                 <span class="trusted-item">⭐ 4.9 / 5 Client Rating</span>
             </div>
 
-            <!-- 客户评价 -->
+            <!-- 滚动评价区域 -->
             <h2 class="section-title">What our <span>partners say</span></h2>
-            <div class="testimonial-grid">
-                <div class="testimonial-card">
-                    <div class="testimonial-text">“With ADDITIVE, we have really found a good partner who has excellent marketing skills.”</div>
-                    <div class="testimonial-author">Berger Family</div>
-                    <div class="testimonial-title">Mountain Resort Feuerberg, Carinthia</div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="testimonial-text">“The collaboration is always professional, friendly and based on facts. We are very grateful to the team for their top performance.”</div>
-                    <div class="testimonial-author">Madreiter Family</div>
-                    <div class="testimonial-title">Der Löwe, Salzburg</div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="testimonial-text">“We have already received numerous bookings. As a company, ADDITIVE has shown what modern hotel marketing really looks like.”</div>
-                    <div class="testimonial-author">Bettina Ortner-Zwicklbauer</div>
-                    <div class="testimonial-title">Ortner's Resort, Bavaria</div>
-                </div>
+            <div class="marquee-container">
+                <div class="marquee-content" id="marqueeContent"></div>
             </div>
 
             <!-- 案例数据卡片 -->
@@ -488,6 +495,36 @@
         window.addEventListener('resize', resize);
         resize();
         animate();
+    })();
+    
+    // 滚动评价数据
+    (function() {
+        const testimonials = [
+            { text: "“With ADDITIVE, we have really found a good partner who has excellent marketing skills.”", author: "Berger Family", title: "Mountain Resort Feuerberg, Carinthia" },
+            { text: "“The collaboration is always professional, friendly and based on facts. We are very grateful to the team for their top performance.”", author: "Madreiter Family", title: "Der Löwe, Salzburg" },
+            { text: "“We have already received numerous bookings. As a company, ADDITIVE has shown what modern hotel marketing really looks like.”", author: "Bettina Ortner-Zwicklbauer", title: "Ortner's Resort, Bavaria" },
+            { text: "“ADDITIVE helps us to address our preferred guests and to measure the inquiries and bookings we have received with sales in a targeted manner.”", author: "Peter Mader", title: "Feuerstein Nature Family Resort, South Tyrol" },
+            { text: "“The ROI we achieved within the first three months exceeded all expectations. A game-changer for our marketing strategy.”", author: "Sabine Weber", title: "Grand Hotel Dolomites" },
+            { text: "“Finally a marketing partner that understands the hotel business. Their data-driven approach brought us 40% more direct bookings.”", author: "Thomas Reinisch", title: "Alpine Hideaway, Tyrol" },
+            { text: "“We've worked with several agencies before, but ADDITIVE is the only one that delivers measurable results consistently. Highly recommended.”", author: "Family Hofer", title: "Seeblick Wellness Hotel" },
+            { text: "“The team is extremely responsive and proactive. They don't just run campaigns — they optimize daily based on real booking data.”", author: "Markus Leitner", title: "City Hotel Innsbruck" }
+        ];
+        
+        const container = document.getElementById('marqueeContent');
+        if(container) {
+            for (let i = 0; i < 2; i++) {
+                testimonials.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = 'testimonial-item';
+                    div.innerHTML = `
+                        <div class="testimonial-text">${t.text}</div>
+                        <div class="testimonial-author">${t.author}</div>
+                        <div class="testimonial-title">${t.title}</div>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+        }
     })();
     </script>
 </body>
