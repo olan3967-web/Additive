@@ -66,41 +66,77 @@
         .section-header h3 { font-size: 16px; font-weight: 600; color: #ffffff; }
         .view-all { color: #C9AA67; text-decoration: none; font-size: 12px; }
         
-        .stats-scroll {
-            overflow-x: auto;
-            white-space: nowrap;
-            scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch;
-            margin-bottom: 32px;
-            padding-bottom: 8px;
-        }
-        .stats-scroll::-webkit-scrollbar {
-            height: 4px;
-        }
-        .stats-scroll::-webkit-scrollbar-track {
-            background: rgba(201, 170, 103, 0.1);
-            border-radius: 4px;
-        }
-        .stats-scroll::-webkit-scrollbar-thumb {
-            background: #C9AA67;
-            border-radius: 4px;
-        }
-        .stats-row {
-            display: inline-flex;
-            gap: 16px;
-            white-space: nowrap;
-        }
-        .stat-card {
-            background: rgba(20, 30, 55, 0.5);
-            backdrop-filter: blur(8px);
-            border-radius: 20px;
-            padding: 16px 20px;
-            border: 1px solid rgba(201, 170, 103, 0.1);
-            scroll-snap-align: start;
-            min-width: 160px;
-            display: inline-block;
-            white-space: normal;
-        }
+        /* 横向滚动区域 - 卡片更大 */
+.stats-scroll {
+    overflow-x: auto;
+    white-space: nowrap;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 32px;
+    padding-bottom: 8px;
+}
+.stats-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+.stats-scroll::-webkit-scrollbar-track {
+    background: rgba(201, 170, 103, 0.1);
+    border-radius: 4px;
+}
+.stats-scroll::-webkit-scrollbar-thumb {
+    background: #C9AA67;
+    border-radius: 4px;
+}
+.stats-row {
+    display: inline-flex;
+    gap: 20px;
+    white-space: nowrap;
+}
+.stat-card {
+    background: rgba(20, 30, 55, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    padding: 24px 20px;
+    border: 1px solid rgba(201, 170, 103, 0.15);
+    scroll-snap-align: start;
+    min-width: 180px;
+    display: inline-block;
+    white-space: normal;
+    transition: all 0.3s;
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(201, 170, 103, 0.35);
+}
+.stat-label {
+    font-size: 12px;
+    color: #a0a8c0;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+}
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+}
+.stat-tag {
+    background: rgba(201, 170, 103, 0.1);
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    color: #C9AA67;
+}
+.stat-btn {
+    display: inline-block;
+    background: rgba(201, 170, 103, 0.08);
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 11px;
+    text-decoration: none;
+    color: #C9AA67;
+    margin-top: 12px;
+}
         .stat-label {
             font-size: 11px;
             color: #a0a8c0;
