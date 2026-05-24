@@ -23,10 +23,23 @@
             min-height: 100vh;
         }
 
+        /* 全局漂浮粒子背景 */
+        .global-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 32px;
+            position: relative;
+            z-index: 1;
         }
 
         /* ========== HEADER ========== */
@@ -44,7 +57,7 @@
             color: #ffffff;
         }
         .username {
-            background: linear-gradient(135deg, #C9AA67, #e6c88a);
+            background: linear-gradient(135deg, #ff9f4a, #ff7b2c);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -53,19 +66,19 @@
         .uid-badge {
             font-size: 12px;
             color: #a0a8c0;
-            background: rgba(201, 170, 103, 0.1);
+            background: rgba(255, 140, 0, 0.1);
             display: inline-block;
             padding: 4px 12px;
             border-radius: 20px;
         }
         .premium-tag {
-            background: rgba(201, 170, 103, 0.12);
-            border: 1px solid rgba(201, 170, 103, 0.25);
+            background: rgba(255, 140, 0, 0.12);
+            border: 1px solid rgba(255, 140, 0, 0.25);
             padding: 6px 16px;
             border-radius: 40px;
             font-size: 12px;
             font-weight: 600;
-            color: #C9AA67;
+            color: #ff9f4a;
         }
 
         /* ========== 两列布局 ========== */
@@ -78,14 +91,14 @@
         .card {
             background: rgba(20, 30, 55, 0.5);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(201, 170, 103, 0.15);
+            border: 1px solid rgba(255, 140, 0, 0.15);
             border-radius: 24px;
             padding: 20px;
             transition: all 0.3s;
         }
         .card:hover {
             transform: translateY(-4px);
-            border-color: rgba(201, 170, 103, 0.35);
+            border-color: rgba(255, 140, 0, 0.35);
         }
         .balance-amount {
             font-size: 42px;
@@ -94,14 +107,14 @@
             color: #ffffff;
         }
         .membership-badge {
-            background: rgba(201, 170, 103, 0.1);
+            background: rgba(255, 140, 0, 0.1);
             padding: 4px 12px;
             border-radius: 30px;
             font-size: 11px;
-            color: #C9AA67;
+            color: #ff9f4a;
         }
         .upgrade-link-sm {
-            color: #C9AA67;
+            color: #ff9f4a;
             text-decoration: none;
             font-size: 12px;
         }
@@ -116,7 +129,7 @@
         .action-card {
             background: rgba(20, 30, 55, 0.5);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(201, 170, 103, 0.1);
+            border: 1px solid rgba(255, 140, 0, 0.1);
             border-radius: 18px;
             padding: 16px;
             text-align: center;
@@ -125,13 +138,13 @@
         }
         .action-card i {
             font-size: 24px;
-            color: #C9AA67;
+            color: #ff9f4a;
             margin-bottom: 8px;
             display: inline-block;
         }
         .action-card:hover {
-            background: rgba(201, 170, 103, 0.08);
-            border-color: rgba(201, 170, 103, 0.3);
+            background: rgba(255, 140, 0, 0.08);
+            border-color: rgba(255, 140, 0, 0.3);
             transform: translateY(-4px);
         }
         .action-text {
@@ -145,7 +158,7 @@
             color: #a0a8c0;
         }
 
-        /* ========== OVERVIEW 区域 - 大卡片 ========== */
+        /* ========== OVERVIEW 区域 - 火山橙渐变 + 飘浮气泡特效 ========== */
         .section-header {
             display: flex;
             justify-content: space-between;
@@ -158,7 +171,7 @@
             color: #ffffff;
         }
         .view-all {
-            color: #C9AA67;
+            color: #ff9f4a;
             text-decoration: none;
             font-size: 13px;
         }
@@ -175,11 +188,11 @@
             height: 6px;
         }
         .stats-scroll::-webkit-scrollbar-track {
-            background: rgba(201, 170, 103, 0.1);
+            background: rgba(255, 140, 0, 0.1);
             border-radius: 4px;
         }
         .stats-scroll::-webkit-scrollbar-thumb {
-            background: #C9AA67;
+            background: #ff9f4a;
             border-radius: 4px;
         }
         .stats-row {
@@ -187,68 +200,92 @@
             gap: 24px;
             white-space: nowrap;
         }
-        .stat-card {
-            background: rgba(20, 30, 55, 0.7);
-            backdrop-filter: blur(12px);
-            border-radius: 28px;
-            padding: 32px 28px;
-            border: 1px solid rgba(201, 170, 103, 0.2);
+        
+        /* 卡片包装器 - 用于粒子 Canvas */
+        .stat-card-wrapper {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
             scroll-snap-align: start;
-            min-width: 220px;
+            min-width: 200px;
             display: inline-block;
             white-space: normal;
-            transition: all 0.3s;
+        }
+        
+        /* 火山橙渐变卡片样式 - 高度调矮 */
+        .stat-card {
+            background: linear-gradient(135deg, #1c1c1c 0%, #3b2a1f 50%, #8b4513 100%);
+            border-radius: 20px;
+            padding: 20px 20px;
             text-align: center;
+            border: 1px solid rgba(255, 140, 0, 0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 2;
+            transition: all 0.3s;
         }
-        .stat-card:hover {
+        .stat-card-wrapper:hover .stat-card {
             transform: translateY(-4px);
-            border-color: rgba(201, 170, 103, 0.4);
-            background: rgba(20, 30, 55, 0.85);
+            border-color: #ff9f4a;
+            box-shadow: 0 8px 25px rgba(255, 140, 0, 0.2);
         }
+        
         .stat-label {
-            font-size: 13px;
-            color: #a0a8c0;
-            margin-bottom: 14px;
-            letter-spacing: 0.5px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.65);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
         }
         .stat-value {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 800;
-            color: #C9AA67;
-            margin-bottom: 10px;
+            color: #ff9f4a;
+            margin-bottom: 8px;
         }
         .stat-tag {
-            background: rgba(201, 170, 103, 0.1);
+            background: rgba(0,0,0,0.35);
             display: inline-block;
-            padding: 4px 12px;
+            padding: 3px 10px;
             border-radius: 20px;
-            font-size: 11px;
-            color: #C9AA67;
+            font-size: 10px;
+            color: rgba(255,255,255,0.75);
         }
         .stat-btn {
             display: inline-block;
-            background: rgba(201, 170, 103, 0.08);
-            padding: 6px 14px;
+            background: rgba(255, 140, 0, 0.15);
+            padding: 5px 12px;
             border-radius: 30px;
-            font-size: 11px;
+            font-size: 10px;
             text-decoration: none;
-            color: #C9AA67;
-            margin-top: 12px;
+            color: #ff9f4a;
+            margin-top: 10px;
             cursor: pointer;
         }
         .stat-btn:hover {
-            background: rgba(201, 170, 103, 0.2);
+            background: rgba(255, 140, 0, 0.3);
         }
 
         /* Certificate 卡片特殊样式 */
         .certificate-card .stat-value {
             font-size: 24px;
-            color: #4ade80;
         }
         .certificate-icon {
-            font-size: 48px;
-            color: #4ade80;
-            margin-bottom: 16px;
+            font-size: 40px;
+            color: #ff9f4a;
+            margin-bottom: 10px;
+        }
+
+        /* 卡片内 Canvas - 最底层气泡特效 */
+        .bubble-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            border-radius: 20px;
+            background: transparent;
         }
 
         /* ========== 最近订单 ========== */
@@ -257,14 +294,14 @@
             backdrop-filter: blur(8px);
             border-radius: 20px;
             overflow: hidden;
-            border: 1px solid rgba(201, 170, 103, 0.1);
+            border: 1px solid rgba(255, 140, 0, 0.1);
         }
         .booking-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 14px 20px;
-            border-bottom: 1px solid rgba(201, 170, 103, 0.08);
+            border-bottom: 1px solid rgba(255, 140, 0, 0.08);
         }
         .booking-info {
             display: flex;
@@ -273,7 +310,7 @@
         }
         .booking-info i {
             font-size: 18px;
-            color: #C9AA67;
+            color: #ff9f4a;
         }
         .booking-name {
             font-weight: 500;
@@ -311,14 +348,14 @@
             font-size: 11px;
             color: #5a6388;
             padding: 16px 0;
-            border-top: 1px solid rgba(201, 170, 103, 0.1);
+            border-top: 1px solid rgba(255, 140, 0, 0.1);
         }
 
         /* ========== 升级卡片 ========== */
         @keyframes pulseGlow {
-            0% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); }
-            50% { box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12); border-color: rgba(201, 176, 149, 0.5); }
-            100% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); }
+            0% { box-shadow: inset 0 0 10px rgba(255, 140, 0, 0.08), 0 0 5px rgba(255, 140, 0, 0.05); border-color: rgba(255, 140, 0, 0.2); }
+            50% { box-shadow: inset 0 0 25px rgba(255, 140, 0, 0.25), 0 0 15px rgba(255, 140, 0, 0.12); border-color: rgba(255, 140, 0, 0.5); }
+            100% { box-shadow: inset 0 0 10px rgba(255, 140, 0, 0.08), 0 0 5px rgba(255, 140, 0, 0.05); border-color: rgba(255, 140, 0, 0.2); }
         }
         .upgrade-card-pulse {
             background: rgba(20, 30, 55, 0.6);
@@ -327,14 +364,14 @@
             padding: 20px;
             transition: all 0.3s ease;
             animation: pulseGlow 2.5s ease-in-out infinite;
-            border: 1px solid rgba(201, 176, 149, 0.3);
+            border: 1px solid rgba(255, 140, 0, 0.3);
             margin-top: 28px;
         }
         .upgrade-title {
             font-size: 17px;
             font-weight: 600;
             margin-bottom: 8px;
-            color: #C9B095;
+            color: #ff9f4a;
         }
         .upgrade-desc {
             font-size: 12px;
@@ -343,21 +380,22 @@
             margin-bottom: 16px;
         }
         .btn-upgrade {
-            background: rgba(201, 176, 149, 0.15);
+            background: rgba(255, 140, 0, 0.15);
             padding: 8px 18px;
             border-radius: 40px;
             text-decoration: none;
-            color: #C9B095;
+            color: #ff9f4a;
             font-weight: 600;
             font-size: 13px;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            border: 1px solid rgba(201, 176, 149, 0.3);
+            border: 1px solid rgba(255, 140, 0, 0.3);
         }
 
         /* ========== 手机版 ========== */
         @media (max-width: 768px) {
+            .container { padding: 0 20px; }
             .two-columns {
                 grid-template-columns: 1fr;
                 gap: 16px;
@@ -375,12 +413,17 @@
             .action-text {
                 font-size: 11px;
             }
+            .stat-card-wrapper {
+                min-width: 170px;
+            }
             .stat-card {
-                min-width: 180px;
-                padding: 24px 20px;
+                padding: 16px 16px;
             }
             .stat-value {
-                font-size: 26px;
+                font-size: 24px;
+            }
+            .certificate-icon {
+                font-size: 32px;
             }
             .desktop-upgrade {
                 display: none;
@@ -398,13 +441,13 @@
         }
 
         .mobile-upgrade-link {
-            background: rgba(201, 176, 149, 0.15);
-            border: 1px solid rgba(201, 176, 149, 0.3);
+            background: rgba(255, 140, 0, 0.15);
+            border: 1px solid rgba(255, 140, 0, 0.3);
             padding: 10px 20px;
             border-radius: 40px;
             text-align: center;
             display: block;
-            color: #C9B095;
+            color: #ff9f4a;
             text-decoration: none;
             font-weight: 600;
             font-size: 14px;
@@ -413,6 +456,9 @@
     </style>
 </head>
 <body>
+    <!-- 全局背景粒子 -->
+    <canvas id="globalParticles" class="global-particles"></canvas>
+
     <div class="menu-overlay" onclick="closeMenu()"></div>
 
     <div class="app">
@@ -496,7 +542,7 @@
                 </div>
             </div>
 
-            <!-- OVERVIEW 区域 - 大卡片 + Certificate -->
+            <!-- OVERVIEW 区域 - 飘浮气泡特效卡片 -->
             <div class="section-header">
                 <h3>OVERVIEW</h3>
                 <a href="#" class="view-all">View all <i class="fas fa-chevron-right"></i></a>
@@ -504,26 +550,45 @@
             
             <div class="stats-scroll">
                 <div class="stats-row">
-                    <div class="stat-card">
-                        <div class="stat-label">Bonus Rate</div>
-                        <div class="stat-value">+15%</div>
-                        <div class="stat-tag">VIP Level</div>
+                    <!-- 卡片1: Bonus Rate -->
+                    <div class="stat-card-wrapper" id="card1">
+                        <canvas id="bubbleCanvas1" class="bubble-canvas"></canvas>
+                        <div class="stat-card">
+                            <div class="stat-label">Bonus Rate</div>
+                            <div class="stat-value">+15%</div>
+                            <div class="stat-tag">VIP Level</div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Weekly Dividends</div>
-                        <div class="stat-value" id="weeklyDividends">€0.00</div>
-                        <div class="stat-btn" onclick="location.href='history.html'">Click to view</div>
+
+                    <!-- 卡片2: Weekly Dividends -->
+                    <div class="stat-card-wrapper" id="card2">
+                        <canvas id="bubbleCanvas2" class="bubble-canvas"></canvas>
+                        <div class="stat-card">
+                            <div class="stat-label">Weekly Dividends</div>
+                            <div class="stat-value" id="weeklyDividends">€0.00</div>
+                            <div class="stat-btn" onclick="location.href='history.html'">Click to view</div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Premium Status</div>
-                        <div class="stat-value" id="premiumStatus">Normal</div>
-                        <div class="stat-btn" onclick="location.href='membership.html'">Upgrade Now</div>
+
+                    <!-- 卡片3: Premium Status -->
+                    <div class="stat-card-wrapper" id="card3">
+                        <canvas id="bubbleCanvas3" class="bubble-canvas"></canvas>
+                        <div class="stat-card">
+                            <div class="stat-label">Premium Status</div>
+                            <div class="stat-value" id="premiumStatus">Normal</div>
+                            <div class="stat-btn" onclick="location.href='membership.html'">Upgrade Now</div>
+                        </div>
                     </div>
-                    <div class="stat-card certificate-card">
-                        <div class="certificate-icon"><i class="fas fa-certificate"></i></div>
-                        <div class="stat-label">Certificate</div>
-                        <div class="stat-value" id="certificateStatus">Not Earned</div>
-                        <div class="stat-tag" id="certificateTag">Complete 100 orders</div>
+
+                    <!-- 卡片4: Certificate -->
+                    <div class="stat-card-wrapper" id="card4">
+                        <canvas id="bubbleCanvas4" class="bubble-canvas"></canvas>
+                        <div class="stat-card certificate-card">
+                            <div class="certificate-icon"><i class="fas fa-certificate"></i></div>
+                            <div class="stat-label">Certificate</div>
+                            <div class="stat-value" id="certificateStatus">Not Earned</div>
+                            <div class="stat-tag" id="certificateTag">Complete 100 orders</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -542,6 +607,160 @@
     </div>
 
     <script>
+        // ========== 飘浮气泡特效（明显版） ==========
+        function initBubbleEffect(canvasId, wrapperId) {
+            const canvas = document.getElementById(canvasId);
+            const wrapper = document.getElementById(wrapperId);
+            if (!canvas || !wrapper) return;
+            
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let bubbles = [];
+            let animationId = null;
+            
+            function resize() {
+                const rect = wrapper.getBoundingClientRect();
+                width = rect.width;
+                height = rect.height;
+                canvas.width = width;
+                canvas.height = height;
+                canvas.style.width = width + 'px';
+                canvas.style.height = height + 'px';
+            }
+            
+            function createBubble() {
+                return {
+                    x: Math.random() * width,
+                    y: height + 15,
+                    radius: Math.random() * 10 + 5,      // 5-15px 气泡
+                    alpha: Math.random() * 0.35 + 0.15,   // 0.15-0.5 透明度
+                    speedY: -1.0 - Math.random() * 1.2,   // 上升速度
+                    wobble: Math.random() * Math.PI * 2,
+                    wobbleSpeed: 0.03 + Math.random() * 0.05
+                };
+            }
+            
+            function animate() {
+                if (!width || !height) {
+                    if (animationId) requestAnimationFrame(animate);
+                    return;
+                }
+                
+                // 生成新气泡
+                if (Math.random() < 0.04 && bubbles.length < 15) {
+                    bubbles.push(createBubble());
+                }
+                
+                ctx.clearRect(0, 0, width, height);
+                
+                for (let i = bubbles.length - 1; i >= 0; i--) {
+                    const b = bubbles[i];
+                    b.y += b.speedY;
+                    b.wobble += b.wobbleSpeed;
+                    b.x += Math.sin(b.wobble) * 0.5;
+                    b.alpha -= 0.002;
+                    
+                    // 气泡填充
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 140, 0, ${b.alpha * 0.5})`;
+                    ctx.fill();
+                    
+                    // 气泡边框
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255, 140, 0, ${b.alpha * 0.7})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    // 高光
+                    ctx.beginPath();
+                    ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.2, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 200, 100, ${b.alpha * 0.6})`;
+                    ctx.fill();
+                    
+                    if (b.y < -40 || b.alpha <= 0.01) {
+                        bubbles.splice(i, 1);
+                    }
+                }
+                
+                animationId = requestAnimationFrame(animate);
+            }
+            
+            const observer = new ResizeObserver(() => {
+                resize();
+                // 重置气泡
+                bubbles = [];
+            });
+            observer.observe(wrapper);
+            
+            resize();
+            animate();
+            
+            return () => {
+                if (animationId) cancelAnimationFrame(animationId);
+                observer.disconnect();
+            };
+        }
+        
+        // 初始化所有卡片的气泡特效
+        initBubbleEffect('bubbleCanvas1', 'card1');
+        initBubbleEffect('bubbleCanvas2', 'card2');
+        initBubbleEffect('bubbleCanvas3', 'card3');
+        initBubbleEffect('bubbleCanvas4', 'card4');
+        
+        // ========== 全局背景粒子 ==========
+        (function() {
+            const canvas = document.getElementById('globalParticles');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let particles = [];
+            
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+            
+            function createParticle() {
+                return {
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 2 + 0.5,
+                    alpha: Math.random() * 0.1 + 0.02,
+                    speedX: (Math.random() - 0.5) * 0.2,
+                    speedY: (Math.random() - 0.5) * 0.15
+                };
+            }
+            
+            for (let i = 0; i < 60; i++) particles.push(createParticle());
+            
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                for (let p of particles) {
+                    p.x += p.speedX;
+                    p.y += p.speedY;
+                    if (p.x < 0) p.x = width;
+                    if (p.x > width) p.x = 0;
+                    if (p.y < 0) p.y = height;
+                    if (p.y > height) p.y = 0;
+                    
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 140, 0, ${p.alpha})`;
+                    ctx.fill();
+                }
+                requestAnimationFrame(animate);
+            }
+            
+            window.addEventListener('resize', () => { resize(); particles = []; for (let i = 0; i < 60; i++) particles.push(createParticle()); });
+            resize();
+            animate();
+        })();
+        
+        // ========== 页面功能 ==========
         function toggleMenu() { 
             const sidebar = document.getElementById('sidebar'); 
             const overlay = document.querySelector('.menu-overlay'); 
@@ -587,7 +806,7 @@
             const weeklyTotal = weeklyOrders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
             document.getElementById('weeklyDividends').innerHTML = '€' + weeklyTotal.toFixed(2);
             
-            // 获取总订单数，用于 Certificate 卡片
+            // 获取总订单数
             const { data: allOrders } = await sb
                 .from('order_history')
                 .select('id')
@@ -599,16 +818,16 @@
             
             if (orderCount >= 100) {
                 certificateStatus.innerHTML = '✓ Earned';
-                certificateStatus.style.color = '#4ade80';
+                certificateStatus.style.color = '#ff9f4a';
                 certificateTag.innerHTML = 'Congratulations!';
-                certificateTag.style.background = 'rgba(74,222,128,0.2)';
-                certificateTag.style.color = '#4ade80';
+                certificateTag.style.background = 'rgba(255, 140, 0, 0.2)';
+                certificateTag.style.color = '#ff9f4a';
             } else {
                 certificateStatus.innerHTML = `${orderCount}/100`;
-                certificateStatus.style.color = '#C9AA67';
+                certificateStatus.style.color = '#ff9f4a';
                 certificateTag.innerHTML = `${100 - orderCount} orders to go`;
-                certificateTag.style.background = 'rgba(201,170,103,0.1)';
-                certificateTag.style.color = '#C9AA67';
+                certificateTag.style.background = 'rgba(255, 140, 0, 0.1)';
+                certificateTag.style.color = '#ff9f4a';
             }
         }
         
