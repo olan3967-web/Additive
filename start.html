@@ -76,7 +76,7 @@
     .menu-toggle { display: block; }
     .two-columns { flex-direction: column; gap: 20px; }
     
-    /* 视频区域 - 全屏无缝隙 */
+    /* 视频区域 - 全屏无缝隙，无圆角 */
     .left-col {
         flex: auto;
         width: 100vw;
@@ -87,7 +87,7 @@
         margin-right: -50vw;
         background: #000000;
         border: none;
-        border-radius: 0;
+        border-radius: 0 !important;
         min-height: auto;
         overflow: hidden;
         padding: 0;
@@ -112,13 +112,14 @@
         display: block;
         margin: 0;
         padding: 0;
-        border-radius: 0;
+        border-radius: 0 !important;
     }
     
     .video-placeholder {
         width: 100%;
         padding: 60px 20px;
         background: #0a0f2a;
+        border-radius: 0 !important;
     }
     
     .right-col { 
@@ -141,7 +142,7 @@
     .start-btn { padding: 12px; font-size: 14px; }
     .big-card { padding: 20px; }
     
-    .hotel-img-item img { width: 120px; height: 75px; }
+    .hotel-img-item img { width: 120px; height: 75px; border-radius: 12px; }
     .upgrade-card-pulse { padding: 16px; margin: 20px 16px; }
     .featured-section { padding: 0 16px; }
     .featured-title { font-size: 14px; }
