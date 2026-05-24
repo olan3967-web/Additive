@@ -58,9 +58,28 @@
         .login-link a { color: #C9B095; text-decoration: none; }
         .error-message { text-align: center; margin-top: 16px; font-size: 13px; min-height: 40px; }
         .success-message { text-align: center; margin-top: 16px; font-size: 13px; color: #4ade80; }
+        
+        /* 波浪背景容器 */
+        .waves-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body {
+            position: relative;
+            overflow-x: hidden;
+            background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
+        }
     </style>
 </head>
 <body>
+    <!-- 波浪背景 Canvas -->
+    <canvas id="wavesBg" class="waves-bg"></canvas>
+
     <div class="register-container">
         <div class="register-card">
             <div class="logo">ADDITIVE<span>®</span></div>
@@ -142,7 +161,6 @@
                 // 处理邀请码 - 查找邀请人
                 let invitedBy = '';
                 let invitedByUsername = '';
-                let referralBonusAdded = false;
                 
                 if (inviteCode) {
                     const { data: inviter, error: inviterError } = await sb
@@ -173,7 +191,6 @@
                                     type: 'referral_bonus',
                                     created_at: new Date().toISOString()
                                 }]);
-                            referralBonusAdded = true;
                             showMessage('Invitation code accepted! +€10 for referrer', false);
                         }
                     } else {
@@ -247,6 +264,48 @@
         document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') handleRegister();
         });
+    </script>
+
+    <!-- 波浪效果脚本 -->
+    <script>
+    (function() {
+        const canvas = document.getElementById('wavesBg');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let time = 0;
+        
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        
+        function animate() {
+            time += 0.02;
+            ctx.fillStyle = '#0a0f2a';
+            ctx.fillRect(0, 0, width, height);
+            
+            for(let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                for(let x = 0; x <= width; x += 10) {
+                    const y = height * (0.4 + i * 0.2) + Math.sin(x * 0.01 + time * (1 + i * 0.5)) * 30 + Math.cos(x * 0.02 + time) * 15;
+                    if(x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = `rgba(201, 176, 149, ${0.15 - i * 0.03})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    })();
     </script>
 </body>
 </html>
