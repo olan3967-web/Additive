@@ -206,61 +206,67 @@
         }
         
         // 自定义 PIN 输入弹窗
-        function showPinPrompt(title, callback) {
-            const modalHtml = `
-                <div id="pinModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
-                    <div class="modal-card" style="max-width: 360px;">
-                        <h3><i class="fas fa-lock"></i> ${title}</h3>
-                        <div class="pin-input-group">
-                            <input type="password" maxlength="1" class="pin-digit" id="pin1" autofocus>
-                            <input type="password" maxlength="1" class="pin-digit" id="pin2">
-                            <input type="password" maxlength="1" class="pin-digit" id="pin3">
-                            <input type="password" maxlength="1" class="pin-digit" id="pin4">
-                        </div>
-                        <div style="display: flex; gap: 12px; margin-top: 20px;">
-                            <button id="confirmPinBtn" class="success">确认</button>
-                            <button id="cancelPinBtn">取消</button>
-                        </div>
-                    </div>
+function showPinPrompt(title, callback) {
+    const modalHtml = `
+        <div id="pinModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
+            <div class="modal-card" style="max-width: 360px; text-align: center;">
+                <h3 style="margin-bottom: 16px;"><i class="fas fa-lock"></i> ${title}</h3>
+                <div class="pin-input-group" style="display: flex; gap: 12px; justify-content: center; margin: 24px 0;">
+                    <input type="password" maxlength="1" class="pin-digit" id="pin1" autofocus style="width: 55px; height: 65px; text-align: center; font-size: 32px; font-weight: 700; background: rgba(0,0,0,0.4); border: 1px solid #2a3560; border-radius: 12px; color: white; outline: none;">
+                    <input type="password" maxlength="1" class="pin-digit" id="pin2" style="width: 55px; height: 65px; text-align: center; font-size: 32px; font-weight: 700; background: rgba(0,0,0,0.4); border: 1px solid #2a3560; border-radius: 12px; color: white; outline: none;">
+                    <input type="password" maxlength="1" class="pin-digit" id="pin3" style="width: 55px; height: 65px; text-align: center; font-size: 32px; font-weight: 700; background: rgba(0,0,0,0.4); border: 1px solid #2a3560; border-radius: 12px; color: white; outline: none;">
+                    <input type="password" maxlength="1" class="pin-digit" id="pin4" style="width: 55px; height: 65px; text-align: center; font-size: 32px; font-weight: 700; background: rgba(0,0,0,0.4); border: 1px solid #2a3560; border-radius: 12px; color: white; outline: none;">
                 </div>
-            `;
-            
-            const existingModal = document.getElementById('pinModal');
-            if(existingModal) existingModal.remove();
-            
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            const modal = document.getElementById('pinModal');
-            const inputs = ['pin1', 'pin2', 'pin3', 'pin4'].map(id => document.getElementById(id));
-            
-            // 自动跳转下一个输入框
-            inputs.forEach((input, idx) => {
-                if (!input) return;
-                input.addEventListener('input', (e) => {
-                    if(e.target.value.length === 1 && idx < 3) {
-                        inputs[idx + 1].focus();
-                    }
-                });
-                input.addEventListener('keydown', (e) => {
-                    if(e.key === 'Backspace' && e.target.value.length === 0 && idx > 0) {
-                        inputs[idx - 1].focus();
-                    }
-                });
-            });
-            
-            const confirmBtn = document.getElementById('confirmPinBtn');
-            const cancelBtn = document.getElementById('cancelPinBtn');
-            
-            confirmBtn.onclick = () => {
-                const pin = inputs.map(i => i ? i.value : '').join('');
-                modal.remove();
-                if(pin.length === 4 && !isNaN(pin)) {
-                    callback(pin);
-                } else {
-                    showToast('PIN must be 4 digits', 'error');
-                    callback(null);
-                }
-            };
+                <div style="display: flex; gap: 16px; justify-content: center; margin-top: 16px; margin-bottom: 8px;">
+                    <button id="confirmPinBtn" style="background: linear-gradient(95deg, #2f6b3a, #1f552c); border: none; border-radius: 40px; padding: 10px 28px; font-weight: 600; color: white; cursor: pointer;">Confirm</button>
+                    <button id="cancelPinBtn" style="background: linear-gradient(95deg, #2f3e7a, #1f2c56); border: none; border-radius: 40px; padding: 10px 28px; font-weight: 600; color: white; cursor: pointer;">Cancel</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const existingModal = document.getElementById('pinModal');
+    if(existingModal) existingModal.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    const modal = document.getElementById('pinModal');
+    const inputs = ['pin1', 'pin2', 'pin3', 'pin4'].map(id => document.getElementById(id));
+    
+    // 自动跳转下一个输入框
+    inputs.forEach((input, idx) => {
+        if (!input) return;
+        input.addEventListener('input', (e) => {
+            if(e.target.value.length === 1 && idx < 3) {
+                inputs[idx + 1].focus();
+            }
+        });
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Backspace' && e.target.value.length === 0 && idx > 0) {
+                inputs[idx - 1].focus();
+            }
+        });
+    });
+    
+    const confirmBtn = document.getElementById('confirmPinBtn');
+    const cancelBtn = document.getElementById('cancelPinBtn');
+    
+    confirmBtn.onclick = () => {
+        const pin = inputs.map(i => i ? i.value : '').join('');
+        modal.remove();
+        if(pin.length === 4 && !isNaN(pin)) {
+            callback(pin);
+        } else {
+            showToast('PIN must be 4 digits', 'error');
+            callback(null);
+        }
+    };
+    
+    cancelBtn.onclick = () => {
+        modal.remove();
+        callback(null);
+    };
+}
             
             cancelBtn.onclick = () => {
                 modal.remove();
