@@ -164,6 +164,40 @@
     .featured-title { font-size: 14px; }
     .marquee-images { padding: 12px 0; }
 }
+
+/* SVG 星星评分样式 - 样式4 */
+.star-rating-premium {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 24px 0;
+}
+.star-premium {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.star-premium svg {
+    width: 36px;
+    height: 36px;
+    transition: all 0.2s ease;
+}
+.star-premium svg polygon {
+    fill: #4a5578;
+    transition: all 0.2s ease;
+}
+.star-premium.active svg polygon {
+    fill: #C9B095;
+    filter: drop-shadow(0 0 4px rgba(201, 176, 149, 0.5));
+}
+.star-premium:hover {
+    transform: translateY(-3px);
+}
+.star-premium:hover svg polygon {
+    fill: #d4b88a;
+}
     </style>
 </head>
 <body>
@@ -408,12 +442,32 @@ if (isUsingTrial) {
                     <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value" style="color:#C9B095;">€${(price + commission).toFixed(2)}</span></div>
                 </div>
                 <div class="star-rating-premium" id="starRating">
-                    <span class="star-premium" data-rating="1"><i class="fas fa-star"></i></span>
-                    <span class="star-premium" data-rating="2"><i class="fas fa-star"></i></span>
-                    <span class="star-premium" data-rating="3"><i class="fas fa-star"></i></span>
-                    <span class="star-premium" data-rating="4"><i class="fas fa-star"></i></span>
-                    <span class="star-premium" data-rating="5"><i class="fas fa-star"></i></span>
-                </div>
+    <span class="star-premium" data-rating="1">
+        <svg viewBox="0 0 24 24" width="36" height="36">
+            <polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/>
+        </svg>
+    </span>
+    <span class="star-premium" data-rating="2">
+        <svg viewBox="0 0 24 24" width="36" height="36">
+            <polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/>
+        </svg>
+    </span>
+    <span class="star-premium" data-rating="3">
+        <svg viewBox="0 0 24 24" width="36" height="36">
+            <polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/>
+        </svg>
+    </span>
+    <span class="star-premium" data-rating="4">
+        <svg viewBox="0 0 24 24" width="36" height="36">
+            <polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/>
+        </svg>
+    </span>
+    <span class="star-premium" data-rating="5">
+        <svg viewBox="0 0 24 24" width="36" height="36">
+            <polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/>
+        </svg>
+    </span>
+</div>
                 <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
                 <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
                 <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
