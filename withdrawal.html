@@ -179,6 +179,7 @@
             
             if (error) {
                 console.error('获取用户数据失败:', error);
+                showToast('Failed to load user data', 'error');
                 return;
             }
             
@@ -202,7 +203,6 @@
             }
         }
         
-        // 自定义 PIN 输入弹窗
         function showPinPrompt(title, callback) {
             const modalHtml = `
                 <div id="pinModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
@@ -268,12 +268,6 @@
             // 重新获取最新用户数据
             await loadUserData();
             
-            const user = getCurrentUser();
-            if (!user) { 
-                window.location.href = 'signin.html'; 
-                return; 
-            }
-            
             const amount = parseFloat(document.getElementById('amountInput').value);
             const minAmount = 10;
             
@@ -312,29 +306,11 @@
                 showConfirm('Confirm Withdrawal', `Are you sure you want to withdraw €${amount.toFixed(2)}?`, async function(confirmed) {
                     if (!confirmed) return;
                     
+                    // 显示加载状态
+                    showToast('Processing withdrawal request...', 'info');
+                    
                     try {
-                        // 1. 先创建提现请求
-                        const { data: withdrawalData, error: withdrawalError } = await sb
-                            .from('withdrawals')
-                            .insert([{ 
-                                uid: currentUserUid, 
-                                username: currentUsername, 
-                                amount: amount, 
-                                wallet_address: "0x" + Math.random().toString(36).substring(2, 10),
-                                status: 'pending',
-                                request_date: new Date().toISOString()
-                            }])
-                            .select();
-                        
-                        if (withdrawalError) {
-                            console.error('Withdrawal insert error:', withdrawalError);
-                            showToast('Withdrawal request failed: ' + withdrawalError.message, 'error');
-                            return;
-                        }
-                        
-                        console.log('Withdrawal created:', withdrawalData);
-                        
-                        // 2. 扣除用户余额
+                        // 1. 先扣除用户余额
                         const newBalance = currentUserBalance - amount;
                         const { error: updateError } = await sb
                             .from('users')
@@ -347,23 +323,45 @@
                             return;
                         }
                         
-                        // 3. 更新本地变量
+                        // 2. 创建提现请求
+                        const walletAddr = `withdrawal_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+                        const { data: withdrawalData, error: withdrawalError } = await sb
+                            .from('withdrawals')
+                            .insert({ 
+                                uid: currentUserUid, 
+                                username: currentUsername, 
+                                amount: amount, 
+                                wallet_address: walletAddr,
+                                status: 'pending',
+                                request_date: new Date().toISOString()
+                            })
+                            .select();
+                        
+                        if (withdrawalError) {
+                            // 如果提现记录创建失败，回滚余额
+                            console.error('Withdrawal insert error:', withdrawalError);
+                            await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUserUid);
+                            showToast('Withdrawal request failed: ' + withdrawalError.message, 'error');
+                            return;
+                        }
+                        
+                        console.log('Withdrawal created successfully:', withdrawalData);
+                        
+                        // 3. 更新本地变量和页面显示
                         currentUserBalance = newBalance;
                         
-                        // 4. 更新 localStorage
                         const storedUser = getCurrentUser();
                         if (storedUser) {
                             storedUser.balance = newBalance;
                             localStorage.setItem('currentUser', JSON.stringify(storedUser));
                         }
                         
-                        // 5. 更新页面显示
                         document.getElementById('displayBalance').innerHTML = `€${newBalance.toFixed(2)}`;
                         document.getElementById('displayAvailable').innerHTML = `€${newBalance.toFixed(2)}`;
                         document.getElementById('availableHint').innerHTML = `Available: €${newBalance.toFixed(2)}`;
+                        document.getElementById('amountInput').value = '';
                         
                         showToast(`Withdrawal request of €${amount.toFixed(2)} submitted for approval.`, 'success');
-                        document.getElementById('amountInput').value = '';
                         
                     } catch (err) {
                         console.error('Withdrawal error:', err);
@@ -379,11 +377,17 @@
         
         loadUserData();
         
+        // 调试函数
         window.checkUserPin = async function() {
             const user = getCurrentUser();
             console.log('LocalStorage user:', user);
             const { data } = await sb.from('users').select('uid, username, pin, balance').eq('uid', user?.uid).single();
             console.log('Database user:', data);
+        };
+        
+        window.checkWithdrawals = async function() {
+            const { data } = await sb.from('withdrawals').select('*').order('id', { ascending: false }).limit(5);
+            console.log('Recent withdrawals:', data);
         };
     </script>
 </body>
