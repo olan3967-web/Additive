@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="toast.css">
     <script src="toast.js"></script>
     <style>
+        /* 保留原有样式 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
@@ -189,12 +190,22 @@
             align-items: center;
             flex-wrap: wrap;
         }
-        .hotel-item img {
+        .hotel-item .img-wrapper {
             width: 100px;
             height: 70px;
-            object-fit: cover;
+            background: #ffffff;
             border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
             border: 1px solid #8ca3ff;
+        }
+        .hotel-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #ffffff;
         }
         .hotel-item .hotel-fields {
             flex: 1;
@@ -533,7 +544,7 @@
             await sb.from('deposits').insert([{ uid, username: user.username, amount: bonusAmount, type: 'deposit_bonus' }]);
         }
         loadUsers(); loadDashboard();
-        alert(`充值 €${amount}，奖励 €${bonusAmount}，总计添加 €${totalAmount}`);
+        showToast(`充值 €${amount}，奖励 €${bonusAmount}，总计添加 €${totalAmount}`, 'success');
     }
     
     async function cutBalance(uid){
@@ -541,14 +552,31 @@
         if(!amt) return;
         amt=parseFloat(amt);
         const {data:user}=await sb.from('users').select('balance').eq('uid',uid).single();
-        if((user.balance||0)<amt){alert('余额不足');return;}
+        if((user.balance||0)<amt){
+            showToast('余额不足', 'error');
+            return;
+        }
         await sb.from('users').update({balance:(user.balance||0)-amt}).eq('uid',uid);
         loadUsers(); loadDashboard();
-        alert(`-€${amt}`);
+        showToast(`-€${amt}`, 'success');
     }
     
-    async function updateVip(uid, level){ await sb.from('users').update({ vip_level: parseInt(level) }).eq('uid', uid); alert('VIP已更新'); loadUsers(); }
-    async function delUser(uid){ if(confirm('永久删除用户？')){ await sb.from('users').delete().eq('uid',uid); await sb.from('order_history').delete().eq('uid',uid); await sb.from('deposits').delete().eq('uid',uid); await sb.from('withdrawals').delete().eq('uid',uid); loadUsers(); loadDashboard(); alert('已删除'); } }
+    async function updateVip(uid, level){ 
+        await sb.from('users').update({ vip_level: parseInt(level) }).eq('uid', uid); 
+        showToast('VIP已更新', 'success');
+        loadUsers(); 
+    }
+    
+    async function delUser(uid){ 
+        showConfirm('确认删除', '永久删除用户？此操作不可恢复', async () => {
+            await sb.from('users').delete().eq('uid',uid); 
+            await sb.from('order_history').delete().eq('uid',uid); 
+            await sb.from('deposits').delete().eq('uid',uid); 
+            await sb.from('withdrawals').delete().eq('uid',uid); 
+            loadUsers(); loadDashboard(); 
+            showToast('已删除', 'success');
+        });
+    }
     
     document.getElementById('searchUserBtn')?.addEventListener('click', () => { searchKeyword = document.getElementById('searchUserInput').value; loadUsers(); });
     document.getElementById('clearUserBtn')?.addEventListener('click', () => { document.getElementById('searchUserInput').value = ''; searchKeyword = ''; loadUsers(); });
@@ -559,17 +587,26 @@
     async function createUser(){ 
         const username=document.getElementById('newUsername').value.trim(); 
         const pwd=document.getElementById('newPassword').value; 
-        if(!username||!pwd){alert('用户名密码必填');return;} 
+        if(!username||!pwd){
+            showToast('用户名密码必填', 'error');
+            return;
+        } 
         const {data:exist}=await sb.from('users').select('username').eq('username',username).single(); 
-        if(exist){alert('用户名已存在');return;} 
+        if(exist){
+            showToast('用户名已存在', 'error');
+            return;
+        } 
         const {data:max}=await sb.from('users').select('uid').order('uid',{ascending:false}).limit(1); 
         let newUid='100001'; 
         if(max&&max.length) newUid=(parseInt(max[0].uid)+1).toString(); 
         const code=Math.random().toString(36).substring(2,8).toUpperCase(); 
         const {error}=await sb.from('users').insert([{uid:newUid,username,password:pwd,invite_code:code,balance:0,vip_level:1,trial_bonus_amount:0}]); 
-        if(error){alert(error.message);return;} 
+        if(error){
+            showToast(error.message, 'error');
+            return;
+        } 
         loadUsers(); document.getElementById('addUserModal').classList.remove('active'); 
-        alert(`用户 ${username} 创建成功`); 
+        showToast(`用户 ${username} 创建成功`, 'success');
     }
     
     // ========== 体验金管理 ==========
@@ -617,9 +654,15 @@
     }
     
     async function adjustTrialBonus(uid, amount, action) {
-        if(isNaN(amount) || amount <= 0) { alert('请输入有效的金额'); return; }
+        if(isNaN(amount) || amount <= 0) { 
+            showToast('请输入有效的金额', 'error');
+            return; 
+        }
         const { data: user, error } = await sb.from('users').select('trial_bonus_amount, username').eq('uid', uid).single();
-        if(error) { alert('获取用户数据失败'); return; }
+        if(error) { 
+            showToast('获取用户数据失败', 'error');
+            return; 
+        }
         
         let currentAmount = user.trial_bonus_amount || 0;
         let newAmount;
@@ -627,14 +670,21 @@
         if(action === 'add') {
             newAmount = currentAmount + amount;
             await sb.from('deposits').insert([{ uid: uid, username: user.username, amount: amount, type: 'trial_bonus' }]);
+            showToast(`成功添加 €${amount} 体验金`, 'success');
         } else if(action === 'cut') {
-            if(currentAmount < amount) { alert('体验金不足'); return; }
+            if(currentAmount < amount) { 
+                showToast('体验金不足', 'error');
+                return; 
+            }
             newAmount = currentAmount - amount;
+            showToast(`成功扣除 €${amount} 体验金`, 'success');
         }
         
         const { error: updateError } = await sb.from('users').update({ trial_bonus_amount: newAmount }).eq('uid', uid);
-        if(updateError) { alert('操作失败'); return; }
-        alert(`成功${action === 'add' ? '添加' : '扣除'} €${amount}`);
+        if(updateError) { 
+            showToast('操作失败', 'error');
+            return; 
+        }
         loadTrialUsers();
         loadUsers();
     }
@@ -650,16 +700,90 @@
     });
     
     // ========== 提现审核 ==========
-    async function loadWithdrawals(){ const {data:wd}=await sb.from('withdrawals').select('*').eq('status','pending'); const tbody=document.getElementById('withdrawalsTableBody'); if(tbody){ tbody.innerHTML=''; for(let w of wd||[]){ const row=tbody.insertRow(); row.insertCell(0).innerHTML=`<span class="badge">${w.uid}</span>`; row.insertCell(1).innerText=w.username; row.insertCell(2).innerHTML=`<span class="text-gold">€${(w.amount||0).toFixed(2)}</span>`; row.insertCell(3).innerText=w.wallet_address||'-'; row.insertCell(4).innerText=new Date(w.request_date).toLocaleString(); row.insertCell(5).innerHTML=`<button class="approve-btn" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" class="success">批准</button> <button class="reject-btn" data-id="${w.id}" class="danger">拒绝</button>`; } document.querySelectorAll('.approve-btn').forEach(btn=>btn.addEventListener('click',()=>approveWd(btn.dataset.id,btn.dataset.uid,parseFloat(btn.dataset.amt)))); document.querySelectorAll('.reject-btn').forEach(btn=>btn.addEventListener('click',()=>rejectWd(btn.dataset.id))); } }
-    async function approveWd(id,uid,amt){ if(confirm(`批准 €${amt} 提现？`)){ await sb.from('withdrawals').update({status:'approved',processed_date:new Date()}).eq('id',id); loadWithdrawals(); loadDashboard(); alert('已批准'); } }
-    async function rejectWd(id){ if(confirm('拒绝该提现？')){ const {data:w}=await sb.from('withdrawals').select('uid,amount').eq('id',id).single(); if(w){ const {data:user}=await sb.from('users').select('balance').eq('uid',w.uid).single(); await sb.from('users').update({balance:(user.balance||0)+w.amount}).eq('uid',w.uid); } await sb.from('withdrawals').update({status:'rejected',processed_date:new Date()}).eq('id',id); loadWithdrawals(); loadDashboard(); alert('已拒绝，金额已退回'); } }
+    async function loadWithdrawals(){ 
+        const {data:wd}=await sb.from('withdrawals').select('*').eq('status','pending'); 
+        const tbody=document.getElementById('withdrawalsTableBody'); 
+        if(tbody){ 
+            tbody.innerHTML=''; 
+            for(let w of wd||[]){ 
+                const row=tbody.insertRow(); 
+                row.insertCell(0).innerHTML=`<span class="badge">${w.uid}</span>`; 
+                row.insertCell(1).innerText=w.username; 
+                row.insertCell(2).innerHTML=`<span class="text-gold">€${(w.amount||0).toFixed(2)}</span>`; 
+                row.insertCell(3).innerText=w.wallet_address||'-'; 
+                row.insertCell(4).innerText=new Date(w.request_date).toLocaleString(); 
+                row.insertCell(5).innerHTML=`<button class="approve-btn" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" class="success">批准</button> <button class="reject-btn" data-id="${w.id}" class="danger">拒绝</button>`; 
+            } 
+            document.querySelectorAll('.approve-btn').forEach(btn=>btn.addEventListener('click',()=>approveWd(btn.dataset.id,btn.dataset.uid,parseFloat(btn.dataset.amt)))); 
+            document.querySelectorAll('.reject-btn').forEach(btn=>btn.addEventListener('click',()=>rejectWd(btn.dataset.id))); 
+        } 
+    }
+    
+    async function approveWd(id,uid,amt){ 
+        showConfirm('批准提现', `批准 €${amt} 提现？`, async () => {
+            await sb.from('withdrawals').update({status:'approved',processed_date:new Date()}).eq('id',id); 
+            loadWithdrawals(); loadDashboard(); 
+            showToast('已批准', 'success');
+        });
+    }
+    
+    async function rejectWd(id){ 
+        showConfirm('拒绝提现', '拒绝该提现？金额将退回用户账户', async () => {
+            const {data:w}=await sb.from('withdrawals').select('uid,amount').eq('id',id).single(); 
+            if(w){ 
+                const {data:user}=await sb.from('users').select('balance').eq('uid',w.uid).single(); 
+                await sb.from('users').update({balance:(user.balance||0)+w.amount}).eq('uid',w.uid); 
+            } 
+            await sb.from('withdrawals').update({status:'rejected',processed_date:new Date()}).eq('id',id); 
+            loadWithdrawals(); loadDashboard(); 
+            showToast('已拒绝，金额已退回', 'success');
+        });
+    }
     
     // ========== VIP ==========
-    async function loadVipSettings(){ const {data:vips}=await sb.from('vip_settings').select('*').order('level'); const div=document.getElementById('vipSettingsDiv'); if(div){ div.innerHTML=''; for(let v of vips||[]){ div.innerHTML+=`<div style="background:#0e132e; border-radius:20px; padding:20px; margin-bottom:20px;"><h3>${v.rank_name} <span class="badge">Lv.${v.level}</span></h3><div>每日订单上限: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:130px;"></div><div>佣金比率(%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:110px;"></div><button class="save-vip" data-level="${v.level}" style="margin-top:10px">保存配置</button></div>`; } document.querySelectorAll('.save-vip').forEach(btn=>btn.addEventListener('click',()=>saveVip(btn.dataset.level))); } }
-    async function saveVip(level){ const limit=parseInt(document.getElementById(`limit_${level}`).value); const rate=parseFloat(document.getElementById(`rate_${level}`).value); await sb.from('vip_settings').update({orders_limit:limit,commission_rate:rate}).eq('level',level); alert('VIP参数已更新'); }
+    async function loadVipSettings(){ 
+        const {data:vips}=await sb.from('vip_settings').select('*').order('level'); 
+        const div=document.getElementById('vipSettingsDiv'); 
+        if(div){ 
+            div.innerHTML=''; 
+            for(let v of vips||[]){ 
+                div.innerHTML+=`<div style="background:#0e132e; border-radius:20px; padding:20px; margin-bottom:20px;">
+                    <h3>${v.rank_name} <span class="badge">Lv.${v.level}</span></h3>
+                    <div>每日订单上限: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:130px;"></div>
+                    <div>佣金比率(%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:110px;"></div>
+                    <button class="save-vip" data-level="${v.level}" style="margin-top:10px">保存配置</button>
+                </div>`; 
+            } 
+            document.querySelectorAll('.save-vip').forEach(btn=>btn.addEventListener('click',()=>saveVip(btn.dataset.level))); 
+        } 
+    }
+    
+    async function saveVip(level){ 
+        const limit=parseInt(document.getElementById(`limit_${level}`).value); 
+        const rate=parseFloat(document.getElementById(`rate_${level}`).value); 
+        await sb.from('vip_settings').update({orders_limit:limit,commission_rate:rate}).eq('level',level); 
+        showToast('VIP参数已更新', 'success');
+    }
     
     // ========== 订单历史 ==========
-    async function loadOrders(){ const {data:orders}=await sb.from('order_history').select('*').order('date',{ascending:false}).limit(200); const tbody=document.getElementById('ordersTableBody'); if(tbody){ tbody.innerHTML=''; for(let o of orders||[]){ const row=tbody.insertRow(); row.insertCell(0).innerText=o.id; row.insertCell(1).innerText=o.uid; row.insertCell(2).innerText=o.username; row.insertCell(3).innerText=o.order_code||'-'; row.insertCell(4).innerText=o.accommodation_name||'-'; row.insertCell(5).innerHTML=`<span class="text-gold">€${(o.price||0).toFixed(2)}</span>`; row.insertCell(6).innerHTML=`<span class="text-green">€${(o.commission||0).toFixed(2)}</span>`; row.insertCell(7).innerText=new Date(o.date).toLocaleString(); } } }
+    async function loadOrders(){ 
+        const {data:orders}=await sb.from('order_history').select('*').order('date',{ascending:false}).limit(200); 
+        const tbody=document.getElementById('ordersTableBody'); 
+        if(tbody){ 
+            tbody.innerHTML=''; 
+            for(let o of orders||[]){ 
+                const row=tbody.insertRow(); 
+                row.insertCell(0).innerText=o.id; 
+                row.insertCell(1).innerText=o.uid; 
+                row.insertCell(2).innerText=o.username; 
+                row.insertCell(3).innerText=o.order_code||'-'; 
+                row.insertCell(4).innerText=o.accommodation_name||'-'; 
+                row.insertCell(5).innerHTML=`<span class="text-gold">€${(o.price||0).toFixed(2)}</span>`; 
+                row.insertCell(6).innerHTML=`<span class="text-green">€${(o.commission||0).toFixed(2)}</span>`; 
+                row.insertCell(7).innerText=new Date(o.date).toLocaleString(); 
+            } 
+        } 
+    }
     
     // ========== 订单池 ==========
     async function loadAllOrdersFromDB() {
@@ -740,14 +864,34 @@
         const price = parseFloat(document.getElementById('price').value);
         const imageUrl = document.getElementById('imageUrl').value.trim();
         const status = document.getElementById('status').value;
-        if(!orderCode || !hotelName || isNaN(price) || price <= 0) { alert('请填写完整的订单信息'); return; }
+        if(!orderCode || !hotelName || isNaN(price) || price <= 0) { 
+            showToast('请填写完整的订单信息', 'error');
+            return; 
+        }
         try {
-            if(id) { await sb.from('orders_pool').update({ order_code: orderCode, accommodation_name: hotelName, price: price, image_url: imageUrl, status: status }).eq('id', parseInt(id)); alert('订单已更新'); }
-            else { await sb.from('orders_pool').insert([{ order_code: orderCode, accommodation_name: hotelName, price: price, image_url: imageUrl, status: status }]); alert('订单已添加'); }
-            document.getElementById('orderModal').classList.remove('active'); loadAllOrdersFromDB(); loadDashboard();
-        } catch(e) { alert('保存失败: ' + e.message); }
+            if(id) { 
+                await sb.from('orders_pool').update({ order_code: orderCode, accommodation_name: hotelName, price: price, image_url: imageUrl, status: status }).eq('id', parseInt(id)); 
+                showToast('订单已更新', 'success');
+            } else { 
+                await sb.from('orders_pool').insert([{ order_code: orderCode, accommodation_name: hotelName, price: price, image_url: imageUrl, status: status }]); 
+                showToast('订单已添加', 'success');
+            }
+            document.getElementById('orderModal').classList.remove('active'); 
+            loadAllOrdersFromDB(); 
+            loadDashboard();
+        } catch(e) { 
+            showToast('保存失败: ' + e.message, 'error');
+        }
     }
-    async function deleteOrder(id) { if(confirm('确定删除此订单？')) { await sb.from('orders_pool').delete().eq('id', parseInt(id)); alert('已删除'); loadAllOrdersFromDB(); loadDashboard(); } }
+    
+    async function deleteOrder(id) { 
+        showConfirm('确认删除', '确定删除此订单？', async () => {
+            await sb.from('orders_pool').delete().eq('id', parseInt(id)); 
+            showToast('已删除', 'success');
+            loadAllOrdersFromDB(); 
+            loadDashboard();
+        });
+    }
     
     document.getElementById('poolSearchBtn')?.addEventListener('click', () => { poolSearchKeyword = document.getElementById('poolSearchInput').value; currentPage = 1; renderOrderPoolPage(); });
     document.getElementById('poolClearBtn')?.addEventListener('click', () => { document.getElementById('poolSearchInput').value = ''; poolSearchKeyword = ''; currentPage = 1; renderOrderPoolPage(); });
@@ -779,8 +923,11 @@
         featuredHotels.forEach((hotel, index) => {
             const div = document.createElement('div');
             div.className = 'hotel-item';
+            let imgUrl = hotel.image || '';
             div.innerHTML = `
-                <img src="${hotel.image || 'https://placehold.co/100x70/1a1f3a/8ca3ff?text=Hotel'}" onerror="this.src='https://placehold.co/100x70/1a1f3a/8ca3ff?text=No+Image'">
+                <div class="img-wrapper">
+                    <img src="${imgUrl}" onerror="this.src='https://placehold.co/100x70/ffffff/8ca3ff?text=No+Image'">
+                </div>
                 <div class="hotel-fields">
                     <input type="text" class="hotel-name-edit" data-index="${index}" value="${escapeHtml(hotel.name || '')}" placeholder="酒店名称">
                     <input type="text" class="hotel-image-edit" data-index="${index}" value="${escapeHtml(hotel.image || '')}" placeholder="图片 URL">
@@ -805,8 +952,8 @@
     async function saveVideo() {
         const videoUrl = document.getElementById('videoUrl').value.trim();
         const { error } = await sb.from('animated_settings').update({ video_url: videoUrl, updated_at: new Date() }).eq('id', 1);
-        if(error) alert('保存失败: ' + error.message);
-        else alert('视频已保存');
+        if(error) showToast('保存失败: ' + error.message, 'error');
+        else showToast('视频已保存', 'success');
     }
     
     function previewVideo() {
@@ -821,7 +968,6 @@
         } else { previewDiv.innerHTML = '<p style="color: #aaa;">暂无视频/图片</p>'; }
     }
     
-    // 图片上传功能
     let uploadedImageUrl = '';
     document.getElementById('hotelImageFile')?.addEventListener('change', async function(e) {
         const file = e.target.files[0];
@@ -834,16 +980,15 @@
         };
         reader.readAsDataURL(file);
         
-        // 确保 storage bucket 存在（需要先在 Supabase 创建 hotel-images bucket）
         const fileName = `hotels/${Date.now()}_${file.name}`;
         const { data, error } = await sb.storage.from('hotel-images').upload(fileName, file);
         
         if (error) {
             console.error('Upload error:', error);
             if(error.message.includes("bucket not found")) {
-                alert('Storage bucket "hotel-images" 不存在，请在 Supabase 中创建该 bucket 并设置为公开');
+                showToast('Storage bucket "hotel-images" 不存在，请在 Supabase 中创建该 bucket 并设置为公开', 'error');
             } else {
-                alert('上传失败: ' + error.message);
+                showToast('上传失败: ' + error.message, 'error');
             }
             return;
         }
@@ -851,13 +996,16 @@
         const { data: urlData } = sb.storage.from('hotel-images').getPublicUrl(fileName);
         uploadedImageUrl = urlData.publicUrl;
         document.getElementById('hotelImageInput').value = uploadedImageUrl;
-        alert('图片上传成功！');
+        showToast('图片上传成功！', 'success');
     });
     
     async function addHotel() {
         const name = document.getElementById('hotelNameInput').value.trim();
         const image = document.getElementById('hotelImageInput').value.trim() || uploadedImageUrl || '';
-        if(!name) { alert('请输入酒店名称'); return; }
+        if(!name) { 
+            showToast('请输入酒店名称', 'error');
+            return; 
+        }
         featuredHotels.push({ name: name, image: image });
         renderHotelsList();
         document.getElementById('hotelNameInput').value = '';
@@ -868,8 +1016,8 @@
     
     async function saveHotels() {
         const { error } = await sb.from('animated_settings').update({ featured_hotels: featuredHotels, updated_at: new Date() }).eq('id', 1);
-        if(error) alert('保存失败: ' + error.message);
-        else alert('精选酒店已保存');
+        if(error) showToast('保存失败: ' + error.message, 'error');
+        else showToast('精选酒店已保存', 'success');
     }
     
     document.getElementById('saveVideoBtn')?.addEventListener('click', saveVideo);
@@ -898,15 +1046,15 @@
     async function saveReward(day){ 
         const amt=parseFloat(document.getElementById(`reward_${day}`).value); 
         await sb.from('signin_rewards').update({amount:amt}).eq('day',day); 
-        alert(`Day ${day} 奖励金额已更新`); 
+        showToast(`Day ${day} 奖励金额已更新`, 'success');
     }
     
     async function deleteSigninDay(day){
-        if(confirm(`确定删除 Day ${day} 的奖励设置吗？`)){
+        showConfirm('确认删除', `确定删除 Day ${day} 的奖励设置吗？`, async () => {
             await sb.from('signin_rewards').delete().eq('day',day);
-            alert('已删除');
+            showToast('已删除', 'success');
             loadSigninRewards();
-        }
+        });
     }
     
     async function addSigninDay() {
@@ -917,9 +1065,9 @@
         
         const { error } = await sb.from('signin_rewards').insert([{ day: parseInt(newDay), amount: parseFloat(amount) }]);
         if(error) {
-            alert('添加失败: ' + error.message);
+            showToast('添加失败: ' + error.message, 'error');
         } else {
-            alert('添加成功');
+            showToast('添加成功', 'success');
             loadSigninRewards();
         }
     }
@@ -927,12 +1075,30 @@
     document.getElementById('addSigninDayBtn')?.addEventListener('click', addSigninDay);
     
     // ========== 内容管理 ==========
-    async function loadContent(){ const {data:content}=await sb.from('system_content').select('*').limit(1).single(); if(content){ document.getElementById('termsContent').value=content.terms||''; document.getElementById('platformRules').value=content.platform_rules||''; } }
+    async function loadContent(){ 
+        const {data:content}=await sb.from('system_content').select('*').limit(1).single(); 
+        if(content){ 
+            document.getElementById('termsContent').value=content.terms||''; 
+            document.getElementById('platformRules').value=content.platform_rules||''; 
+        } 
+    }
     document.getElementById('saveContentBtn')?.addEventListener('click', saveContent);
-    async function saveContent(){ await sb.from('system_content').update({terms:document.getElementById('termsContent').value,platform_rules:document.getElementById('platformRules').value,updated_at:new Date()}).eq('id',1); alert('内容已保存'); }
+    async function saveContent(){ 
+        await sb.from('system_content').update({
+            terms:document.getElementById('termsContent').value,
+            platform_rules:document.getElementById('platformRules').value,
+            updated_at:new Date()
+        }).eq('id',1); 
+        showToast('内容已保存', 'success');
+    }
     
     // ========== 退出登录 ==========
-    document.getElementById('logoutBtn')?.addEventListener('click', () => { if(confirm('退出登录？')) { localStorage.removeItem('admin_logged_in'); window.location.href = 'admin-login.html'; } });
+    document.getElementById('logoutBtn')?.addEventListener('click', () => { 
+        showConfirm('退出登录', '确定要退出登录吗？', () => {
+            localStorage.removeItem('admin_logged_in'); 
+            window.location.href = 'admin-login.html';
+        });
+    });
     
     // ========== 登录检查 ==========
     if(localStorage.getItem('admin_logged_in') !== 'true') window.location.href = 'admin-login.html';
