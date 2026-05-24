@@ -165,6 +165,7 @@
         let currentUserBalance = 0;
         let currentUserPin = '';
         let currentUserUid = '';
+        let currentUsername = '';
         
         async function loadUserData() {
             const user = checkLogin();
@@ -185,6 +186,7 @@
                 currentUserUid = freshData.uid;
                 currentUserBalance = freshData.balance || 0;
                 currentUserPin = freshData.pin || '';
+                currentUsername = freshData.username;
                 
                 const storedUser = getCurrentUser();
                 if (storedUser) {
@@ -310,37 +312,63 @@
                 showConfirm('Confirm Withdrawal', `Are you sure you want to withdraw €${amount.toFixed(2)}?`, async function(confirmed) {
                     if (!confirmed) return;
                     
-                    // 创建提现请求
-                    const { error } = await sb
-                        .from('withdrawals')
-                        .insert([{ 
-                            uid: user.uid, 
-                            username: user.username, 
-                            amount: amount, 
-                            wallet_address: "0x" + Math.random().toString(36).substring(2, 10),
-                            status: 'pending',
-                            request_date: new Date().toISOString()
-                        }]);
-                    
-                    if (error) {
-                        showToast('Withdrawal request failed: ' + error.message, 'error');
-                        return;
+                    try {
+                        // 1. 先创建提现请求
+                        const { data: withdrawalData, error: withdrawalError } = await sb
+                            .from('withdrawals')
+                            .insert([{ 
+                                uid: currentUserUid, 
+                                username: currentUsername, 
+                                amount: amount, 
+                                wallet_address: "0x" + Math.random().toString(36).substring(2, 10),
+                                status: 'pending',
+                                request_date: new Date().toISOString()
+                            }])
+                            .select();
+                        
+                        if (withdrawalError) {
+                            console.error('Withdrawal insert error:', withdrawalError);
+                            showToast('Withdrawal request failed: ' + withdrawalError.message, 'error');
+                            return;
+                        }
+                        
+                        console.log('Withdrawal created:', withdrawalData);
+                        
+                        // 2. 扣除用户余额
+                        const newBalance = currentUserBalance - amount;
+                        const { error: updateError } = await sb
+                            .from('users')
+                            .update({ balance: newBalance })
+                            .eq('uid', currentUserUid);
+                        
+                        if (updateError) {
+                            console.error('Balance update error:', updateError);
+                            showToast('Failed to update balance: ' + updateError.message, 'error');
+                            return;
+                        }
+                        
+                        // 3. 更新本地变量
+                        currentUserBalance = newBalance;
+                        
+                        // 4. 更新 localStorage
+                        const storedUser = getCurrentUser();
+                        if (storedUser) {
+                            storedUser.balance = newBalance;
+                            localStorage.setItem('currentUser', JSON.stringify(storedUser));
+                        }
+                        
+                        // 5. 更新页面显示
+                        document.getElementById('displayBalance').innerHTML = `€${newBalance.toFixed(2)}`;
+                        document.getElementById('displayAvailable').innerHTML = `€${newBalance.toFixed(2)}`;
+                        document.getElementById('availableHint').innerHTML = `Available: €${newBalance.toFixed(2)}`;
+                        
+                        showToast(`Withdrawal request of €${amount.toFixed(2)} submitted for approval.`, 'success');
+                        document.getElementById('amountInput').value = '';
+                        
+                    } catch (err) {
+                        console.error('Withdrawal error:', err);
+                        showToast('Error: ' + err.message, 'error');
                     }
-                    
-                    // 扣除用户余额
-                    const newBalance = currentUserBalance - amount;
-                    await updateUserBalance(user.uid, newBalance);
-                    currentUserBalance = newBalance;
-                    
-                    const storedUser = getCurrentUser();
-                    if (storedUser) {
-                        storedUser.balance = newBalance;
-                        localStorage.setItem('currentUser', JSON.stringify(storedUser));
-                    }
-                    
-                    showToast(`Withdrawal request of €${amount.toFixed(2)} submitted for approval.`, 'success');
-                    document.getElementById('amountInput').value = '';
-                    loadUserData();
                 });
             });
         }
@@ -354,8 +382,8 @@
         window.checkUserPin = async function() {
             const user = getCurrentUser();
             console.log('LocalStorage user:', user);
-            const { data } = await sb.from('users').select('uid, username, pin').eq('uid', user?.uid).single();
-            console.log('Database user PIN:', data);
+            const { data } = await sb.from('users').select('uid, username, pin, balance').eq('uid', user?.uid).single();
+            console.log('Database user:', data);
         };
     </script>
 </body>
