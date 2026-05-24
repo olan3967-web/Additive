@@ -54,11 +54,6 @@
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
         
-        /* PIN 输入弹窗样式 */
-        .pin-modal-card {
-            max-width: 360px;
-            text-align: center;
-        }
         .pin-input-group {
             display: flex;
             gap: 12px;
@@ -79,6 +74,60 @@
         }
         .pin-digit:focus {
             border-color: #C9B095;
+        }
+        
+        /* 自定义确认弹窗 */
+        .custom-confirm-local {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .confirm-content-local {
+            background: linear-gradient(145deg, #12172e, #0e1225);
+            border-radius: 24px;
+            padding: 24px;
+            width: 320px;
+            text-align: center;
+            border: 1px solid rgba(201,176,149,0.3);
+        }
+        .confirm-title-local {
+            font-size: 18px;
+            font-weight: 600;
+            color: #C9B095;
+            margin-bottom: 12px;
+        }
+        .confirm-message-local {
+            font-size: 14px;
+            color: #c0c8e0;
+            margin-bottom: 24px;
+        }
+        .confirm-buttons-local {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .confirm-btn-local {
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+        .confirm-cancel-local {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .confirm-ok-local {
+            background: linear-gradient(135deg, #C9B095, #b8944a);
+            color: #0A122B;
         }
     </style>
 </head>
@@ -211,7 +260,7 @@
         function showPinPrompt(callback) {
             const modalHtml = `
                 <div id="pinModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
-                    <div class="modal-card pin-modal-card">
+                    <div class="modal-card" style="max-width: 360px; text-align: center;">
                         <h3 style="margin-bottom: 16px;"><i class="fas fa-lock"></i> Enter Withdrawal PIN</h3>
                         <div class="pin-input-group">
                             <input type="password" maxlength="1" class="pin-digit" id="pin1" autofocus>
@@ -269,6 +318,41 @@
             };
         }
         
+        // 自定义确认弹窗（本地实现，不依赖外部）
+        function showConfirmLocal(title, message, onConfirm, onCancel) {
+            const modalHtml = `
+                <div id="customConfirmModal" class="custom-confirm-local">
+                    <div class="confirm-content-local">
+                        <div class="confirm-title-local">${title}</div>
+                        <div class="confirm-message-local">${message}</div>
+                        <div class="confirm-buttons-local">
+                            <button class="confirm-btn-local confirm-cancel-local" id="confirmCancelLocal">Cancel</button>
+                            <button class="confirm-btn-local confirm-ok-local" id="confirmOkLocal">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const existingModal = document.getElementById('customConfirmModal');
+            if(existingModal) existingModal.remove();
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            const modal = document.getElementById('customConfirmModal');
+            const cancelBtn = document.getElementById('confirmCancelLocal');
+            const okBtn = document.getElementById('confirmOkLocal');
+            
+            cancelBtn.onclick = () => {
+                modal.remove();
+                if(onCancel) onCancel();
+            };
+            
+            okBtn.onclick = () => {
+                modal.remove();
+                if(onConfirm) onConfirm();
+            };
+        }
+        
         async function requestWithdrawal() {
             // 重新获取最新数据
             await loadUserData();
@@ -287,16 +371,14 @@
             
             // 检查 PIN 是否设置
             if (!currentUserPin || currentUserPin === '0000' || currentUserPin === '') {
-                showConfirm('PIN Not Set', 'You need to set a withdrawal PIN in Settings first. Go to Settings now?', function(confirmed) {
-                    if (confirmed) {
-                        window.location.href = 'settings.html';
-                    }
+                showConfirmLocal('PIN Not Set', 'You need to set a withdrawal PIN in Settings first. Go to Settings now?', function() {
+                    window.location.href = 'settings.html';
                 });
                 return;
             }
             
             // 显示 PIN 输入弹窗
-            showPinPrompt(async function(enteredPin) {
+            showPinPrompt(function(enteredPin) {
                 if (!enteredPin) {
                     showToast('Withdrawal cancelled', 'info');
                     return;
@@ -308,9 +390,7 @@
                 }
                 
                 // 确认提现
-                showConfirm('Confirm Withdrawal', `Are you sure you want to withdraw €${amount.toFixed(2)}?`, async function(confirmed) {
-                    if (!confirmed) return;
-                    
+                showConfirmLocal('Confirm Withdrawal', `Are you sure you want to withdraw €${amount.toFixed(2)}?`, async function() {
                     showToast('Processing withdrawal...', 'info');
                     
                     try {
