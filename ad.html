@@ -783,9 +783,11 @@
         }
         const { data: withdrawals } = await sb.from('withdrawals').select('*').eq('status', 'pending');
         document.getElementById('statPending').innerText = withdrawals?.length || 0;
-        const { data: orderPool } = await sb.from('orders_pool').select('*');
-        document.getElementById('statOrderPool').innerText = orderPool?.length || 0;
-    }
+        // 获取订单池真实总数（不受分页限制）
+const { count: orderPoolCount, error: countError } = await sb
+    .from('orders_pool')
+    .select('*', { count: 'exact', head: true });
+document.getElementById('statOrderPool').innerText = orderPoolCount || 0;
     
     // ========== 用户管理 ==========
     async function loadUsers() {
@@ -1226,7 +1228,6 @@ document.getElementById('advancedSearchOrderBtn')?.addEventListener('click', asy
     const targetPrice = parseFloat(document.getElementById('advancedTargetPrice').value);
     if(isNaN(targetPrice)) { showToast('请输入有效价格', 'error'); return; }
     
-    // 根据位数计算区间
     const priceNum = Math.floor(targetPrice);
     const digitCount = priceNum.toString().length;
     
@@ -1243,26 +1244,24 @@ document.getElementById('advancedSearchOrderBtn')?.addEventListener('click', asy
         maxPrice = priceNum;
     }
     
-    console.log(`输入价格: ${targetPrice}, 位数: ${digitCount}`);
     console.log(`搜索区间: ${minPrice} - ${maxPrice}`);
     
-    const { data: orders } = await sb.from('orders_pool').select('*').eq('status', 'available');
+    // 直接查询区间内的订单
+    const { data: matchedOrders } = await sb
+        .from('orders_pool')
+        .select('*')
+        .eq('status', 'available')
+        .gte('price', minPrice)
+        .lte('price', maxPrice)
+        .order('price', { ascending: true });
     
-    let matchedOrders = orders.filter(o => {
-        const price = parseFloat(o.price);
-        return price >= minPrice && price <= maxPrice;
-    });
-    
-    matchedOrders.sort((a, b) => a.price - b.price);
-    
-    console.log(`匹配到 ${matchedOrders.length} 条订单`);
-    console.log('匹配到的价格:', matchedOrders.slice(0, 20).map(o => o.price));
+    console.log(`匹配到 ${matchedOrders?.length || 0} 条订单`);
     
     const container = document.getElementById('advancedOrdersList');
     container.innerHTML = '';
     selectedAdvancedOrdersList = [];
     
-    if(matchedOrders.length === 0) {
+    if(!matchedOrders || matchedOrders.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:20px;">未找到匹配订单</div>';
         return;
     }
