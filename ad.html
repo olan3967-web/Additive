@@ -1226,24 +1226,24 @@ document.getElementById('advancedSearchOrderBtn')?.addEventListener('click', asy
     const targetPrice = parseFloat(document.getElementById('advancedTargetPrice').value);
     if(isNaN(targetPrice)) { showToast('请输入有效价格', 'error'); return; }
     
-    const targetStr = Math.floor(targetPrice).toString();
-    const firstDigit = targetStr[0];
-    const digitCount = targetStr.length;
+    // 计算区间：输入 1000 则显示 1000-1999
+    const basePrice = Math.floor(targetPrice / 1000) * 1000;
+    const minPrice = basePrice;
+    const maxPrice = basePrice + 999;
+    
+    console.log(`搜索区间: ${minPrice} - ${maxPrice}`);
     
     const { data: orders } = await sb.from('orders_pool').select('*').eq('status', 'available');
     
-    // 筛选：位数相同 && 第一位相同
+    // 筛选区间内的订单
     let matchedOrders = orders.filter(o => {
-        const orderStr = Math.floor(o.price).toString();
-        return orderStr.length === digitCount && orderStr[0] === firstDigit;
+        return o.price >= minPrice && o.price <= maxPrice;
     });
     
-    // 按价格接近目标价格排序
-    matchedOrders.sort((a, b) => {
-        const diffA = Math.abs(a.price - targetPrice);
-        const diffB = Math.abs(b.price - targetPrice);
-        return diffA - diffB;
-    });
+    // 按价格排序
+    matchedOrders.sort((a, b) => a.price - b.price);
+    
+    console.log(`匹配到 ${matchedOrders.length} 条订单`);
     
     const container = document.getElementById('advancedOrdersList');
     container.innerHTML = '';
@@ -1283,22 +1283,22 @@ document.getElementById('cardSearchOrderBtn')?.addEventListener('click', async (
     const targetPrice = parseFloat(document.getElementById('cardTargetPrice').value);
     if(isNaN(targetPrice)) { showToast('请输入有效价格', 'error'); return; }
     
-    const targetStr = Math.floor(targetPrice).toString();
-    const firstDigit = targetStr[0];
-    const digitCount = targetStr.length;
+    // 计算区间：输入 1000 则显示 1000-1999
+    const basePrice = Math.floor(targetPrice / 1000) * 1000;
+    const minPrice = basePrice;
+    const maxPrice = basePrice + 999;
+    
+    console.log(`搜索区间: ${minPrice} - ${maxPrice}`);
     
     const { data: orders } = await sb.from('orders_pool').select('*').eq('status', 'available');
     
     let matchedOrders = orders.filter(o => {
-        const orderStr = Math.floor(o.price).toString();
-        return orderStr.length === digitCount && orderStr[0] === firstDigit;
+        return o.price >= minPrice && o.price <= maxPrice;
     });
     
-    matchedOrders.sort((a, b) => {
-        const diffA = Math.abs(a.price - targetPrice);
-        const diffB = Math.abs(b.price - targetPrice);
-        return diffA - diffB;
-    });
+    matchedOrders.sort((a, b) => a.price - b.price);
+    
+    console.log(`匹配到 ${matchedOrders.length} 条订单`);
     
     const container = document.getElementById('cardOrdersList');
     container.innerHTML = '';
