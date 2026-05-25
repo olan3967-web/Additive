@@ -258,6 +258,121 @@
             font-size: 12px;
         }
         
+        /* 设置订单页面样式 */
+        .setorders-container {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .setorders-left {
+            flex: 1;
+            min-width: 280px;
+        }
+        .setorders-right {
+            flex: 2;
+            min-width: 300px;
+        }
+        .order-item-card {
+            background: rgba(10, 18, 43, 0.6);
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(140, 163, 255, 0.2);
+        }
+        .order-item-card:hover {
+            background: rgba(140, 163, 255, 0.1);
+            border-color: #8ca3ff;
+        }
+        .order-item-card.selected {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.05);
+        }
+        .order-item-img {
+            width: 60px;
+            height: 45px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .order-item-info {
+            flex: 1;
+        }
+        .order-item-name {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .order-item-price {
+            font-size: 12px;
+            color: #ffdd99;
+        }
+        .order-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .uid-header {
+            background: rgba(140, 163, 255, 0.15);
+            padding: 10px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .uid-header span {
+            color: #8ca3ff;
+            font-weight: 700;
+        }
+        .history-tabs {
+            display: flex;
+            gap: 8px;
+            background: rgba(10,18,43,0.5);
+            padding: 6px;
+            border-radius: 50px;
+            width: fit-content;
+            margin-bottom: 24px;
+            border: 1px solid rgba(140, 163, 255, 0.15);
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            color: #a0a8c0;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .tab-btn.active {
+            background: rgba(140, 163, 255, 0.15);
+            color: #8ca3ff;
+        }
+        .input-group {
+            margin-bottom: 16px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: #a0a8c0;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            background: #0e132e;
+            border: 1px solid #2e3a6e;
+            border-radius: 12px;
+            color: #fff;
+        }
+        
         @media (max-width: 1000px) {
             .sidebar { width: 260px; transform: translateX(-100%); position: fixed; transition: 0.2s; z-index: 100; }
             .sidebar.open { transform: translateX(0); }
@@ -294,6 +409,7 @@
         <div class="nav-item" data-page="trial"><i class="fas fa-gift"></i> 体验金管理</div>
         <div class="nav-item" data-page="withdrawals"><i class="fas fa-money-bill-wave"></i> 提现审核</div>
         <div class="nav-item" data-page="vip"><i class="fas fa-crown"></i> VIP 配置</div>
+        <div class="nav-item" data-page="setorders"><i class="fas fa-cog"></i> 设置订单</div>
         <div class="nav-item" data-page="orders"><i class="fas fa-clock"></i> 订单记录</div>
         <div class="nav-item" data-page="orderpool"><i class="fas fa-hotel"></i> 订单池</div>
         <div class="nav-item" data-page="animated"><i class="fas fa-play-circle"></i> 动画/视频</div>
@@ -326,7 +442,7 @@
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
-                            <tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>操作</th></tr>
+                            <tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>操作</th>
                         </thead>
                         <tbody id="usersTableBody"></tbody>
                     </table>
@@ -367,12 +483,109 @@
             <div class="card"><h3><i class="fas fa-crown text-gold"></i> VIP 等级配置</h3><div id="vipSettingsDiv"></div></div>
         </div>
 
+        <!-- 设置订单 -->
+        <div id="page_setorders" class="page">
+            <div class="card">
+                <div class="search-bar" style="justify-content: space-between;">
+                    <h3><i class="fas fa-cog"></i> 设置订单</h3>
+                    <button id="backToUserList" class="secondary"><i class="fas fa-arrow-left"></i> 返回用户列表</button>
+                </div>
+                
+                <!-- UID 搜索区域 -->
+                <div id="setordersUserSearch" style="margin-bottom: 20px;">
+                    <div class="search-bar">
+                        <input type="text" id="setordersSearchUid" placeholder="🔍 输入 UID 或用户名" style="flex:1;">
+                        <button id="setordersSearchBtn" class="primary"><i class="fas fa-search"></i> 搜索用户</button>
+                    </div>
+                    <div id="setordersUserList" class="table-container" style="max-height: 300px; margin-top: 12px;">
+                        <table class="data-table">
+                            <thead><tr><th>UID</th><th>用户名</th><th>操作</th></tr></thead>
+                            <tbody id="setordersUserTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 订单设置主界面（初始隐藏） -->
+                <div id="setordersMain" style="display: none;">
+                    <div class="uid-header">当前用户：<span id="selectedUidDisplay"></span> - <span id="selectedUsernameDisplay"></span></div>
+                    
+                    <!-- 选项卡 -->
+                    <div class="history-tabs" style="margin-bottom: 20px;">
+                        <button class="tab-btn active" data-setorder-tab="advanced">高级订单</button>
+                        <button class="tab-btn" data-setorder-tab="card">卡牌奖励</button>
+                    </div>
+                    
+                    <!-- 高级订单面板 -->
+                    <div id="advancedPanel" class="setorders-container">
+                        <div class="setorders-left">
+                            <div class="input-group">
+                                <label>设置单数</label>
+                                <input type="number" id="advancedOrderCount" placeholder="输入订单数量" value="1">
+                            </div>
+                            <div class="input-group">
+                                <label>设置价格 (€)</label>
+                                <input type="number" id="advancedTargetPrice" placeholder="目标价格" step="0.01">
+                            </div>
+                            <button id="advancedSearchOrderBtn" class="primary"><i class="fas fa-search"></i> 搜索订单</button>
+                        </div>
+                        <div class="setorders-right">
+                            <h4>匹配订单列表</h4>
+                            <div id="advancedOrdersList" style="max-height: 400px; overflow-y: auto;"></div>
+                            <div class="action-buttons" id="advancedActionBtns" style="display: none;">
+                                <button id="advancedConfirmBtn" class="success">确认触发</button>
+                                <button id="advancedCancelBtn" class="danger">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 卡牌奖励面板 -->
+                    <div id="cardPanel" class="setorders-container" style="display: none;">
+                        <div class="setorders-left">
+                            <div class="input-group">
+                                <label>设置单数</label>
+                                <input type="number" id="cardOrderCount" placeholder="输入订单数量" value="1">
+                            </div>
+                            <div class="input-group">
+                                <label>设置价格 (€)</label>
+                                <input type="number" id="cardTargetPrice" placeholder="目标价格" step="0.01">
+                            </div>
+                            <div class="input-group">
+                                <label>选择类型</label>
+                                <select id="cardTypeSelect">
+                                    <option value="reward">卡牌奖励</option>
+                                    <option value="order">卡牌订单</option>
+                                </select>
+                            </div>
+                            <div id="cardRewardSection" style="display: block;">
+                                <button id="addCardRewardBtn" class="success" style="width:100%;">确认添加</button>
+                            </div>
+                            <div id="cardOrderSection" style="display: none;">
+                                <button id="cardSearchOrderBtn" class="primary" style="width:100%;"><i class="fas fa-search"></i> 搜索订单</button>
+                            </div>
+                        </div>
+                        <div class="setorders-right">
+                            <div id="cardOrdersList" style="max-height: 400px; overflow-y: auto;"></div>
+                            <div class="action-buttons" id="cardActionBtns" style="display: none;">
+                                <button id="cardConfirmBtn" class="success">确认触发</button>
+                                <button id="cardCancelBtn" class="danger">取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 订单记录 -->
         <div id="page_orders" class="page">
             <div class="card">
                 <div class="search-bar" style="justify-content: space-between;">
                     <h3 style="margin:0;"><i class="fas fa-history"></i> 用户订单历史</h3>
-                    <button id="refreshOrdersListBtn"><i class="fas fa-sync-alt"></i> 刷新用户列表</button>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="text" id="searchOrderUid" placeholder="🔍 搜索 UID 或用户名" style="padding: 6px 12px; width: 200px;">
+                        <button id="searchOrderBtn" class="primary"><i class="fas fa-search"></i> 搜索</button>
+                        <button id="clearOrderSearchBtn"><i class="fas fa-times"></i> 清除</button>
+                        <button id="refreshOrdersListBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
+                    </div>
                 </div>
                 <div class="table-container" style="max-height: 300px;">
                     <table class="data-table">
@@ -415,33 +628,20 @@
         <div id="page_animated" class="page">
             <div class="card">
                 <h3><i class="fas fa-video"></i> 动态视频设置</h3>
-                <div style="margin-bottom: 15px;">
-                    <label>视频 / GIF URL</label>
-                    <input type="text" id="videoUrl" placeholder="https://example.com/video.mp4 或 图片URL" style="width:100%; margin-top: 8px;">
-                </div>
-                <div style="display: flex; gap: 12px;">
-                    <button id="saveVideoBtn" class="success"><i class="fas fa-save"></i> 保存视频</button>
-                    <button id="previewVideoBtn"><i class="fas fa-play"></i> 预览</button>
-                </div>
-                <div id="videoPreview" style="margin-top: 20px; background: #0a0f2a; border-radius: 12px; padding: 20px; text-align: center; min-height: 150px;">
-                    <p style="color: #aaa;">点击预览查看效果</p>
-                </div>
+                <div style="margin-bottom: 15px;"><label>视频 / GIF URL</label><input type="text" id="videoUrl" placeholder="https://example.com/video.mp4 或 图片URL" style="width:100%; margin-top: 8px;"></div>
+                <div style="display: flex; gap: 12px;"><button id="saveVideoBtn" class="success"><i class="fas fa-save"></i> 保存视频</button><button id="previewVideoBtn"><i class="fas fa-play"></i> 预览</button></div>
+                <div id="videoPreview" style="margin-top: 20px; background: #0a0f2a; border-radius: 12px; padding: 20px; text-align: center; min-height: 150px;"><p style="color: #aaa;">点击预览查看效果</p></div>
             </div>
-
             <div class="card">
                 <h3><i class="fas fa-hotel"></i> 精选酒店轮播图</h3>
                 <div class="search-bar" style="margin-bottom: 15px;">
                     <input type="text" id="hotelNameInput" class="search-input" placeholder="酒店名称">
                     <input type="text" id="hotelImageInput" class="search-input" placeholder="图片 URL (或点击上传)">
-                    <button id="uploadImageBtn" class="primary" onclick="document.getElementById('hotelImageFile').click()">
-                        <i class="fas fa-upload"></i> 上传图片
-                    </button>
+                    <button id="uploadImageBtn" class="primary" onclick="document.getElementById('hotelImageFile').click()"><i class="fas fa-upload"></i> 上传图片</button>
                     <input type="file" id="hotelImageFile" accept="image/*" style="display: none;">
                     <button id="addHotelBtn" class="success"><i class="fas fa-plus"></i> 添加酒店</button>
                 </div>
-                <div id="hotelPreviewImg" style="display: none; margin-bottom: 15px;">
-                    <img id="previewUploadImg" class="preview-img">
-                </div>
+                <div id="hotelPreviewImg" style="display: none; margin-bottom: 15px;"><img id="previewUploadImg" class="preview-img"></div>
                 <div id="hotelsListContainer" style="max-height: 400px; overflow-y: auto;"></div>
                 <button id="saveHotelsBtn" style="margin-top: 15px;"><i class="fas fa-save"></i> 保存所有酒店</button>
             </div>
@@ -476,10 +676,7 @@
         <input type="text" id="newPhone" placeholder="手机号" style="width:100%; margin:10px 0; padding:12px;">
         <input type="text" id="newUsername" placeholder="用户名" style="width:100%; margin:10px 0; padding:12px;">
         <input type="password" id="newPassword" placeholder="密码" style="width:100%; margin:10px 0; padding:12px;">
-        <div style="display: flex; gap: 12px; margin-top: 20px;">
-            <button id="createUserBtn" class="success">创建</button>
-            <button id="closeUserModalBtn">取消</button>
-        </div>
+        <div style="display: flex; gap: 12px; margin-top: 20px;"><button id="createUserBtn" class="success">创建</button><button id="closeUserModalBtn">取消</button></div>
     </div>
 </div>
 
@@ -493,10 +690,7 @@
         <div style="margin-bottom: 15px;"><label>图片 URL</label><textarea id="imageUrl" rows="2" style="width:100%" placeholder="https://..."></textarea></div>
         <div style="margin-bottom: 15px;"><label>状态</label><select id="status" style="width:100%"><option value="available">available</option><option value="unavailable">unavailable</option></select></div>
         <input type="hidden" id="editId">
-        <div style="display: flex; gap: 12px; margin-top: 20px;">
-            <button id="saveOrderBtn" class="success">保存</button>
-            <button id="cancelOrderBtn">取消</button>
-        </div>
+        <div style="display: flex; gap: 12px; margin-top: 20px;"><button id="saveOrderBtn" class="success">保存</button><button id="cancelOrderBtn">取消</button></div>
     </div>
 </div>
 
@@ -506,10 +700,7 @@
         <h3><i class="fas fa-upload"></i> 重新上传图片</h3>
         <input type="file" id="reuploadFile" accept="image/*" style="width:100%; margin:15px 0; padding:10px;">
         <div id="reuploadPreview" style="text-align: center; margin-bottom: 15px;"></div>
-        <div style="display: flex; gap: 12px;">
-            <button id="confirmReuploadBtn" class="success">确认上传</button>
-            <button id="cancelReuploadBtn">取消</button>
-        </div>
+        <div style="display: flex; gap: 12px;"><button id="confirmReuploadBtn" class="success">确认上传</button><button id="cancelReuploadBtn">取消</button></div>
     </div>
 </div>
 
@@ -519,10 +710,7 @@
         <h3><i class="fas fa-plus"></i> 添加内容</h3>
         <div style="margin-bottom: 15px;"><label>标题</label><input type="text" id="contentTitle" style="width:100%" placeholder="例如: 服务条款"></div>
         <div style="margin-bottom: 15px;"><label>内容</label><textarea id="contentBody" rows="6" style="width:100%" placeholder="输入详细内容..."></textarea></div>
-        <div style="display: flex; gap: 12px;">
-            <button id="saveContentItemBtn" class="success">保存</button>
-            <button id="closeContentModalBtn">取消</button>
-        </div>
+        <div style="display: flex; gap: 12px;"><button id="saveContentItemBtn" class="success">保存</button><button id="closeContentModalBtn">取消</button></div>
     </div>
 </div>
 
@@ -540,6 +728,12 @@
     let trialSearchKeyword = '';
     let currentQueryUid = null;
     let systemContents = [];
+    let orderSearchKeyword = '';
+    
+    // 设置订单页面变量
+    let selectedSetUser = null;
+    let selectedAdvancedOrders = [];
+    let selectedCardOrders = [];
     
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
     
@@ -560,6 +754,7 @@
         if(pageId === 'animated') loadAnimatedSettings();
         if(pageId === 'signin') loadSigninRewards();
         if(pageId === 'content') loadContentList();
+        if(pageId === 'setorders') loadSetordersUserList();
         
         if(window.innerWidth <= 1000) toggleSidebar();
     }
@@ -643,161 +838,89 @@
         });
     }
     
-    // 充值弹窗（合并充值金额和奖励金额）
     async function depositBalance(uid) {
         const modalHtml = `
             <div id="depositModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
                 <div class="modal-card" style="max-width: 400px;">
                     <h3><i class="fas fa-plus-circle"></i> 充值</h3>
-                    <div style="margin-bottom: 15px;">
-                        <label>充值金额 (€)</label>
-                        <input type="number" id="depositAmount" step="0.01" placeholder="0.00" style="width:100%; margin-top:5px; padding:10px;">
-                    </div>
-                    <div style="margin-bottom: 20px;">
-                        <label>奖励金额 (€)</label>
-                        <input type="number" id="bonusAmount" step="0.01" placeholder="0.00" style="width:100%; margin-top:5px; padding:10px;">
-                    </div>
-                    <div style="display: flex; gap: 12px;">
-                        <button id="confirmDepositBtn" class="success">确认充值</button>
-                        <button id="cancelDepositBtn">取消</button>
-                    </div>
+                    <div style="margin-bottom: 15px;"><label>充值金额 (€)</label><input type="number" id="depositAmount" step="0.01" placeholder="0.00" style="width:100%; margin-top:5px; padding:10px;"></div>
+                    <div style="margin-bottom: 20px;"><label>奖励金额 (€)</label><input type="number" id="bonusAmount" step="0.01" placeholder="0.00" style="width:100%; margin-top:5px; padding:10px;"></div>
+                    <div style="display: flex; gap: 12px;"><button id="confirmDepositBtn" class="success">确认充值</button><button id="cancelDepositBtn">取消</button></div>
                 </div>
             </div>
         `;
-        
         const existingModal = document.getElementById('depositModal');
         if(existingModal) existingModal.remove();
-        
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-        
         const modal = document.getElementById('depositModal');
         const confirmBtn = document.getElementById('confirmDepositBtn');
         const cancelBtn = document.getElementById('cancelDepositBtn');
-        
         confirmBtn.onclick = async () => {
             const amount = parseFloat(document.getElementById('depositAmount').value) || 0;
             const bonusAmount = parseFloat(document.getElementById('bonusAmount').value) || 0;
-            
-            if(amount === 0 && bonusAmount === 0) {
-                showToast('请输入充值金额或奖励金额', 'error');
-                return;
-            }
-            
+            if(amount === 0 && bonusAmount === 0) { showToast('请输入充值金额或奖励金额', 'error'); return; }
             const totalAmount = amount + bonusAmount;
-            
             const { data: user } = await sb.from('users').select('balance, username').eq('uid', uid).single();
             const newBalance = (user.balance || 0) + totalAmount;
             await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
-            
-            if(amount > 0) {
-                await sb.from('deposits').insert([{ uid, username: user.username, amount: amount, type: 'manual', created_at: new Date().toISOString() }]);
-            }
-            if(bonusAmount > 0) {
-                await sb.from('deposits').insert([{ uid, username: user.username, amount: bonusAmount, type: 'deposit_bonus', created_at: new Date().toISOString() }]);
-            }
-            
+            if(amount > 0) { await sb.from('deposits').insert([{ uid, username: user.username, amount: amount, type: 'manual', created_at: new Date().toISOString() }]); }
+            if(bonusAmount > 0) { await sb.from('deposits').insert([{ uid, username: user.username, amount: bonusAmount, type: 'deposit_bonus', created_at: new Date().toISOString() }]); }
             modal.remove();
-            loadUsers();
-            loadDashboard();
+            loadUsers(); loadDashboard();
             showToast(`充值 €${amount.toFixed(2)}，奖励 €${bonusAmount.toFixed(2)}，总计 €${totalAmount.toFixed(2)}`, 'success');
         };
-        
         cancelBtn.onclick = () => { modal.remove(); };
     }
     
     async function cutBalance(uid){
         showPrompt('扣款金额', '请输入扣款金额 (€)', async (amtInput) => {
             const amt = parseFloat(amtInput);
-            if(!amt || isNaN(amt) || amt <= 0) {
-                showToast('请输入有效金额', 'error');
-                return;
-            }
+            if(!amt || isNaN(amt) || amt <= 0) { showToast('请输入有效金额', 'error'); return; }
             const {data:user}=await sb.from('users').select('balance').eq('uid',uid).single();
-            if((user.balance||0) < amt){
-                showToast('余额不足', 'error');
-                return;
-            }
+            if((user.balance||0) < amt){ showToast('余额不足', 'error'); return; }
             await sb.from('users').update({balance:(user.balance||0)-amt}).eq('uid',uid);
             loadUsers(); loadDashboard();
             showToast(`-€${amt}`, 'success');
         });
     }
     
-    // 修改用户信息弹窗
     function openEditUserModal(uid, phone, username, pin) {
         const modalHtml = `
             <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
                 <div class="modal-card" style="max-width: 400px;">
                     <h3><i class="fas fa-edit"></i> 修改用户信息 - ${escapeHtml(username)}</h3>
-                    <div style="margin-bottom: 15px;">
-                        <label>Phone Number</label>
-                        <input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" style="width:100%; margin-top:5px; padding:10px;">
-                    </div>
-                    <div style="margin-bottom: 15px;">
-                        <label>Login Password</label>
-                        <input type="password" id="editPassword" placeholder="留空则不修改" style="width:100%; margin-top:5px; padding:10px;">
-                        <small style="color:#a0a8c0;">留空表示不修改密码</small>
-                    </div>
-                    <div style="margin-bottom: 20px;">
-                        <label>Withdrawal PIN (4 digits)</label>
-                        <input type="password" id="editPin" maxlength="4" value="${escapeHtml(pin || '')}" style="width:100%; margin-top:5px; padding:10px;">
-                    </div>
-                    <div style="display: flex; gap: 12px;">
-                        <button id="confirmEditBtn" class="success">保存修改</button>
-                        <button id="cancelEditBtn">取消</button>
-                    </div>
+                    <div style="margin-bottom: 15px;"><label>Phone Number</label><input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" style="width:100%; margin-top:5px; padding:10px;"></div>
+                    <div style="margin-bottom: 15px;"><label>Login Password</label><input type="password" id="editPassword" placeholder="留空则不修改" style="width:100%; margin-top:5px; padding:10px;"><small style="color:#a0a8c0;">留空表示不修改密码</small></div>
+                    <div style="margin-bottom: 20px;"><label>Withdrawal PIN (4 digits)</label><input type="password" id="editPin" maxlength="4" value="${escapeHtml(pin || '')}" style="width:100%; margin-top:5px; padding:10px;"></div>
+                    <div style="display: flex; gap: 12px;"><button id="confirmEditBtn" class="success">保存修改</button><button id="cancelEditBtn">取消</button></div>
                 </div>
             </div>
         `;
-        
         const existingModal = document.getElementById('editUserModal');
         if(existingModal) existingModal.remove();
-        
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-        
         const modal = document.getElementById('editUserModal');
         const confirmBtn = document.getElementById('confirmEditBtn');
         const cancelBtn = document.getElementById('cancelEditBtn');
-        
         confirmBtn.onclick = async () => {
             const newPhone = document.getElementById('editPhone').value.trim();
             const newPassword = document.getElementById('editPassword').value;
             const newPin = document.getElementById('editPin').value;
-            
             const updateData = {};
             if(newPhone) updateData.phone = newPhone;
             if(newPassword && newPassword.length >= 4) updateData.password = newPassword;
             if(newPin && newPin.length === 4 && !isNaN(newPin)) updateData.pin = newPin;
-            
-            if(Object.keys(updateData).length === 0) {
-                showToast('没有修改任何信息', 'warning');
-                modal.remove();
-                return;
-            }
-            
+            if(Object.keys(updateData).length === 0) { showToast('没有修改任何信息', 'warning'); modal.remove(); return; }
             const { error } = await sb.from('users').update(updateData).eq('uid', uid);
-            
-            if(error) {
-                showToast('修改失败: ' + error.message, 'error');
-            } else {
-                showToast('用户信息已更新', 'success');
-                modal.remove();
-                loadUsers();
-            }
+            if(error) { showToast('修改失败: ' + error.message, 'error'); } else { showToast('用户信息已更新', 'success'); modal.remove(); loadUsers(); }
         };
-        
         cancelBtn.onclick = () => { modal.remove(); };
     }
     
     async function updateVip(uid, level){ 
         const newLevel = parseInt(level);
         const { error } = await sb.from('users').update({ vip_level: newLevel }).eq('uid', uid);
-        if (error) {
-            showToast('VIP更新失败: ' + error.message, 'error');
-        } else {
-            showToast('VIP已更新', 'success');
-            loadUsers();
-        }
+        if (error) { showToast('VIP更新失败: ' + error.message, 'error'); } else { showToast('VIP已更新', 'success'); loadUsers(); }
     }
     
     async function delUser(uid){ 
@@ -820,9 +943,7 @@
     function generateInviteCode() {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let code = '';
-        for(let i = 0; i < 6; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
+        for(let i = 0; i < 6; i++) { code += chars.charAt(Math.floor(Math.random() * chars.length)); }
         return code;
     }
     
@@ -830,49 +951,25 @@
         const phone = document.getElementById('newPhone').value.trim();
         const username = document.getElementById('newUsername').value.trim(); 
         const pwd = document.getElementById('newPassword').value; 
-        if(!phone || !username || !pwd){
-            showToast('手机号、用户名、密码必填', 'error');
-            return;
-        } 
+        if(!phone || !username || !pwd){ showToast('手机号、用户名、密码必填', 'error'); return; }
         const {data:exist}=await sb.from('users').select('username').eq('username',username).single(); 
-        if(exist){
-            showToast('用户名已存在', 'error');
-            return;
-        } 
+        if(exist){ showToast('用户名已存在', 'error'); return; }
         const {data:max}=await sb.from('users').select('uid').order('uid',{ascending:false}).limit(1); 
-        let newUid='100001'; 
-        if(max&&max.length) newUid=(parseInt(max[0].uid)+1).toString(); 
+        let newUid='100001'; if(max&&max.length) newUid=(parseInt(max[0].uid)+1).toString(); 
         const inviteCode = generateInviteCode();
-        const {error}=await sb.from('users').insert([{
-            uid:newUid,
-            phone: phone,
-            username,
-            password:pwd,
-            invite_code:inviteCode,
-            balance:0,
-            vip_level:1,
-            trial_bonus_amount:0
-        }]); 
-        if(error){
-            showToast(error.message, 'error');
-            return;
-        } 
+        const {error}=await sb.from('users').insert([{ uid:newUid, phone: phone, username, password:pwd, invite_code:inviteCode, balance:0, vip_level:1, trial_bonus_amount:0 }]); 
+        if(error){ showToast(error.message, 'error'); return; }
         loadUsers(); document.getElementById('addUserModal').classList.remove('active'); 
         showToast(`用户 ${username} 创建成功`, 'success');
-        document.getElementById('newPhone').value = '';
-        document.getElementById('newUsername').value = '';
-        document.getElementById('newPassword').value = '';
+        document.getElementById('newPhone').value = ''; document.getElementById('newUsername').value = ''; document.getElementById('newPassword').value = '';
     }
     
     // ========== 体验金管理 ==========
     async function loadTrialUsers() {
         let query = sb.from('users').select('uid, username, trial_bonus_amount').order('uid', { ascending: true });
-        if(trialSearchKeyword) {
-            query = query.ilike('uid', `%${trialSearchKeyword}%`);
-        }
+        if(trialSearchKeyword) { query = query.ilike('uid', `%${trialSearchKeyword}%`); }
         const { data: users, error } = await query;
         if(error) { console.error(error); return; }
-        
         const tbody = document.getElementById('trialTableBody');
         if(tbody && users) {
             tbody.innerHTML = '';
@@ -881,26 +978,21 @@
                 row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
                 row.insertCell(1).innerText = u.username;
                 row.insertCell(2).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
-                
                 const amountInput = document.createElement('input');
                 amountInput.type = 'number';
                 amountInput.placeholder = '金额';
                 amountInput.style.width = '100px';
                 amountInput.id = `trialAmount_${u.uid}`;
-                
                 const addBtn = document.createElement('button');
                 addBtn.className = 'success';
                 addBtn.innerHTML = '<i class="fas fa-plus"></i> 添加';
                 addBtn.onclick = () => adjustTrialBonus(u.uid, parseFloat(amountInput.value), 'add');
-                
                 const cutBtn = document.createElement('button');
                 cutBtn.className = 'danger';
                 cutBtn.innerHTML = '<i class="fas fa-minus"></i> 扣除';
                 cutBtn.onclick = () => adjustTrialBonus(u.uid, parseFloat(amountInput.value), 'cut');
-                
                 const cell3 = row.insertCell(3);
                 cell3.appendChild(amountInput);
-                
                 const cell4 = row.insertCell(4);
                 cell4.appendChild(addBtn);
                 cell4.appendChild(cutBtn);
@@ -909,50 +1001,27 @@
     }
     
     async function adjustTrialBonus(uid, amount, action) {
-        if(isNaN(amount) || amount <= 0) { 
-            showToast('请输入有效的金额', 'error');
-            return; 
-        }
+        if(isNaN(amount) || amount <= 0) { showToast('请输入有效的金额', 'error'); return; }
         const { data: user, error } = await sb.from('users').select('trial_bonus_amount, username').eq('uid', uid).single();
-        if(error) { 
-            showToast('获取用户数据失败', 'error');
-            return; 
-        }
-        
+        if(error) { showToast('获取用户数据失败', 'error'); return; }
         let currentAmount = user.trial_bonus_amount || 0;
         let newAmount;
-        
         if(action === 'add') {
             newAmount = currentAmount + amount;
             await sb.from('deposits').insert([{ uid: uid, username: user.username, amount: amount, type: 'trial_bonus' }]);
             showToast(`成功添加 €${amount} 体验金`, 'success');
         } else {
-            if(currentAmount < amount) { 
-                showToast('体验金不足', 'error');
-                return; 
-            }
+            if(currentAmount < amount) { showToast('体验金不足', 'error'); return; }
             newAmount = currentAmount - amount;
             showToast(`成功扣除 €${amount} 体验金`, 'success');
         }
-        
         const { error: updateError } = await sb.from('users').update({ trial_bonus_amount: newAmount }).eq('uid', uid);
-        if(updateError) { 
-            showToast('操作失败', 'error');
-            return; 
-        }
-        loadTrialUsers();
-        loadUsers();
+        if(updateError) { showToast('操作失败', 'error'); return; }
+        loadTrialUsers(); loadUsers();
     }
     
-    document.getElementById('trialSearchBtn')?.addEventListener('click', () => {
-        trialSearchKeyword = document.getElementById('trialSearchUid').value;
-        loadTrialUsers();
-    });
-    document.getElementById('trialRefreshBtn')?.addEventListener('click', () => {
-        document.getElementById('trialSearchUid').value = '';
-        trialSearchKeyword = '';
-        loadTrialUsers();
-    });
+    document.getElementById('trialSearchBtn')?.addEventListener('click', () => { trialSearchKeyword = document.getElementById('trialSearchUid').value; loadTrialUsers(); });
+    document.getElementById('trialRefreshBtn')?.addEventListener('click', () => { document.getElementById('trialSearchUid').value = ''; trialSearchKeyword = ''; loadTrialUsers(); });
     
     // ========== 提现审核 ==========
     async function loadWithdrawals(){ 
@@ -977,24 +1046,11 @@
     document.getElementById('refreshWithdrawalsBtn')?.addEventListener('click', () => { loadWithdrawals(); loadDashboard(); });
     
     async function approveWd(id,uid,amt){ 
-        showConfirm('批准提现', `批准 €${amt} 提现？`, async () => {
-            await sb.from('withdrawals').update({status:'approved',processed_date:new Date()}).eq('id',id); 
-            loadWithdrawals(); loadDashboard(); 
-            showToast('已批准', 'success');
-        });
+        showConfirm('批准提现', `批准 €${amt} 提现？`, async () => { await sb.from('withdrawals').update({status:'approved',processed_date:new Date()}).eq('id',id); loadWithdrawals(); loadDashboard(); showToast('已批准', 'success'); });
     }
     
     async function rejectWd(id){ 
-        showConfirm('拒绝提现', '拒绝该提现？金额将退回用户账户', async () => {
-            const {data:w}=await sb.from('withdrawals').select('uid,amount').eq('id',id).single(); 
-            if(w){ 
-                const {data:user}=await sb.from('users').select('balance').eq('uid',w.uid).single(); 
-                await sb.from('users').update({balance:(user.balance||0)+w.amount}).eq('uid',w.uid); 
-            } 
-            await sb.from('withdrawals').update({status:'rejected',processed_date:new Date()}).eq('id',id); 
-            loadWithdrawals(); loadDashboard(); 
-            showToast('已拒绝，金额已退回', 'success');
-        });
+        showConfirm('拒绝提现', '拒绝该提现？金额将退回用户账户', async () => { const {data:w}=await sb.from('withdrawals').select('uid,amount').eq('id',id).single(); if(w){ const {data:user}=await sb.from('users').select('balance').eq('uid',w.uid).single(); await sb.from('users').update({balance:(user.balance||0)+w.amount}).eq('uid',w.uid); } await sb.from('withdrawals').update({status:'rejected',processed_date:new Date()}).eq('id',id); loadWithdrawals(); loadDashboard(); showToast('已拒绝，金额已退回', 'success'); });
     }
     
     // ========== VIP ==========
@@ -1026,7 +1082,11 @@
     
     // ========== 订单记录 ==========
     async function loadUserListForOrders() {
-        const { data: users } = await sb.from('users').select('uid, username').order('created_at', { ascending: false });
+        let query = sb.from('users').select('uid, username').order('created_at', { ascending: false });
+        if (orderSearchKeyword) {
+            query = query.or(`uid.ilike.%${orderSearchKeyword}%,username.ilike.%${orderSearchKeyword}%`);
+        }
+        const { data: users } = await query;
         const tbody = document.getElementById('userListForOrders');
         if(tbody && users) {
             tbody.innerHTML = '';
@@ -1047,10 +1107,7 @@
         const { data: orders } = await sb.from('order_history').select('*').eq('uid', uid).order('date', { ascending: false });
         const tbody = document.getElementById('ordersDetailTableBody');
         if(tbody) {
-            if(!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">用户 ${username} 暂无订单记录</td></tr>`;
-                return;
-            }
+            if(!orders || orders.length === 0) { tbody.innerHTML = `<td><td colspan="5" style="text-align:center;">用户 ${username} 暂无订单记录</td></tr>`; return; }
             tbody.innerHTML = '';
             for(let o of orders) {
                 const row = tbody.insertRow();
@@ -1063,9 +1120,321 @@
         }
     }
     
+    document.getElementById('searchOrderBtn')?.addEventListener('click', () => {
+        orderSearchKeyword = document.getElementById('searchOrderUid').value.trim();
+        loadUserListForOrders();
+    });
+    document.getElementById('clearOrderSearchBtn')?.addEventListener('click', () => {
+        document.getElementById('searchOrderUid').value = '';
+        orderSearchKeyword = '';
+        loadUserListForOrders();
+    });
     document.getElementById('refreshOrdersListBtn')?.addEventListener('click', () => {
         loadUserListForOrders();
         if(currentQueryUid) queryUserOrders(currentQueryUid, '');
+    });
+    
+    // ========== 设置订单页面 ==========
+    let setordersSearchKeyword = '';
+    let currentSetUser = null;
+    let selectedAdvancedOrdersList = [];
+    let selectedCardOrdersList = [];
+    
+    async function loadSetordersUserList() {
+        let query = sb.from('users').select('uid, username').order('created_at', { ascending: false });
+        if (setordersSearchKeyword) {
+            query = query.or(`uid.ilike.%${setordersSearchKeyword}%,username.ilike.%${setordersSearchKeyword}%`);
+        }
+        const { data: users } = await query;
+        const tbody = document.getElementById('setordersUserTableBody');
+        if(tbody && users) {
+            tbody.innerHTML = '';
+            for(let u of users) {
+                const row = tbody.insertRow();
+                row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
+                row.insertCell(1).innerText = u.username;
+                row.insertCell(2).innerHTML = `<button class="setorder-select-btn" data-uid="${u.uid}" data-name="${u.username}"><i class="fas fa-cog"></i> 设置订单</button>`;
+            }
+            document.querySelectorAll('.setorder-select-btn').forEach(btn => {
+                btn.addEventListener('click', () => selectUserForSetOrder(btn.dataset.uid, btn.dataset.name));
+            });
+        }
+    }
+    
+    function selectUserForSetOrder(uid, username) {
+        currentSetUser = { uid, username };
+        document.getElementById('selectedUidDisplay').innerText = uid;
+        document.getElementById('selectedUsernameDisplay').innerText = username;
+        document.getElementById('setordersUserSearch').style.display = 'none';
+        document.getElementById('setordersMain').style.display = 'block';
+        // 重置选中状态
+        selectedAdvancedOrdersList = [];
+        selectedCardOrdersList = [];
+        document.getElementById('advancedOrdersList').innerHTML = '';
+        document.getElementById('cardOrdersList').innerHTML = '';
+        document.getElementById('advancedActionBtns').style.display = 'none';
+        document.getElementById('cardActionBtns').style.display = 'none';
+        document.getElementById('advancedTargetPrice').value = '';
+        document.getElementById('cardTargetPrice').value = '';
+        document.getElementById('advancedOrderCount').value = '1';
+        document.getElementById('cardOrderCount').value = '1';
+    }
+    
+    document.getElementById('setordersSearchBtn')?.addEventListener('click', () => {
+        setordersSearchKeyword = document.getElementById('setordersSearchUid').value.trim();
+        loadSetordersUserList();
+    });
+    document.getElementById('backToUserList')?.addEventListener('click', () => {
+        document.getElementById('setordersUserSearch').style.display = 'block';
+        document.getElementById('setordersMain').style.display = 'none';
+        currentSetUser = null;
+        selectedAdvancedOrdersList = [];
+        selectedCardOrdersList = [];
+    });
+    
+    // 选项卡切换
+    document.querySelectorAll('[data-setorder-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-setorder-tab]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const tab = btn.dataset.setorderTab;
+            if(tab === 'advanced') {
+                document.getElementById('advancedPanel').style.display = 'flex';
+                document.getElementById('cardPanel').style.display = 'none';
+            } else {
+                document.getElementById('advancedPanel').style.display = 'none';
+                document.getElementById('cardPanel').style.display = 'flex';
+            }
+        });
+    });
+    
+    // 卡牌类型切换
+    document.getElementById('cardTypeSelect')?.addEventListener('change', (e) => {
+        if(e.target.value === 'reward') {
+            document.getElementById('cardRewardSection').style.display = 'block';
+            document.getElementById('cardOrderSection').style.display = 'none';
+            document.getElementById('cardOrdersList').innerHTML = '';
+            document.getElementById('cardActionBtns').style.display = 'none';
+        } else {
+            document.getElementById('cardRewardSection').style.display = 'none';
+            document.getElementById('cardOrderSection').style.display = 'block';
+        }
+    });
+    
+    // 高级订单搜索
+document.getElementById('advancedSearchOrderBtn')?.addEventListener('click', async () => {
+    const targetPrice = parseFloat(document.getElementById('advancedTargetPrice').value);
+    if(isNaN(targetPrice)) { showToast('请输入有效价格', 'error'); return; }
+    
+    const targetStr = Math.floor(targetPrice).toString();
+    const firstDigit = targetStr[0];
+    const digitCount = targetStr.length;
+    
+    const { data: orders } = await sb.from('orders_pool').select('*').eq('status', 'available');
+    
+    // 筛选：位数相同 && 第一位相同
+    let matchedOrders = orders.filter(o => {
+        const orderStr = Math.floor(o.price).toString();
+        return orderStr.length === digitCount && orderStr[0] === firstDigit;
+    });
+    
+    // 按价格接近目标价格排序
+    matchedOrders.sort((a, b) => {
+        const diffA = Math.abs(a.price - targetPrice);
+        const diffB = Math.abs(b.price - targetPrice);
+        return diffA - diffB;
+    });
+    
+    const container = document.getElementById('advancedOrdersList');
+    container.innerHTML = '';
+    selectedAdvancedOrdersList = [];
+    
+    if(matchedOrders.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px;">未找到匹配订单</div>';
+        return;
+    }
+    
+    for(let order of matchedOrders) {
+        const div = document.createElement('div');
+        div.className = 'order-item-card';
+        div.innerHTML = `
+            <input type="checkbox" class="order-checkbox" data-id="${order.id}" data-price="${order.price}">
+            ${order.image_url ? `<img src="${order.image_url}" class="order-item-img" onerror="this.src='https://placehold.co/60x45/1a1f3a/8ca3ff?text=No+Image'">` : '<div style="width:60px;"></div>'}
+            <div class="order-item-info">
+                <div class="order-item-name">${order.accommodation_name || 'Hotel Task'}</div>
+                <div class="order-item-price">€${order.price.toFixed(2)}</div>
+            </div>
+        `;
+        container.appendChild(div);
+        const checkbox = div.querySelector('.order-checkbox');
+        checkbox.addEventListener('change', (e) => {
+            if(e.target.checked) {
+                selectedAdvancedOrdersList.push({ id: order.id, price: order.price });
+            } else {
+                selectedAdvancedOrdersList = selectedAdvancedOrdersList.filter(o => o.id !== order.id);
+            }
+            document.getElementById('advancedActionBtns').style.display = selectedAdvancedOrdersList.length > 0 ? 'flex' : 'none';
+        });
+    }
+});
+    
+    // 卡牌订单搜索
+document.getElementById('cardSearchOrderBtn')?.addEventListener('click', async () => {
+    const targetPrice = parseFloat(document.getElementById('cardTargetPrice').value);
+    if(isNaN(targetPrice)) { showToast('请输入有效价格', 'error'); return; }
+    
+    const targetStr = Math.floor(targetPrice).toString();
+    const firstDigit = targetStr[0];
+    const digitCount = targetStr.length;
+    
+    const { data: orders } = await sb.from('orders_pool').select('*').eq('status', 'available');
+    
+    let matchedOrders = orders.filter(o => {
+        const orderStr = Math.floor(o.price).toString();
+        return orderStr.length === digitCount && orderStr[0] === firstDigit;
+    });
+    
+    matchedOrders.sort((a, b) => {
+        const diffA = Math.abs(a.price - targetPrice);
+        const diffB = Math.abs(b.price - targetPrice);
+        return diffA - diffB;
+    });
+    
+    const container = document.getElementById('cardOrdersList');
+    container.innerHTML = '';
+    selectedCardOrdersList = [];
+    
+    if(matchedOrders.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px;">未找到匹配订单</div>';
+        return;
+    }
+    
+    for(let order of matchedOrders) {
+        const div = document.createElement('div');
+        div.className = 'order-item-card';
+        div.innerHTML = `
+            <input type="checkbox" class="order-checkbox" data-id="${order.id}" data-price="${order.price}">
+            ${order.image_url ? `<img src="${order.image_url}" class="order-item-img" onerror="this.src='https://placehold.co/60x45/1a1f3a/8ca3ff?text=No+Image'">` : '<div style="width:60px;"></div>'}
+            <div class="order-item-info">
+                <div class="order-item-name">${order.accommodation_name || 'Hotel Task'}</div>
+                <div class="order-item-price">€${order.price.toFixed(2)}</div>
+            </div>
+        `;
+        container.appendChild(div);
+        const checkbox = div.querySelector('.order-checkbox');
+        checkbox.addEventListener('change', (e) => {
+            if(e.target.checked) {
+                selectedCardOrdersList.push({ id: order.id, price: order.price });
+            } else {
+                selectedCardOrdersList = selectedCardOrdersList.filter(o => o.id !== order.id);
+            }
+            document.getElementById('cardActionBtns').style.display = selectedCardOrdersList.length > 0 ? 'flex' : 'none';
+        });
+    }
+});
+    
+    // 高级订单确认
+    document.getElementById('advancedConfirmBtn')?.addEventListener('click', async () => {
+        if(!currentSetUser) return;
+        const orderCount = parseInt(document.getElementById('advancedOrderCount').value) || 1;
+        if(selectedAdvancedOrdersList.length === 0) { showToast('请至少选择一个订单', 'error'); return; }
+        // 创建订单记录
+        for(let i = 0; i < orderCount; i++) {
+            for(let order of selectedAdvancedOrdersList) {
+                await sb.from('order_history').insert([{
+                    uid: currentSetUser.uid,
+                    username: currentSetUser.username,
+                    order_code: 'ADMIN_' + Date.now() + '_' + i,
+                    accommodation_name: 'Admin Order',
+                    price: order.price,
+                    commission: order.price * 0.05,
+                    rating: 5,
+                    status: 'completed',
+                    date: new Date().toISOString(),
+                    used_trial: false
+                }]);
+            }
+        }
+        showToast(`成功添加 ${orderCount * selectedAdvancedOrdersList.length} 个订单`, 'success');
+        selectedAdvancedOrdersList = [];
+        document.getElementById('advancedOrdersList').innerHTML = '';
+        document.getElementById('advancedActionBtns').style.display = 'none';
+    });
+    
+    document.getElementById('advancedCancelBtn')?.addEventListener('click', () => {
+        selectedAdvancedOrdersList = [];
+        document.getElementById('advancedOrdersList').innerHTML = '';
+        document.getElementById('advancedActionBtns').style.display = 'none';
+    });
+    
+    // 卡牌奖励确认
+    document.getElementById('addCardRewardBtn')?.addEventListener('click', async () => {
+        if(!currentSetUser) return;
+        const orderCount = parseInt(document.getElementById('cardOrderCount').value) || 1;
+        const cardType = document.getElementById('cardTypeSelect').value;
+        if(cardType === 'reward') {
+            // 添加卡牌奖励（体验金）
+            const rewardAmount = parseFloat(document.getElementById('cardTargetPrice').value) || 0;
+            if(rewardAmount <= 0) { showToast('请输入有效的奖励金额', 'error'); return; }
+            const { data: userData } = await sb.from('users').select('trial_bonus_amount').eq('uid', currentSetUser.uid).single();
+            const newTrialBonus = (userData?.trial_bonus_amount || 0) + (rewardAmount * orderCount);
+            await sb.from('users').update({ trial_bonus_amount: newTrialBonus }).eq('uid', currentSetUser.uid);
+            showToast(`成功添加 €${rewardAmount * orderCount} 卡牌奖励`, 'success');
+        } else {
+            if(selectedCardOrdersList.length === 0) { showToast('请至少选择一个订单', 'error'); return; }
+            for(let i = 0; i < orderCount; i++) {
+                for(let order of selectedCardOrdersList) {
+                    await sb.from('order_history').insert([{
+                        uid: currentSetUser.uid,
+                        username: currentSetUser.username,
+                        order_code: 'CARD_' + Date.now() + '_' + i,
+                        accommodation_name: 'Card Order',
+                        price: order.price,
+                        commission: order.price * 0.08,
+                        rating: 5,
+                        status: 'completed',
+                        date: new Date().toISOString(),
+                        used_trial: true
+                    }]);
+                }
+            }
+            showToast(`成功添加 ${orderCount * selectedCardOrdersList.length} 个卡牌订单`, 'success');
+            selectedCardOrdersList = [];
+            document.getElementById('cardOrdersList').innerHTML = '';
+            document.getElementById('cardActionBtns').style.display = 'none';
+        }
+    });
+    
+    document.getElementById('cardConfirmBtn')?.addEventListener('click', async () => {
+        if(!currentSetUser) return;
+        const orderCount = parseInt(document.getElementById('cardOrderCount').value) || 1;
+        if(selectedCardOrdersList.length === 0) { showToast('请至少选择一个订单', 'error'); return; }
+        for(let i = 0; i < orderCount; i++) {
+            for(let order of selectedCardOrdersList) {
+                await sb.from('order_history').insert([{
+                    uid: currentSetUser.uid,
+                    username: currentSetUser.username,
+                    order_code: 'CARD_' + Date.now() + '_' + i,
+                    accommodation_name: 'Card Order',
+                    price: order.price,
+                    commission: order.price * 0.08,
+                    rating: 5,
+                    status: 'completed',
+                    date: new Date().toISOString(),
+                    used_trial: true
+                }]);
+            }
+        }
+        showToast(`成功添加 ${orderCount * selectedCardOrdersList.length} 个卡牌订单`, 'success');
+        selectedCardOrdersList = [];
+        document.getElementById('cardOrdersList').innerHTML = '';
+        document.getElementById('cardActionBtns').style.display = 'none';
+    });
+    
+    document.getElementById('cardCancelBtn')?.addEventListener('click', () => {
+        selectedCardOrdersList = [];
+        document.getElementById('cardOrdersList').innerHTML = '';
+        document.getElementById('cardActionBtns').style.display = 'none';
     });
     
     // ========== 订单池 ==========
@@ -1146,33 +1515,16 @@
         const price = parseFloat(document.getElementById('price').value);
         const imageUrl = document.getElementById('imageUrl').value.trim();
         const status = document.getElementById('status').value;
-        if(!orderCode || !hotelName || isNaN(price) || price <= 0) { 
-            showToast('请填写完整的订单信息', 'error');
-            return; 
-        }
+        if(!orderCode || !hotelName || isNaN(price) || price <= 0) { showToast('请填写完整的订单信息', 'error'); return; }
         try {
-            if(id) { 
-                await sb.from('orders_pool').update({ order_code: orderCode, accommodation_name: hotelName, price: price, image_url: imageUrl, status: status }).eq('id', parseInt(id)); 
-                showToast('订单已更新', 'success');
-            } else { 
-                await sb.from('orders_pool').insert([{ order_code: orderCode, accommodation_name: hotelName, price: price, image_url: imageUrl, status: status }]); 
-                showToast('订单已添加', 'success');
-            }
-            document.getElementById('orderModal').classList.remove('active'); 
-            loadAllOrdersFromDB(); 
-            loadDashboard();
-        } catch(e) { 
-            showToast('保存失败: ' + e.message, 'error');
-        }
+            if(id) { await sb.from('orders_pool').update({ order_code: orderCode, accommodation_name: hotelName, price: price, image_url: imageUrl, status: status }).eq('id', parseInt(id)); showToast('订单已更新', 'success'); }
+            else { await sb.from('orders_pool').insert([{ order_code: orderCode, accommodation_name: hotelName, price: price, image_url: imageUrl, status: status }]); showToast('订单已添加', 'success'); }
+            document.getElementById('orderModal').classList.remove('active'); loadAllOrdersFromDB(); loadDashboard();
+        } catch(e) { showToast('保存失败: ' + e.message, 'error'); }
     }
     
     async function deleteOrder(id) { 
-        showConfirm('确认删除', '确定删除此订单？', async () => {
-            await sb.from('orders_pool').delete().eq('id', parseInt(id)); 
-            showToast('已删除', 'success');
-            loadAllOrdersFromDB(); 
-            loadDashboard();
-        });
+        showConfirm('确认删除', '确定删除此订单？', async () => { await sb.from('orders_pool').delete().eq('id', parseInt(id)); showToast('已删除', 'success'); loadAllOrdersFromDB(); loadDashboard(); });
     }
     
     document.getElementById('poolSearchBtn')?.addEventListener('click', () => { poolSearchKeyword = document.getElementById('poolSearchInput').value; currentPage = 1; renderOrderPoolPage(); });
@@ -1185,13 +1537,8 @@
     async function loadAnimatedSettings() {
         try {
             const { data, error } = await sb.from('animated_settings').select('*').eq('id', 1).single();
-            if(error && error.code === 'PGRST116') {
-                await sb.from('animated_settings').insert([{ id: 1, video_url: '', featured_hotels: [] }]);
-                featuredHotels = [];
-            } else if(data) {
-                document.getElementById('videoUrl').value = data.video_url || '';
-                featuredHotels = data.featured_hotels || [];
-            }
+            if(error && error.code === 'PGRST116') { await sb.from('animated_settings').insert([{ id: 1, video_url: '', featured_hotels: [] }]); featuredHotels = []; }
+            else if(data) { document.getElementById('videoUrl').value = data.video_url || ''; featuredHotels = data.featured_hotels || []; }
             renderHotelsList();
         } catch(e) { console.error(e); }
     }
@@ -1206,88 +1553,44 @@
             div.className = 'hotel-item';
             let imgUrl = hotel.image || '';
             div.innerHTML = `
-                <div class="img-wrapper">
-                    <img src="${imgUrl}" onerror="this.src='https://placehold.co/100x70/ffffff/8ca3ff?text=No+Image'">
-                </div>
-                <div class="hotel-fields">
-                    <input type="text" class="hotel-name-edit" data-index="${index}" value="${escapeHtml(hotel.name || '')}" placeholder="酒店名称">
-                    <input type="text" class="hotel-image-edit" data-index="${index}" value="${escapeHtml(hotel.image || '')}" placeholder="图片 URL">
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <button class="reupload-hotel-btn" data-index="${index}" style="background:#2f6b3a;"><i class="fas fa-upload"></i> 重新上传</button>
-                    <button class="delete-hotel-btn" data-index="${index}" style="background:#7a2f2f;"><i class="fas fa-trash"></i> 删除</button>
-                </div>
+                <div class="img-wrapper"><img src="${imgUrl}" onerror="this.src='https://placehold.co/100x70/ffffff/8ca3ff?text=No+Image'"></div>
+                <div class="hotel-fields"><input type="text" class="hotel-name-edit" data-index="${index}" value="${escapeHtml(hotel.name || '')}" placeholder="酒店名称"><input type="text" class="hotel-image-edit" data-index="${index}" value="${escapeHtml(hotel.image || '')}" placeholder="图片 URL"></div>
+                <div style="display: flex; gap: 8px;"><button class="reupload-hotel-btn" data-index="${index}" style="background:#2f6b3a;"><i class="fas fa-upload"></i> 重新上传</button><button class="delete-hotel-btn" data-index="${index}" style="background:#7a2f2f;"><i class="fas fa-trash"></i> 删除</button></div>
             `;
             container.appendChild(div);
         });
-        document.querySelectorAll('.hotel-name-edit').forEach(input => {
-            input.addEventListener('change', (e) => { featuredHotels[parseInt(input.dataset.index)].name = input.value; });
-        });
-        document.querySelectorAll('.hotel-image-edit').forEach(input => {
-            input.addEventListener('change', (e) => { featuredHotels[parseInt(input.dataset.index)].image = input.value; });
-        });
-        document.querySelectorAll('.delete-hotel-btn').forEach(btn => {
-            btn.addEventListener('click', () => { featuredHotels.splice(parseInt(btn.dataset.index), 1); renderHotelsList(); });
-        });
-        document.querySelectorAll('.reupload-hotel-btn').forEach(btn => {
-            btn.addEventListener('click', () => openReuploadModal(parseInt(btn.dataset.index)));
-        });
+        document.querySelectorAll('.hotel-name-edit').forEach(input => { input.addEventListener('change', (e) => { featuredHotels[parseInt(input.dataset.index)].name = input.value; }); });
+        document.querySelectorAll('.hotel-image-edit').forEach(input => { input.addEventListener('change', (e) => { featuredHotels[parseInt(input.dataset.index)].image = input.value; }); });
+        document.querySelectorAll('.delete-hotel-btn').forEach(btn => { btn.addEventListener('click', () => { featuredHotels.splice(parseInt(btn.dataset.index), 1); renderHotelsList(); }); });
+        document.querySelectorAll('.reupload-hotel-btn').forEach(btn => { btn.addEventListener('click', () => openReuploadModal(parseInt(btn.dataset.index))); });
     }
     
     let reuploadIndex = null;
-    function openReuploadModal(index) {
-        reuploadIndex = index;
-        document.getElementById('reuploadModal').classList.add('active');
-        document.getElementById('reuploadPreview').innerHTML = '';
-        document.getElementById('reuploadFile').value = '';
-    }
+    function openReuploadModal(index) { reuploadIndex = index; document.getElementById('reuploadModal').classList.add('active'); document.getElementById('reuploadPreview').innerHTML = ''; document.getElementById('reuploadFile').value = ''; }
     
     document.getElementById('confirmReuploadBtn')?.addEventListener('click', async () => {
         const fileInput = document.getElementById('reuploadFile');
         const file = fileInput.files[0];
-        if(!file || reuploadIndex === null) {
-            showToast('请选择图片文件', 'error');
-            return;
-        }
-        
+        if(!file || reuploadIndex === null) { showToast('请选择图片文件', 'error'); return; }
         const fileName = `hotels/${Date.now()}_${file.name}`;
         const { data, error } = await sb.storage.from('hotel-images').upload(fileName, file);
-        
-        if(error) {
-            showToast('上传失败: ' + error.message, 'error');
-            return;
-        }
-        
+        if(error) { showToast('上传失败: ' + error.message, 'error'); return; }
         const { data: urlData } = sb.storage.from('hotel-images').getPublicUrl(fileName);
         const publicUrl = urlData.publicUrl;
-        
         featuredHotels[reuploadIndex].image = publicUrl;
         renderHotelsList();
         document.getElementById('reuploadModal').classList.remove('active');
         showToast('图片已更新', 'success');
     });
+    document.getElementById('cancelReuploadBtn')?.addEventListener('click', () => { document.getElementById('reuploadModal').classList.remove('active'); reuploadIndex = null; });
     
-    document.getElementById('cancelReuploadBtn')?.addEventListener('click', () => {
-        document.getElementById('reuploadModal').classList.remove('active');
-        reuploadIndex = null;
-    });
-    
-    async function saveVideo() {
-        const videoUrl = document.getElementById('videoUrl').value.trim();
-        const { error } = await sb.from('animated_settings').update({ video_url: videoUrl, updated_at: new Date() }).eq('id', 1);
-        if(error) showToast('保存失败: ' + error.message, 'error');
-        else showToast('视频已保存', 'success');
-    }
-    
+    async function saveVideo() { const videoUrl = document.getElementById('videoUrl').value.trim(); const { error } = await sb.from('animated_settings').update({ video_url: videoUrl, updated_at: new Date() }).eq('id', 1); if(error) showToast('保存失败: ' + error.message, 'error'); else showToast('视频已保存', 'success'); }
     function previewVideo() {
         const videoUrl = document.getElementById('videoUrl').value.trim();
         const previewDiv = document.getElementById('videoPreview');
         if(videoUrl) {
-            if(videoUrl.endsWith('.mp4') || videoUrl.includes('.mp4')) {
-                previewDiv.innerHTML = `<video src="${videoUrl}" controls style="max-width: 100%; max-height: 250px; border-radius: 12px;"></video>`;
-            } else {
-                previewDiv.innerHTML = `<img src="${videoUrl}" style="max-width: 100%; max-height: 250px; border-radius: 12px;" onerror="this.parentElement.innerHTML='<p style=\'color:#ff8888;\'>无法加载图片/视频，请检查URL</p>'">`;
-            }
+            if(videoUrl.endsWith('.mp4') || videoUrl.includes('.mp4')) { previewDiv.innerHTML = `<video src="${videoUrl}" controls style="max-width: 100%; max-height: 250px; border-radius: 12px;"></video>`; }
+            else { previewDiv.innerHTML = `<img src="${videoUrl}" style="max-width: 100%; max-height: 250px; border-radius: 12px;" onerror="this.parentElement.innerHTML='<p style=\'color:#ff8888;\'>无法加载图片/视频，请检查URL</p>'">`; }
         } else { previewDiv.innerHTML = '<p style="color: #aaa;">暂无视频/图片</p>'; }
     }
     
@@ -1295,53 +1598,20 @@
     document.getElementById('hotelImageFile')?.addEventListener('change', async function(e) {
         const file = e.target.files[0];
         if (!file) return;
-        
         const reader = new FileReader();
-        reader.onload = function(event) {
-            document.getElementById('previewUploadImg').src = event.target.result;
-            document.getElementById('hotelPreviewImg').style.display = 'block';
-        };
+        reader.onload = function(event) { document.getElementById('previewUploadImg').src = event.target.result; document.getElementById('hotelPreviewImg').style.display = 'block'; };
         reader.readAsDataURL(file);
-        
         const fileName = `hotels/${Date.now()}_${file.name}`;
         const { data, error } = await sb.storage.from('hotel-images').upload(fileName, file);
-        
-        if (error) {
-            console.error('Upload error:', error);
-            if(error.message.includes("bucket not found")) {
-                showToast('Storage bucket "hotel-images" 不存在，请在 Supabase 中创建该 bucket 并设置为公开', 'error');
-            } else {
-                showToast('上传失败: ' + error.message, 'error');
-            }
-            return;
-        }
-        
+        if (error) { console.error('Upload error:', error); if(error.message.includes("bucket not found")) { showToast('Storage bucket "hotel-images" 不存在，请在 Supabase 中创建该 bucket 并设置为公开', 'error'); } else { showToast('上传失败: ' + error.message, 'error'); } return; }
         const { data: urlData } = sb.storage.from('hotel-images').getPublicUrl(fileName);
         uploadedImageUrl = urlData.publicUrl;
         document.getElementById('hotelImageInput').value = uploadedImageUrl;
         showToast('图片上传成功！', 'success');
     });
     
-    async function addHotel() {
-        const name = document.getElementById('hotelNameInput').value.trim();
-        const image = document.getElementById('hotelImageInput').value.trim() || uploadedImageUrl || '';
-        if(!name) { 
-            showToast('请输入酒店名称', 'error');
-            return; 
-        }
-        featuredHotels.push({ name: name, image: image });
-        renderHotelsList();
-        document.getElementById('hotelNameInput').value = '';
-        document.getElementById('hotelImageInput').value = '';
-        document.getElementById('hotelPreviewImg').style.display = 'none';
-        uploadedImageUrl = '';
-    }
-    
-    async function saveHotels() {
-        const { error } = await sb.from('animated_settings').update({ featured_hotels: featuredHotels, updated_at: new Date() }).eq('id', 1);
-        if(error) showToast('保存失败: ' + error.message, 'error');
-        else showToast('精选酒店已保存', 'success');
-    }
+    async function addHotel() { const name = document.getElementById('hotelNameInput').value.trim(); const image = document.getElementById('hotelImageInput').value.trim() || uploadedImageUrl || ''; if(!name) { showToast('请输入酒店名称', 'error'); return; } featuredHotels.push({ name: name, image: image }); renderHotelsList(); document.getElementById('hotelNameInput').value = ''; document.getElementById('hotelImageInput').value = ''; document.getElementById('hotelPreviewImg').style.display = 'none'; uploadedImageUrl = ''; }
+    async function saveHotels() { const { error } = await sb.from('animated_settings').update({ featured_hotels: featuredHotels, updated_at: new Date() }).eq('id', 1); if(error) showToast('保存失败: ' + error.message, 'error'); else showToast('精选酒店已保存', 'success'); }
     
     document.getElementById('saveVideoBtn')?.addEventListener('click', saveVideo);
     document.getElementById('previewVideoBtn')?.addEventListener('click', previewVideo);
@@ -1354,154 +1624,42 @@
         const div=document.getElementById('signinRewardsDiv'); 
         if(div){ 
             div.innerHTML=''; 
-            for(let r of rewards||[]){ 
-                div.innerHTML+=`<div style="background:#0e132e; border-radius:16px; padding:15px; margin-bottom:12px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
-                    Day ${r.day}: <input type="number" id="reward_${r.day}" value="${r.amount}" style="width:120px;"> € 
-                    <button class="saveReward" data-day="${r.day}" class="success">保存</button>
-                    <button class="deleteReward" data-day="${r.day}" class="danger">删除</button>
-                </div>`; 
-            } 
+            for(let r of rewards||[]){ div.innerHTML+=`<div style="background:#0e132e; border-radius:16px; padding:15px; margin-bottom:12px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">Day ${r.day}: <input type="number" id="reward_${r.day}" value="${r.amount}" style="width:120px;"> € <button class="saveReward" data-day="${r.day}" class="success">保存</button><button class="deleteReward" data-day="${r.day}" class="danger">删除</button></div>`; } 
             document.querySelectorAll('.saveReward').forEach(btn=>btn.addEventListener('click',()=>saveReward(btn.dataset.day)));
             document.querySelectorAll('.deleteReward').forEach(btn=>btn.addEventListener('click',()=>deleteSigninDay(btn.dataset.day)));
         } 
     }
-    
-    async function saveReward(day){ 
-        const amt=parseFloat(document.getElementById(`reward_${day}`).value); 
-        await sb.from('signin_rewards').update({amount:amt}).eq('day',day); 
-        showToast(`Day ${day} 奖励金额已更新`, 'success');
-    }
-    
-    async function deleteSigninDay(day){
-        showConfirm('确认删除', `确定删除 Day ${day} 的奖励设置吗？`, async () => {
-            await sb.from('signin_rewards').delete().eq('day',day);
-            showToast('已删除', 'success');
-            loadSigninRewards();
-        });
-    }
-    
-    async function addSigninDay() {
-        showPrompt('添加签到日', '请输入新的签到日数 (例如: 7)', async (newDay) => {
-            if(!newDay || isNaN(newDay)) return;
-            showPrompt('设置奖励金额', `请输入 Day ${newDay} 的奖励金额 (€)`, async (amount) => {
-                if(!amount || isNaN(amount)) return;
-                
-                const { error } = await sb.from('signin_rewards').insert([{ day: parseInt(newDay), amount: parseFloat(amount) }]);
-                if(error) {
-                    showToast('添加失败: ' + error.message, 'error');
-                } else {
-                    showToast('添加成功', 'success');
-                    loadSigninRewards();
-                }
-            });
-        });
-    }
-    
+    async function saveReward(day){ const amt=parseFloat(document.getElementById(`reward_${day}`).value); await sb.from('signin_rewards').update({amount:amt}).eq('day',day); showToast(`Day ${day} 奖励金额已更新`, 'success'); }
+    async function deleteSigninDay(day){ showConfirm('确认删除', `确定删除 Day ${day} 的奖励设置吗？`, async () => { await sb.from('signin_rewards').delete().eq('day',day); showToast('已删除', 'success'); loadSigninRewards(); }); }
+    async function addSigninDay() { showPrompt('添加签到日', '请输入新的签到日数 (例如: 7)', async (newDay) => { if(!newDay || isNaN(newDay)) return; showPrompt('设置奖励金额', `请输入 Day ${newDay} 的奖励金额 (€)`, async (amount) => { if(!amount || isNaN(amount)) return; const { error } = await sb.from('signin_rewards').insert([{ day: parseInt(newDay), amount: parseFloat(amount) }]); if(error) { showToast('添加失败: ' + error.message, 'error'); } else { showToast('添加成功', 'success'); loadSigninRewards(); } }); }); }
     document.getElementById('addSigninDayBtn')?.addEventListener('click', addSigninDay);
     
     // ========== 内容管理 ==========
-    async function loadContentList() {
-        const { data: contents, error } = await sb.from('system_content').select('*').order('id');
-        if(error) {
-            console.error(error);
-            return;
-        }
-        systemContents = contents || [];
-        renderContentList();
-    }
-    
+    async function loadContentList() { const { data: contents, error } = await sb.from('system_content').select('*').order('id'); if(error) { console.error(error); return; } systemContents = contents || []; renderContentList(); }
     function renderContentList() {
         const container = document.getElementById('contentListContainer');
         if(!container) return;
-        if(systemContents.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无内容，点击"添加内容"开始</div>';
-            return;
-        }
+        if(systemContents.length === 0) { container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无内容，点击"添加内容"开始</div>'; return; }
         container.innerHTML = '';
         systemContents.forEach(content => {
             const div = document.createElement('div');
             div.className = 'content-item';
-            div.innerHTML = `
-                <input type="text" class="content-title-input" data-id="${content.id}" value="${escapeHtml(content.title || '')}" placeholder="标题">
-                <textarea rows="4" data-id="${content.id}" class="content-body-textarea" placeholder="内容" style="width:100%; margin-bottom:10px;">${escapeHtml(content.content || '')}</textarea>
-                <div style="display:flex; gap:10px; justify-content:flex-end;">
-                    <button class="save-content-btn" data-id="${content.id}" class="success"><i class="fas fa-save"></i> 保存</button>
-                    <button class="delete-content-btn" data-id="${content.id}" class="danger"><i class="fas fa-trash"></i> 删除</button>
-                </div>
-            `;
+            div.innerHTML = `<input type="text" class="content-title-input" data-id="${content.id}" value="${escapeHtml(content.title || '')}" placeholder="标题"><textarea rows="4" data-id="${content.id}" class="content-body-textarea" placeholder="内容" style="width:100%; margin-bottom:10px;">${escapeHtml(content.content || '')}</textarea><div style="display:flex; gap:10px; justify-content:flex-end;"><button class="save-content-btn" data-id="${content.id}" class="success"><i class="fas fa-save"></i> 保存</button><button class="delete-content-btn" data-id="${content.id}" class="danger"><i class="fas fa-trash"></i> 删除</button></div>`;
             container.appendChild(div);
         });
-        
-        document.querySelectorAll('.save-content-btn').forEach(btn => {
-            btn.addEventListener('click', () => saveContentItem(btn.dataset.id));
-        });
-        document.querySelectorAll('.delete-content-btn').forEach(btn => {
-            btn.addEventListener('click', () => deleteContentItem(btn.dataset.id));
-        });
+        document.querySelectorAll('.save-content-btn').forEach(btn => { btn.addEventListener('click', () => saveContentItem(btn.dataset.id)); });
+        document.querySelectorAll('.delete-content-btn').forEach(btn => { btn.addEventListener('click', () => deleteContentItem(btn.dataset.id)); });
     }
-    
-    async function saveContentItem(id) {
-        const titleInput = document.querySelector(`.content-title-input[data-id="${id}"]`);
-        const bodyTextarea = document.querySelector(`.content-body-textarea[data-id="${id}"]`);
-        const title = titleInput?.value || '';
-        const content = bodyTextarea?.value || '';
-        
-        const { error } = await sb.from('system_content').update({ title: title, content: content, updated_at: new Date() }).eq('id', id);
-        if(error) {
-            showToast('保存失败: ' + error.message, 'error');
-        } else {
-            showToast('保存成功', 'success');
-            loadContentList();
-        }
-    }
-    
-    async function deleteContentItem(id) {
-        showConfirm('确认删除', '确定删除此内容吗？', async () => {
-            const { error } = await sb.from('system_content').delete().eq('id', id);
-            if(error) {
-                showToast('删除失败: ' + error.message, 'error');
-            } else {
-                showToast('已删除', 'success');
-                loadContentList();
-            }
-        });
-    }
-    
-    function openAddContentModal() {
-        document.getElementById('contentTitle').value = '';
-        document.getElementById('contentBody').value = '';
-        document.getElementById('addContentModal').classList.add('active');
-    }
-    
-    async function saveNewContent() {
-        const title = document.getElementById('contentTitle').value.trim();
-        const content = document.getElementById('contentBody').value.trim();
-        if(!title || !content) {
-            showToast('请填写标题和内容', 'error');
-            return;
-        }
-        
-        const { error } = await sb.from('system_content').insert([{ title: title, content: content, created_at: new Date(), updated_at: new Date() }]);
-        if(error) {
-            showToast('添加失败: ' + error.message, 'error');
-        } else {
-            showToast('添加成功', 'success');
-            document.getElementById('addContentModal').classList.remove('active');
-            loadContentList();
-        }
-    }
-    
+    async function saveContentItem(id) { const titleInput = document.querySelector(`.content-title-input[data-id="${id}"]`); const bodyTextarea = document.querySelector(`.content-body-textarea[data-id="${id}"]`); const title = titleInput?.value || ''; const content = bodyTextarea?.value || ''; const { error } = await sb.from('system_content').update({ title: title, content: content, updated_at: new Date() }).eq('id', id); if(error) { showToast('保存失败: ' + error.message, 'error'); } else { showToast('保存成功', 'success'); loadContentList(); } }
+    async function deleteContentItem(id) { showConfirm('确认删除', '确定删除此内容吗？', async () => { const { error } = await sb.from('system_content').delete().eq('id', id); if(error) { showToast('删除失败: ' + error.message, 'error'); } else { showToast('已删除', 'success'); loadContentList(); } }); }
+    function openAddContentModal() { document.getElementById('contentTitle').value = ''; document.getElementById('contentBody').value = ''; document.getElementById('addContentModal').classList.add('active'); }
+    async function saveNewContent() { const title = document.getElementById('contentTitle').value.trim(); const content = document.getElementById('contentBody').value.trim(); if(!title || !content) { showToast('请填写标题和内容', 'error'); return; } const { error } = await sb.from('system_content').insert([{ title: title, content: content, created_at: new Date(), updated_at: new Date() }]); if(error) { showToast('添加失败: ' + error.message, 'error'); } else { showToast('添加成功', 'success'); document.getElementById('addContentModal').classList.remove('active'); loadContentList(); } }
     document.getElementById('addContentBtn')?.addEventListener('click', openAddContentModal);
     document.getElementById('saveContentItemBtn')?.addEventListener('click', saveNewContent);
     document.getElementById('closeContentModalBtn')?.addEventListener('click', () => document.getElementById('addContentModal').classList.remove('active'));
     
     // ========== 退出登录 ==========
-    document.getElementById('logoutBtn')?.addEventListener('click', () => { 
-        showConfirm('退出登录', '确定要退出登录吗？', () => {
-            localStorage.removeItem('admin_logged_in'); 
-            window.location.href = 'admin-login.html';
-        });
-    });
+    document.getElementById('logoutBtn')?.addEventListener('click', () => { showConfirm('退出登录', '确定要退出登录吗？', () => { localStorage.removeItem('admin_logged_in'); window.location.href = 'admin-login.html'; }); });
     
     // ========== 登录检查 ==========
     if(localStorage.getItem('admin_logged_in') !== 'true') window.location.href = 'admin-login.html';
