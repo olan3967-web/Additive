@@ -286,13 +286,15 @@
             
             const { data: userData } = await sb
                 .from('users')
-                .select('balance')
+                .select('balance, username')
                 .eq('uid', uid)
                 .single();
             
             const currentBalance = userData?.balance || 0;
+            const username = userData?.username || '';
             const newBalance = currentBalance + matchedPrice + commission;
             
+            // 更新余额
             const { error: balanceError } = await sb
                 .from('users')
                 .update({ balance: newBalance })
@@ -303,6 +305,22 @@
                 return false;
             }
             
+            // 添加佣金记录到 deposits 表（用于显示 Commissions 卡片）
+            const { error: depositError } = await sb
+                .from('deposits')
+                .insert([{
+                    uid: uid,
+                    username: username,
+                    amount: commission,
+                    type: 'order_commission',
+                    created_at: new Date().toISOString()
+                }]);
+            
+            if (depositError) {
+                console.error('添加佣金记录失败:', depositError);
+            }
+            
+            // 更新触发订单状态为 completed
             const { error: updateError } = await sb
                 .from('user_trigger_orders')
                 .update({
@@ -821,11 +839,12 @@
                 // 重新从数据库获取最新余额
                 const { data: freshUserData } = await sb
                     .from('users')
-                    .select('balance')
+                    .select('balance, username')
                     .eq('uid', user.uid)
                     .single();
                 
                 const latestBalance = freshUserData?.balance || 0;
+                const username = freshUserData?.username || user.username;
                 
                 let newBalance = latestBalance;
                 
@@ -847,6 +866,7 @@
                     pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting Order...'; pb.style.width='75%';
                     
                     setTimeout(async()=>{
+                        // 更新余额
                         const { error: updateError } = await sb
                             .from('users')
                             .update({ balance: newBalance })
@@ -857,6 +877,21 @@
                             alert('订单提交失败: ' + updateError.message);
                             closeOrderModal();
                             return;
+                        }
+                        
+                        // 添加佣金记录到 deposits 表
+                        const { error: depositError } = await sb
+                            .from('deposits')
+                            .insert([{
+                                uid: user.uid,
+                                username: username,
+                                amount: commission,
+                                type: 'order_commission',
+                                created_at: new Date().toISOString()
+                            }]);
+                        
+                        if (depositError) {
+                            console.error('添加佣金记录失败:', depositError);
                         }
                         
                         currentUserBalance = newBalance;
