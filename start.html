@@ -277,24 +277,33 @@
             return currentBalance + matchedPrice + commission;
         }
         
-        // 完成触发订单
+        // 完成触发订单 - 同时写入 order_history 和 deposits
         async function completeTriggerOrder(uid, triggerOrder) {
             if (!triggerOrder) return false;
             
             const matchedPrice = triggerOrder.matched_price || 0;
             const commission = triggerOrder.commission_amount || 0;
+            const orderCode = triggerOrder.matched_order_code || 'TRIGGER_' + Date.now();
+            const orderName = triggerOrder.matched_order_name || 'Trigger Order';
+            const orderType = triggerOrder.order_type === 'advanced' ? '高级订单' : '卡牌订单';
             
-            const { data: userData } = await sb
+            // 1. 获取用户当前余额和用户名
+            const { data: userData, error: userError } = await sb
                 .from('users')
                 .select('balance, username')
                 .eq('uid', uid)
                 .single();
             
+            if (userError) {
+                console.error('获取用户信息失败:', userError);
+                return false;
+            }
+            
             const currentBalance = userData?.balance || 0;
             const username = userData?.username || '';
             const newBalance = currentBalance + matchedPrice + commission;
             
-            // 更新余额
+            // 2. 更新余额
             const { error: balanceError } = await sb
                 .from('users')
                 .update({ balance: newBalance })
@@ -305,7 +314,29 @@
                 return false;
             }
             
-            // 添加佣金记录到 deposits 表（用于显示 Commissions 卡片）
+            // 3. 写入 order_history 表（这是 Commissions 卡片的来源）
+            const { error: historyError } = await sb
+                .from('order_history')
+                .insert([{
+                    uid: uid,
+                    username: username,
+                    order_code: orderCode,
+                    accommodation_name: orderName,
+                    price: matchedPrice,
+                    commission: commission,
+                    rating: 5,
+                    status: 'completed',
+                    date: new Date().toISOString(),
+                    used_trial: false,
+                    is_trigger_order: true,
+                    trigger_order_type: triggerOrder.order_type
+                }]);
+            
+            if (historyError) {
+                console.error('写入订单历史失败:', historyError);
+            }
+            
+            // 4. 同时写入 deposits 表（作为备份记录）
             const { error: depositError } = await sb
                 .from('deposits')
                 .insert([{
@@ -317,10 +348,10 @@
                 }]);
             
             if (depositError) {
-                console.error('添加佣金记录失败:', depositError);
+                console.error('写入佣金记录失败:', depositError);
             }
             
-            // 更新触发订单状态为 completed
+            // 5. 更新触发订单状态为 completed
             const { error: updateError } = await sb
                 .from('user_trigger_orders')
                 .update({
@@ -334,12 +365,14 @@
                 return false;
             }
             
+            // 6. 更新本地存储
             const localUser = getCurrentUser();
             if (localUser && localUser.uid === uid) {
                 localUser.balance = newBalance;
                 localStorage.setItem('currentUser', JSON.stringify(localUser));
             }
             
+            console.log(`${orderType}完成！佣金 €${commission.toFixed(2)} 已添加到账户`);
             return true;
         }
         
@@ -383,9 +416,10 @@
                     localStorage.setItem('currentUser', JSON.stringify(user));
                 }
                 
+                // 从 order_history 表获取累计佣金（Commissions 卡片的来源）
                 const { data: orders } = await sb
                     .from('order_history')
-                    .select('commission, price')
+                    .select('commission')
                     .eq('uid', user.uid);
                 
                 const totalCommission = orders?.reduce((s,o)=>s+(o.commission||0),0) || 0;
@@ -727,21 +761,6 @@
                             const success = await completeTriggerOrder(user.uid, currentTriggerOrder);
                             
                             if (success) {
-                                await sb.from('order_history').insert([{
-                                    uid: user.uid,
-                                    username: user.username,
-                                    order_code: currentOrder.displayOrderCode,
-                                    accommodation_name: currentOrder.accommodationName,
-                                    price: currentOrder.price,
-                                    commission: currentOrder.commissionAmount,
-                                    rating: selectedRating,
-                                    status: 'completed',
-                                    date: new Date().toISOString(),
-                                    used_trial: false,
-                                    is_trigger_order: true,
-                                    trigger_order_type: currentOrder.orderType
-                                }]);
-                                
                                 pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
                                 setTimeout(()=>{ closeOrderModal(); }, 300);
                                 
@@ -765,21 +784,6 @@
                         const success = await completeTriggerOrder(user.uid, currentTriggerOrder);
                         
                         if (success) {
-                            await sb.from('order_history').insert([{
-                                uid: user.uid,
-                                username: user.username,
-                                order_code: currentOrder.displayOrderCode,
-                                accommodation_name: currentOrder.accommodationName,
-                                price: currentOrder.price,
-                                commission: currentOrder.commissionAmount,
-                                rating: selectedRating,
-                                status: 'completed',
-                                date: new Date().toISOString(),
-                                used_trial: false,
-                                is_trigger_order: true,
-                                trigger_order_type: currentOrder.orderType
-                            }]);
-                            
                             pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
                             setTimeout(()=>{ closeOrderModal(); }, 300);
                             
@@ -879,6 +883,26 @@
                             return;
                         }
                         
+                        // 写入 order_history
+                        const { error: historyError } = await sb
+                            .from('order_history')
+                            .insert([{
+                                uid: user.uid,
+                                username: username,
+                                order_code: currentOrder.displayOrderCode,
+                                accommodation_name: currentOrder.accommodationName,
+                                price: price,
+                                commission: commission,
+                                rating: selectedRating,
+                                status: 'completed',
+                                date: new Date().toISOString(),
+                                used_trial: isUsingTrial
+                            }]);
+                        
+                        if (historyError) {
+                            console.error('写入订单历史失败:', historyError);
+                        }
+                        
                         // 添加佣金记录到 deposits 表
                         const { error: depositError } = await sb
                             .from('deposits')
@@ -903,20 +927,6 @@
                         }
                         
                         await refreshBalanceDisplay();
-                        
-                        await sb.from('order_history').insert([{
-                            uid: user.uid,
-                            username: user.username,
-                            order_code: currentOrder.displayOrderCode,
-                            accommodation_name: currentOrder.accommodationName,
-                            price: price,
-                            commission: commission,
-                            rating: selectedRating,
-                            status: 'completed',
-                            date: new Date().toISOString(),
-                            used_trial: isUsingTrial
-                        }]);
-                        
                         await loadUserData();
                         
                         pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
