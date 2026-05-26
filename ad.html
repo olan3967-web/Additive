@@ -664,10 +664,11 @@
     
     // 加载用户已设置的触发订单
     async function loadUserTriggerOrders(uid) {
+    console.log('loadUserTriggerOrders 被调用, uid:', uid);
     const container = document.getElementById('triggerOrdersContainer');
     if (!container) return;
     
-    // ✅ 先清空并显示加载状态
+    // 清空并显示加载状态
     container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">加载中...</div>';
     
     try {
@@ -677,6 +678,8 @@
             .eq('uid', uid)
             .eq('status', 'pending')
             .order('trigger_order_number', { ascending: true });
+        
+        console.log('查询到的订单数量:', orders?.length || 0);
         
         if (error) {
             console.error('加载触发订单失败:', error);
@@ -746,17 +749,21 @@ async function deleteTriggerOrder(orderId) {
                 showToast('删除失败: ' + error.message, 'error');
             } else {
                 showToast('删除成功', 'success');
-                // 强制刷新列表 - 先清空容器再重新加载
-                const container = document.getElementById('triggerOrdersContainer');
-                if (container) {
-                    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">加载中...</div>';
-                }
-                // 延迟一下再加载，确保数据库操作完成
-                setTimeout(async () => {
-                    if (currentSetUser) {
-                        await loadUserTriggerOrders(currentSetUser.uid);
+                
+                // 获取当前选中的用户 UID
+                const uid = currentSetUser?.uid;
+                if (uid) {
+                    console.log('刷新订单列表，用户UID:', uid);
+                    // 直接调用加载函数刷新列表
+                    await loadUserTriggerOrders(uid);
+                } else {
+                    console.log('currentSetUser 为空，无法刷新');
+                    // 如果 currentSetUser 为空，尝试从页面获取
+                    const uidDisplay = document.getElementById('selectedUidDisplay')?.innerText;
+                    if (uidDisplay && uidDisplay !== '---') {
+                        await loadUserTriggerOrders(uidDisplay);
                     }
-                }, 500);
+                }
             }
         } catch (e) {
             showToast('删除失败: ' + e.message, 'error');
