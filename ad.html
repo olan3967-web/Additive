@@ -828,32 +828,99 @@
     });
     document.getElementById('advancedCancelBtn')?.addEventListener('click', () => { selectedAdvancedOrdersList = []; document.getElementById('advancedOrdersList').innerHTML = ''; document.getElementById('advancedActionBtns').style.display = 'none'; });
     
-    // ========== 卡牌奖励：创建触发订单（不直接加钱）==========
-    document.getElementById('addCardRewardBtn')?.addEventListener('click', async () => {
-        if(!currentSetUser) { showToast('请先选择用户', 'error'); return; }
-        const orderCount = parseInt(document.getElementById('cardOrderCount').value) || 0;
-        const rewardAmount = parseFloat(document.getElementById('cardTargetPrice').value) || 0;
-        if(orderCount <= 0) { showToast('请输入有效的触发单数（必须大于0）', 'error'); return; }
-        if(rewardAmount <= 0) { showToast('请输入有效的奖励金额', 'error'); return; }
-        const { data: existing } = await sb.from('user_trigger_orders').select('id').eq('uid', currentSetUser.uid).eq('trigger_order_number', orderCount).eq('status', 'pending').maybeSingle();
-        if(existing) { showToast(`用户已有第 ${orderCount} 单的触发订单未完成，请先处理`, 'error'); return; }
-        const { error } = await sb.from('user_trigger_orders').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_type: 'card_reward', trigger_order_number: orderCount, target_price: rewardAmount, matched_price: 0, matched_order_name: `卡牌奖励 €${rewardAmount}`, matched_order_code: `CARD_REWARD_${Date.now()}`, commission_rate: 0, commission_amount: 0, status: 'pending', created_at: new Date().toISOString() }]);
-        if(error) { showToast('添加失败: ' + error.message, 'error'); } else { showToast(`✅ 已设置：用户 ${currentSetUser.username} 在第 ${orderCount} 单时触发卡牌奖励 €${rewardAmount}`, 'success'); await loadUserTriggerOrders(currentSetUser.uid); document.getElementById('cardOrderCount').value = ''; document.getElementById('cardTargetPrice').value = ''; }
-    });
+    // ========== 卡牌奖励：创建触发订单 ==========
+document.getElementById('addCardRewardBtn')?.addEventListener('click', async () => {
+    if(!currentSetUser) { showToast('请先选择用户', 'error'); return; }
+    const orderCount = parseInt(document.getElementById('cardOrderCount').value) || 0;
+    const rewardAmount = parseFloat(document.getElementById('cardTargetPrice').value) || 0;
+    if(orderCount <= 0) { showToast('请输入有效的触发单数（必须大于0）', 'error'); return; }
+    if(rewardAmount <= 0) { showToast('请输入有效的奖励金额', 'error'); return; }
+    
+    // 检查是否已存在相同单数的未完成触发订单
+    const { data: existing } = await sb
+        .from('user_trigger_orders')
+        .select('id')
+        .eq('uid', currentSetUser.uid)
+        .eq('trigger_order_number', orderCount)
+        .eq('status', 'pending')
+        .maybeSingle();
+    
+    if(existing) { showToast(`用户已有第 ${orderCount} 单的触发订单未完成，请先处理`, 'error'); return; }
+    
+    // 只使用表中存在的字段
+    const insertData = {
+        uid: currentSetUser.uid,
+        username: currentSetUser.username,
+        order_type: 'card_reward',
+        trigger_order_number: orderCount,
+        target_price: rewardAmount,
+        matched_price: 0,
+        matched_order_name: `卡牌奖励 €${rewardAmount}`,
+        commission_rate: 0,
+        commission_amount: 0,
+        status: 'pending',
+        created_at: new Date().toISOString()
+    };
+    
+    const { error } = await sb.from('user_trigger_orders').insert([insertData]);
+    
+    if(error) { 
+        console.error('插入失败:', error);
+        showToast('添加失败: ' + error.message, 'error'); 
+    } else { 
+        showToast(`✅ 已设置：用户 ${currentSetUser.username} 在第 ${orderCount} 单时触发卡牌奖励 €${rewardAmount}`, 'success'); 
+        await loadUserTriggerOrders(currentSetUser.uid); 
+        document.getElementById('cardOrderCount').value = ''; 
+        document.getElementById('cardTargetPrice').value = ''; 
+    }
+});
     
     // ========== 卡牌订单：创建触发订单 ==========
-    document.getElementById('addCardOrderBtn')?.addEventListener('click', async () => {
-        if(!currentSetUser) { showToast('请先选择用户', 'error'); return; }
-        const orderCount = parseInt(document.getElementById('cardorderOrderCount').value) || 0;
-        const targetPrice = parseFloat(document.getElementById('cardorderTargetPrice').value) || 0;
-        if(orderCount <= 0) { showToast('请输入有效的触发单数', 'error'); return; }
-        if(targetPrice <= 0) { showToast('请输入有效的订单价格', 'error'); return; }
-        const { data: existing } = await sb.from('user_trigger_orders').select('id').eq('uid', currentSetUser.uid).eq('trigger_order_number', orderCount).eq('status', 'pending').maybeSingle();
-        if(existing) { showToast(`用户已有第 ${orderCount} 单的触发订单未完成，请先处理`, 'error'); return; }
-        const commissionAmount = targetPrice * 0.15;
-        const { error } = await sb.from('user_trigger_orders').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_type: 'card_order', trigger_order_number: orderCount, target_price: targetPrice, matched_price: targetPrice, matched_order_name: `✨ 卡牌订单 ✨`, matched_order_code: `CARD_ORDER_${Date.now()}`, commission_rate: 15.0, commission_amount: commissionAmount, status: 'pending', created_at: new Date().toISOString() }]);
-        if(error) { showToast('添加失败: ' + error.message, 'error'); } else { showToast(`✅ 已设置：用户 ${currentSetUser.username} 在第 ${orderCount} 单时触发卡牌订单 €${targetPrice} (15%佣金)`, 'success'); await loadUserTriggerOrders(currentSetUser.uid); document.getElementById('cardorderOrderCount').value = ''; document.getElementById('cardorderTargetPrice').value = ''; }
-    });
+document.getElementById('addCardOrderBtn')?.addEventListener('click', async () => {
+    if(!currentSetUser) { showToast('请先选择用户', 'error'); return; }
+    const orderCount = parseInt(document.getElementById('cardorderOrderCount').value) || 0;
+    const targetPrice = parseFloat(document.getElementById('cardorderTargetPrice').value) || 0;
+    if(orderCount <= 0) { showToast('请输入有效的触发单数', 'error'); return; }
+    if(targetPrice <= 0) { showToast('请输入有效的订单价格', 'error'); return; }
+    
+    const { data: existing } = await sb
+        .from('user_trigger_orders')
+        .select('id')
+        .eq('uid', currentSetUser.uid)
+        .eq('trigger_order_number', orderCount)
+        .eq('status', 'pending')
+        .maybeSingle();
+    
+    if(existing) { showToast(`用户已有第 ${orderCount} 单的触发订单未完成，请先处理`, 'error'); return; }
+    
+    const commissionAmount = targetPrice * 0.15;
+    
+    const insertData = {
+        uid: currentSetUser.uid,
+        username: currentSetUser.username,
+        order_type: 'card_order',
+        trigger_order_number: orderCount,
+        target_price: targetPrice,
+        matched_price: targetPrice,
+        matched_order_name: `✨ 卡牌订单 ✨`,
+        commission_rate: 15.0,
+        commission_amount: commissionAmount,
+        status: 'pending',
+        created_at: new Date().toISOString()
+    };
+    
+    const { error } = await sb.from('user_trigger_orders').insert([insertData]);
+    
+    if(error) { 
+        console.error('插入失败:', error);
+        showToast('添加失败: ' + error.message, 'error'); 
+    } else { 
+        showToast(`✅ 已设置：用户 ${currentSetUser.username} 在第 ${orderCount} 单时触发卡牌订单 €${targetPrice} (15%佣金)`, 'success'); 
+        await loadUserTriggerOrders(currentSetUser.uid); 
+        document.getElementById('cardorderOrderCount').value = ''; 
+        document.getElementById('cardorderTargetPrice').value = ''; 
+    }
+});
     
     // 订单池
     async function loadAllOrdersFromDB() { const tbody=document.getElementById('orderPoolTableBody'); if(tbody) tbody.innerHTML='<tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> 正在加载全部订单...</td></tr>'; try{ let allData=[]; let from=0; const batchSize=1000; let hasMore=true; while(hasMore){ const {data,error}=await sb.from('orders_pool').select('*').order('id',{ascending:false}).range(from,from+batchSize-1); if(error) throw error; if(data&&data.length>0){ allData=allData.concat(data); from+=batchSize; } if(!data||data.length<batchSize) hasMore=false; } allOrders=allData; renderOrderPoolPage(); }catch(e){ console.error(e); if(tbody) tbody.innerHTML=`<tr><td colspan="7">错误: ${e.message}</td></tr>`; } }
