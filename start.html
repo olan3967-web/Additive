@@ -551,7 +551,7 @@
     
     if (cardTriggers && cardTriggers.length > 0) {
         for (const trigger of cardTriggers) {
-            if (currentCount == trigger.trigger_order_number) {
+            if (currentCount + 1 == trigger.trigger_order_number) {
                 // 先强制关闭订单弹窗
                 const orderModal = document.getElementById('orderModal');
                 if (orderModal) orderModal.classList.remove('active');
