@@ -730,42 +730,48 @@
         async function preloadOrders() { await getOrdersFromAdmin(); }
         
         async function openOrderModal() {
-    console.log('=== openOrderModal 开始 ===');
+    console.log('openOrderModal 开始');
     
-    // 先检查卡牌触发
+    // 1. 优先检查卡牌触发
     const user = getCurrentUser();
     if (user) {
-        const { data: pendingCards } = await sb
+        // 直接查询 pending 状态的卡牌记录
+        const { data: cardTriggers, error } = await sb
             .from('user_trigger_orders')
             .select('*')
             .eq('uid', user.uid)
             .eq('status', 'pending')
             .in('order_type', ['card_reward', 'card_order']);
         
-        if (pendingCards && pendingCards.length > 0) {
+        console.log('查询到的卡牌记录:', cardTriggers);
+        
+        if (cardTriggers && cardTriggers.length > 0) {
+            // 获取当前订单数
             const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
             const currentCount = orders?.length || 0;
+            console.log('当前订单数:', currentCount);
             
-            for (const card of pendingCards) {
-                if (currentCount >= card.trigger_order_number) {
-                    console.log('触发卡牌:', card.order_type, card.trigger_order_number);
-                    await sb.from('user_trigger_orders').update({ status: 'completed' }).eq('id', card.id);
+            for (const trigger of cardTriggers) {
+                console.log('检查触发条件:', currentCount, '>=', trigger.trigger_order_number);
+                if (currentCount >= trigger.trigger_order_number) {
+                    console.log('触发卡牌! 类型:', trigger.order_type);
+                    // 更新状态为已完成
+                    await sb.from('user_trigger_orders').update({ status: 'completed' }).eq('id', trigger.id);
                     
-                    if (card.order_type === 'card_reward') {
-                        showCardRewardModal(card.target_price);
-                    } else if (card.order_type === 'card_order') {
-                        showCardOrderModal(card.target_price);
+                    if (trigger.order_type === 'card_reward') {
+                        showCardRewardModal(trigger.target_price);
+                    } else if (trigger.order_type === 'card_order') {
+                        showCardOrderModal(trigger.target_price);
                     }
-                    console.log('卡牌弹窗已显示，退出 openOrderModal');
-                    return;  // 直接退出，不继续
+                    return; // 关键：直接返回，不执行后续订单逻辑
                 }
             }
         }
     }
     
-    console.log('没有卡牌触发，继续普通订单流程');
+    // 2. 没有卡牌触发，继续原有订单逻辑
+    console.log('无卡牌触发，继续普通订单');
     
-    // 以下是原有的普通订单和高级订单逻辑...
     currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
     const orderCount = parseInt(document.getElementById('totalOrders').innerText) || 0;
     const ordersLimit = await getUserOrdersLimit();
@@ -774,57 +780,103 @@
     
     const modal = document.getElementById('orderModal');
     const modalContent = document.getElementById('modalContent');
-            
-            if (currentTriggerOrder && (currentTriggerOrder.status === 'pending' || currentTriggerOrder.status === 'deducted')) {
-                const matchedPrice = currentTriggerOrder.matched_price || 0;
-                const commission = currentTriggerOrder.commission_amount || 0;
-                const orderType = currentTriggerOrder.order_type === 'advanced' ? '高级订单' : '订单';
-                const commissionPercent = currentTriggerOrder.order_type === 'advanced' ? '5%' : '';
-                
-                currentOrder = {
-                    id: currentTriggerOrder.id,
-                    orderCode: currentTriggerOrder.matched_order_code,
-                    accommodationName: currentTriggerOrder.matched_order_name,
-                    price: matchedPrice,
-                    imageUrl: currentTriggerOrder.matched_image_url,
-                    commissionAmount: commission,
-                    isTriggerOrder: true,
-                    triggerOrderId: currentTriggerOrder.id,
-                    orderType: currentTriggerOrder.order_type
-                };
-                
-                if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
-                    const { data: poolOrder } = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
-                    if (poolOrder) currentOrder.imageUrl = poolOrder.image_url;
-                }
-                
-                selectedRating = 0;
-                const randomCode = generateRandomOrderCode();
-                
-                modalContent.innerHTML = `
-                    <div class="order-image">${currentOrder.imageUrl ? `<img src="${currentOrder.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
-                    <div class="order-name">${currentOrder.accommodationName || 'Hotel Task'}</div>
-                    <div class="order-code"><i class="fas fa-tag"></i> ${randomCode}</div>
-                    <div class="order-details">
-                        <div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">${orderType}</span></div>
-                        <div class="detail-row"><span class="detail-label">Price</span><span class="detail-value price">€${matchedPrice.toFixed(2)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)} (${commissionPercent})</span></div>
-                        <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value" style="color:#C9B095;">€${(matchedPrice + commission).toFixed(2)}</span></div>
-                    </div>
-                    <div class="star-rating-premium" id="starRating">
-                        ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
-                    </div>
-                    <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
-                    <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
-                    <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
-                `;
-                
-                document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const r = parseInt(this.dataset.rating); selectedRating = r; document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); }));
-                currentOrder.displayOrderCode = randomCode;
-                modal.classList.add('active');
-                return;
-            }
+    
+    if (currentTriggerOrder && (currentTriggerOrder.status === 'pending' || currentTriggerOrder.status === 'deducted')) {
+        // ... 高级订单代码保持不变（您原有的代码）
+        const matchedPrice = currentTriggerOrder.matched_price || 0;
+        const commission = currentTriggerOrder.commission_amount || 0;
+        const orderType = currentTriggerOrder.order_type === 'advanced' ? '高级订单' : '订单';
+        const commissionPercent = currentTriggerOrder.order_type === 'advanced' ? '5%' : '';
+        
+        currentOrder = {
+            id: currentTriggerOrder.id,
+            orderCode: currentTriggerOrder.matched_order_code,
+            accommodationName: currentTriggerOrder.matched_order_name,
+            price: matchedPrice,
+            imageUrl: currentTriggerOrder.matched_image_url,
+            commissionAmount: commission,
+            isTriggerOrder: true,
+            triggerOrderId: currentTriggerOrder.id,
+            orderType: currentTriggerOrder.order_type
+        };
+        
+        if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
+            const { data: poolOrder } = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
+            if (poolOrder) currentOrder.imageUrl = poolOrder.image_url;
+        }
+        
+        selectedRating = 0;
+        const randomCode = generateRandomOrderCode();
+        
+        modalContent.innerHTML = `
+            <div class="order-image">${currentOrder.imageUrl ? `<img src="${currentOrder.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
+            <div class="order-name">${currentOrder.accommodationName || 'Hotel Task'}</div>
+            <div class="order-code"><i class="fas fa-tag"></i> ${randomCode}</div>
+            <div class="order-details">
+                <div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">${orderType}</span></div>
+                <div class="detail-row"><span class="detail-label">Price</span><span class="detail-value price">€${matchedPrice.toFixed(2)}</span></div>
+                <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)} (${commissionPercent})</span></div>
+                <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)}</span></div>
+                <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value" style="color:#C9B095;">€${(matchedPrice + commission).toFixed(2)}</span></div>
+            </div>
+            <div class="star-rating-premium" id="starRating">
+                ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
+            </div>
+            <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
+            <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
+            <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
+        `;
+        
+        document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const r = parseInt(this.dataset.rating); selectedRating = r; document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); }));
+        currentOrder.displayOrderCode = randomCode;
+        modal.classList.add('active');
+        return;
+    }
+    
+    // 普通订单
+    modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+    modal.classList.add('active');
+    
+    await loadUserData();
+    const allOrders = await getOrdersFromAdmin();
+    const totalAvailable = currentUserBalance;
+    const available = allOrders.filter(o => (o.price || 0) <= totalAvailable);
+    
+    if(available.length === 0) { modalContent.innerHTML = '<div style="text-align:center; padding:40px;">No available orders</div>'; return; }
+    
+    const order = available[Math.floor(Math.random() * available.length)];
+    if(!order) return;
+    currentOrder = order;
+    selectedRating = 0;
+    const randomCode = generateRandomOrderCode();
+    const price = order.price || 0;
+    const commissionRate = await getUserCommissionRate();
+    let commission = price * commissionRate;
+    currentOrder.commissionAmount = commission;
+    currentOrder.isTriggerOrder = false;
+    
+    modalContent.innerHTML = `
+        <div class="order-image">${order.imageUrl ? `<img src="${order.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
+        <div class="order-name">${order.accommodationName || 'Hotel Task'}</div>
+        <div class="order-code"><i class="fas fa-tag"></i> ${randomCode}</div>
+        <div class="order-details">
+            <div class="detail-row"><span class="detail-label">Price</span><span class="detail-value price">€${price.toFixed(2)}</span></div>
+            <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)} (${(commissionRate*100).toFixed(2)}%)</span></div>
+            <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)}</span></div>
+            <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value" style="color:#C9B095;">€${(price + commission).toFixed(2)}</span></div>
+        </div>
+        <div class="star-rating-premium" id="starRating">
+            ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
+        </div>
+        <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
+        <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
+        <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
+    `;
+    
+    document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const r = parseInt(this.dataset.rating); selectedRating = r; document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); }));
+    currentOrder.displayOrderCode = randomCode;
+}
+
             
             // 普通订单
             modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
