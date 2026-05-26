@@ -122,3 +122,119 @@ async function fetchUserStats(uid) {
     
     return { totalCommission, orderCount };
 }
+
+// ========== 触发订单相关函数 ==========
+
+// 获取用户待完成的触发订单（pending 且 trigger_order_number <= 当前订单数 + 1）
+async function getUserPendingTriggerOrder(uid) {
+    // 先获取用户当前订单总数
+    const { data: orders } = await sb
+        .from('order_history')
+        .select('id', { count: 'exact' })
+        .eq('uid', uid);
+    
+    const currentOrderCount = orders?.length || 0;
+    const nextOrderNumber = currentOrderCount + 1;
+    
+    // 查找触发订单数 <= 下一个订单数的 pending 订单
+    const { data: triggers, error } = await sb
+        .from('user_trigger_orders')
+        .select('*')
+        .eq('uid', uid)
+        .eq('status', 'pending')
+        .lte('trigger_order_number', nextOrderNumber)
+        .order('trigger_order_number', { ascending: true })
+        .limit(1);
+    
+    if (error) {
+        console.error('获取触发订单失败:', error);
+        return null;
+    }
+    
+    return triggers?.[0] || null;
+}
+
+// 检查用户是否有待完成的触发订单（用于判断负数状态）
+async function hasPendingTriggerOrder(uid) {
+    const trigger = await getUserPendingTriggerOrder(uid);
+    return trigger !== null;
+}
+
+// 获取触发订单的 Pending 金额（完成后的预期总余额）
+async function getTriggerOrderPendingAmount(uid, currentBalance, triggerOrder) {
+    if (!triggerOrder) {
+        triggerOrder = await getUserPendingTriggerOrder(uid);
+    }
+    
+    if (!triggerOrder) return 0;
+    
+    const matchedPrice = triggerOrder.matched_price || 0;
+    const commission = triggerOrder.commission_amount || 0;
+    
+    // Pending = 当前余额 + 订单价格 + 佣金
+    return currentBalance + matchedPrice + commission;
+}
+
+// 完成触发订单（用户提交订单后调用）
+async function completeTriggerOrder(uid, triggerOrder) {
+    if (!triggerOrder) return false;
+    
+    const matchedPrice = triggerOrder.matched_price || 0;
+    const commission = triggerOrder.commission_amount || 0;
+    
+    // 获取用户当前余额
+    const { data: userData } = await sb
+        .from('users')
+        .select('balance')
+        .eq('uid', uid)
+        .single();
+    
+    const currentBalance = userData?.balance || 0;
+    
+    // 新余额 = 当前余额 + 订单价格 + 佣金
+    const newBalance = currentBalance + matchedPrice + commission;
+    
+    // 更新余额
+    const { error: balanceError } = await sb
+        .from('users')
+        .update({ balance: newBalance })
+        .eq('uid', uid);
+    
+    if (balanceError) {
+        console.error('更新余额失败:', balanceError);
+        return false;
+    }
+    
+    // 标记触发订单为已完成
+    const { error: updateError } = await sb
+        .from('user_trigger_orders')
+        .update({
+            status: 'completed',
+            completed_at: new Date().toISOString()
+        })
+        .eq('id', triggerOrder.id);
+    
+    if (updateError) {
+        console.error('更新触发订单状态失败:', updateError);
+        return false;
+    }
+    
+    // 更新本地用户数据
+    const localUser = getCurrentUser();
+    if (localUser && localUser.uid === uid) {
+        localUser.balance = newBalance;
+        localStorage.setItem('currentUser', JSON.stringify(localUser));
+    }
+    
+    return true;
+}
+
+// 取消触发订单（后台用）
+async function cancelTriggerOrder(triggerId) {
+    const { error } = await sb
+        .from('user_trigger_orders')
+        .update({ status: 'cancelled' })
+        .eq('id', triggerId);
+    
+    return !error;
+}
