@@ -368,37 +368,28 @@
         let currentOrder = null, selectedRating = 0, currentUserBalance = 0, currentUserUid = null;
         let ordersCache = null;
         let currentTriggerOrder = null;
-        let isNegativeBalance = false;
-        let negativePendingAmount = 0;
         
         function generateRandomOrderCode() { const l='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; return l[Math.floor(Math.random()*26)]+l[Math.floor(Math.random()*26)]+(Math.floor(Math.random()*90000)+10000); }
         
-        // 从 Supabase orders_pool 读取订单
         async function getOrdersFromAdmin() {
             if (ordersCache) return ordersCache;
             try {
                 const { data, error } = await sb.from('orders_pool').select('*').eq('status', 'available');
                 if (error) { console.error('获取订单失败:', error); return []; }
                 ordersCache = data.map(order => ({
-                    id: order.id,
-                    orderCode: order.order_code,
-                    accommodationName: order.accommodation_name,
-                    price: order.price,
-                    imageUrl: order.image_url,
-                    status: order.status
+                    id: order.id, orderCode: order.order_code, accommodationName: order.accommodation_name,
+                    price: order.price, imageUrl: order.image_url, status: order.status
                 }));
                 return ordersCache;
             } catch(e) { console.error('获取订单异常:', e); return []; }
         }
         
-        // 获取用户待完成的触发订单
         async function getUserPendingTriggerOrder(uid) {
             const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
             const currentOrderCount = orders?.length || 0;
             const nextOrderNumber = currentOrderCount + 1;
-            
             const { data: triggers, error } = await sb.from('user_trigger_orders').select('*').eq('uid', uid).in('status', ['pending', 'deducted']).eq('trigger_order_number', nextOrderNumber).limit(1);
-            if (error) { console.error('获取触发订单失败:', error); return null; }
+            if (error) return null;
             return triggers?.[0] || null;
         }
         
@@ -410,192 +401,243 @@
                 currentUserBalance = userData.balance || 0;
                 document.getElementById('statBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
                 const balanceEl = document.getElementById('statBalance');
-                if (currentUserBalance < 0) {
-                    balanceEl.classList.add('balance-negative');
-                } else {
-                    balanceEl.classList.remove('balance-negative');
-                }
+                if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
+                else balanceEl.classList.remove('balance-negative');
                 document.getElementById('statTrialBonus').innerHTML = `€0.00`;
                 user.balance = currentUserBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
             }
         }
         
-        // 卡牌奖励：直接加现金到余额
-        async function applyCardReward(uid, amount) {
-            const { data: userData } = await sb.from('users').select('balance, username').eq('uid', uid).single();
-            if (!userData) return false;
-            const newBalance = (userData.balance || 0) + amount;
-            const { error } = await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
-            if (error) { console.error('添加卡牌奖励失败:', error); return false; }
-            const localUser = getCurrentUser();
-            if (localUser && localUser.uid === uid) { localUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(localUser)); }
-            currentUserBalance = newBalance;
-            await refreshBalanceDisplay();
-            return true;
-        }
-        
-        // 卡牌订单
-        async function applyCardOrder(uid, multiplier, orderPrice) {
-            const { data: userData } = await sb.from('users').select('balance, username').eq('uid', uid).single();
-            if (!userData) return false;
+        // ========== 卡牌奖励专用弹窗 ==========
+        function showCardRewardModal(rewardAmount) {
+            const modal = document.getElementById('cardRewardModal');
+            const container = document.getElementById('cardModalContainer');
             
-            const commissionRate = multiplier / 100;
-            const commissionAmount = orderPrice * commissionRate;
-            
-            if (userData.balance >= orderPrice) {
-                const newBalance = userData.balance - orderPrice + commissionAmount;
-                await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
-                await sb.from('order_history').insert([{
-                    uid: uid, username: userData.username, order_code: generateRandomOrderCode(),
-                    accommodation_name: `✨ 卡牌订单 (${multiplier}倍) ✨`, price: orderPrice, commission: commissionAmount,
-                    rating: 5, status: 'completed', date: new Date().toISOString(), used_trial: false, is_card_order: true
-                }]);
-                const localUser = getCurrentUser();
-                if (localUser && localUser.uid === uid) { localUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(localUser)); }
-                currentUserBalance = newBalance;
-                await refreshBalanceDisplay();
-                showToast(`✨ 卡牌订单完成！获得 €${commissionAmount.toFixed(2)} 佣金`, 'success');
-                return true;
-            } else {
-                const newBalance = userData.balance - orderPrice;
-                await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
-                await sb.from('user_trigger_orders').insert([{
-                    uid: uid, username: userData.username, order_type: 'card_order',
-                    trigger_order_number: 1, target_price: orderPrice, matched_price: orderPrice,
-                    matched_order_name: `✨ 卡牌订单 (${multiplier}倍) ✨`, commission_rate: multiplier, commission_amount: commissionAmount,
-                    status: 'deducted', created_at: new Date().toISOString()
-                }]);
-                const localUser = getCurrentUser();
-                if (localUser && localUser.uid === uid) { localUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(localUser)); }
-                currentUserBalance = newBalance;
-                await refreshBalanceDisplay();
-                showToast(`⚠️ 余额不足！已扣除 €${orderPrice.toFixed(2)}，请充值后完成订单`, 'warning');
-                return false;
-            }
-        }
-        
-        // 魔法符文卡牌弹窗
-        function showMagicCardModal(cardRewardAmount, cardMultiplier, cardOrderPrice) {
-            return new Promise((resolve) => {
-                const modal = document.getElementById('cardRewardModal');
-                const container = document.getElementById('cardModalContainer');
-                
-                const cardConfigs = [
-                    { type: 'reward', amount: cardRewardAmount || Math.floor(Math.random() * 200 + 50), multiplier: null, price: null, icon: 'fa-gift' },
-                    { type: 'reward', amount: Math.floor(Math.random() * 300 + 80), multiplier: null, price: null, icon: 'fa-crown' },
-                    { type: 'order', amount: null, multiplier: cardMultiplier || [15,20,25,30][Math.floor(Math.random()*4)], price: cardOrderPrice || Math.floor(Math.random() * 300 + 80), icon: 'fa-ticket-alt' }
-                ];
-                for (let i = cardConfigs.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [cardConfigs[i], cardConfigs[j]] = [cardConfigs[j], cardConfigs[i]];
-                }
-                
-                container.innerHTML = `
-                    <div class="cards-panel-magic magic-rune-animation">
-                        <div class="cards-title-magic">
-                            <i class="fas fa-wand-magic"></i> 符文召唤 · 命运卡牌
-                        </div>
-                        <div class="cards-subtitle-magic">
-                            符文之力正在汇聚...<br>
-                            点击卡牌揭开命运
-                        </div>
-                        <div class="cards-grid-magic">
-                            ${cardConfigs.map((cfg, idx) => `
-                                <div class="card-item-magic" data-card-index="${idx}" data-type="${cfg.type}" data-amount="${cfg.amount || 0}" data-multiplier="${cfg.multiplier || 0}" data-price="${cfg.price || 0}">
-                                    <div class="card-back-magic">
-                                        <i class="fas fa-question-circle"></i>
-                                        <i class="fas ${cfg.icon}"></i>
-                                        <span>点击翻开</span>
-                                    </div>
-                                    <div class="card-reveal-content"></div>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <button class="close-modal-btn" id="closeCardModalBtn"><i class="fas fa-times"></i> 关闭</button>
+            const cardsHtml = `
+                <div class="cards-panel-magic magic-rune-animation">
+                    <div class="cards-title-magic">
+                        <i class="fas fa-gift"></i> 神秘卡牌奖励
                     </div>
-                `;
-                
-                modal.classList.add('active');
-                
-                const cards = container.querySelectorAll('.card-item-magic');
-                let hasRevealed = false;
-                
-                cards.forEach(card => {
-                    card.addEventListener('click', async (e) => {
-                        e.stopPropagation();
-                        if (hasRevealed || card.classList.contains('revealed')) return;
-                        hasRevealed = true;
-                        
-                        const cardType = card.dataset.type;
-                        const amount = parseFloat(card.dataset.amount);
-                        const multiplier = parseFloat(card.dataset.multiplier);
-                        const price = parseFloat(card.dataset.price);
-                        const user = getCurrentUser();
-                        
-                        let revealHtml = '';
-                        if (cardType === 'reward') {
-                            revealHtml = `
-                                <div style="text-align: center;">
-                                    <i class="fas fa-gift" style="font-size: 42px; color: #C9B095; margin-bottom: 12px; display: block;"></i>
-                                    <div class="reward-label-magic">🎉 恭喜获得 🎉</div>
-                                    <div class="reward-amount-magic">€${amount.toFixed(2)}</div>
-                                    <div class="reward-label-magic">现金奖励</div>
-                                    <div style="margin-top: 12px; font-size: 11px; color: #4ade80;">
-                                        <i class="fas fa-check-circle"></i> 已添加到余额
-                                    </div>
-                                    <div style="margin-top: 6px; font-size: 10px; color: #7a85a5;">
-                                        * 不计入佣金统计
-                                    </div>
-                                </div>
-                            `;
-                            card.style.background = 'linear-gradient(145deg, #1a3a2a, #0f2a1a)';
-                            card.style.border = '2px solid #4ade80';
-                            if (user) await applyCardReward(user.uid, amount);
-                        } else {
-                            const estimatedCommission = (price * (multiplier / 100)).toFixed(2);
-                            revealHtml = `
-                                <div style="text-align: center;">
-                                    <i class="fas fa-ticket-alt" style="font-size: 42px; color: #ff9f4a; margin-bottom: 12px; display: block;"></i>
-                                    <div class="reward-label-magic">🔥 稀有卡牌订单 🔥</div>
-                                    <div class="multiplier-badge-magic">${multiplier}倍佣金</div>
-                                    <div style="font-size: 16px; font-weight: 700; margin: 6px 0;">订单价格: €${price.toFixed(2)}</div>
-                                    <div style="margin-top: 8px; font-size: 11px; color: #ff9f4a;">
-                                        <i class="fas fa-chart-line"></i> 预估佣金: €${estimatedCommission}
-                                    </div>
-                                    <div style="margin-top: 10px; font-size: 10px; color: #ff8888;">
-                                        <i class="fas fa-info-circle"></i> 若余额不足将进入待充值状态
-                                    </div>
-                                </div>
-                            `;
-                            card.style.background = 'linear-gradient(145deg, #3a2a1a, #2a1f0f)';
-                            card.style.border = '2px solid #ff9f4a';
-                            if (user) await applyCardOrder(user.uid, multiplier, price);
-                        }
-                        
-                        const revealDiv = card.querySelector('.card-reveal-content');
-                        revealDiv.innerHTML = revealHtml;
-                        card.classList.add('revealed');
-                        
-                        const subtitle = container.querySelector('.cards-subtitle-magic');
-                        if (cardType === 'reward') {
-                            subtitle.innerHTML = `✨ 获得 €${amount.toFixed(2)} 现金奖励！已加入余额 ✨`;
-                        } else {
-                            subtitle.innerHTML = `🔥 获得 ${multiplier}倍佣金订单！🔥`;
-                        }
-                        subtitle.style.color = '#C9B095';
-                        subtitle.style.fontWeight = 'bold';
-                        
-                        cards.forEach(c => { if (c !== card) { c.style.opacity = '0.4'; c.style.pointerEvents = 'none'; } });
-                        setTimeout(async () => { await refreshBalanceDisplay(); }, 500);
-                    });
+                    <div class="cards-subtitle-magic">
+                        点击任意卡牌领取奖励
+                    </div>
+                    <div class="cards-grid-magic">
+                        <div class="card-item-magic" data-type="reward" data-amount="${rewardAmount}">
+                            <div class="card-back-magic">
+                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-gem"></i>
+                                <span>点击翻开</span>
+                            </div>
+                            <div class="card-reveal-content"></div>
+                        </div>
+                        <div class="card-item-magic" data-type="reward" data-amount="${rewardAmount}">
+                            <div class="card-back-magic">
+                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-crown"></i>
+                                <span>点击翻开</span>
+                            </div>
+                            <div class="card-reveal-content"></div>
+                        </div>
+                        <div class="card-item-magic" data-type="reward" data-amount="${rewardAmount}">
+                            <div class="card-back-magic">
+                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-star"></i>
+                                <span>点击翻开</span>
+                            </div>
+                            <div class="card-reveal-content"></div>
+                        </div>
+                    </div>
+                    <button class="close-modal-btn" id="closeCardModalBtn">关闭</button>
+                </div>
+            `;
+            
+            container.innerHTML = cardsHtml;
+            modal.classList.add('active');
+            
+            const cards = container.querySelectorAll('.card-item-magic');
+            let hasRevealed = false;
+            
+            cards.forEach(card => {
+                card.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (hasRevealed || card.classList.contains('revealed')) return;
+                    hasRevealed = true;
+                    
+                    const amount = parseFloat(card.dataset.amount);
+                    const user = getCurrentUser();
+                    
+                    if (user) {
+                        const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                        const newBalance = (userData?.balance || 0) + amount;
+                        await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+                        user.balance = newBalance;
+                        localStorage.setItem('currentUser', JSON.stringify(user));
+                        currentUserBalance = newBalance;
+                        await refreshBalanceDisplay();
+                        showToast(`🎉 获得 €${amount.toFixed(2)} 现金奖励！`, 'success');
+                    }
+                    
+                    const revealHtml = `
+                        <div style="text-align: center;">
+                            <i class="fas fa-gift" style="font-size: 42px; color: #ffd700; margin-bottom: 12px; display: block;"></i>
+                            <div class="reward-amount-magic">€${amount.toFixed(2)}</div>
+                            <div class="reward-label-magic">现金奖励</div>
+                            <div style="margin-top: 8px; font-size: 11px; color: #4ade80;">已添加到余额</div>
+                        </div>
+                    `;
+                    card.querySelector('.card-reveal-content').innerHTML = revealHtml;
+                    card.classList.add('revealed');
+                    card.style.background = 'linear-gradient(145deg, #1a3a2a, #0f2a1a)';
+                    card.style.border = '2px solid #ffd700';
+                    
+                    cards.forEach(c => { if (c !== card) { c.style.opacity = '0.4'; c.style.pointerEvents = 'none'; } });
+                    const subtitle = container.querySelector('.cards-subtitle-magic');
+                    subtitle.innerHTML = `✨ 获得 €${amount.toFixed(2)} 现金奖励！ ✨`;
                 });
-                
-                document.getElementById('closeCardModalBtn').onclick = () => {
-                    modal.classList.remove('active');
-                    resolve();
-                };
             });
+            
+            document.getElementById('closeCardModalBtn').onclick = () => { modal.classList.remove('active'); };
+        }
+        
+        // ========== 卡牌订单专用弹窗 ==========
+        function showCardOrderModal(orderPrice) {
+            const modal = document.getElementById('cardRewardModal');
+            const container = document.getElementById('cardModalContainer');
+            const commissionAmount = orderPrice * 0.15;
+            
+            const cardsHtml = `
+                <div class="cards-panel-magic magic-rune-animation">
+                    <div class="cards-title-magic">
+                        <i class="fas fa-ticket-alt"></i> 神秘卡牌订单
+                    </div>
+                    <div class="cards-subtitle-magic">
+                        点击任意卡牌领取订单
+                    </div>
+                    <div class="cards-grid-magic">
+                        <div class="card-item-magic" data-type="order" data-price="${orderPrice}" data-commission="${commissionAmount}">
+                            <div class="card-back-magic">
+                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-gem"></i>
+                                <span>点击翻开</span>
+                            </div>
+                            <div class="card-reveal-content"></div>
+                        </div>
+                        <div class="card-item-magic" data-type="order" data-price="${orderPrice}" data-commission="${commissionAmount}">
+                            <div class="card-back-magic">
+                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-crown"></i>
+                                <span>点击翻开</span>
+                            </div>
+                            <div class="card-reveal-content"></div>
+                        </div>
+                        <div class="card-item-magic" data-type="order" data-price="${orderPrice}" data-commission="${commissionAmount}">
+                            <div class="card-back-magic">
+                                <i class="fas fa-question-circle"></i>
+                                <i class="fas fa-star"></i>
+                                <span>点击翻开</span>
+                            </div>
+                            <div class="card-reveal-content"></div>
+                        </div>
+                    </div>
+                    <button class="close-modal-btn" id="closeCardModalBtn">关闭</button>
+                </div>
+            `;
+            
+            container.innerHTML = cardsHtml;
+            modal.classList.add('active');
+            
+            const cards = container.querySelectorAll('.card-item-magic');
+            let hasRevealed = false;
+            
+            cards.forEach(card => {
+                card.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (hasRevealed || card.classList.contains('revealed')) return;
+                    hasRevealed = true;
+                    
+                    const price = parseFloat(card.dataset.price);
+                    const commission = parseFloat(card.dataset.commission);
+                    const user = getCurrentUser();
+                    
+                    if (user) {
+                        if (currentUserBalance >= price) {
+                            const newBalance = currentUserBalance - price + commission;
+                            await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+                            await sb.from('order_history').insert([{
+                                uid: user.uid, username: user.username, order_code: generateRandomOrderCode(),
+                                accommodation_name: `✨ 卡牌订单 ✨`, price: price, commission: commission,
+                                rating: 5, status: 'completed', date: new Date().toISOString()
+                            }]);
+                            user.balance = newBalance;
+                            localStorage.setItem('currentUser', JSON.stringify(user));
+                            currentUserBalance = newBalance;
+                            await refreshBalanceDisplay();
+                            await loadUserData();
+                            showToast(`✨ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
+                        } else {
+                            const newBalance = currentUserBalance - price;
+                            await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+                            user.balance = newBalance;
+                            localStorage.setItem('currentUser', JSON.stringify(user));
+                            currentUserBalance = newBalance;
+                            await refreshBalanceDisplay();
+                            showToast(`⚠️ 余额不足！已扣除 €${price.toFixed(2)}，请充值后完成订单`, 'warning');
+                        }
+                    }
+                    
+                    const revealHtml = `
+                        <div style="text-align: center;">
+                            <i class="fas fa-ticket-alt" style="font-size: 42px; color: #ff9f4a; margin-bottom: 12px; display: block;"></i>
+                            <div class="multiplier-badge-magic">15% 佣金订单</div>
+                            <div style="font-size: 16px; font-weight: 700; margin: 6px 0;">订单价格: €${price.toFixed(2)}</div>
+                            <div style="margin-top: 8px; font-size: 11px; color: #4ade80;">佣金: €${commission.toFixed(2)}</div>
+                        </div>
+                    `;
+                    card.querySelector('.card-reveal-content').innerHTML = revealHtml;
+                    card.classList.add('revealed');
+                    card.style.background = 'linear-gradient(145deg, #3a2a1a, #2a1f0f)';
+                    card.style.border = '2px solid #ff9f4a';
+                    
+                    cards.forEach(c => { if (c !== card) { c.style.opacity = '0.4'; c.style.pointerEvents = 'none'; } });
+                    const subtitle = container.querySelector('.cards-subtitle-magic');
+                    subtitle.innerHTML = `✨ 获得 €${price.toFixed(2)} 卡牌订单！ ✨`;
+                });
+            });
+            
+            document.getElementById('closeCardModalBtn').onclick = () => { modal.classList.remove('active'); };
+        }
+        
+        // ========== 检查并触发卡牌 ==========
+        async function checkAndTriggerCard() {
+            const user = getCurrentUser();
+            if (!user) return false;
+            
+            const { data: triggerOrders } = await sb
+                .from('user_trigger_orders')
+                .select('*')
+                .eq('uid', user.uid)
+                .eq('status', 'pending')
+                .in('order_type', ['card_reward', 'card_order']);
+            
+            if (triggerOrders && triggerOrders.length > 0) {
+                const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+                const currentCount = orders?.length || 0;
+                
+                for (const trigger of triggerOrders) {
+                    if (currentCount >= trigger.trigger_order_number) {
+                        await sb.from('user_trigger_orders').update({ status: 'completed' }).eq('id', trigger.id);
+                        
+                        if (trigger.order_type === 'card_reward') {
+                            showCardRewardModal(trigger.target_price);
+                        } else if (trigger.order_type === 'card_order') {
+                            showCardOrderModal(trigger.target_price);
+                        }
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
         
         async function loadUserData() {
@@ -604,7 +646,7 @@
             currentUserUid = user.uid;
             
             try {
-                const { data: userData } = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
+                const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
                 if (userData) {
                     currentUserBalance = userData.balance || 0;
                     user.balance = currentUserBalance;
@@ -657,17 +699,9 @@
                             const url = data.video_url;
                             if(url.endsWith('.mp4')||url.includes('.mp4')) {
                                 const video = document.createElement('video');
-                                video.src = url;
-                                video.autoplay = true;
-                                video.loop = true;
-                                video.muted = true;
-                                video.playsinline = true;
-                                video.preload = 'auto';
-                                video.style.width = '100%';
-                                video.style.borderRadius = '24px';
+                                video.src = url; video.autoplay = true; video.loop = true; video.muted = true; video.playsinline = true; video.style.width = '100%'; video.style.borderRadius = '24px';
                                 video.oncanplay = () => { const loading = document.getElementById('pageLoading'); if(loading) { loading.style.opacity = '0'; setTimeout(() => { loading.style.display = 'none'; }, 300); } };
-                                vc.innerHTML = '';
-                                vc.appendChild(video);
+                                vc.innerHTML = ''; vc.appendChild(video);
                             } else {
                                 vc.innerHTML = `<img src="${url}" style="width:100%; border-radius:24px;">`;
                                 const img = vc.querySelector('img');
@@ -686,8 +720,7 @@
                                 div.innerHTML = `<img src="${hotel.image||''}" alt="${hotel.name}" onerror="this.src='https://placehold.co/180x110/0E1838/C9B095?text=Hotel'"><span class="hotel-name">${hotel.name}</span>`;
                                 container.appendChild(div);
                             });
-                            const items = container.innerHTML;
-                            container.innerHTML = items + items;
+                            const items = container.innerHTML; container.innerHTML = items + items;
                         }
                     }
                 } else { const loading = document.getElementById('pageLoading'); if(loading) { loading.style.opacity = '0'; setTimeout(() => { loading.style.display = 'none'; }, 300); } }
@@ -696,34 +729,16 @@
         
         async function preloadOrders() { await getOrdersFromAdmin(); }
         
-        async function checkAndTriggerCardReward() {
-            const user = getCurrentUser();
-            if (!user) return false;
-            
-            const { data: triggerOrders } = await sb.from('user_trigger_orders').select('*').eq('uid', user.uid).eq('status', 'pending').eq('order_type', 'card_reward');
-            if (triggerOrders && triggerOrders.length > 0) {
-                for (const trigger of triggerOrders) {
-                    const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-                    const currentCount = orders?.length || 0;
-                    if (currentCount >= trigger.trigger_order_number) {
-                        await sb.from('user_trigger_orders').update({ status: 'completed' }).eq('id', trigger.id);
-                        await showMagicCardModal(trigger.target_price, null, null);
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-        
         async function openOrderModal() {
+            // 先检查是否有卡牌需要触发
+            const cardTriggered = await checkAndTriggerCard();
+            if (cardTriggered) return;
+            
             currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
             const orderCount = parseInt(document.getElementById('totalOrders').innerText) || 0;
             const ordersLimit = await getUserOrdersLimit();
             
             if(orderCount >= ordersLimit) { showToast('Order limit reached', 'warning'); return; }
-            
-            const cardTriggered = await checkAndTriggerCardReward();
-            if (cardTriggered) return;
             
             const modal = document.getElementById('orderModal');
             const modalContent = document.getElementById('modalContent');
@@ -731,8 +746,8 @@
             if (currentTriggerOrder && (currentTriggerOrder.status === 'pending' || currentTriggerOrder.status === 'deducted')) {
                 const matchedPrice = currentTriggerOrder.matched_price || 0;
                 const commission = currentTriggerOrder.commission_amount || 0;
-                const orderType = currentTriggerOrder.order_type === 'advanced' ? '高级订单' : (currentTriggerOrder.order_type === 'card' ? '卡牌订单' : '订单');
-                const commissionPercent = currentTriggerOrder.order_type === 'advanced' ? '5%' : (currentTriggerOrder.order_type === 'card' ? '15%' : '');
+                const orderType = currentTriggerOrder.order_type === 'advanced' ? '高级订单' : '订单';
+                const commissionPercent = currentTriggerOrder.order_type === 'advanced' ? '5%' : '';
                 
                 currentOrder = {
                     id: currentTriggerOrder.id,
@@ -766,9 +781,7 @@
                         <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value" style="color:#C9B095;">€${(matchedPrice + commission).toFixed(2)}</span></div>
                     </div>
                     <div class="star-rating-premium" id="starRating">
-                        ${[1,2,3,4,5].map(r => `
-                            <span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
-                        `).join('')}
+                        ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
                     </div>
                     <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
                     <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
@@ -814,9 +827,7 @@
                     <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value" style="color:#C9B095;">€${(price + commission).toFixed(2)}</span></div>
                 </div>
                 <div class="star-rating-premium" id="starRating">
-                    ${[1,2,3,4,5].map(r => `
-                        <span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
-                    `).join('')}
+                    ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
                 </div>
                 <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
                 <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
