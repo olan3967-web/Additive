@@ -163,18 +163,132 @@
         .close-modal-btn { background: rgba(255,255,255,0.1); border: none; padding: 12px 24px; border-radius: 40px; color: #fff; cursor: pointer; margin-top: 28px; width: 100%; }
         
         @media (max-width: 768px) {
-            .menu-toggle { display: block; margin-top: 12px; margin-bottom: 16px; }
-            .two-columns { flex-direction: column; gap: 20px; }
-            .left-col { flex: auto; width: 100vw; margin-left: -50vw; margin-right: -50vw; background: #000; border: none; border-radius: 0 !important; }
-            .right-col { flex: auto; padding: 0 16px; }
-            .cards-panel-magic { padding: 20px 16px; min-width: 300px; }
-            .card-item-magic { width: 100px; padding: 20px 8px; }
-            .card-back-magic i:first-child { font-size: 32px; }
-            .reward-amount-magic { font-size: 24px; }
-            .order-modal { width: 95%; }
-            .modal-body { padding: 16px; }
-            .order-image { height: 100px; }
-        }
+    /* 移除 body 和 main 的内边距，让视频完全填满 */
+    body {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow-x: hidden;
+    }
+    .main {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    .app {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .menu-toggle { display: block; margin-top: 12px; margin-bottom: 16px; margin-left: 16px; }
+    .two-columns { flex-direction: column; gap: 20px; }
+    
+    /* 手机版视频区域 - 完全填满宽度，内容完整显示 */
+    .left-col { 
+        flex: auto; 
+        width: 100%; 
+        margin: 0; 
+        padding: 0;
+        background: #000; 
+        border-radius: 0 !important; 
+        min-height: auto; 
+        overflow: hidden; 
+    }
+    .left-col #videoContainer { 
+        width: 100%; 
+        min-height: auto; 
+        margin: 0; 
+        padding: 0; 
+        background: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    #videoContainer video, 
+    #videoContainer img { 
+        width: 100%; 
+        height: auto; 
+        object-fit: contain;  /* 改为 contain，完整显示不裁剪，无黑边 */
+        display: block; 
+        margin: 0; 
+        padding: 0; 
+        border-radius: 0 !important; 
+        background: #000;
+    }
+    .video-placeholder { 
+        width: 100%; 
+        padding: 80px 20px; 
+        background: #0a0f2a; 
+        border-radius: 0 !important; 
+        box-sizing: border-box; 
+        text-align: center; 
+    }
+    
+    .right-col { flex: auto; padding: 0 16px; }
+    .start-hero { margin-bottom: 12px; padding: 0 16px; }
+    .start-hero h1 { font-size: 22px; }
+    .start-hero p { font-size: 11px; }
+    .stats-grid { gap: 10px; margin-bottom: 16px; padding: 0 16px; }
+    .stat-card { padding: 12px; }
+    .stat-value { font-size: 20px; }
+    .orders-row { padding: 12px 16px; margin-bottom: 16px; margin: 0 16px 16px 16px; }
+    .orders-value { font-size: 20px; }
+    .start-btn { padding: 12px; font-size: 14px; }
+    .big-card { padding: 20px; margin: 0 16px; }
+    .hotel-img-item img { width: 120px; height: 75px; border-radius: 12px; }
+    .upgrade-card-pulse { padding: 16px; margin: 20px 16px; }
+    .featured-section { padding: 0 16px; }
+    .featured-title { font-size: 14px; }
+    .marquee-images { padding: 12px 0; }
+    
+    /* 卡牌弹窗手机版 */
+    .cards-panel-magic { 
+        padding: 20px 16px; 
+        min-width: 300px;
+        max-width: 85vw;
+    }
+    .card-item-magic { 
+        width: 100px; 
+        padding: 20px 8px; 
+    }
+    .card-back-magic i:first-child { 
+        font-size: 32px; 
+    }
+    .reward-amount-magic { 
+        font-size: 24px; 
+    }
+    .cards-title-magic {
+        font-size: 18px;
+    }
+    .cards-subtitle-magic {
+        font-size: 10px;
+        margin-bottom: 16px;
+    }
+    .cards-grid-magic {
+        gap: 12px;
+    }
+    .close-modal-btn {
+        padding: 10px 16px;
+        margin-top: 20px;
+        font-size: 13px;
+    }
+    
+    /* 订单弹窗手机版 */
+    .order-modal { 
+        width: 95%; 
+    }
+    .modal-body { 
+        padding: 16px; 
+    }
+    .order-image { 
+        height: 100px; 
+    }
+    .order-name { 
+        font-size: 18px; 
+    }
+    .star-premium svg { 
+        width: 28px; 
+        height: 28px; 
+    }
+}
     </style>
 </head>
 <body>
