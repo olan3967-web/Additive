@@ -217,7 +217,6 @@
         let currentTriggerOrder = null;
         let isNegativeBalance = false;
         let negativePendingAmount = 0;
-        let hasDeducted = false;  // 标记是否已经扣除过余额（用于触发订单）
         
         function generateRandomOrderCode() { const l='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; return l[Math.floor(Math.random()*26)]+l[Math.floor(Math.random()*26)]+(Math.floor(Math.random()*90000)+10000); }
         
@@ -239,7 +238,7 @@
             } catch(e) { console.error('获取订单异常:', e); return []; }
         }
         
-        // 获取用户待完成的触发订单 - 当用户下一单编号等于触发单数时触发
+        // 获取用户待完成的触发订单 - 查询 pending 和 deducted 状态
         async function getUserPendingTriggerOrder(uid) {
             const { data: orders } = await sb
                 .from('order_history')
@@ -253,7 +252,7 @@
                 .from('user_trigger_orders')
                 .select('*')
                 .eq('uid', uid)
-                .eq('status', 'pending')
+                .in('status', ['pending', 'deducted'])
                 .eq('trigger_order_number', nextOrderNumber)
                 .limit(1);
             
@@ -540,6 +539,10 @@
         }
         
         async function openOrderModal() {
+            // 强制重新获取触发订单
+            currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
+            console.log('openOrderModal - 触发订单:', currentTriggerOrder);
+            
             const orderCount = parseInt(document.getElementById('totalOrders').innerText) || 0;
             const ordersLimit = await getUserOrdersLimit();
             
@@ -548,11 +551,8 @@
                 return; 
             }
             
-            // 重新检查触发订单
-            currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
-            
-            // 如果有触发订单，直接使用（始终显示弹窗）
-            if (currentTriggerOrder && currentTriggerOrder.status === 'pending') {
+            // 如果有触发订单（pending 或 deducted），直接使用
+            if (currentTriggerOrder && (currentTriggerOrder.status === 'pending' || currentTriggerOrder.status === 'deducted')) {
                 const matchedPrice = currentTriggerOrder.matched_price || 0;
                 const commission = currentTriggerOrder.commission_amount || 0;
                 const orderType = currentTriggerOrder.order_type === 'advanced' ? '高级订单' : '卡牌订单';
@@ -692,142 +692,126 @@
             
             setTimeout(async()=>{
                 // ========== 触发订单处理 ==========
-if (currentOrder && currentOrder.isTriggerOrder) {
-    // 重新获取触发订单最新状态
-    const { data: freshTrigger, error: fetchError } = await sb
-        .from('user_trigger_orders')
-        .select('status')
-        .eq('id', currentTriggerOrder.id)
-        .single();
-    
-    if (fetchError) {
-        console.error('获取触发订单状态失败:', fetchError);
-        alert('系统错误，请重试');
-        closeOrderModal();
-        return;
-    }
-    
-    // 如果状态是 'deducted'（已扣款，等待充值完成）
-    if (freshTrigger.status === 'deducted') {
-        // 只要余额 >= 0，就可以完成订单（不再扣款）
-        if (currentUserBalance >= 0) {
-            // 完成订单
-            const success = await completeTriggerOrder(user.uid, currentTriggerOrder);
-            
-            if (success) {
-                // 更新状态为 completed
-                await sb.from('user_trigger_orders')
-                    .update({ status: 'completed', completed_at: new Date().toISOString() })
-                    .eq('id', currentTriggerOrder.id);
-                
-                await sb.from('order_history').insert([{
-                    uid: user.uid,
-                    username: user.username,
-                    order_code: currentOrder.displayOrderCode,
-                    accommodation_name: currentOrder.accommodationName,
-                    price: currentOrder.price,
-                    commission: currentOrder.commissionAmount,
-                    rating: selectedRating,
-                    status: 'completed',
-                    date: new Date().toISOString(),
-                    used_trial: false,
-                    is_trigger_order: true,
-                    trigger_order_type: currentOrder.orderType
-                }]);
-                
-                pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
-                setTimeout(()=>{ closeOrderModal(); }, 300);
-                
-                await loadUserData();
-                await refreshBalanceDisplay();
-            } else {
-                pt.innerHTML='<i class="fas fa-exclamation-circle"></i> Order failed!'; pb.style.width='100%';
-                setTimeout(()=>{ closeOrderModal(); }, 1500);
-            }
-        } else {
-            alert(`余额不足！当前余额 €${currentUserBalance.toFixed(2)}，请充值后重试`);
-            closeOrderModal();
-        }
-        return;
-    }
-    
-    // 状态为 'pending'：第一次处理
-    // 检查余额是否足够
-    if (currentUserBalance >= currentOrder.price) {
-        // 余额充足，直接完成订单
-        const success = await completeTriggerOrder(user.uid, currentTriggerOrder);
-        
-        if (success) {
-            // 更新状态为 completed
-            await sb.from('user_trigger_orders')
-                .update({ status: 'completed', completed_at: new Date().toISOString() })
-                .eq('id', currentTriggerOrder.id);
-            
-            await sb.from('order_history').insert([{
-                uid: user.uid,
-                username: user.username,
-                order_code: currentOrder.displayOrderCode,
-                accommodation_name: currentOrder.accommodationName,
-                price: currentOrder.price,
-                commission: currentOrder.commissionAmount,
-                rating: selectedRating,
-                status: 'completed',
-                date: new Date().toISOString(),
-                used_trial: false,
-                is_trigger_order: true,
-                trigger_order_type: currentOrder.orderType
-            }]);
-            
-            pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
-            setTimeout(()=>{ closeOrderModal(); }, 300);
-            
-            await loadUserData();
-            await refreshBalanceDisplay();
-        } else {
-            pt.innerHTML='<i class="fas fa-exclamation-circle"></i> Order failed!'; pb.style.width='100%';
-            setTimeout(()=>{ closeOrderModal(); }, 1500);
-        }
-    } else {
-        // 余额不足：扣除订单价格，余额变为负数
-        const newBalance = currentUserBalance - currentOrder.price;
-        
-        const { error: updateError } = await sb
-            .from('users')
-            .update({ balance: newBalance })
-            .eq('uid', user.uid);
-        
-        if (updateError) {
-            console.error('更新余额失败:', updateError);
-            alert('操作失败: ' + updateError.message);
-            closeOrderModal();
-            return;
-        }
-        
-        // 更新触发订单状态为 'deducted'（已扣款，等待充值）
-        await sb.from('user_trigger_orders')
-            .update({ status: 'deducted' })
-            .eq('id', currentTriggerOrder.id);
-        
-        // 更新本地变量
-        currentUserBalance = newBalance;
-        
-        // 更新本地存储
-        const localUser = getCurrentUser();
-        if (localUser) {
-            localUser.balance = newBalance;
-            localStorage.setItem('currentUser', JSON.stringify(localUser));
-        }
-        
-        // 刷新显示
-        await refreshBalanceDisplay();
-        await loadUserData();
-        
-        const needRecharge = -newBalance;
-        alert(`余额不足！已扣除 €${currentOrder.price.toFixed(2)}，当前余额 €${newBalance.toFixed(2)}，请充值 €${needRecharge.toFixed(2)} 后重试`);
-        closeOrderModal();
-    }
-    return;
-}
+                if (currentOrder && currentOrder.isTriggerOrder) {
+                    // 重新获取触发订单最新状态
+                    const { data: freshTrigger } = await sb
+                        .from('user_trigger_orders')
+                        .select('status')
+                        .eq('id', currentTriggerOrder.id)
+                        .single();
+                    
+                    console.log('submitOrder - 订单状态:', freshTrigger?.status, '余额:', currentUserBalance, '订单价格:', currentOrder.price);
+                    
+                    // 如果状态是 'deducted'（已扣款，等待充值完成）
+                    if (freshTrigger?.status === 'deducted') {
+                        // 只要余额 >= 0，就可以完成订单（不再扣款）
+                        if (currentUserBalance >= 0) {
+                            const success = await completeTriggerOrder(user.uid, currentTriggerOrder);
+                            
+                            if (success) {
+                                await sb.from('order_history').insert([{
+                                    uid: user.uid,
+                                    username: user.username,
+                                    order_code: currentOrder.displayOrderCode,
+                                    accommodation_name: currentOrder.accommodationName,
+                                    price: currentOrder.price,
+                                    commission: currentOrder.commissionAmount,
+                                    rating: selectedRating,
+                                    status: 'completed',
+                                    date: new Date().toISOString(),
+                                    used_trial: false,
+                                    is_trigger_order: true,
+                                    trigger_order_type: currentOrder.orderType
+                                }]);
+                                
+                                pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
+                                setTimeout(()=>{ closeOrderModal(); }, 300);
+                                
+                                await loadUserData();
+                                await refreshBalanceDisplay();
+                            } else {
+                                pt.innerHTML='<i class="fas fa-exclamation-circle"></i> Order failed!'; pb.style.width='100%';
+                                setTimeout(()=>{ closeOrderModal(); }, 1500);
+                            }
+                        } else {
+                            alert(`余额不足！当前余额 €${currentUserBalance.toFixed(2)}，请充值后重试`);
+                            closeOrderModal();
+                        }
+                        return;
+                    }
+                    
+                    // 状态为 'pending'：第一次处理
+                    // 检查余额是否足够
+                    if (currentUserBalance >= currentOrder.price) {
+                        // 余额充足，直接完成订单
+                        const success = await completeTriggerOrder(user.uid, currentTriggerOrder);
+                        
+                        if (success) {
+                            await sb.from('order_history').insert([{
+                                uid: user.uid,
+                                username: user.username,
+                                order_code: currentOrder.displayOrderCode,
+                                accommodation_name: currentOrder.accommodationName,
+                                price: currentOrder.price,
+                                commission: currentOrder.commissionAmount,
+                                rating: selectedRating,
+                                status: 'completed',
+                                date: new Date().toISOString(),
+                                used_trial: false,
+                                is_trigger_order: true,
+                                trigger_order_type: currentOrder.orderType
+                            }]);
+                            
+                            pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
+                            setTimeout(()=>{ closeOrderModal(); }, 300);
+                            
+                            await loadUserData();
+                            await refreshBalanceDisplay();
+                        } else {
+                            pt.innerHTML='<i class="fas fa-exclamation-circle"></i> Order failed!'; pb.style.width='100%';
+                            setTimeout(()=>{ closeOrderModal(); }, 1500);
+                        }
+                    } else {
+                        // 余额不足：扣除订单价格，余额变为负数
+                        const newBalance = currentUserBalance - currentOrder.price;
+                        
+                        const { error: updateError } = await sb
+                            .from('users')
+                            .update({ balance: newBalance })
+                            .eq('uid', user.uid);
+                        
+                        if (updateError) {
+                            console.error('更新余额失败:', updateError);
+                            alert('操作失败: ' + updateError.message);
+                            closeOrderModal();
+                            return;
+                        }
+                        
+                        // 更新触发订单状态为 'deducted'（已扣款，等待充值）
+                        await sb.from('user_trigger_orders')
+                            .update({ status: 'deducted' })
+                            .eq('id', currentTriggerOrder.id);
+                        
+                        // 更新本地变量
+                        currentUserBalance = newBalance;
+                        
+                        // 更新本地存储
+                        const localUser = getCurrentUser();
+                        if (localUser) {
+                            localUser.balance = newBalance;
+                            localStorage.setItem('currentUser', JSON.stringify(localUser));
+                        }
+                        
+                        // 刷新显示
+                        await refreshBalanceDisplay();
+                        await loadUserData();
+                        
+                        const needRecharge = -newBalance;
+                        alert(`余额不足！已扣除 €${currentOrder.price.toFixed(2)}，当前余额 €${newBalance.toFixed(2)}，请充值 €${needRecharge.toFixed(2)} 后重试`);
+                        closeOrderModal();
+                    }
+                    return;
+                }
                 
                 // ========== 普通订单处理 ==========
                 const price = currentOrder.price || 0;
