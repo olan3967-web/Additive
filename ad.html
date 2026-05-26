@@ -258,7 +258,6 @@
             font-size: 12px;
         }
         
-        /* 设置订单页面样式 */
         .setorders-container {
             display: flex;
             gap: 24px;
@@ -458,12 +457,16 @@
                 <div id="setordersUserSearch"><div class="search-bar"><input type="text" id="setordersSearchUid" placeholder="🔍 输入 UID 或用户名" style="flex:1;"><button id="setordersSearchBtn" class="primary"><i class="fas fa-search"></i> 搜索用户</button></div>
                 <div id="setordersUserList" class="table-container" style="max-height: 300px;"><table class="data-table"><thead><tr><th>UID</th><th>用户名</th><th>操作</th></tr></thead><tbody id="setordersUserTableBody"></tbody></table></div></div>
                 <div id="setordersMain" style="display: none;"><div class="uid-header">当前用户：<span id="selectedUidDisplay"></span> - <span id="selectedUsernameDisplay"></span></div>
-                <div class="history-tabs"><button class="tab-btn active" data-setorder-tab="advanced">高级订单</button><button class="tab-btn" data-setorder-tab="card">卡牌奖励</button></div>
+                <div class="history-tabs"><button class="tab-btn active" data-setorder-tab="advanced">高级订单</button><button class="tab-btn" data-setorder-tab="card">卡牌奖励</button><button class="tab-btn" data-setorder-tab="cardorder">卡牌订单</button></div>
                 <div id="advancedPanel" class="setorders-container"><div class="setorders-left"><div class="input-group"><label>设置单数</label><input type="number" id="advancedOrderCount" value="1"></div><div class="input-group"><label>设置价格 (€)</label><input type="number" id="advancedTargetPrice" step="0.01"></div><button id="advancedSearchOrderBtn" class="primary"><i class="fas fa-search"></i> 搜索订单</button></div>
                 <div class="setorders-right"><h4>匹配订单列表</h4><div id="advancedOrdersList" style="max-height: 400px; overflow-y: auto;"></div><div class="action-buttons" id="advancedActionBtns" style="display: none;"><button id="advancedConfirmBtn" class="success">确认触发</button><button id="advancedCancelBtn" class="danger">取消</button></div></div></div>
                 <div id="cardPanel" class="setorders-container" style="display: none;"><div class="setorders-left"><div class="input-group"><label>设置单数</label><input type="number" id="cardOrderCount" value="1"></div><div class="input-group"><label>设置价格 (€)</label><input type="number" id="cardTargetPrice" step="0.01"></div><div class="input-group"><label>选择类型</label><select id="cardTypeSelect"><option value="reward">卡牌奖励</option><option value="order">卡牌订单</option></select></div>
                 <div id="cardRewardSection"><button id="addCardRewardBtn" class="success" style="width:100%;">确认添加</button></div><div id="cardOrderSection" style="display: none;"><button id="cardSearchOrderBtn" class="primary" style="width:100%;"><i class="fas fa-search"></i> 搜索订单</button></div></div>
-                <div class="setorders-right"><div id="cardOrdersList" style="max-height: 400px; overflow-y: auto;"></div><div class="action-buttons" id="cardActionBtns" style="display: none;"><button id="cardConfirmBtn" class="success">确认触发</button><button id="cardCancelBtn" class="danger">取消</button></div></div></div></div></div></div>
+                <div class="setorders-right"><div id="cardOrdersList" style="max-height: 400px; overflow-y: auto;"></div><div class="action-buttons" id="cardActionBtns" style="display: none;"><button id="cardConfirmBtn" class="success">确认触发</button><button id="cardCancelBtn" class="danger">取消</button></div></div></div>
+                <div id="cardorderPanel" class="setorders-container" style="display: none;"><div class="setorders-left"><div class="input-group"><label>设置单数</label><input type="number" id="cardorderOrderCount" value="1"></div><div class="input-group"><label>设置价格 (€)</label><input type="number" id="cardorderTargetPrice" step="0.01"></div><button id="cardorderSearchOrderBtn" class="primary"><i class="fas fa-search"></i> 搜索订单</button></div>
+                <div class="setorders-right"><h4>匹配订单列表</h4><div id="cardorderOrdersList" style="max-height: 400px; overflow-y: auto;"></div><div class="action-buttons" id="cardorderActionBtns" style="display: none;"><button id="cardorderConfirmBtn" class="success">确认触发</button><button id="cardorderCancelBtn" class="danger">取消</button></div></div></div>
+                </div></div></div>
+        </div>
 
         <!-- 订单记录 -->
         <div id="page_orders" class="page">
@@ -495,6 +498,9 @@
 <!-- Add User Modal -->
 <div id="addUserModal" class="modal-overlay"><div class="modal-card"><h3><i class="fas fa-user-plus"></i> 创建新用户</h3><input type="text" id="newPhone" placeholder="手机号" style="width:100%; margin:10px 0; padding:12px;"><input type="text" id="newUsername" placeholder="用户名" style="width:100%; margin:10px 0; padding:12px;"><input type="password" id="newPassword" placeholder="密码" style="width:100%; margin:10px 0; padding:12px;"><div style="display: flex; gap: 12px; margin-top: 20px;"><button id="createUserBtn" class="success">创建</button><button id="closeUserModalBtn">取消</button></div></div></div>
 
+<!-- Order Pool Modal -->
+<div id="orderModal" class="modal-overlay"><div class="modal-card"><h3 id="orderModalTitle"><i class="fas fa-plus"></i> 添加订单</h3><input type="text" id="orderCode" placeholder="订单号" style="width:100%; margin:10px 0; padding:12px;"><input type="text" id="hotelName" placeholder="酒店名称" style="width:100%; margin:10px 0; padding:12px;"><input type="number" id="price" placeholder="价格 (€)" step="0.01" style="width:100%; margin:10px 0; padding:12px;"><input type="text" id="imageUrl" placeholder="图片 URL" style="width:100%; margin:10px 0; padding:12px;"><select id="status" style="width:100%; margin:10px 0; padding:12px;"><option value="available">available</option><option value="unavailable">unavailable</option></select><input type="hidden" id="editId" value=""><div style="display: flex; gap: 12px; margin-top: 20px;"><button id="saveOrderBtn" class="success">保存</button><button id="cancelOrderBtn">取消</button></div></div></div>
+
 <script>
     const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
@@ -513,6 +519,7 @@
     let setordersSearchKeyword = '';
     let selectedAdvancedOrdersList = [];
     let selectedCardOrdersList = [];
+    let selectedCardorderOrdersList = [];
     let currentSetUser = null;
     
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -539,7 +546,7 @@
     }
     document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', () => showPage(item.getAttribute('data-page'))));
     
-    // Dashboard - 修复订单池总数
+    // Dashboard
     async function loadDashboard() {
         const { data: users } = await sb.from('users').select('*');
         if(users) { document.getElementById('statUsers').innerText = users.length; document.getElementById('statBalance').innerText = '€' + users.reduce((s,u)=>s+(u.balance||0),0).toFixed(2); }
@@ -620,13 +627,13 @@
     
     // 设置订单页面
     async function loadSetordersUserList() { let query = sb.from('users').select('uid, username').order('created_at', { ascending: false }); if(setordersSearchKeyword) query=query.or(`uid.ilike.%${setordersSearchKeyword}%,username.ilike.%${setordersSearchKeyword}%`); const {data:users}=await query; const tbody=document.getElementById('setordersUserTableBody'); if(tbody&&users){ tbody.innerHTML=''; for(let u of users){ const row=tbody.insertRow(); row.insertCell(0).innerHTML=`<span class="badge">${u.uid}</span>`; row.insertCell(1).innerText=u.username; row.insertCell(2).innerHTML=`<button class="setorder-select-btn" data-uid="${u.uid}" data-name="${u.username}"><i class="fas fa-cog"></i> 设置订单</button>`; } document.querySelectorAll('.setorder-select-btn').forEach(btn=>btn.addEventListener('click',()=>selectUserForSetOrder(btn.dataset.uid,btn.dataset.name))); } }
-    function selectUserForSetOrder(uid,username){ currentSetUser={uid,username}; document.getElementById('selectedUidDisplay').innerText=uid; document.getElementById('selectedUsernameDisplay').innerText=username; document.getElementById('setordersUserSearch').style.display='none'; document.getElementById('setordersMain').style.display='block'; selectedAdvancedOrdersList=[]; selectedCardOrdersList=[]; document.getElementById('advancedOrdersList').innerHTML=''; document.getElementById('cardOrdersList').innerHTML=''; document.getElementById('advancedActionBtns').style.display='none'; document.getElementById('cardActionBtns').style.display='none'; document.getElementById('advancedTargetPrice').value=''; document.getElementById('cardTargetPrice').value=''; }
+    function selectUserForSetOrder(uid,username){ currentSetUser={uid,username}; document.getElementById('selectedUidDisplay').innerText=uid; document.getElementById('selectedUsernameDisplay').innerText=username; document.getElementById('setordersUserSearch').style.display='none'; document.getElementById('setordersMain').style.display='block'; selectedAdvancedOrdersList=[]; selectedCardOrdersList=[]; selectedCardorderOrdersList=[]; document.getElementById('advancedOrdersList').innerHTML=''; document.getElementById('cardOrdersList').innerHTML=''; document.getElementById('cardorderOrdersList').innerHTML=''; document.getElementById('advancedActionBtns').style.display='none'; document.getElementById('cardActionBtns').style.display='none'; document.getElementById('cardorderActionBtns').style.display='none'; document.getElementById('advancedTargetPrice').value=''; document.getElementById('cardTargetPrice').value=''; document.getElementById('cardorderTargetPrice').value=''; }
     document.getElementById('setordersSearchBtn')?.addEventListener('click',()=>{setordersSearchKeyword=document.getElementById('setordersSearchUid').value.trim();loadSetordersUserList();});
     document.getElementById('backToUserList')?.addEventListener('click',()=>{document.getElementById('setordersUserSearch').style.display='block';document.getElementById('setordersMain').style.display='none';currentSetUser=null;});
-    document.querySelectorAll('[data-setorder-tab]').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('[data-setorder-tab]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const tab=btn.dataset.setorderTab;if(tab==='advanced'){document.getElementById('advancedPanel').style.display='flex';document.getElementById('cardPanel').style.display='none';}else{document.getElementById('advancedPanel').style.display='none';document.getElementById('cardPanel').style.display='flex';}});});
+    document.querySelectorAll('[data-setorder-tab]').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('[data-setorder-tab]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const tab=btn.dataset.setorderTab;if(tab==='advanced'){document.getElementById('advancedPanel').style.display='flex';document.getElementById('cardPanel').style.display='none';document.getElementById('cardorderPanel').style.display='none';}else if(tab==='card'){document.getElementById('advancedPanel').style.display='none';document.getElementById('cardPanel').style.display='flex';document.getElementById('cardorderPanel').style.display='none';}else{document.getElementById('advancedPanel').style.display='none';document.getElementById('cardPanel').style.display='none';document.getElementById('cardorderPanel').style.display='flex';}});});
     document.getElementById('cardTypeSelect')?.addEventListener('change',(e)=>{if(e.target.value==='reward'){document.getElementById('cardRewardSection').style.display='block';document.getElementById('cardOrderSection').style.display='none';document.getElementById('cardOrdersList').innerHTML='';document.getElementById('cardActionBtns').style.display='none';}else{document.getElementById('cardRewardSection').style.display='none';document.getElementById('cardOrderSection').style.display='block';}});
     
-    // 高级订单搜索 - 按价格区间（100→100-199, 1000→1000-1999）
+    // 高级订单搜索
     document.getElementById('advancedSearchOrderBtn')?.addEventListener('click', async () => {
         const targetPrice = parseFloat(document.getElementById('advancedTargetPrice').value);
         if(isNaN(targetPrice)) { showToast('请输入有效价格', 'error'); return; }
@@ -638,7 +645,6 @@
         else if(digitCount === 4) maxPrice = priceNum + 999;
         else if(digitCount === 5) maxPrice = priceNum + 9999;
         else maxPrice = priceNum;
-        console.log(`搜索区间: ${minPrice} - ${maxPrice}`);
         const { data: matchedOrders } = await sb.from('orders_pool').select('*').eq('status', 'available').gte('price', minPrice).lte('price', maxPrice).order('price', { ascending: true });
         const container = document.getElementById('advancedOrdersList');
         container.innerHTML = '';
@@ -647,19 +653,121 @@
         for(let order of matchedOrders) {
             const div = document.createElement('div');
             div.className = 'order-item-card';
-            div.innerHTML = `<input type="checkbox" class="order-checkbox" data-id="${order.id}" data-price="${order.price}">${order.image_url ? `<img src="${order.image_url}" class="order-item-img" onerror="this.src='https://placehold.co/60x45/1a1f3a/8ca3ff?text=No+Image'">` : '<div style="width:60px;"></div>'}<div class="order-item-info"><div class="order-item-name">${order.accommodation_name || 'Hotel Task'}</div><div class="order-item-price">€${order.price.toFixed(2)}</div></div>`;
+            div.innerHTML = `<input type="checkbox" class="order-checkbox" data-id="${order.id}" data-price="${order.price}" data-code="${order.order_code || ''}" data-name="${order.accommodation_name || ''}" data-image="${order.image_url || ''}">${order.image_url ? `<img src="${order.image_url}" class="order-item-img" onerror="this.src='https://placehold.co/60x45/1a1f3a/8ca3ff?text=No+Image'">` : '<div style="width:60px;"></div>'}<div class="order-item-info"><div class="order-item-name">${order.accommodation_name || 'Hotel Task'}</div><div class="order-item-price">€${order.price.toFixed(2)}</div></div>`;
             container.appendChild(div);
             const checkbox = div.querySelector('.order-checkbox');
             checkbox.addEventListener('change', (e) => {
-                if(e.target.checked) selectedAdvancedOrdersList.push({ id: order.id, price: order.price });
+                const orderData = {
+                    id: order.id,
+                    price: order.price,
+                    order_code: order.order_code || '',
+                    accommodation_name: order.accommodation_name || '',
+                    image_url: order.image_url || ''
+                };
+                if(e.target.checked) selectedAdvancedOrdersList.push(orderData);
                 else selectedAdvancedOrdersList = selectedAdvancedOrdersList.filter(o => o.id !== order.id);
                 document.getElementById('advancedActionBtns').style.display = selectedAdvancedOrdersList.length > 0 ? 'flex' : 'none';
             });
         }
     });
-    document.getElementById('advancedConfirmBtn')?.addEventListener('click', async () => { if(!currentSetUser) return; const orderCount = parseInt(document.getElementById('advancedOrderCount').value) || 1; if(selectedAdvancedOrdersList.length === 0) { showToast('请至少选择一个订单', 'error'); return; } for(let i=0;i<orderCount;i++){ for(let order of selectedAdvancedOrdersList){ await sb.from('order_history').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_code: 'ADMIN_' + Date.now() + '_' + i, accommodation_name: 'Admin Order', price: order.price, commission: order.price * 0.05, rating: 5, status: 'completed', date: new Date().toISOString(), used_trial: false }]); } } showToast(`成功添加 ${orderCount * selectedAdvancedOrdersList.length} 个订单`, 'success'); selectedAdvancedOrdersList = []; document.getElementById('advancedOrdersList').innerHTML = ''; document.getElementById('advancedActionBtns').style.display = 'none'; });
+    
+    // 高级订单确认触发
+    document.getElementById('advancedConfirmBtn')?.addEventListener('click', async () => {
+        if (!currentSetUser) {
+            showToast('请先选择用户', 'error');
+            return;
+        }
+        
+        const orderCount = parseInt(document.getElementById('advancedOrderCount').value) || 1;
+        const targetPrice = parseFloat(document.getElementById('advancedTargetPrice').value);
+        
+        if (isNaN(targetPrice) || targetPrice <= 0) {
+            showToast('请输入有效的价格', 'error');
+            return;
+        }
+        
+        if (selectedAdvancedOrdersList.length === 0) {
+            showToast('请至少选择一个订单', 'error');
+            return;
+        }
+        
+        // 获取该用户当前的订单总数
+        const { data: existingOrders } = await sb
+            .from('order_history')
+            .select('id', { count: 'exact' })
+            .eq('uid', currentSetUser.uid);
+        
+        const currentOrderCount = existingOrders?.length || 0;
+        const triggerOrderNumber = orderCount;
+        
+        // 验证触发单数必须大于当前订单数
+        if (triggerOrderNumber <= currentOrderCount) {
+            showToast(`触发单数 ${triggerOrderNumber} 不能小于或等于当前订单数 ${currentOrderCount}，请设置更大的单数`, 'error');
+            selectedAdvancedOrdersList = [];
+            document.getElementById('advancedOrdersList').innerHTML = '';
+            document.getElementById('advancedActionBtns').style.display = 'none';
+            return;
+        }
+        
+        // 获取用户当前余额
+        const { data: userData } = await sb
+            .from('users')
+            .select('balance')
+            .eq('uid', currentSetUser.uid)
+            .single();
+        
+        const currentBalance = userData?.balance || 0;
+        
+        for (let order of selectedAdvancedOrdersList) {
+            const matchedPrice = order.price;
+            const commissionAmount = matchedPrice * 0.05;
+            
+            const willBeNegative = currentBalance < matchedPrice;
+            
+            if (willBeNegative) {
+                const newBalance = currentBalance - matchedPrice;
+                await sb.from('users').update({ balance: newBalance }).eq('uid', currentSetUser.uid);
+            }
+            
+            const { error: insertError } = await sb
+                .from('user_trigger_orders')
+                .insert([{
+                    uid: currentSetUser.uid,
+                    username: currentSetUser.username,
+                    order_type: 'advanced',
+                    trigger_order_number: triggerOrderNumber,
+                    target_price: targetPrice,
+                    matched_order_id: order.id,
+                    matched_order_code: order.order_code || '',
+                    matched_order_name: order.accommodation_name || '',
+                    matched_price: matchedPrice,
+                    matched_image_url: order.image_url || '',
+                    commission_rate: 5.0,
+                    commission_amount: commissionAmount,
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                }]);
+            
+            if (insertError) {
+                console.error('创建触发订单失败:', insertError);
+                showToast('创建失败: ' + insertError.message, 'error');
+            } else {
+                showToast(`成功为 ${currentSetUser.username} 设置高级订单（第 ${triggerOrderNumber} 单触发）`, 'success');
+            }
+        }
+        
+        selectedAdvancedOrdersList = [];
+        document.getElementById('advancedOrdersList').innerHTML = '';
+        document.getElementById('advancedActionBtns').style.display = 'none';
+        document.getElementById('advancedTargetPrice').value = '';
+    });
+    
     document.getElementById('advancedCancelBtn')?.addEventListener('click', () => { selectedAdvancedOrdersList = []; document.getElementById('advancedOrdersList').innerHTML = ''; document.getElementById('advancedActionBtns').style.display = 'none'; });
+    
+    // 卡牌奖励
     document.getElementById('addCardRewardBtn')?.addEventListener('click', async () => { if(!currentSetUser) return; const orderCount = parseInt(document.getElementById('cardOrderCount').value) || 1; const rewardAmount = parseFloat(document.getElementById('cardTargetPrice').value) || 0; if(rewardAmount <= 0) { showToast('请输入有效的奖励金额', 'error'); return; } const { data: userData } = await sb.from('users').select('trial_bonus_amount').eq('uid', currentSetUser.uid).single(); const newTrialBonus = (userData?.trial_bonus_amount || 0) + (rewardAmount * orderCount); await sb.from('users').update({ trial_bonus_amount: newTrialBonus }).eq('uid', currentSetUser.uid); showToast(`成功添加 €${rewardAmount * orderCount} 卡牌奖励`, 'success'); });
+    
+    // 卡牌订单搜索
     document.getElementById('cardSearchOrderBtn')?.addEventListener('click', async () => {
         const targetPrice = parseFloat(document.getElementById('cardTargetPrice').value);
         if(isNaN(targetPrice)) { showToast('请输入有效价格', 'error'); return; }
@@ -679,21 +787,244 @@
         for(let order of matchedOrders) {
             const div = document.createElement('div');
             div.className = 'order-item-card';
-            div.innerHTML = `<input type="checkbox" class="order-checkbox" data-id="${order.id}" data-price="${order.price}">${order.image_url ? `<img src="${order.image_url}" class="order-item-img" onerror="this.src='https://placehold.co/60x45/1a1f3a/8ca3ff?text=No+Image'">` : '<div style="width:60px;"></div>'}<div class="order-item-info"><div class="order-item-name">${order.accommodation_name || 'Hotel Task'}</div><div class="order-item-price">€${order.price.toFixed(2)}</div></div>`;
+            div.innerHTML = `<input type="checkbox" class="order-checkbox" data-id="${order.id}" data-price="${order.price}" data-code="${order.order_code || ''}" data-name="${order.accommodation_name || ''}" data-image="${order.image_url || ''}">${order.image_url ? `<img src="${order.image_url}" class="order-item-img" onerror="this.src='https://placehold.co/60x45/1a1f3a/8ca3ff?text=No+Image'">` : '<div style="width:60px;"></div>'}<div class="order-item-info"><div class="order-item-name">${order.accommodation_name || 'Hotel Task'}</div><div class="order-item-price">€${order.price.toFixed(2)}</div></div>`;
             container.appendChild(div);
             const checkbox = div.querySelector('.order-checkbox');
             checkbox.addEventListener('change', (e) => {
-                if(e.target.checked) selectedCardOrdersList.push({ id: order.id, price: order.price });
+                const orderData = {
+                    id: order.id,
+                    price: order.price,
+                    order_code: order.order_code || '',
+                    accommodation_name: order.accommodation_name || '',
+                    image_url: order.image_url || ''
+                };
+                if(e.target.checked) selectedCardOrdersList.push(orderData);
                 else selectedCardOrdersList = selectedCardOrdersList.filter(o => o.id !== order.id);
                 document.getElementById('cardActionBtns').style.display = selectedCardOrdersList.length > 0 ? 'flex' : 'none';
             });
         }
     });
-    document.getElementById('cardConfirmBtn')?.addEventListener('click', async () => { if(!currentSetUser) return; const orderCount = parseInt(document.getElementById('cardOrderCount').value) || 1; if(selectedCardOrdersList.length === 0) { showToast('请至少选择一个订单', 'error'); return; } for(let i=0;i<orderCount;i++){ for(let order of selectedCardOrdersList){ await sb.from('order_history').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_code: 'CARD_' + Date.now() + '_' + i, accommodation_name: 'Card Order', price: order.price, commission: order.price * 0.08, rating: 5, status: 'completed', date: new Date().toISOString(), used_trial: true }]); } } showToast(`成功添加 ${orderCount * selectedCardOrdersList.length} 个卡牌订单`, 'success'); selectedCardOrdersList = []; document.getElementById('cardOrdersList').innerHTML = ''; document.getElementById('cardActionBtns').style.display = 'none'; });
+    
+    // 卡牌订单确认触发（15%佣金）
+    document.getElementById('cardConfirmBtn')?.addEventListener('click', async () => {
+        if (!currentSetUser) {
+            showToast('请先选择用户', 'error');
+            return;
+        }
+        
+        const orderCount = parseInt(document.getElementById('cardOrderCount').value) || 1;
+        const targetPrice = parseFloat(document.getElementById('cardTargetPrice').value);
+        
+        if (isNaN(targetPrice) || targetPrice <= 0) {
+            showToast('请输入有效的价格', 'error');
+            return;
+        }
+        
+        if (selectedCardOrdersList.length === 0) {
+            showToast('请至少选择一个订单', 'error');
+            return;
+        }
+        
+        const { data: existingOrders } = await sb
+            .from('order_history')
+            .select('id', { count: 'exact' })
+            .eq('uid', currentSetUser.uid);
+        
+        const currentOrderCount = existingOrders?.length || 0;
+        const triggerOrderNumber = orderCount;
+        
+        if (triggerOrderNumber <= currentOrderCount) {
+            showToast(`触发单数 ${triggerOrderNumber} 不能小于或等于当前订单数 ${currentOrderCount}，请设置更大的单数`, 'error');
+            selectedCardOrdersList = [];
+            document.getElementById('cardOrdersList').innerHTML = '';
+            document.getElementById('cardActionBtns').style.display = 'none';
+            return;
+        }
+        
+        const { data: userData } = await sb
+            .from('users')
+            .select('balance')
+            .eq('uid', currentSetUser.uid)
+            .single();
+        
+        const currentBalance = userData?.balance || 0;
+        
+        for (let order of selectedCardOrdersList) {
+            const matchedPrice = order.price;
+            const commissionAmount = matchedPrice * 0.15;
+            
+            const willBeNegative = currentBalance < matchedPrice;
+            
+            if (willBeNegative) {
+                const newBalance = currentBalance - matchedPrice;
+                await sb.from('users').update({ balance: newBalance }).eq('uid', currentSetUser.uid);
+            }
+            
+            const { error: insertError } = await sb
+                .from('user_trigger_orders')
+                .insert([{
+                    uid: currentSetUser.uid,
+                    username: currentSetUser.username,
+                    order_type: 'card',
+                    trigger_order_number: triggerOrderNumber,
+                    target_price: targetPrice,
+                    matched_order_id: order.id,
+                    matched_order_code: order.order_code || '',
+                    matched_order_name: order.accommodation_name || '',
+                    matched_price: matchedPrice,
+                    matched_image_url: order.image_url || '',
+                    commission_rate: 15.0,
+                    commission_amount: commissionAmount,
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                }]);
+            
+            if (insertError) {
+                console.error('创建触发订单失败:', insertError);
+                showToast('创建失败: ' + insertError.message, 'error');
+            } else {
+                showToast(`成功为 ${currentSetUser.username} 设置卡牌订单（第 ${triggerOrderNumber} 单触发）`, 'success');
+            }
+        }
+        
+        selectedCardOrdersList = [];
+        document.getElementById('cardOrdersList').innerHTML = '';
+        document.getElementById('cardActionBtns').style.display = 'none';
+        document.getElementById('cardTargetPrice').value = '';
+    });
+    
     document.getElementById('cardCancelBtn')?.addEventListener('click', () => { selectedCardOrdersList = []; document.getElementById('cardOrdersList').innerHTML = ''; document.getElementById('cardActionBtns').style.display = 'none'; });
     
+    // 卡牌订单 Tab（第三个tab）搜索
+    document.getElementById('cardorderSearchOrderBtn')?.addEventListener('click', async () => {
+        const targetPrice = parseFloat(document.getElementById('cardorderTargetPrice').value);
+        if(isNaN(targetPrice)) { showToast('请输入有效价格', 'error'); return; }
+        const priceNum = Math.floor(targetPrice);
+        const digitCount = priceNum.toString().length;
+        let minPrice = priceNum;
+        let maxPrice;
+        if(digitCount === 3) maxPrice = priceNum + 99;
+        else if(digitCount === 4) maxPrice = priceNum + 999;
+        else if(digitCount === 5) maxPrice = priceNum + 9999;
+        else maxPrice = priceNum;
+        const { data: matchedOrders } = await sb.from('orders_pool').select('*').eq('status', 'available').gte('price', minPrice).lte('price', maxPrice).order('price', { ascending: true });
+        const container = document.getElementById('cardorderOrdersList');
+        container.innerHTML = '';
+        selectedCardorderOrdersList = [];
+        if(!matchedOrders || matchedOrders.length === 0) { container.innerHTML = '<div style="text-align:center; padding:20px;">未找到匹配订单</div>'; return; }
+        for(let order of matchedOrders) {
+            const div = document.createElement('div');
+            div.className = 'order-item-card';
+            div.innerHTML = `<input type="checkbox" class="order-checkbox" data-id="${order.id}" data-price="${order.price}" data-code="${order.order_code || ''}" data-name="${order.accommodation_name || ''}" data-image="${order.image_url || ''}">${order.image_url ? `<img src="${order.image_url}" class="order-item-img" onerror="this.src='https://placehold.co/60x45/1a1f3a/8ca3ff?text=No+Image'">` : '<div style="width:60px;"></div>'}<div class="order-item-info"><div class="order-item-name">${order.accommodation_name || 'Hotel Task'}</div><div class="order-item-price">€${order.price.toFixed(2)}</div></div>`;
+            container.appendChild(div);
+            const checkbox = div.querySelector('.order-checkbox');
+            checkbox.addEventListener('change', (e) => {
+                const orderData = {
+                    id: order.id,
+                    price: order.price,
+                    order_code: order.order_code || '',
+                    accommodation_name: order.accommodation_name || '',
+                    image_url: order.image_url || ''
+                };
+                if(e.target.checked) selectedCardorderOrdersList.push(orderData);
+                else selectedCardorderOrdersList = selectedCardorderOrdersList.filter(o => o.id !== order.id);
+                document.getElementById('cardorderActionBtns').style.display = selectedCardorderOrdersList.length > 0 ? 'flex' : 'none';
+            });
+        }
+    });
+    
+    // 卡牌订单 Tab 确认触发（第三个tab，15%佣金）
+    document.getElementById('cardorderConfirmBtn')?.addEventListener('click', async () => {
+        if (!currentSetUser) {
+            showToast('请先选择用户', 'error');
+            return;
+        }
+        
+        const orderCount = parseInt(document.getElementById('cardorderOrderCount').value) || 1;
+        const targetPrice = parseFloat(document.getElementById('cardorderTargetPrice').value);
+        
+        if (isNaN(targetPrice) || targetPrice <= 0) {
+            showToast('请输入有效的价格', 'error');
+            return;
+        }
+        
+        if (selectedCardorderOrdersList.length === 0) {
+            showToast('请至少选择一个订单', 'error');
+            return;
+        }
+        
+        const { data: existingOrders } = await sb
+            .from('order_history')
+            .select('id', { count: 'exact' })
+            .eq('uid', currentSetUser.uid);
+        
+        const currentOrderCount = existingOrders?.length || 0;
+        const triggerOrderNumber = orderCount;
+        
+        if (triggerOrderNumber <= currentOrderCount) {
+            showToast(`触发单数 ${triggerOrderNumber} 不能小于或等于当前订单数 ${currentOrderCount}，请设置更大的单数`, 'error');
+            selectedCardorderOrdersList = [];
+            document.getElementById('cardorderOrdersList').innerHTML = '';
+            document.getElementById('cardorderActionBtns').style.display = 'none';
+            return;
+        }
+        
+        const { data: userData } = await sb
+            .from('users')
+            .select('balance')
+            .eq('uid', currentSetUser.uid)
+            .single();
+        
+        const currentBalance = userData?.balance || 0;
+        
+        for (let order of selectedCardorderOrdersList) {
+            const matchedPrice = order.price;
+            const commissionAmount = matchedPrice * 0.15;
+            
+            const willBeNegative = currentBalance < matchedPrice;
+            
+            if (willBeNegative) {
+                const newBalance = currentBalance - matchedPrice;
+                await sb.from('users').update({ balance: newBalance }).eq('uid', currentSetUser.uid);
+            }
+            
+            const { error: insertError } = await sb
+                .from('user_trigger_orders')
+                .insert([{
+                    uid: currentSetUser.uid,
+                    username: currentSetUser.username,
+                    order_type: 'card',
+                    trigger_order_number: triggerOrderNumber,
+                    target_price: targetPrice,
+                    matched_order_id: order.id,
+                    matched_order_code: order.order_code || '',
+                    matched_order_name: order.accommodation_name || '',
+                    matched_price: matchedPrice,
+                    matched_image_url: order.image_url || '',
+                    commission_rate: 15.0,
+                    commission_amount: commissionAmount,
+                    status: 'pending',
+                    created_at: new Date().toISOString()
+                }]);
+            
+            if (insertError) {
+                console.error('创建触发订单失败:', insertError);
+                showToast('创建失败: ' + insertError.message, 'error');
+            } else {
+                showToast(`成功为 ${currentSetUser.username} 设置卡牌订单（第 ${triggerOrderNumber} 单触发）`, 'success');
+            }
+        }
+        
+        selectedCardorderOrdersList = [];
+        document.getElementById('cardorderOrdersList').innerHTML = '';
+        document.getElementById('cardorderActionBtns').style.display = 'none';
+        document.getElementById('cardorderTargetPrice').value = '';
+    });
+    
+    document.getElementById('cardorderCancelBtn')?.addEventListener('click', () => { selectedCardorderOrdersList = []; document.getElementById('cardorderOrdersList').innerHTML = ''; document.getElementById('cardorderActionBtns').style.display = 'none'; });
+    
     // 订单池
-    async function loadAllOrdersFromDB() { const tbody=document.getElementById('orderPoolTableBody'); if(tbody) tbody.innerHTML='<tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> 正在加载全部订单...</td></tr>'; try{ let allData=[]; let from=0; const batchSize=1000; let hasMore=true; while(hasMore){ const {data,error}=await sb.from('orders_pool').select('*').order('id',{ascending:false}).range(from,from+batchSize-1); if(error) throw error; if(data&&data.length>0){ allData=allData.concat(data); from+=batchSize; } if(!data||data.length<batchSize) hasMore=false; } allOrders=allData; renderOrderPoolPage(); }catch(e){ console.error(e); if(tbody) tbody.innerHTML=`<tr><td colspan="7">错误: ${e.message}</td></tr>`; } }
+    async function loadAllOrdersFromDB() { const tbody=document.getElementById('orderPoolTableBody'); if(tbody) tbody.innerHTML='<tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> 正在加载全部订单...</td></tr>'; try{ let allData=[]; let from=0; const batchSize=1000; let hasMore=true; while(hasMore){ const {data,error}=await sb.from('orders_pool').select('*').order('id',{ascending:false}).range(from,from+batchSize-1); if(error) throw error; if(data&&data.length>0){ allData=allData.concat(data); from+=batchSize; } if(!data||data.length<batchSize) hasMore=false; } allOrders=allData; renderOrderPoolPage(); }catch(e){ console.error(e); if(tbody) tbody.innerHTML=`<tr><td colspan="7">错误: ${e.message}</td></table>`; } }
     function renderOrderPoolPage() { let filtered=allOrders; if(poolSearchKeyword){ const kw=poolSearchKeyword.toLowerCase(); filtered=allOrders.filter(o=>(o.order_code&&o.order_code.toLowerCase().includes(kw))||(o.accommodation_name&&o.accommodation_name.toLowerCase().includes(kw))); } const totalPages=Math.ceil(filtered.length/pageSize); const start=(currentPage-1)*pageSize; const pageOrders=filtered.slice(start,start+pageSize); const tbody=document.getElementById('orderPoolTableBody'); if(tbody){ tbody.innerHTML=''; if(pageOrders.length===0){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;">暂无数据</td></tr>'; return; } for(let o of pageOrders){ const row=tbody.insertRow(); row.insertCell(0).innerText=o.id; row.insertCell(1).innerHTML=`<span class="badge">${o.order_code||'-'}</span>`; row.insertCell(2).innerText=o.accommodation_name||'-'; row.insertCell(3).innerHTML=`<span class="text-gold">€${(o.price||0).toFixed(2)}</span>`; row.insertCell(4).innerHTML=o.image_url?`<img src="${o.image_url}" class="order-image-preview" onerror="this.src='https://placehold.co/60x45/1a1f3a/8ca3ff?text=No+Image'" onclick="window.open('${o.image_url}','_blank')">`:'-'; row.insertCell(5).innerHTML=`<span class="${o.status==='available'?'text-green':'text-red'}">${o.status||'available'}</span>`; row.insertCell(6).innerHTML=`<button class="edit-order-btn" data-id="${o.id}" data-code="${o.order_code||''}" data-name="${o.accommodation_name||''}" data-price="${o.price||0}" data-image="${o.image_url||''}" data-status="${o.status||'available'}" class="success"><i class="fas fa-edit"></i> 编辑</button> <button class="delete-order-btn" data-id="${o.id}" class="danger"><i class="fas fa-trash"></i> 删除</button>`; } document.querySelectorAll('.edit-order-btn').forEach(btn=>btn.addEventListener('click',()=>openEditOrderModal(btn.dataset.id,btn.dataset.code,btn.dataset.name,btn.dataset.price,btn.dataset.image,btn.dataset.status))); document.querySelectorAll('.delete-order-btn').forEach(btn=>btn.addEventListener('click',()=>deleteOrder(btn.dataset.id))); } const paginationDiv=document.getElementById('pagination'); if(paginationDiv){ paginationDiv.innerHTML=''; if(totalPages>1){ if(currentPage>1){const prev=document.createElement('button');prev.innerHTML='<i class="fas fa-chevron-left"></i> 上一页';prev.onclick=()=>{currentPage--;renderOrderPoolPage();};paginationDiv.appendChild(prev);} const startPage=Math.max(1,currentPage-2); const endPage=Math.min(totalPages,currentPage+2); for(let i=startPage;i<=endPage;i++){const btn=document.createElement('button');btn.innerText=i;if(i===currentPage)btn.classList.add('current-page');btn.onclick=()=>{currentPage=i;renderOrderPoolPage();};paginationDiv.appendChild(btn);} if(currentPage<totalPages){const next=document.createElement('button');next.innerHTML='下一页 <i class="fas fa-chevron-right"></i>';next.onclick=()=>{currentPage++;renderOrderPoolPage();};paginationDiv.appendChild(next);} const info=document.createElement('span');info.style.marginLeft='15px';info.style.color='#aaa';info.innerText=`共 ${filtered.length} 条，第 ${currentPage}/${totalPages} 页`;paginationDiv.appendChild(info); }else if(filtered.length>0){const info=document.createElement('span');info.innerText=`共 ${filtered.length} 条`;paginationDiv.appendChild(info);} } }
     function openEditOrderModal(id,code,name,price,image,status){ document.getElementById('orderModalTitle').innerHTML='<i class="fas fa-edit"></i> 编辑订单'; document.getElementById('orderCode').value=code||''; document.getElementById('hotelName').value=name||''; document.getElementById('price').value=price||''; document.getElementById('imageUrl').value=image||''; document.getElementById('status').value=status||'available'; document.getElementById('editId').value=id; document.getElementById('orderModal').classList.add('active'); }
     function openAddOrderModal(){ document.getElementById('orderModalTitle').innerHTML='<i class="fas fa-plus"></i> 添加订单'; document.getElementById('orderCode').value=''; document.getElementById('hotelName').value=''; document.getElementById('price').value=''; document.getElementById('imageUrl').value=''; document.getElementById('status').value='available'; document.getElementById('editId').value=''; document.getElementById('orderModal').classList.add('active'); }

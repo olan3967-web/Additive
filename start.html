@@ -10,11 +10,10 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
-        /* 样式保持不变 - 省略重复代码，直接使用之前的样式 */
         .start-hero { 
-    margin-bottom: 12px; 
-    padding: 0 0 0 0px; 
-}
+            margin-bottom: 12px; 
+            padding: 0 0 0 0px; 
+        }
         .start-hero h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .start-hero p { color: #7a85a5; font-size: 13px; margin-bottom: 0; }
         .menu-toggle { display: none; width: fit-content; margin-bottom: 16px; background: rgba(201,176,149,0.2); border: 1px solid rgba(201,176,149,0.4); border-radius: 12px; padding: 8px 12px; cursor: pointer; color: #C9B095; font-size: 18px; }
@@ -30,11 +29,13 @@
         .stat-label { font-size: 11px; color: #a0a8c0; margin-bottom: 8px; }
         .stat-value { font-size: 26px; font-weight: 700; color: #C9B095; }
         .balance-value { color: #ffffff; }
+        .balance-negative { color: #ff8888 !important; }
         .orders-row { background: rgba(10,18,43,0.6); border-radius: 20px; padding: 16px 20px; display: flex; justify-content: space-between; margin-bottom: 24px; }
         .orders-label { font-size: 14px; color: #a0a8c0; }
         .orders-value { font-size: 26px; font-weight: 700; color: #C9B095; }
         .start-btn { width: 100%; background: linear-gradient(135deg, #C9B095, #b8944a); border: none; padding: 14px; border-radius: 40px; color: #0A122B; font-weight: 700; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .start-btn:hover { transform: scale(1.01); box-shadow: 0 5px 15px rgba(201,176,149,0.3); }
+        .start-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .featured-section { margin-top: 20px; }
         .featured-title { font-size: 16px; font-weight: 500; color: #C9B095; margin-bottom: 14px; }
         .marquee-images { overflow: hidden; white-space: nowrap; background: #0E1838; border-radius: 20px; padding: 20px 0; }
@@ -65,8 +66,9 @@
         .detail-value.price { color: #4ade80; }
         .star-rating-premium { display: flex; justify-content: center; gap: 12px; margin: 24px 0; }
         .star-premium { cursor: pointer; transition: all 0.2s; }
-        .star-premium i { font-size: 40px; color: #4a5578; transition: all 0.2s; }
-        .star-premium.active i { color: #C9B095; text-shadow: 0 0 8px rgba(201,176,149,0.4); transform: scale(1.08); }
+        .star-premium svg { width: 36px; height: 36px; transition: all 0.2s ease; }
+        .star-premium svg polygon { fill: #4a5578; transition: all 0.2s ease; }
+        .star-premium.active svg polygon { fill: #C9B095; filter: drop-shadow(0 0 4px rgba(201, 176, 149, 0.5)); }
         .star-premium:hover { transform: translateY(-3px); }
         .rating-text-premium { text-align: center; font-size: 13px; color: #c0c0d0; margin-bottom: 20px; }
         .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
@@ -77,238 +79,46 @@
         .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.2s ease; }
         .progress-text { text-align: center; margin-top: 12px; font-size: 13px; color: #C9B095; }
         @media (max-width: 768px) {
-    .menu-toggle { 
-    display: block;
-    margin-top: 12px;
-    margin-left: 0px;
-    margin-bottom: 16px;
-}
-    
-    .two-columns { flex-direction: column; gap: 20px; }
-    
-    /* 视频区域 - 全屏无缝隙 */
-    .left-col {
-    flex: auto;
-    width: 100vw;
-    position: relative;
-    left: 50%;
-    right: 50%;
-    margin-left: -50vw;
-    margin-right: -50vw;
-    background: #000000;
-    border: none;
-    border-radius: 0 !important;
-    min-height: auto;
-    overflow: hidden;
-    padding: 0;
-}
-    
-    .left-col #videoContainer {
-        width: 100%;
-        min-height: auto;
-        margin: 0;
-        padding: 0;
-    }
-    
-    #videoContainer video,
-    #videoContainer img {
-        width: 100%;
-        height: auto;
-        object-fit: cover;
-        display: block;
-        margin: 0;
-        padding: 0;
-        border-radius: 0 !important;
-    }
-    
-    .video-placeholder {
-        width: 100%;
-        padding: 80px 20px;
-        background: #0a0f2a;
-        border-radius: 0 !important;
-        box-sizing: border-box;
-        text-align: center;
-    }
-    
-    .right-col { 
-        flex: auto; 
-        padding: 0 16px; 
-    }
-    
-    .main {
-        padding-top: 0 !important;
-    }
-    
-    .app {
-        overflow-x: hidden;
-    }
-    
-    .start-hero { 
-        margin-bottom: 12px; 
-        padding: 0 0 0 0px; 
-    }
-    .start-hero h1 { font-size: 22px; }
-    .start-hero p { font-size: 11px; }
-    
-    .stats-grid { gap: 10px; margin-bottom: 16px; }
-    .stat-card { padding: 12px; }
-    .stat-value { font-size: 20px; }
-    .orders-row { padding: 12px 16px; margin-bottom: 16px; }
-    .orders-value { font-size: 20px; }
-    .start-btn { padding: 12px; font-size: 14px; }
-    .big-card { padding: 20px; }
-    
-    .hotel-img-item img { width: 120px; height: 75px; border-radius: 12px; }
-    .upgrade-card-pulse { padding: 16px; margin: 20px 16px; }
-    .featured-section { padding: 0 16px; }
-    .featured-title { font-size: 14px; }
-    .marquee-images { padding: 12px 0; }
-}
-
-/* SVG 星星评分样式 - 样式4 */
-.star-rating-premium {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin: 24px 0;
-}
-.star-premium {
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-.star-premium svg {
-    width: 36px;
-    height: 36px;
-    transition: all 0.2s ease;
-}
-.star-premium svg polygon {
-    fill: #4a5578;
-    transition: all 0.2s ease;
-}
-.star-premium.active svg polygon {
-    fill: #C9B095;
-    filter: drop-shadow(0 0 4px rgba(201, 176, 149, 0.5));
-}
-.star-premium:hover {
-    transform: translateY(-3px);
-}
-.star-premium:hover svg polygon {
-    fill: #d4b88a;
-}
-
-/* Loading 遮罩 */
-#pageLoading {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    transition: opacity 0.3s ease;
-}
-.loading-spinner {
-    text-align: center;
-}
-.loading-spinner i {
-    font-size: 48px;
-    color: #C9B095;
-    margin-bottom: 16px;
-    display: inline-block;
-    animation: spin 1s linear infinite;
-}
-.loading-spinner p {
-    color: #a0a8c0;
-    font-size: 14px;
-}
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* 手机版做单弹窗优化 */
-@media (max-width: 768px) {
-    .order-modal {
-        width: 95%;
-        max-width: 95%;
-        margin: 0 auto;
-        max-height: 85vh;
-        overflow-y: auto;
-    }
-    
-    .modal-body {
-        padding: 16px;
-        max-height: calc(85vh - 60px);
-        overflow-y: auto;
-    }
-    
-    .order-image {
-        height: 100px;
-        margin-bottom: 12px;
-    }
-    
-    .order-name {
-        font-size: 18px;
-        margin-bottom: 4px;
-    }
-    
-    .order-code {
-        font-size: 12px;
-        margin-bottom: 12px;
-    }
-    
-    .order-details {
-        padding: 12px;
-        margin-bottom: 12px;
-    }
-    
-    .detail-row {
-        padding: 6px 0;
-    }
-    
-    .detail-label {
-        font-size: 12px;
-    }
-    
-    .detail-value {
-        font-size: 13px;
-    }
-    
-    .star-rating-premium {
-        gap: 8px;
-        margin: 16px 0;
-    }
-    
-    .star-premium svg {
-        width: 28px;
-        height: 28px;
-    }
-    
-    .rating-text-premium {
-        font-size: 11px;
-        margin-bottom: 12px;
-    }
-    
-    .modal-buttons {
-        gap: 8px;
-        margin-top: 12px;
-    }
-    
-    .btn-submit, .btn-close-modal {
-        padding: 10px;
-        font-size: 13px;
-    }
-    
-    .progress-text {
-        font-size: 11px;
-    }
-}
+            .menu-toggle { display: block; margin-top: 12px; margin-left: 0px; margin-bottom: 16px; }
+            .two-columns { flex-direction: column; gap: 20px; }
+            .left-col { flex: auto; width: 100vw; position: relative; left: 50%; right: 50%; margin-left: -50vw; margin-right: -50vw; background: #000000; border: none; border-radius: 0 !important; min-height: auto; overflow: hidden; padding: 0; }
+            .left-col #videoContainer { width: 100%; min-height: auto; margin: 0; padding: 0; }
+            #videoContainer video, #videoContainer img { width: 100%; height: auto; object-fit: cover; display: block; margin: 0; padding: 0; border-radius: 0 !important; }
+            .video-placeholder { width: 100%; padding: 80px 20px; background: #0a0f2a; border-radius: 0 !important; box-sizing: border-box; text-align: center; }
+            .right-col { flex: auto; padding: 0 16px; }
+            .main { padding-top: 0 !important; }
+            .app { overflow-x: hidden; }
+            .start-hero { margin-bottom: 12px; padding: 0 0 0 0px; }
+            .start-hero h1 { font-size: 22px; }
+            .start-hero p { font-size: 11px; }
+            .stats-grid { gap: 10px; margin-bottom: 16px; }
+            .stat-card { padding: 12px; }
+            .stat-value { font-size: 20px; }
+            .orders-row { padding: 12px 16px; margin-bottom: 16px; }
+            .orders-value { font-size: 20px; }
+            .start-btn { padding: 12px; font-size: 14px; }
+            .big-card { padding: 20px; }
+            .hotel-img-item img { width: 120px; height: 75px; border-radius: 12px; }
+            .upgrade-card-pulse { padding: 16px; margin: 20px 16px; }
+            .featured-section { padding: 0 16px; }
+            .featured-title { font-size: 14px; }
+            .marquee-images { padding: 12px 0; }
+            .order-modal { width: 95%; max-width: 95%; max-height: 85vh; overflow-y: auto; }
+            .modal-body { padding: 16px; max-height: calc(85vh - 60px); overflow-y: auto; }
+            .order-image { height: 100px; margin-bottom: 12px; }
+            .order-name { font-size: 18px; margin-bottom: 4px; }
+            .order-code { font-size: 12px; margin-bottom: 12px; }
+            .order-details { padding: 12px; margin-bottom: 12px; }
+            .detail-row { padding: 6px 0; }
+            .detail-label { font-size: 12px; }
+            .detail-value { font-size: 13px; }
+            .star-rating-premium { gap: 8px; margin: 16px 0; }
+            .star-premium svg { width: 28px; height: 28px; }
+            .rating-text-premium { font-size: 11px; margin-bottom: 12px; }
+            .modal-buttons { gap: 8px; margin-top: 12px; }
+            .btn-submit, .btn-close-modal { padding: 10px; font-size: 13px; }
+            .progress-text { font-size: 11px; }
+        }
     </style>
 </head>
 <body>
@@ -318,6 +128,39 @@
         <p>Loading...</p>
     </div>
 </div>
+<style>
+    #pageLoading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.3s ease;
+    }
+    .loading-spinner {
+        text-align: center;
+    }
+    .loading-spinner i {
+        font-size: 48px;
+        color: #C9B095;
+        margin-bottom: 16px;
+        display: inline-block;
+        animation: spin 1s linear infinite;
+    }
+    .loading-spinner p {
+        color: #a0a8c0;
+        font-size: 14px;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
     <div class="menu-overlay" onclick="closeMenu()"></div>
     <div class="app">
         <aside class="sidebar" id="sidebar">
@@ -336,7 +179,7 @@
             <div class="sidebar-upgrade-card">
                 <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
                 <div class="sidebar-upgrade-title">Upgrade your membership</div>
-                <div class="sidebar-upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits</div>
+                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
                 <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
             </div>
         </aside>
@@ -369,10 +212,11 @@
         function closeMenu() { const s=document.getElementById('sidebar'), o=document.querySelector('.menu-overlay'), m=document.getElementById('menuToggleBtn'); if(s)s.classList.remove('open'); if(o)o.classList.remove('active'); if(m)m.classList.remove('hidden'); }
         
         let currentOrder = null, selectedRating = 0, currentUserBalance = 0, currentUserUid = null;
-        let displayTrialBonus = 0;  // 前端显示的体验金金额
+        let displayTrialBonus = 0;
         let ordersCache = null;
-        let trialOrdersCount = 0;    // 使用体验金完成的订单数（用于佣金计算）
-        let totalTrialCommission = 0; // 使用体验金获得的总佣金
+        let currentTriggerOrder = null;
+        let isNegativeBalance = false;
+        let negativePendingAmount = 0;
         
         function generateRandomOrderCode() { const l='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; return l[Math.floor(Math.random()*26)]+l[Math.floor(Math.random()*26)]+(Math.floor(Math.random()*90000)+10000); }
         
@@ -383,6 +227,7 @@
                 const { data, error } = await sb.from('orders_pool').select('*').eq('status', 'available');
                 if (error) { console.error('获取订单失败:', error); return []; }
                 ordersCache = data.map(order => ({
+                    id: order.id,
                     orderCode: order.order_code,
                     accommodationName: order.accommodation_name,
                     price: order.price,
@@ -393,7 +238,93 @@
             } catch(e) { console.error('获取订单异常:', e); return []; }
         }
         
-        // 刷新余额显示
+        // 获取用户待完成的触发订单 - 当用户下一单编号等于触发单数时触发
+        async function getUserPendingTriggerOrder(uid) {
+            const { data: orders } = await sb
+                .from('order_history')
+                .select('id', { count: 'exact' })
+                .eq('uid', uid);
+            
+            const currentOrderCount = orders?.length || 0;
+            const nextOrderNumber = currentOrderCount + 1;
+            
+            const { data: triggers, error } = await sb
+                .from('user_trigger_orders')
+                .select('*')
+                .eq('uid', uid)
+                .eq('status', 'pending')
+                .eq('trigger_order_number', nextOrderNumber)
+                .limit(1);
+            
+            if (error) {
+                console.error('获取触发订单失败:', error);
+                return null;
+            }
+            
+            return triggers?.[0] || null;
+        }
+        
+        // 获取触发订单的 Pending 金额
+        async function getTriggerOrderPendingAmount(uid, currentBalance, triggerOrder) {
+            if (!triggerOrder) {
+                triggerOrder = await getUserPendingTriggerOrder(uid);
+            }
+            if (!triggerOrder) return 0;
+            
+            const matchedPrice = triggerOrder.matched_price || 0;
+            const commission = triggerOrder.commission_amount || 0;
+            
+            return currentBalance + matchedPrice + commission;
+        }
+        
+        // 完成触发订单
+        async function completeTriggerOrder(uid, triggerOrder) {
+            if (!triggerOrder) return false;
+            
+            const matchedPrice = triggerOrder.matched_price || 0;
+            const commission = triggerOrder.commission_amount || 0;
+            
+            const { data: userData } = await sb
+                .from('users')
+                .select('balance')
+                .eq('uid', uid)
+                .single();
+            
+            const currentBalance = userData?.balance || 0;
+            const newBalance = currentBalance + matchedPrice + commission;
+            
+            const { error: balanceError } = await sb
+                .from('users')
+                .update({ balance: newBalance })
+                .eq('uid', uid);
+            
+            if (balanceError) {
+                console.error('更新余额失败:', balanceError);
+                return false;
+            }
+            
+            const { error: updateError } = await sb
+                .from('user_trigger_orders')
+                .update({
+                    status: 'completed',
+                    completed_at: new Date().toISOString()
+                })
+                .eq('id', triggerOrder.id);
+            
+            if (updateError) {
+                console.error('更新触发订单状态失败:', updateError);
+                return false;
+            }
+            
+            const localUser = getCurrentUser();
+            if (localUser && localUser.uid === uid) {
+                localUser.balance = newBalance;
+                localStorage.setItem('currentUser', JSON.stringify(localUser));
+            }
+            
+            return true;
+        }
+        
         async function refreshBalanceDisplay() {
             const user = getCurrentUser();
             if (!user) return;
@@ -401,6 +332,12 @@
             if (userData) {
                 currentUserBalance = userData.balance || 0;
                 document.getElementById('statBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
+                const balanceEl = document.getElementById('statBalance');
+                if (currentUserBalance < 0) {
+                    balanceEl.classList.add('balance-negative');
+                } else {
+                    balanceEl.classList.remove('balance-negative');
+                }
                 document.getElementById('statTrialBonus').innerHTML = `€${displayTrialBonus.toFixed(2)}`;
                 user.balance = currentUserBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
@@ -411,8 +348,14 @@
             const user = getCurrentUser();
             if (!user) { window.location.href = 'signin.html'; return; }
             currentUserUid = user.uid;
+            
             try {
-                const { data: userData } = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
+                const { data: userData } = await sb
+                    .from('users')
+                    .select('balance, trial_bonus_amount')
+                    .eq('uid', user.uid)
+                    .single();
+                
                 if (userData) {
                     currentUserBalance = userData.balance || 0;
                     if (displayTrialBonus === 0) {
@@ -421,52 +364,82 @@
                     user.balance = currentUserBalance;
                     localStorage.setItem('currentUser', JSON.stringify(user));
                 }
-                const { data: orders } = await sb.from('order_history').select('commission, price').eq('uid', user.uid);
+                
+                const { data: orders } = await sb
+                    .from('order_history')
+                    .select('commission, price')
+                    .eq('uid', user.uid);
+                
                 const totalCommission = orders?.reduce((s,o)=>s+(o.commission||0),0) || 0;
                 const orderCount = orders?.length || 0;
-                document.getElementById('statBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
+                
+                // 检查触发订单
+                currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
+                isNegativeBalance = currentUserBalance < 0;
+                
+                if (isNegativeBalance && currentTriggerOrder) {
+                    negativePendingAmount = await getTriggerOrderPendingAmount(
+                        user.uid, 
+                        currentUserBalance, 
+                        currentTriggerOrder
+                    );
+                } else {
+                    negativePendingAmount = 0;
+                }
+                
+                // 获取待处理提现金额
+                const { data: pendingWithdrawals } = await sb
+                    .from('withdrawals')
+                    .select('amount')
+                    .eq('uid', user.uid)
+                    .eq('status', 'pending');
+                
+                const totalPending = pendingWithdrawals?.reduce((sum, w) => sum + (w.amount || 0), 0) || 0;
+                
+                // 更新 UI
+                const balanceEl = document.getElementById('statBalance');
+                balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
+                if (currentUserBalance < 0) {
+                    balanceEl.classList.add('balance-negative');
+                } else {
+                    balanceEl.classList.remove('balance-negative');
+                }
+                
                 document.getElementById('statTrialBonus').innerHTML = `€${displayTrialBonus.toFixed(2)}`;
                 document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`;
                 document.getElementById('totalOrders').innerText = orderCount;
-                // 获取待处理提现金额（pending状态的提现）
-const { data: pendingWithdrawals } = await sb
-    .from('withdrawals')
-    .select('amount')
-    .eq('uid', user.uid)
-    .eq('status', 'pending');
-
-const totalPending = pendingWithdrawals?.reduce((sum, w) => sum + (w.amount || 0), 0) || 0;
-document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)}`;
                 
-                // 计算使用体验金完成的订单数和佣金
-                // 假设：所有使用体验金完成的订单，都是价格 <= 体验金额度
-                // 这个逻辑可以根据实际业务调整
-                if (displayTrialBonus > 0 && orders) {
-                    // 筛选出使用体验金完成的订单（这里简化：订单价格 <= 体验金总额）
-                    let remainingTrial = displayTrialBonus;
-                    let trialOrders = [];
-                    for (let o of orders) {
-                        if (remainingTrial > 0 && o.price <= remainingTrial) {
-                            remainingTrial -= o.price;
-                            trialOrders.push(o);
-                        } else if (remainingTrial > 0 && o.price > remainingTrial) {
-                            // 部分使用体验金的订单，也算一次体验金订单
-                            trialOrders.push(o);
-                            remainingTrial = 0;
-                        }
+                // Pending 卡片双重功能
+                const pendingElement = document.getElementById('statPending');
+                if (isNegativeBalance && currentTriggerOrder && negativePendingAmount > 0) {
+                    pendingElement.innerHTML = `€${negativePendingAmount.toFixed(2)}`;
+                    const startBtn = document.getElementById('startNowBtn');
+                    if (startBtn) {
+                        startBtn.disabled = true;
+                        startBtn.style.opacity = '0.5';
+                        startBtn.style.cursor = 'not-allowed';
+                        startBtn.title = '余额不足，请联系客服充值';
                     }
-                    trialOrdersCount = trialOrders.length;
-                    totalTrialCommission = trialOrders.reduce((s,o)=>s+(o.commission||0),0);
+                } else {
+                    pendingElement.innerHTML = `€${totalPending.toFixed(2)}`;
+                    const startBtn = document.getElementById('startNowBtn');
+                    if (startBtn) {
+                        startBtn.disabled = false;
+                        startBtn.style.opacity = '1';
+                        startBtn.style.cursor = 'pointer';
+                        startBtn.title = '';
+                    }
                 }
                 
-                // 完成30单后，一次性扣除所有体验金
                 if (orderCount >= 30 && displayTrialBonus > 0) {
                     await sb.from('users').update({ trial_bonus_amount: 0 }).eq('uid', user.uid);
                     displayTrialBonus = 0;
                     document.getElementById('statTrialBonus').innerHTML = `€0.00`;
-                    console.log('已完成30单，体验金已全部扣除');
                 }
-            } catch(e) { console.error('加载数据失败:', e); }
+                
+            } catch(e) { 
+                console.error('加载数据失败:', e); 
+            }
         }
         
         async function getUserCommissionRate() {
@@ -484,57 +457,87 @@ document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)
         }
         
         async function loadAnimatedConfig() {
-    try {
-        const { data } = await sb.from('animated_settings').select('*').eq('id',1).single();
-        if(data) {
-            if(data.video_url) {
-                const vc = document.getElementById('videoContainer');
-                if(vc) {
-                    const url = data.video_url;
-                    if(url.endsWith('.mp4')||url.includes('.mp4')) {
-                        // 创建视频元素，监听加载完成事件
-                        const video = document.createElement('video');
-                        video.src = url;
-                        video.autoplay = true;
-                        video.loop = true;
-                        video.muted = true;
-                        video.playsinline = true;
-                        video.preload = 'auto';
-                        video.style.width = '100%';
-                        video.style.borderRadius = '24px';
-                        
-                        // 视频可以播放时隐藏 Loading
-                        video.addEventListener('canplay', function() {
-                            const loading = document.getElementById('pageLoading');
-                            if(loading) {
-                                loading.style.opacity = '0';
-                                setTimeout(() => {
-                                    loading.style.display = 'none';
-                                }, 300);
-                            }
-                        });
-                        
-                        vc.innerHTML = '';
-                        vc.appendChild(video);
-                    } else {
-                        vc.innerHTML = `<img src="${url}" style="width:100%; border-radius:24px;">`;
-                        // 图片加载完成隐藏 Loading
-                        const img = vc.querySelector('img');
-                        if(img) {
-                            img.onload = function() {
-                                const loading = document.getElementById('pageLoading');
-                                if(loading) {
-                                    loading.style.opacity = '0';
-                                    setTimeout(() => {
-                                        loading.style.display = 'none';
-                                    }, 300);
+            try {
+                const { data } = await sb.from('animated_settings').select('*').eq('id',1).single();
+                if(data) {
+                    if(data.video_url) {
+                        const vc = document.getElementById('videoContainer');
+                        if(vc) {
+                            const url = data.video_url;
+                            if(url.endsWith('.mp4')||url.includes('.mp4')) {
+                                const video = document.createElement('video');
+                                video.src = url;
+                                video.autoplay = true;
+                                video.loop = true;
+                                video.muted = true;
+                                video.playsinline = true;
+                                video.preload = 'auto';
+                                video.style.width = '100%';
+                                video.style.borderRadius = '24px';
+                                
+                                video.addEventListener('canplay', function() {
+                                    const loading = document.getElementById('pageLoading');
+                                    if(loading) {
+                                        loading.style.opacity = '0';
+                                        setTimeout(() => {
+                                            loading.style.display = 'none';
+                                        }, 300);
+                                    }
+                                });
+                                
+                                vc.innerHTML = '';
+                                vc.appendChild(video);
+                            } else {
+                                vc.innerHTML = `<img src="${url}" style="width:100%; border-radius:24px;">`;
+                                const img = vc.querySelector('img');
+                                if(img) {
+                                    img.onload = function() {
+                                        const loading = document.getElementById('pageLoading');
+                                        if(loading) {
+                                            loading.style.opacity = '0';
+                                            setTimeout(() => {
+                                                loading.style.display = 'none';
+                                            }, 300);
+                                        }
+                                    };
                                 }
-                            };
+                            }
+                        }
+                    } else {
+                        const loading = document.getElementById('pageLoading');
+                        if(loading) {
+                            loading.style.opacity = '0';
+                            setTimeout(() => {
+                                loading.style.display = 'none';
+                            }, 300);
                         }
                     }
+                    
+                    if(data.featured_hotels && data.featured_hotels.length) {
+                        const container = document.getElementById('hotelImagesContainer');
+                        if(container) {
+                            container.innerHTML = '';
+                            data.featured_hotels.forEach(hotel => {
+                                const div = document.createElement('div');
+                                div.className = 'hotel-img-item';
+                                div.innerHTML = `<img src="${hotel.image||''}" alt="${hotel.name}" onerror="this.src='https://placehold.co/180x110/0E1838/C9B095?text=Hotel'"><span class="hotel-name">${hotel.name}</span>`;
+                                container.appendChild(div);
+                            });
+                            const items = container.innerHTML;
+                            container.innerHTML = items + items;
+                        }
+                    }
+                } else {
+                    const loading = document.getElementById('pageLoading');
+                    if(loading) {
+                        loading.style.opacity = '0';
+                        setTimeout(() => {
+                            loading.style.display = 'none';
+                        }, 300);
+                    }
                 }
-            } else {
-                // 没有视频，直接隐藏 Loading
+            } catch(e) { 
+                console.error(e);
                 const loading = document.getElementById('pageLoading');
                 if(loading) {
                     loading.style.opacity = '0';
@@ -543,43 +546,7 @@ document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)
                     }, 300);
                 }
             }
-            
-            if(data.featured_hotels && data.featured_hotels.length) {
-                const container = document.getElementById('hotelImagesContainer');
-                if(container) {
-                    container.innerHTML = '';
-                    data.featured_hotels.forEach(hotel => {
-                        const div = document.createElement('div');
-                        div.className = 'hotel-img-item';
-                        div.innerHTML = `<img src="${hotel.image||''}" alt="${hotel.name}" onerror="this.src='https://placehold.co/180x110/0E1838/C9B095?text=Hotel'"><span class="hotel-name">${hotel.name}</span>`;
-                        container.appendChild(div);
-                    });
-                    const items = container.innerHTML;
-                    container.innerHTML = items + items;
-                }
-            }
-        } else {
-            // 没有数据，直接隐藏 Loading
-            const loading = document.getElementById('pageLoading');
-            if(loading) {
-                loading.style.opacity = '0';
-                setTimeout(() => {
-                    loading.style.display = 'none';
-                }, 300);
-            }
         }
-    } catch(e) { 
-        console.error(e);
-        // 出错也隐藏 Loading
-        const loading = document.getElementById('pageLoading');
-        if(loading) {
-            loading.style.opacity = '0';
-            setTimeout(() => {
-                loading.style.display = 'none';
-            }, 300);
-        }
-    }
-}
         
         async function preloadOrders() {
             await getOrdersFromAdmin();
@@ -588,17 +555,92 @@ document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)
         async function openOrderModal() {
             const orderCount = parseInt(document.getElementById('totalOrders').innerText) || 0;
             const ordersLimit = await getUserOrdersLimit();
+            
             if(orderCount >= ordersLimit) { 
                 showToast('Order limit reached', 'warning'); 
                 return; 
             }
             
+            // 重新检查触发订单
+            currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
+            
+            // 如果有触发订单，直接使用
+            if (currentTriggerOrder && currentTriggerOrder.status === 'pending') {
+                const matchedPrice = currentTriggerOrder.matched_price || 0;
+                const commission = currentTriggerOrder.commission_amount || 0;
+                const orderType = currentTriggerOrder.order_type === 'advanced' ? '高级订单' : '卡牌订单';
+                const commissionPercent = currentTriggerOrder.order_type === 'advanced' ? '5%' : '15%';
+                
+                if (currentUserBalance < 0) {
+                    showToast(`余额不足 (€${currentUserBalance.toFixed(2)})，请联系客服充值后继续`, 'error');
+                    return;
+                }
+                
+                currentOrder = {
+                    id: currentTriggerOrder.id,
+                    orderCode: currentTriggerOrder.matched_order_code,
+                    accommodationName: currentTriggerOrder.matched_order_name,
+                    price: matchedPrice,
+                    imageUrl: currentTriggerOrder.matched_image_url,
+                    commissionAmount: commission,
+                    isTriggerOrder: true,
+                    triggerOrderId: currentTriggerOrder.id,
+                    orderType: currentTriggerOrder.order_type
+                };
+                
+                // 如果没有图片，尝试从订单池获取
+                if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
+                    const { data: poolOrder } = await sb
+                        .from('orders_pool')
+                        .select('image_url')
+                        .eq('id', currentTriggerOrder.matched_order_id)
+                        .single();
+                    if (poolOrder) currentOrder.imageUrl = poolOrder.image_url;
+                }
+                
+                selectedRating = 0;
+                const randomCode = generateRandomOrderCode();
+                
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="order-image">${currentOrder.imageUrl ? `<img src="${currentOrder.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
+                    <div class="order-name">${currentOrder.accommodationName || 'Hotel Task'}</div>
+                    <div class="order-code"><i class="fas fa-tag"></i> ${randomCode}</div>
+                    <div class="order-details">
+                        <div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">${orderType}</span></div>
+                        <div class="detail-row"><span class="detail-label">Price</span><span class="detail-value price">€${matchedPrice.toFixed(2)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)} (${commissionPercent})</span></div>
+                        <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value" style="color:#C9B095;">+€${commission.toFixed(2)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value" style="color:#C9B095;">€${(matchedPrice + commission).toFixed(2)}</span></div>
+                    </div>
+                    <div class="star-rating-premium" id="starRating">
+                        <span class="star-premium" data-rating="1"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
+                        <span class="star-premium" data-rating="2"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
+                        <span class="star-premium" data-rating="3"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
+                        <span class="star-premium" data-rating="4"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
+                        <span class="star-premium" data-rating="5"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
+                    </div>
+                    <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
+                    <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
+                    <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
+                `;
+                
+                document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { 
+                    const r = parseInt(this.dataset.rating); 
+                    selectedRating = r; 
+                    document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); 
+                }));
+                
+                currentOrder.displayOrderCode = randomCode;
+                document.getElementById('orderModal').classList.add('active');
+                return;
+            }
+            
+            // 没有触发订单时，从订单池随机获取
             document.getElementById('modalContent').innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
             document.getElementById('orderModal').classList.add('active');
             
             await loadUserData();
             const allOrders = await getOrdersFromAdmin();
-            // 可用金额 = 余额 + 体验金（体验金不实际扣除，只是额度）
             const totalAvailable = currentUserBalance + displayTrialBonus;
             const available = allOrders.filter(o => (o.price || 0) <= totalAvailable);
             
@@ -616,13 +658,11 @@ document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)
             const commissionRate = await getUserCommissionRate();
             let commission = price * commissionRate;
             
-            // 如果是使用体验金完成的订单，佣金控制在 0.8 - 0.9 之间
-const isUsingTrial = (price <= displayTrialBonus);
-if (isUsingTrial) {
-    // 体验金订单：佣金 0.8 - 1.0 欧元之间
-    commission = 0.8 + (Math.random() * 0.2);
-    commission = parseFloat(commission.toFixed(2));
-}
+            const isUsingTrial = (price <= displayTrialBonus);
+            if (isUsingTrial) {
+                commission = 0.8 + (Math.random() * 0.2);
+                commission = parseFloat(commission.toFixed(2));
+            }
             
             document.getElementById('modalContent').innerHTML = `
                 <div class="order-image">${order.imageUrl ? `<img src="${order.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
@@ -635,32 +675,12 @@ if (isUsingTrial) {
                     <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value" style="color:#C9B095;">€${(price + commission).toFixed(2)}</span></div>
                 </div>
                 <div class="star-rating-premium" id="starRating">
-    <span class="star-premium" data-rating="1">
-        <svg viewBox="0 0 24 24" width="36" height="36">
-            <polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/>
-        </svg>
-    </span>
-    <span class="star-premium" data-rating="2">
-        <svg viewBox="0 0 24 24" width="36" height="36">
-            <polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/>
-        </svg>
-    </span>
-    <span class="star-premium" data-rating="3">
-        <svg viewBox="0 0 24 24" width="36" height="36">
-            <polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/>
-        </svg>
-    </span>
-    <span class="star-premium" data-rating="4">
-        <svg viewBox="0 0 24 24" width="36" height="36">
-            <polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/>
-        </svg>
-    </span>
-    <span class="star-premium" data-rating="5">
-        <svg viewBox="0 0 24 24" width="36" height="36">
-            <polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/>
-        </svg>
-    </span>
-</div>
+                    <span class="star-premium" data-rating="1"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
+                    <span class="star-premium" data-rating="2"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
+                    <span class="star-premium" data-rating="3"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
+                    <span class="star-premium" data-rating="4"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
+                    <span class="star-premium" data-rating="5"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>
+                </div>
                 <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
                 <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
                 <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
@@ -672,85 +692,102 @@ if (isUsingTrial) {
                 document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); 
             }));
             currentOrder.displayOrderCode = randomCode;
-            currentOrder.commissionAmount = commission;
             currentOrder.isUsingTrial = isUsingTrial;
+            currentOrder.isTriggerOrder = false;
         }
         
         function closeOrderModal() { document.getElementById('orderModal').classList.remove('active'); currentOrder = null; selectedRating = 0; }
         
         async function submitOrder() {
-    if(selectedRating===0){alert('Please select a rating');return;}
-    const user = getCurrentUser();
-    if(!user){window.location.href='signin.html';return;}
-    const price = currentOrder.price || 0;
-    const commission = currentOrder.commissionAmount;
-    const isUsingTrial = currentOrder.isUsingTrial;
-    
-    const pc = document.getElementById('progressContainer'), pb = document.getElementById('progressBar'), pt = document.getElementById('progressText');
-    pc.style.display='block'; pb.style.width='0%'; pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing payment...'; pb.style.width='25%';
-    
-    setTimeout(async()=>{
-        let newBalance = currentUserBalance;
-        
-        if (isUsingTrial) {
-            // 使用体验金：不扣除余额，体验金不变
-            // 体验金订单：只记录佣金，不涉及余额变动
-            // 注意：体验金不返还本金，因为本金是体验金出的
-            // 最终余额 = 原余额 + 佣金
-            newBalance = currentUserBalance + commission;
-        } else {
-            // 使用余额：正确逻辑
-            // 1. 扣除订单金额（冻结）
-            // 2. 订单完成后返还订单金额 + 佣金
-            // 净效果：余额 = 原余额 + 佣金
-            if (currentUserBalance >= price) {
-                // 先扣除订单金额
-                const afterDeduction = currentUserBalance - price;
-                // 订单完成后，返还本金+佣金
-                newBalance = afterDeduction + price + commission;
-            } else {
-                alert('Insufficient balance!');
-                closeOrderModal();
-                return;
-            }
-        }
-        
-        await refreshBalanceDisplay();
-        
-        pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Searching Offer...'; pb.style.width='50%';
-        
-        setTimeout(async()=>{
-            pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting Order...'; pb.style.width='75%';
+            if(selectedRating===0){alert('Please select a rating');return;}
+            const user = getCurrentUser();
+            if(!user){window.location.href='signin.html';return;}
+            
+            const pc = document.getElementById('progressContainer'), pb = document.getElementById('progressBar'), pt = document.getElementById('progressText');
+            pc.style.display='block'; pb.style.width='0%'; pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Processing payment...'; pb.style.width='25%';
             
             setTimeout(async()=>{
-                // 更新余额
-                await updateUserBalance(user.uid, newBalance, null);
-                currentUserBalance = newBalance;
-                await refreshBalanceDisplay();
+                if (currentOrder && currentOrder.isTriggerOrder) {
+                    const success = await completeTriggerOrder(user.uid, currentTriggerOrder);
+                    
+                    if (success) {
+                        await sb.from('order_history').insert([{
+                            uid: user.uid,
+                            username: user.username,
+                            order_code: currentOrder.displayOrderCode,
+                            accommodation_name: currentOrder.accommodationName,
+                            price: currentOrder.price,
+                            commission: currentOrder.commissionAmount,
+                            rating: selectedRating,
+                            status: 'completed',
+                            date: new Date().toISOString(),
+                            used_trial: false,
+                            is_trigger_order: true,
+                            trigger_order_type: currentOrder.orderType
+                        }]);
+                        
+                        pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
+                        setTimeout(()=>{ closeOrderModal(); }, 300);
+                        
+                        await loadUserData();
+                        await refreshBalanceDisplay();
+                    } else {
+                        pt.innerHTML='<i class="fas fa-exclamation-circle"></i> Order failed!'; pb.style.width='100%';
+                        setTimeout(()=>{ closeOrderModal(); }, 1500);
+                    }
+                    return;
+                }
                 
-                // 保存订单历史
-                await sb.from('order_history').insert([{
-                    uid: user.uid,
-                    username: user.username,
-                    order_code: currentOrder.displayOrderCode,
-                    accommodation_name: currentOrder.accommodationName,
-                    price: price,
-                    commission: commission,
-                    rating: selectedRating,
-                    status: 'completed',
-                    date: new Date().toISOString(),
-                    used_trial: isUsingTrial
-                }]);
+                const price = currentOrder.price || 0;
+                const commission = currentOrder.commissionAmount;
+                const isUsingTrial = currentOrder.isUsingTrial;
                 
-                // 重新加载用户数据
-                await loadUserData();
+                let newBalance = currentUserBalance;
                 
-                pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
-                setTimeout(()=>{ closeOrderModal(); }, 300);
-            }, 1000);
-        }, 1000);
-    }, 500);
-}
+                if (isUsingTrial) {
+                    newBalance = currentUserBalance + commission;
+                } else {
+                    if (currentUserBalance >= price) {
+                        const afterDeduction = currentUserBalance - price;
+                        newBalance = afterDeduction + price + commission;
+                    } else {
+                        alert('Insufficient balance!');
+                        closeOrderModal();
+                        return;
+                    }
+                }
+                
+                pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Searching Offer...'; pb.style.width='50%';
+                
+                setTimeout(async()=>{
+                    pt.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting Order...'; pb.style.width='75%';
+                    
+                    setTimeout(async()=>{
+                        await updateUserBalance(user.uid, newBalance, null);
+                        currentUserBalance = newBalance;
+                        await refreshBalanceDisplay();
+                        
+                        await sb.from('order_history').insert([{
+                            uid: user.uid,
+                            username: user.username,
+                            order_code: currentOrder.displayOrderCode,
+                            accommodation_name: currentOrder.accommodationName,
+                            price: price,
+                            commission: commission,
+                            rating: selectedRating,
+                            status: 'completed',
+                            date: new Date().toISOString(),
+                            used_trial: isUsingTrial
+                        }]);
+                        
+                        await loadUserData();
+                        
+                        pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
+                        setTimeout(()=>{ closeOrderModal(); }, 300);
+                    }, 1000);
+                }, 1000);
+            }, 500);
+        }
         
         document.getElementById('startNowBtn').addEventListener('click', () => openOrderModal());
         
