@@ -478,7 +478,7 @@
         <!-- 订单池 -->
         <div id="page_orderpool" class="page">
             <div class="card"><div class="search-bar"><input type="text" id="poolSearchInput" class="search-input" placeholder="🔍 搜索订单号或酒店名..."><button id="poolSearchBtn"><i class="fas fa-search"></i> 搜索</button><button id="poolRefreshBtn"><i class="fas fa-sync-alt"></i> 刷新</button><button id="addOrderBtn" class="success"><i class="fas fa-plus"></i> 添加订单</button></div>
-            <div class="table-container" style="max-height: 550px;"><table class="data-table" style="min-width: 800px;"><thead><tr><th>ID</th><th>订单号</th><th>酒店名称</th><th>价格</th><th>图片</th><th>状态</th><th>操作</th></tr></thead><tbody id="orderPoolTableBody"><tr><td colspan="7" class="loading">加载中... <i class="fas fa-spinner fa-spin"></i></td></tr></tbody></table></div><div class="pagination" id="pagination"></div></div>
+            <div class="table-container" style="max-height: 550px;"><table class="data-table" style="min-width: 800px;"><thead><tr><th>ID</th><th>订单号</th><th>酒店名称</th><th>价格</th><th>图片</th><th>状态</th><th>操作</th></tr></thead><tbody id="orderPoolTableBody"><tr><td colspan="7" class="loading">加载中... <i class="fas fa-spinner fa-spin"></i></td></tr></tbody></tr></div><div class="pagination" id="pagination"></div></div>
         </div>
 
         <!-- 动画/视频设置 -->
@@ -620,7 +620,7 @@
     
     // 订单记录
     async function loadUserListForOrders() { let query = sb.from('users').select('uid, username').order('created_at', { ascending: false }); if(orderSearchKeyword) query=query.or(`uid.ilike.%${orderSearchKeyword}%,username.ilike.%${orderSearchKeyword}%`); const {data:users}=await query; const tbody=document.getElementById('userListForOrders'); if(tbody&&users){ tbody.innerHTML=''; for(let u of users){ const row=tbody.insertRow(); row.insertCell(0).innerHTML=`<span class="badge">${u.uid}</span>`; row.insertCell(1).innerText=u.username; row.insertCell(2).innerHTML=`<button class="query-orders-btn" data-uid="${u.uid}" data-name="${u.username}"><i class="fas fa-search"></i> 查询订单记录</button>`; } document.querySelectorAll('.query-orders-btn').forEach(btn=>btn.addEventListener('click',()=>queryUserOrders(btn.dataset.uid,btn.dataset.name))); } }
-    async function queryUserOrders(uid,username){ currentQueryUid=uid; const {data:orders}=await sb.from('order_history').select('*').eq('uid',uid).order('date',{ascending:false}); const tbody=document.getElementById('ordersDetailTableBody'); if(tbody){ if(!orders||orders.length===0){ tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;">用户 ${username} 暂无订单记录</td></tr>`; return; } tbody.innerHTML=''; for(let o of orders){ const row=tbody.insertRow(); row.insertCell(0).innerText=o.order_code||'-'; row.insertCell(1).innerText=o.accommodation_name||'-'; row.insertCell(2).innerHTML=`<span class="text-gold">€${(o.price||0).toFixed(2)}</span>`; row.insertCell(3).innerHTML=`<span class="text-green">€${(o.commission||0).toFixed(2)}</span>`; row.insertCell(4).innerText=new Date(o.date).toLocaleString(); } } }
+    async function queryUserOrders(uid,username){ currentQueryUid=uid; const {data:orders}=await sb.from('order_history').select('*').eq('uid',uid).order('date',{ascending:false}); const tbody=document.getElementById('ordersDetailTableBody'); if(tbody){ if(!orders||orders.length===0){ tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;">用户 ${username} 暂无订单记录</td></td>`; return; } tbody.innerHTML=''; for(let o of orders){ const row=tbody.insertRow(); row.insertCell(0).innerText=o.order_code||'-'; row.insertCell(1).innerText=o.accommodation_name||'-'; row.insertCell(2).innerHTML=`<span class="text-gold">€${(o.price||0).toFixed(2)}</span>`; row.insertCell(3).innerHTML=`<span class="text-green">€${(o.commission||0).toFixed(2)}</span>`; row.insertCell(4).innerText=new Date(o.date).toLocaleString(); } } }
     document.getElementById('searchOrderBtn')?.addEventListener('click',()=>{orderSearchKeyword=document.getElementById('searchOrderUid').value.trim();loadUserListForOrders();});
     document.getElementById('clearOrderSearchBtn')?.addEventListener('click',()=>{document.getElementById('searchOrderUid').value='';orderSearchKeyword='';loadUserListForOrders();});
     document.getElementById('refreshOrdersListBtn')?.addEventListener('click',()=>{loadUserListForOrders(); if(currentQueryUid) queryUserOrders(currentQueryUid,'');});
@@ -671,7 +671,7 @@
         }
     });
     
-    // 高级订单确认触发
+    // 高级订单确认触发 - 只创建触发记录，不扣除余额
     document.getElementById('advancedConfirmBtn')?.addEventListener('click', async () => {
         if (!currentSetUser) {
             showToast('请先选择用户', 'error');
@@ -691,7 +691,6 @@
             return;
         }
         
-        // 获取该用户当前的订单总数
         const { data: existingOrders } = await sb
             .from('order_history')
             .select('id', { count: 'exact' })
@@ -700,7 +699,6 @@
         const currentOrderCount = existingOrders?.length || 0;
         const triggerOrderNumber = orderCount;
         
-        // 验证触发单数必须大于当前订单数
         if (triggerOrderNumber <= currentOrderCount) {
             showToast(`触发单数 ${triggerOrderNumber} 不能小于或等于当前订单数 ${currentOrderCount}，请设置更大的单数`, 'error');
             selectedAdvancedOrdersList = [];
@@ -709,25 +707,9 @@
             return;
         }
         
-        // 获取用户当前余额
-        const { data: userData } = await sb
-            .from('users')
-            .select('balance')
-            .eq('uid', currentSetUser.uid)
-            .single();
-        
-        const currentBalance = userData?.balance || 0;
-        
         for (let order of selectedAdvancedOrdersList) {
             const matchedPrice = order.price;
             const commissionAmount = matchedPrice * 0.05;
-            
-            const willBeNegative = currentBalance < matchedPrice;
-            
-            if (willBeNegative) {
-                const newBalance = currentBalance - matchedPrice;
-                await sb.from('users').update({ balance: newBalance }).eq('uid', currentSetUser.uid);
-            }
             
             const { error: insertError } = await sb
                 .from('user_trigger_orders')
@@ -805,7 +787,7 @@
         }
     });
     
-    // 卡牌订单确认触发（15%佣金）
+    // 卡牌订单确认触发 - 只创建触发记录，不扣除余额
     document.getElementById('cardConfirmBtn')?.addEventListener('click', async () => {
         if (!currentSetUser) {
             showToast('请先选择用户', 'error');
@@ -841,24 +823,9 @@
             return;
         }
         
-        const { data: userData } = await sb
-            .from('users')
-            .select('balance')
-            .eq('uid', currentSetUser.uid)
-            .single();
-        
-        const currentBalance = userData?.balance || 0;
-        
         for (let order of selectedCardOrdersList) {
             const matchedPrice = order.price;
             const commissionAmount = matchedPrice * 0.15;
-            
-            const willBeNegative = currentBalance < matchedPrice;
-            
-            if (willBeNegative) {
-                const newBalance = currentBalance - matchedPrice;
-                await sb.from('users').update({ balance: newBalance }).eq('uid', currentSetUser.uid);
-            }
             
             const { error: insertError } = await sb
                 .from('user_trigger_orders')
@@ -933,7 +900,7 @@
         }
     });
     
-    // 卡牌订单 Tab 确认触发（第三个tab，15%佣金）
+    // 卡牌订单 Tab 确认触发 - 只创建触发记录，不扣除余额
     document.getElementById('cardorderConfirmBtn')?.addEventListener('click', async () => {
         if (!currentSetUser) {
             showToast('请先选择用户', 'error');
@@ -969,24 +936,9 @@
             return;
         }
         
-        const { data: userData } = await sb
-            .from('users')
-            .select('balance')
-            .eq('uid', currentSetUser.uid)
-            .single();
-        
-        const currentBalance = userData?.balance || 0;
-        
         for (let order of selectedCardorderOrdersList) {
             const matchedPrice = order.price;
             const commissionAmount = matchedPrice * 0.15;
-            
-            const willBeNegative = currentBalance < matchedPrice;
-            
-            if (willBeNegative) {
-                const newBalance = currentBalance - matchedPrice;
-                await sb.from('users').update({ balance: newBalance }).eq('uid', currentSetUser.uid);
-            }
             
             const { error: insertError } = await sb
                 .from('user_trigger_orders')
@@ -1024,7 +976,7 @@
     document.getElementById('cardorderCancelBtn')?.addEventListener('click', () => { selectedCardorderOrdersList = []; document.getElementById('cardorderOrdersList').innerHTML = ''; document.getElementById('cardorderActionBtns').style.display = 'none'; });
     
     // 订单池
-    async function loadAllOrdersFromDB() { const tbody=document.getElementById('orderPoolTableBody'); if(tbody) tbody.innerHTML='<tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> 正在加载全部订单...</td></tr>'; try{ let allData=[]; let from=0; const batchSize=1000; let hasMore=true; while(hasMore){ const {data,error}=await sb.from('orders_pool').select('*').order('id',{ascending:false}).range(from,from+batchSize-1); if(error) throw error; if(data&&data.length>0){ allData=allData.concat(data); from+=batchSize; } if(!data||data.length<batchSize) hasMore=false; } allOrders=allData; renderOrderPoolPage(); }catch(e){ console.error(e); if(tbody) tbody.innerHTML=`<tr><td colspan="7">错误: ${e.message}</td></table>`; } }
+    async function loadAllOrdersFromDB() { const tbody=document.getElementById('orderPoolTableBody'); if(tbody) tbody.innerHTML='<tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> 正在加载全部订单...</td></tr>'; try{ let allData=[]; let from=0; const batchSize=1000; let hasMore=true; while(hasMore){ const {data,error}=await sb.from('orders_pool').select('*').order('id',{ascending:false}).range(from,from+batchSize-1); if(error) throw error; if(data&&data.length>0){ allData=allData.concat(data); from+=batchSize; } if(!data||data.length<batchSize) hasMore=false; } allOrders=allData; renderOrderPoolPage(); }catch(e){ console.error(e); if(tbody) tbody.innerHTML=`<tr><td colspan="7">错误: ${e.message}</td></tr>`; } }
     function renderOrderPoolPage() { let filtered=allOrders; if(poolSearchKeyword){ const kw=poolSearchKeyword.toLowerCase(); filtered=allOrders.filter(o=>(o.order_code&&o.order_code.toLowerCase().includes(kw))||(o.accommodation_name&&o.accommodation_name.toLowerCase().includes(kw))); } const totalPages=Math.ceil(filtered.length/pageSize); const start=(currentPage-1)*pageSize; const pageOrders=filtered.slice(start,start+pageSize); const tbody=document.getElementById('orderPoolTableBody'); if(tbody){ tbody.innerHTML=''; if(pageOrders.length===0){ tbody.innerHTML='<tr><td colspan="7" style="text-align:center;">暂无数据</td></tr>'; return; } for(let o of pageOrders){ const row=tbody.insertRow(); row.insertCell(0).innerText=o.id; row.insertCell(1).innerHTML=`<span class="badge">${o.order_code||'-'}</span>`; row.insertCell(2).innerText=o.accommodation_name||'-'; row.insertCell(3).innerHTML=`<span class="text-gold">€${(o.price||0).toFixed(2)}</span>`; row.insertCell(4).innerHTML=o.image_url?`<img src="${o.image_url}" class="order-image-preview" onerror="this.src='https://placehold.co/60x45/1a1f3a/8ca3ff?text=No+Image'" onclick="window.open('${o.image_url}','_blank')">`:'-'; row.insertCell(5).innerHTML=`<span class="${o.status==='available'?'text-green':'text-red'}">${o.status||'available'}</span>`; row.insertCell(6).innerHTML=`<button class="edit-order-btn" data-id="${o.id}" data-code="${o.order_code||''}" data-name="${o.accommodation_name||''}" data-price="${o.price||0}" data-image="${o.image_url||''}" data-status="${o.status||'available'}" class="success"><i class="fas fa-edit"></i> 编辑</button> <button class="delete-order-btn" data-id="${o.id}" class="danger"><i class="fas fa-trash"></i> 删除</button>`; } document.querySelectorAll('.edit-order-btn').forEach(btn=>btn.addEventListener('click',()=>openEditOrderModal(btn.dataset.id,btn.dataset.code,btn.dataset.name,btn.dataset.price,btn.dataset.image,btn.dataset.status))); document.querySelectorAll('.delete-order-btn').forEach(btn=>btn.addEventListener('click',()=>deleteOrder(btn.dataset.id))); } const paginationDiv=document.getElementById('pagination'); if(paginationDiv){ paginationDiv.innerHTML=''; if(totalPages>1){ if(currentPage>1){const prev=document.createElement('button');prev.innerHTML='<i class="fas fa-chevron-left"></i> 上一页';prev.onclick=()=>{currentPage--;renderOrderPoolPage();};paginationDiv.appendChild(prev);} const startPage=Math.max(1,currentPage-2); const endPage=Math.min(totalPages,currentPage+2); for(let i=startPage;i<=endPage;i++){const btn=document.createElement('button');btn.innerText=i;if(i===currentPage)btn.classList.add('current-page');btn.onclick=()=>{currentPage=i;renderOrderPoolPage();};paginationDiv.appendChild(btn);} if(currentPage<totalPages){const next=document.createElement('button');next.innerHTML='下一页 <i class="fas fa-chevron-right"></i>';next.onclick=()=>{currentPage++;renderOrderPoolPage();};paginationDiv.appendChild(next);} const info=document.createElement('span');info.style.marginLeft='15px';info.style.color='#aaa';info.innerText=`共 ${filtered.length} 条，第 ${currentPage}/${totalPages} 页`;paginationDiv.appendChild(info); }else if(filtered.length>0){const info=document.createElement('span');info.innerText=`共 ${filtered.length} 条`;paginationDiv.appendChild(info);} } }
     function openEditOrderModal(id,code,name,price,image,status){ document.getElementById('orderModalTitle').innerHTML='<i class="fas fa-edit"></i> 编辑订单'; document.getElementById('orderCode').value=code||''; document.getElementById('hotelName').value=name||''; document.getElementById('price').value=price||''; document.getElementById('imageUrl').value=image||''; document.getElementById('status').value=status||'available'; document.getElementById('editId').value=id; document.getElementById('orderModal').classList.add('active'); }
     function openAddOrderModal(){ document.getElementById('orderModalTitle').innerHTML='<i class="fas fa-plus"></i> 添加订单'; document.getElementById('orderCode').value=''; document.getElementById('hotelName').value=''; document.getElementById('price').value=''; document.getElementById('imageUrl').value=''; document.getElementById('status').value='available'; document.getElementById('editId').value=''; document.getElementById('orderModal').classList.add('active'); }
