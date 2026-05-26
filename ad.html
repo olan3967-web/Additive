@@ -664,96 +664,105 @@
     
     // 加载用户已设置的触发订单
     async function loadUserTriggerOrders(uid) {
-        const container = document.getElementById('triggerOrdersContainer');
-        if (!container) return;
+    const container = document.getElementById('triggerOrdersContainer');
+    if (!container) return;
+    
+    // ✅ 先清空并显示加载状态
+    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">加载中...</div>';
+    
+    try {
+        const { data: orders, error } = await sb
+            .from('user_trigger_orders')
+            .select('*')
+            .eq('uid', uid)
+            .eq('status', 'pending')
+            .order('trigger_order_number', { ascending: true });
         
-        try {
-            const { data: orders, error } = await sb
-                .from('user_trigger_orders')
-                .select('*')
-                .eq('uid', uid)
-                .eq('status', 'pending')
-                .order('trigger_order_number', { ascending: true });
+        if (error) {
+            console.error('加载触发订单失败:', error);
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff8888;">加载失败</div>';
+            return;
+        }
+        
+        if (!orders || orders.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">暂无已设置的订单</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        for (let order of orders) {
+            const orderDiv = document.createElement('div');
+            orderDiv.className = 'trigger-order-item';
             
-            if (error) {
-                console.error('加载触发订单失败:', error);
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff8888;">加载失败</div>';
-                return;
-            }
+            const orderTypeText = order.order_type === 'advanced' ? '高级订单' : '卡牌订单';
+            const commissionText = order.order_type === 'advanced' ? '5%' : '15%';
             
-            if (!orders || orders.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">暂无已设置的订单</div>';
-                return;
-            }
-            
-            container.innerHTML = '';
-            for (let order of orders) {
-                const orderDiv = document.createElement('div');
-                orderDiv.className = 'trigger-order-item';
-                
-                const orderTypeText = order.order_type === 'advanced' ? '高级订单' : '卡牌订单';
-                const commissionText = order.order_type === 'advanced' ? '5%' : '15%';
-                
-                orderDiv.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <div style="flex: 1;">
-                            <div><strong style="color: #8ca3ff;">${orderTypeText}</strong> <span class="badge">第 ${order.trigger_order_number} 单触发</span></div>
-                            <div style="font-size: 12px; margin-top: 5px;">
-                                目标价格: €${parseFloat(order.target_price).toFixed(2)} | 
-                                匹配订单: ${order.matched_order_name || '-'} (€${parseFloat(order.matched_price || 0).toFixed(2)}) | 
-                                佣金: ${commissionText}
-                            </div>
-                            <div style="font-size: 11px; color: #aaa; margin-top: 3px;">
-                                创建时间: ${new Date(order.created_at).toLocaleString()}
-                            </div>
+            orderDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div style="flex: 1;">
+                        <div><strong style="color: #8ca3ff;">${orderTypeText}</strong> <span class="badge">第 ${order.trigger_order_number} 单触发</span></div>
+                        <div style="font-size: 12px; margin-top: 5px;">
+                            目标价格: €${parseFloat(order.target_price).toFixed(2)} | 
+                            匹配订单: ${order.matched_order_name || '-'} (€${parseFloat(order.matched_price || 0).toFixed(2)}) | 
+                            佣金: ${commissionText}
                         </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="edit-trigger-btn" data-id="${order.id}" style="background: #2f6b3a; padding: 5px 12px; font-size: 12px;"><i class="fas fa-edit"></i> 修改</button>
-                            <button class="delete-trigger-btn" data-id="${order.id}" style="background: #7a2f2f; padding: 5px 12px; font-size: 12px;"><i class="fas fa-trash"></i> 删除</button>
+                        <div style="font-size: 11px; color: #aaa; margin-top: 3px;">
+                            创建时间: ${new Date(order.created_at).toLocaleString()}
                         </div>
                     </div>
-                `;
-                container.appendChild(orderDiv);
-            }
-            
-            // 绑定修改按钮事件
-            document.querySelectorAll('.edit-trigger-btn').forEach(btn => {
-                btn.addEventListener('click', () => editTriggerOrder(btn.dataset.id));
-            });
-            
-            // 绑定删除按钮事件
-            document.querySelectorAll('.delete-trigger-btn').forEach(btn => {
-                btn.addEventListener('click', () => deleteTriggerOrder(btn.dataset.id));
-            });
-            
-        } catch (e) {
-            console.error('加载触发订单异常:', e);
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff8888;">加载失败</div>';
+                    <div style="display: flex; gap: 8px;">
+                        <button class="edit-trigger-btn" data-id="${order.id}" style="background: #2f6b3a; padding: 5px 12px; font-size: 12px;"><i class="fas fa-edit"></i> 修改</button>
+                        <button class="delete-trigger-btn" data-id="${order.id}" style="background: #7a2f2f; padding: 5px 12px; font-size: 12px;"><i class="fas fa-trash"></i> 删除</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(orderDiv);
         }
+        
+        // 重新绑定按钮事件
+        document.querySelectorAll('.edit-trigger-btn').forEach(btn => {
+            btn.onclick = () => editTriggerOrder(btn.dataset.id);
+        });
+        document.querySelectorAll('.delete-trigger-btn').forEach(btn => {
+            btn.onclick = () => deleteTriggerOrder(btn.dataset.id);
+        });
+        
+    } catch (e) {
+        console.error('加载触发订单异常:', e);
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff8888;">加载失败</div>';
     }
+}
     
     // 删除触发订单
-    async function deleteTriggerOrder(orderId) {
-        showConfirm('确认删除', '确定要删除这个触发订单吗？删除后用户将不会收到该订单。', async () => {
-            try {
-                const { error } = await sb
-                    .from('user_trigger_orders')
-                    .delete()
-                    .eq('id', parseInt(orderId));
-                
-                if (error) {
-                    showToast('删除失败: ' + error.message, 'error');
-                } else {
-                    showToast('删除成功', 'success');
+async function deleteTriggerOrder(orderId) {
+    showConfirm('确认删除', '确定要删除这个触发订单吗？删除后用户将不会收到该订单。', async () => {
+        try {
+            const { error } = await sb
+                .from('user_trigger_orders')
+                .delete()
+                .eq('id', parseInt(orderId));
+            
+            if (error) {
+                showToast('删除失败: ' + error.message, 'error');
+            } else {
+                showToast('删除成功', 'success');
+                // 强制刷新列表 - 先清空容器再重新加载
+                const container = document.getElementById('triggerOrdersContainer');
+                if (container) {
+                    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">加载中...</div>';
+                }
+                // 延迟一下再加载，确保数据库操作完成
+                setTimeout(async () => {
                     if (currentSetUser) {
                         await loadUserTriggerOrders(currentSetUser.uid);
                     }
-                }
-            } catch (e) {
-                showToast('删除失败: ' + e.message, 'error');
+                }, 500);
             }
-        });
-    }
+        } catch (e) {
+            showToast('删除失败: ' + e.message, 'error');
+        }
+    });
+}
     
     // 修改触发订单弹窗
     async function editTriggerOrder(orderId) {
