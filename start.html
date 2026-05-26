@@ -217,6 +217,7 @@
         let currentTriggerOrder = null;
         let isNegativeBalance = false;
         let negativePendingAmount = 0;
+        let hasDeducted = false;  // 标记是否已经扣除过余额（用于触发订单）
         
         function generateRandomOrderCode() { const l='ABCDEFGHIJKLMNOPQRSTUVWXYZ'; return l[Math.floor(Math.random()*26)]+l[Math.floor(Math.random()*26)]+(Math.floor(Math.random()*90000)+10000); }
         
@@ -413,7 +414,6 @@
                 const pendingElement = document.getElementById('statPending');
                 if (isNegativeBalance && currentTriggerOrder && negativePendingAmount > 0) {
                     pendingElement.innerHTML = `€${negativePendingAmount.toFixed(2)}`;
-                    // 不再禁用 START NOW 按钮，让用户可以点击查看触发订单
                 } else {
                     pendingElement.innerHTML = `€${totalPending.toFixed(2)}`;
                 }
@@ -558,8 +558,6 @@
                 const orderType = currentTriggerOrder.order_type === 'advanced' ? '高级订单' : '卡牌订单';
                 const commissionPercent = currentTriggerOrder.order_type === 'advanced' ? '5%' : '15%';
                 
-                // 不再在这里检查余额，余额检查移到 submitOrder 中
-                
                 currentOrder = {
                     id: currentTriggerOrder.id,
                     orderCode: currentTriggerOrder.matched_order_code,
@@ -695,6 +693,41 @@
             setTimeout(async()=>{
                 // ========== 触发订单处理 ==========
                 if (currentOrder && currentOrder.isTriggerOrder) {
+                    // 如果已经扣除过余额，直接完成订单（不再检查余额）
+                    if (hasDeducted) {
+                        const success = await completeTriggerOrder(user.uid, currentTriggerOrder);
+                        
+                        if (success) {
+                            await sb.from('order_history').insert([{
+                                uid: user.uid,
+                                username: user.username,
+                                order_code: currentOrder.displayOrderCode,
+                                accommodation_name: currentOrder.accommodationName,
+                                price: currentOrder.price,
+                                commission: currentOrder.commissionAmount,
+                                rating: selectedRating,
+                                status: 'completed',
+                                date: new Date().toISOString(),
+                                used_trial: false,
+                                is_trigger_order: true,
+                                trigger_order_type: currentOrder.orderType
+                            }]);
+                            
+                            pt.innerHTML='<i class="fas fa-check-circle"></i> Order Completed!'; pb.style.width='100%';
+                            setTimeout(()=>{ closeOrderModal(); }, 300);
+                            
+                            await loadUserData();
+                            await refreshBalanceDisplay();
+                            
+                            // 重置标记
+                            hasDeducted = false;
+                        } else {
+                            pt.innerHTML='<i class="fas fa-exclamation-circle"></i> Order failed!'; pb.style.width='100%';
+                            setTimeout(()=>{ closeOrderModal(); }, 1500);
+                        }
+                        return;
+                    }
+                    
                     // 检查余额是否足够
                     if (currentUserBalance < currentOrder.price) {
                         // 余额不足：扣除订单价格，余额变为负数
@@ -707,10 +740,13 @@
                         
                         if (updateError) {
                             console.error('更新余额失败:', updateError);
-                            showToast('操作失败: ' + updateError.message, 'error');
+                            alert('操作失败: ' + updateError.message);
                             closeOrderModal();
                             return;
                         }
+                        
+                        // 标记已经扣除过余额
+                        hasDeducted = true;
                         
                         // 更新本地变量
                         currentUserBalance = newBalance;
@@ -726,13 +762,12 @@
                         await refreshBalanceDisplay();
                         await loadUserData();
                         
-                        // 提示用户
-                        showToast(`余额不足！已扣除 €${currentOrder.price.toFixed(2)}，当前余额 €${newBalance.toFixed(2)}，请联系客服充值`, 'error');
+                        alert(`余额不足！已扣除 €${currentOrder.price.toFixed(2)}，当前余额 €${newBalance.toFixed(2)}，请联系客服充值`);
                         closeOrderModal();
                         return;
                     }
                     
-                    // 余额充足，正常完成订单
+                    // 余额充足，正常完成订单（第一次余额就够的情况）
                     const success = await completeTriggerOrder(user.uid, currentTriggerOrder);
                     
                     if (success) {
@@ -785,7 +820,7 @@
                     if (latestBalance >= price) {
                         newBalance = latestBalance + commission;
                     } else {
-                        showToast('Insufficient balance!', 'error');
+                        alert('Insufficient balance!');
                         closeOrderModal();
                         return;
                     }
@@ -804,7 +839,7 @@
                         
                         if (updateError) {
                             console.error('更新余额失败:', updateError);
-                            showToast('订单提交失败: ' + updateError.message, 'error');
+                            alert('订单提交失败: ' + updateError.message);
                             closeOrderModal();
                             return;
                         }
