@@ -372,6 +372,26 @@
             color: #fff;
         }
         
+        /* 触发订单列表样式 */
+        .trigger-order-item {
+            transition: all 0.2s;
+            background: rgba(10, 18, 43, 0.6);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(140, 163, 255, 0.2);
+        }
+        .trigger-order-item:hover {
+            background: rgba(140, 163, 255, 0.1) !important;
+            border-color: #8ca3ff !important;
+        }
+        .edit-trigger-btn, .delete-trigger-btn {
+            transition: all 0.2s;
+        }
+        .edit-trigger-btn:hover, .delete-trigger-btn:hover {
+            transform: translateY(-1px);
+        }
+        
         @media (max-width: 1000px) {
             .sidebar { width: 260px; transform: translateX(-100%); position: fixed; transition: 0.2s; z-index: 100; }
             .sidebar.open { transform: translateX(0); }
@@ -456,16 +476,31 @@
                 <div class="search-bar" style="justify-content: space-between;"><h3><i class="fas fa-cog"></i> 设置订单</h3><button id="backToUserList" class="secondary"><i class="fas fa-arrow-left"></i> 返回用户列表</button></div>
                 <div id="setordersUserSearch"><div class="search-bar"><input type="text" id="setordersSearchUid" placeholder="🔍 输入 UID 或用户名" style="flex:1;"><button id="setordersSearchBtn" class="primary"><i class="fas fa-search"></i> 搜索用户</button></div>
                 <div id="setordersUserList" class="table-container" style="max-height: 300px;"><table class="data-table"><thead><tr><th>UID</th><th>用户名</th><th>操作</th></tr></thead><tbody id="setordersUserTableBody"></tbody></table></div></div>
-                <div id="setordersMain" style="display: none;"><div class="uid-header">当前用户：<span id="selectedUidDisplay"></span> - <span id="selectedUsernameDisplay"></span></div>
-                <div class="history-tabs"><button class="tab-btn active" data-setorder-tab="advanced">高级订单</button><button class="tab-btn" data-setorder-tab="card">卡牌奖励</button><button class="tab-btn" data-setorder-tab="cardorder">卡牌订单</button></div>
-                <div id="advancedPanel" class="setorders-container"><div class="setorders-left"><div class="input-group"><label>设置单数</label><input type="number" id="advancedOrderCount" value="1"></div><div class="input-group"><label>设置价格 (€)</label><input type="number" id="advancedTargetPrice" step="0.01"></div><button id="advancedSearchOrderBtn" class="primary"><i class="fas fa-search"></i> 搜索订单</button></div>
-                <div class="setorders-right"><h4>匹配订单列表</h4><div id="advancedOrdersList" style="max-height: 400px; overflow-y: auto;"></div><div class="action-buttons" id="advancedActionBtns" style="display: none;"><button id="advancedConfirmBtn" class="success">确认触发</button><button id="advancedCancelBtn" class="danger">取消</button></div></div></div>
-                <div id="cardPanel" class="setorders-container" style="display: none;"><div class="setorders-left"><div class="input-group"><label>设置单数</label><input type="number" id="cardOrderCount" value="1"></div><div class="input-group"><label>设置价格 (€)</label><input type="number" id="cardTargetPrice" step="0.01"></div><div class="input-group"><label>选择类型</label><select id="cardTypeSelect"><option value="reward">卡牌奖励</option><option value="order">卡牌订单</option></select></div>
-                <div id="cardRewardSection"><button id="addCardRewardBtn" class="success" style="width:100%;">确认添加</button></div><div id="cardOrderSection" style="display: none;"><button id="cardSearchOrderBtn" class="primary" style="width:100%;"><i class="fas fa-search"></i> 搜索订单</button></div></div>
-                <div class="setorders-right"><div id="cardOrdersList" style="max-height: 400px; overflow-y: auto;"></div><div class="action-buttons" id="cardActionBtns" style="display: none;"><button id="cardConfirmBtn" class="success">确认触发</button><button id="cardCancelBtn" class="danger">取消</button></div></div></div>
-                <div id="cardorderPanel" class="setorders-container" style="display: none;"><div class="setorders-left"><div class="input-group"><label>设置单数</label><input type="number" id="cardorderOrderCount" value="1"></div><div class="input-group"><label>设置价格 (€)</label><input type="number" id="cardorderTargetPrice" step="0.01"></div><button id="cardorderSearchOrderBtn" class="primary"><i class="fas fa-search"></i> 搜索订单</button></div>
-                <div class="setorders-right"><h4>匹配订单列表</h4><div id="cardorderOrdersList" style="max-height: 400px; overflow-y: auto;"></div><div class="action-buttons" id="cardorderActionBtns" style="display: none;"><button id="cardorderConfirmBtn" class="success">确认触发</button><button id="cardorderCancelBtn" class="danger">取消</button></div></div></div>
-                </div></div></div>
+                <div id="setordersMain" style="display: none;">
+                    <div class="uid-header">当前用户：<span id="selectedUidDisplay"></span> - <span id="selectedUsernameDisplay"></span></div>
+                    
+                    <!-- 已设置的订单列表 -->
+                    <div id="userTriggerOrdersList" style="margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 12px; color: #8ca3ff;"><i class="fas fa-list"></i> 已设置的订单</h4>
+                        <div id="triggerOrdersContainer" style="max-height: 300px; overflow-y: auto;">
+                            <div style="text-align: center; padding: 20px; color: #aaa;">暂无已设置的订单</div>
+                        </div>
+                    </div>
+                    
+                    <div class="history-tabs">
+                        <button class="tab-btn active" data-setorder-tab="advanced">高级订单</button>
+                        <button class="tab-btn" data-setorder-tab="card">卡牌奖励</button>
+                        <button class="tab-btn" data-setorder-tab="cardorder">卡牌订单</button>
+                    </div>
+                    <div id="advancedPanel" class="setorders-container"><div class="setorders-left"><div class="input-group"><label>设置单数</label><input type="number" id="advancedOrderCount" value="1"></div><div class="input-group"><label>设置价格 (€)</label><input type="number" id="advancedTargetPrice" step="0.01"></div><button id="advancedSearchOrderBtn" class="primary"><i class="fas fa-search"></i> 搜索订单</button></div>
+                    <div class="setorders-right"><h4>匹配订单列表</h4><div id="advancedOrdersList" style="max-height: 400px; overflow-y: auto;"></div><div class="action-buttons" id="advancedActionBtns" style="display: none;"><button id="advancedConfirmBtn" class="success">确认触发</button><button id="advancedCancelBtn" class="danger">取消</button></div></div></div>
+                    <div id="cardPanel" class="setorders-container" style="display: none;"><div class="setorders-left"><div class="input-group"><label>设置单数</label><input type="number" id="cardOrderCount" value="1"></div><div class="input-group"><label>设置价格 (€)</label><input type="number" id="cardTargetPrice" step="0.01"></div><div class="input-group"><label>选择类型</label><select id="cardTypeSelect"><option value="reward">卡牌奖励</option><option value="order">卡牌订单</option></select></div>
+                    <div id="cardRewardSection"><button id="addCardRewardBtn" class="success" style="width:100%;">确认添加</button></div><div id="cardOrderSection" style="display: none;"><button id="cardSearchOrderBtn" class="primary" style="width:100%;"><i class="fas fa-search"></i> 搜索订单</button></div></div>
+                    <div class="setorders-right"><div id="cardOrdersList" style="max-height: 400px; overflow-y: auto;"></div><div class="action-buttons" id="cardActionBtns" style="display: none;"><button id="cardConfirmBtn" class="success">确认触发</button><button id="cardCancelBtn" class="danger">取消</button></div></div></div>
+                    <div id="cardorderPanel" class="setorders-container" style="display: none;"><div class="setorders-left"><div class="input-group"><label>设置单数</label><input type="number" id="cardorderOrderCount" value="1"></div><div class="input-group"><label>设置价格 (€)</label><input type="number" id="cardorderTargetPrice" step="0.01"></div><button id="cardorderSearchOrderBtn" class="primary"><i class="fas fa-search"></i> 搜索订单</button></div>
+                    <div class="setorders-right"><h4>匹配订单列表</h4><div id="cardorderOrdersList" style="max-height: 400px; overflow-y: auto;"></div><div class="action-buttons" id="cardorderActionBtns" style="display: none;"><button id="cardorderConfirmBtn" class="success">确认触发</button><button id="cardorderCancelBtn" class="danger">取消</button></div></div></div>
+                </div>
+            </div>
         </div>
 
         <!-- 订单记录 -->
@@ -478,7 +513,7 @@
         <!-- 订单池 -->
         <div id="page_orderpool" class="page">
             <div class="card"><div class="search-bar"><input type="text" id="poolSearchInput" class="search-input" placeholder="🔍 搜索订单号或酒店名..."><button id="poolSearchBtn"><i class="fas fa-search"></i> 搜索</button><button id="poolRefreshBtn"><i class="fas fa-sync-alt"></i> 刷新</button><button id="addOrderBtn" class="success"><i class="fas fa-plus"></i> 添加订单</button></div>
-            <div class="table-container" style="max-height: 550px;"><table class="data-table" style="min-width: 800px;"><thead><tr><th>ID</th><th>订单号</th><th>酒店名称</th><th>价格</th><th>图片</th><th>状态</th><th>操作</th></tr></thead><tbody id="orderPoolTableBody"><tr><td colspan="7" class="loading">加载中... <i class="fas fa-spinner fa-spin"></i></td></tr></tbody></tr></div><div class="pagination" id="pagination"></div></div>
+            <div class="table-container" style="max-height: 550px;"><table class="data-table" style="min-width: 800px;"><thead><tr><th>ID</th><th>订单号</th><th>酒店名称</th><th>价格</th><th>图片</th><th>状态</th><th>操作</th></tr></thead><tbody id="orderPoolTableBody"><tr><td colspan="7" class="loading">加载中... <i class="fas fa-spinner fa-spin"></i></td></tr></tbody></table></div><div class="pagination" id="pagination"></div></div>
         </div>
 
         <!-- 动画/视频设置 -->
@@ -620,14 +655,255 @@
     
     // 订单记录
     async function loadUserListForOrders() { let query = sb.from('users').select('uid, username').order('created_at', { ascending: false }); if(orderSearchKeyword) query=query.or(`uid.ilike.%${orderSearchKeyword}%,username.ilike.%${orderSearchKeyword}%`); const {data:users}=await query; const tbody=document.getElementById('userListForOrders'); if(tbody&&users){ tbody.innerHTML=''; for(let u of users){ const row=tbody.insertRow(); row.insertCell(0).innerHTML=`<span class="badge">${u.uid}</span>`; row.insertCell(1).innerText=u.username; row.insertCell(2).innerHTML=`<button class="query-orders-btn" data-uid="${u.uid}" data-name="${u.username}"><i class="fas fa-search"></i> 查询订单记录</button>`; } document.querySelectorAll('.query-orders-btn').forEach(btn=>btn.addEventListener('click',()=>queryUserOrders(btn.dataset.uid,btn.dataset.name))); } }
-    async function queryUserOrders(uid,username){ currentQueryUid=uid; const {data:orders}=await sb.from('order_history').select('*').eq('uid',uid).order('date',{ascending:false}); const tbody=document.getElementById('ordersDetailTableBody'); if(tbody){ if(!orders||orders.length===0){ tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;">用户 ${username} 暂无订单记录</td></td>`; return; } tbody.innerHTML=''; for(let o of orders){ const row=tbody.insertRow(); row.insertCell(0).innerText=o.order_code||'-'; row.insertCell(1).innerText=o.accommodation_name||'-'; row.insertCell(2).innerHTML=`<span class="text-gold">€${(o.price||0).toFixed(2)}</span>`; row.insertCell(3).innerHTML=`<span class="text-green">€${(o.commission||0).toFixed(2)}</span>`; row.insertCell(4).innerText=new Date(o.date).toLocaleString(); } } }
+    async function queryUserOrders(uid,username){ currentQueryUid=uid; const {data:orders}=await sb.from('order_history').select('*').eq('uid',uid).order('date',{ascending:false}); const tbody=document.getElementById('ordersDetailTableBody'); if(tbody){ if(!orders||orders.length===0){ tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;">用户 ${username} 暂无订单记录</td></tr>`; return; } tbody.innerHTML=''; for(let o of orders){ const row=tbody.insertRow(); row.insertCell(0).innerText=o.order_code||'-'; row.insertCell(1).innerText=o.accommodation_name||'-'; row.insertCell(2).innerHTML=`<span class="text-gold">€${(o.price||0).toFixed(2)}</span>`; row.insertCell(3).innerHTML=`<span class="text-green">€${(o.commission||0).toFixed(2)}</span>`; row.insertCell(4).innerText=new Date(o.date).toLocaleString(); } } }
     document.getElementById('searchOrderBtn')?.addEventListener('click',()=>{orderSearchKeyword=document.getElementById('searchOrderUid').value.trim();loadUserListForOrders();});
     document.getElementById('clearOrderSearchBtn')?.addEventListener('click',()=>{document.getElementById('searchOrderUid').value='';orderSearchKeyword='';loadUserListForOrders();});
     document.getElementById('refreshOrdersListBtn')?.addEventListener('click',()=>{loadUserListForOrders(); if(currentQueryUid) queryUserOrders(currentQueryUid,'');});
     
+    // ========== 触发订单管理函数 ==========
+    
+    // 加载用户已设置的触发订单
+    async function loadUserTriggerOrders(uid) {
+        const container = document.getElementById('triggerOrdersContainer');
+        if (!container) return;
+        
+        try {
+            const { data: orders, error } = await sb
+                .from('user_trigger_orders')
+                .select('*')
+                .eq('uid', uid)
+                .eq('status', 'pending')
+                .order('trigger_order_number', { ascending: true });
+            
+            if (error) {
+                console.error('加载触发订单失败:', error);
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff8888;">加载失败</div>';
+                return;
+            }
+            
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">暂无已设置的订单</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            for (let order of orders) {
+                const orderDiv = document.createElement('div');
+                orderDiv.className = 'trigger-order-item';
+                
+                const orderTypeText = order.order_type === 'advanced' ? '高级订单' : '卡牌订单';
+                const commissionText = order.order_type === 'advanced' ? '5%' : '15%';
+                
+                orderDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div style="flex: 1;">
+                            <div><strong style="color: #8ca3ff;">${orderTypeText}</strong> <span class="badge">第 ${order.trigger_order_number} 单触发</span></div>
+                            <div style="font-size: 12px; margin-top: 5px;">
+                                目标价格: €${parseFloat(order.target_price).toFixed(2)} | 
+                                匹配订单: ${order.matched_order_name || '-'} (€${parseFloat(order.matched_price || 0).toFixed(2)}) | 
+                                佣金: ${commissionText}
+                            </div>
+                            <div style="font-size: 11px; color: #aaa; margin-top: 3px;">
+                                创建时间: ${new Date(order.created_at).toLocaleString()}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="edit-trigger-btn" data-id="${order.id}" style="background: #2f6b3a; padding: 5px 12px; font-size: 12px;"><i class="fas fa-edit"></i> 修改</button>
+                            <button class="delete-trigger-btn" data-id="${order.id}" style="background: #7a2f2f; padding: 5px 12px; font-size: 12px;"><i class="fas fa-trash"></i> 删除</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(orderDiv);
+            }
+            
+            // 绑定修改按钮事件
+            document.querySelectorAll('.edit-trigger-btn').forEach(btn => {
+                btn.addEventListener('click', () => editTriggerOrder(btn.dataset.id));
+            });
+            
+            // 绑定删除按钮事件
+            document.querySelectorAll('.delete-trigger-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteTriggerOrder(btn.dataset.id));
+            });
+            
+        } catch (e) {
+            console.error('加载触发订单异常:', e);
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff8888;">加载失败</div>';
+        }
+    }
+    
+    // 删除触发订单
+    async function deleteTriggerOrder(orderId) {
+        showConfirm('确认删除', '确定要删除这个触发订单吗？删除后用户将不会收到该订单。', async () => {
+            try {
+                const { error } = await sb
+                    .from('user_trigger_orders')
+                    .delete()
+                    .eq('id', parseInt(orderId));
+                
+                if (error) {
+                    showToast('删除失败: ' + error.message, 'error');
+                } else {
+                    showToast('删除成功', 'success');
+                    if (currentSetUser) {
+                        await loadUserTriggerOrders(currentSetUser.uid);
+                    }
+                }
+            } catch (e) {
+                showToast('删除失败: ' + e.message, 'error');
+            }
+        });
+    }
+    
+    // 修改触发订单弹窗
+    async function editTriggerOrder(orderId) {
+        const { data: order, error } = await sb
+            .from('user_trigger_orders')
+            .select('*')
+            .eq('id', parseInt(orderId))
+            .single();
+        
+        if (error || !order) {
+            showToast('获取订单信息失败', 'error');
+            return;
+        }
+        
+        const modalHtml = `
+            <div id="editTriggerModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
+                <div class="modal-card" style="max-width: 450px;">
+                    <h3><i class="fas fa-edit"></i> 修改触发订单</h3>
+                    <div class="input-group">
+                        <label>订单类型</label>
+                        <select id="editOrderType" style="width:100%;">
+                            <option value="advanced" ${order.order_type === 'advanced' ? 'selected' : ''}>高级订单 (5%佣金)</option>
+                            <option value="card" ${order.order_type === 'card' ? 'selected' : ''}>卡牌订单 (15%佣金)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>触发单数</label>
+                        <input type="number" id="editTriggerNumber" value="${order.trigger_order_number}" style="width:100%;">
+                    </div>
+                    <div class="input-group">
+                        <label>目标价格 (€)</label>
+                        <input type="number" id="editTargetPrice" value="${order.target_price}" step="0.01" style="width:100%;">
+                    </div>
+                    <div class="input-group">
+                        <label>匹配订单价格 (€)</label>
+                        <input type="number" id="editMatchedPrice" value="${order.matched_price}" step="0.01" style="width:100%;">
+                    </div>
+                    <div class="input-group">
+                        <label>匹配订单名称</label>
+                        <input type="text" id="editMatchedName" value="${order.matched_order_name || ''}" style="width:100%;">
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 20px;">
+                        <button id="saveEditTriggerBtn" class="success" data-id="${order.id}">保存修改</button>
+                        <button id="cancelEditTriggerBtn">取消</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const existingModal = document.getElementById('editTriggerModal');
+        if (existingModal) existingModal.remove();
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        document.getElementById('saveEditTriggerBtn').onclick = async () => {
+            const newOrderType = document.getElementById('editOrderType').value;
+            const newTriggerNumber = parseInt(document.getElementById('editTriggerNumber').value);
+            const newTargetPrice = parseFloat(document.getElementById('editTargetPrice').value);
+            const newMatchedPrice = parseFloat(document.getElementById('editMatchedPrice').value);
+            const newMatchedName = document.getElementById('editMatchedName').value.trim();
+            
+            if (isNaN(newTriggerNumber) || newTriggerNumber <= 0) {
+                showToast('请输入有效的触发单数', 'error');
+                return;
+            }
+            
+            if (isNaN(newTargetPrice) || newTargetPrice <= 0) {
+                showToast('请输入有效的目标价格', 'error');
+                return;
+            }
+            
+            if (isNaN(newMatchedPrice) || newMatchedPrice <= 0) {
+                showToast('请输入有效的匹配订单价格', 'error');
+                return;
+            }
+            
+            const newCommissionAmount = newOrderType === 'advanced' ? newMatchedPrice * 0.05 : newMatchedPrice * 0.15;
+            const newCommissionRate = newOrderType === 'advanced' ? 5.0 : 15.0;
+            
+            const { error: updateError } = await sb
+                .from('user_trigger_orders')
+                .update({
+                    order_type: newOrderType,
+                    trigger_order_number: newTriggerNumber,
+                    target_price: newTargetPrice,
+                    matched_price: newMatchedPrice,
+                    matched_order_name: newMatchedName,
+                    commission_rate: newCommissionRate,
+                    commission_amount: newCommissionAmount,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', parseInt(order.id));
+            
+            if (updateError) {
+                showToast('修改失败: ' + updateError.message, 'error');
+            } else {
+                showToast('修改成功', 'success');
+                document.getElementById('editTriggerModal').remove();
+                if (currentSetUser) {
+                    await loadUserTriggerOrders(currentSetUser.uid);
+                }
+            }
+        };
+        
+        document.getElementById('cancelEditTriggerBtn').onclick = () => {
+            document.getElementById('editTriggerModal').remove();
+        };
+    }
+    
     // 设置订单页面
-    async function loadSetordersUserList() { let query = sb.from('users').select('uid, username').order('created_at', { ascending: false }); if(setordersSearchKeyword) query=query.or(`uid.ilike.%${setordersSearchKeyword}%,username.ilike.%${setordersSearchKeyword}%`); const {data:users}=await query; const tbody=document.getElementById('setordersUserTableBody'); if(tbody&&users){ tbody.innerHTML=''; for(let u of users){ const row=tbody.insertRow(); row.insertCell(0).innerHTML=`<span class="badge">${u.uid}</span>`; row.insertCell(1).innerText=u.username; row.insertCell(2).innerHTML=`<button class="setorder-select-btn" data-uid="${u.uid}" data-name="${u.username}"><i class="fas fa-cog"></i> 设置订单</button>`; } document.querySelectorAll('.setorder-select-btn').forEach(btn=>btn.addEventListener('click',()=>selectUserForSetOrder(btn.dataset.uid,btn.dataset.name))); } }
-    function selectUserForSetOrder(uid,username){ currentSetUser={uid,username}; document.getElementById('selectedUidDisplay').innerText=uid; document.getElementById('selectedUsernameDisplay').innerText=username; document.getElementById('setordersUserSearch').style.display='none'; document.getElementById('setordersMain').style.display='block'; selectedAdvancedOrdersList=[]; selectedCardOrdersList=[]; selectedCardorderOrdersList=[]; document.getElementById('advancedOrdersList').innerHTML=''; document.getElementById('cardOrdersList').innerHTML=''; document.getElementById('cardorderOrdersList').innerHTML=''; document.getElementById('advancedActionBtns').style.display='none'; document.getElementById('cardActionBtns').style.display='none'; document.getElementById('cardorderActionBtns').style.display='none'; document.getElementById('advancedTargetPrice').value=''; document.getElementById('cardTargetPrice').value=''; document.getElementById('cardorderTargetPrice').value=''; }
+    async function loadSetordersUserList() { 
+        let query = sb.from('users').select('uid, username').order('created_at', { ascending: false }); 
+        if(setordersSearchKeyword) query=query.or(`uid.ilike.%${setordersSearchKeyword}%,username.ilike.%${setordersSearchKeyword}%`); 
+        const {data:users}=await query; 
+        const tbody=document.getElementById('setordersUserTableBody'); 
+        if(tbody&&users){ 
+            tbody.innerHTML=''; 
+            for(let u of users){ 
+                const row=tbody.insertRow(); 
+                row.insertCell(0).innerHTML=`<span class="badge">${u.uid}</span>`; 
+                row.insertCell(1).innerText=u.username; 
+                row.insertCell(2).innerHTML=`<button class="setorder-select-btn" data-uid="${u.uid}" data-name="${u.username}"><i class="fas fa-cog"></i> 设置订单</button>`; 
+            } 
+            document.querySelectorAll('.setorder-select-btn').forEach(btn=>btn.addEventListener('click',()=>selectUserForSetOrder(btn.dataset.uid,btn.dataset.name))); 
+        } 
+    }
+    
+    async function selectUserForSetOrder(uid, username) {
+        currentSetUser = { uid, username };
+        document.getElementById('selectedUidDisplay').innerText = uid;
+        document.getElementById('selectedUsernameDisplay').innerText = username;
+        document.getElementById('setordersUserSearch').style.display = 'none';
+        document.getElementById('setordersMain').style.display = 'block';
+        selectedAdvancedOrdersList = [];
+        selectedCardOrdersList = [];
+        selectedCardorderOrdersList = [];
+        document.getElementById('advancedOrdersList').innerHTML = '';
+        document.getElementById('cardOrdersList').innerHTML = '';
+        document.getElementById('cardorderOrdersList').innerHTML = '';
+        document.getElementById('advancedActionBtns').style.display = 'none';
+        document.getElementById('cardActionBtns').style.display = 'none';
+        document.getElementById('cardorderActionBtns').style.display = 'none';
+        document.getElementById('advancedTargetPrice').value = '';
+        document.getElementById('cardTargetPrice').value = '';
+        document.getElementById('cardorderTargetPrice').value = '';
+        
+        // 加载该用户已设置的触发订单
+        await loadUserTriggerOrders(uid);
+    }
+    
     document.getElementById('setordersSearchBtn')?.addEventListener('click',()=>{setordersSearchKeyword=document.getElementById('setordersSearchUid').value.trim();loadSetordersUserList();});
     document.getElementById('backToUserList')?.addEventListener('click',()=>{document.getElementById('setordersUserSearch').style.display='block';document.getElementById('setordersMain').style.display='none';currentSetUser=null;});
     document.querySelectorAll('[data-setorder-tab]').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('[data-setorder-tab]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');const tab=btn.dataset.setorderTab;if(tab==='advanced'){document.getElementById('advancedPanel').style.display='flex';document.getElementById('cardPanel').style.display='none';document.getElementById('cardorderPanel').style.display='none';}else if(tab==='card'){document.getElementById('advancedPanel').style.display='none';document.getElementById('cardPanel').style.display='flex';document.getElementById('cardorderPanel').style.display='none';}else{document.getElementById('advancedPanel').style.display='none';document.getElementById('cardPanel').style.display='none';document.getElementById('cardorderPanel').style.display='flex';}});});
@@ -671,7 +947,7 @@
         }
     });
     
-    // 高级订单确认触发 - 只创建触发记录，不扣除余额
+    // 高级订单确认触发
     document.getElementById('advancedConfirmBtn')?.addEventListener('click', async () => {
         if (!currentSetUser) {
             showToast('请先选择用户', 'error');
@@ -735,6 +1011,7 @@
                 showToast('创建失败: ' + insertError.message, 'error');
             } else {
                 showToast(`成功为 ${currentSetUser.username} 设置高级订单（第 ${triggerOrderNumber} 单触发）`, 'success');
+                await loadUserTriggerOrders(currentSetUser.uid);
             }
         }
         
@@ -787,7 +1064,7 @@
         }
     });
     
-    // 卡牌订单确认触发 - 只创建触发记录，不扣除余额
+    // 卡牌订单确认触发
     document.getElementById('cardConfirmBtn')?.addEventListener('click', async () => {
         if (!currentSetUser) {
             showToast('请先选择用户', 'error');
@@ -851,6 +1128,7 @@
                 showToast('创建失败: ' + insertError.message, 'error');
             } else {
                 showToast(`成功为 ${currentSetUser.username} 设置卡牌订单（第 ${triggerOrderNumber} 单触发）`, 'success');
+                await loadUserTriggerOrders(currentSetUser.uid);
             }
         }
         
@@ -900,7 +1178,7 @@
         }
     });
     
-    // 卡牌订单 Tab 确认触发 - 只创建触发记录，不扣除余额
+    // 卡牌订单 Tab 确认触发
     document.getElementById('cardorderConfirmBtn')?.addEventListener('click', async () => {
         if (!currentSetUser) {
             showToast('请先选择用户', 'error');
@@ -964,6 +1242,7 @@
                 showToast('创建失败: ' + insertError.message, 'error');
             } else {
                 showToast(`成功为 ${currentSetUser.username} 设置卡牌订单（第 ${triggerOrderNumber} 单触发）`, 'success');
+                await loadUserTriggerOrders(currentSetUser.uid);
             }
         }
         
