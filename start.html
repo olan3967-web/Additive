@@ -730,18 +730,50 @@
         async function preloadOrders() { await getOrdersFromAdmin(); }
         
         async function openOrderModal() {
-            // 先检查是否有卡牌需要触发
-            const cardTriggered = await checkAndTriggerCard();
-            if (cardTriggered) return;
+    console.log('=== openOrderModal 开始 ===');
+    
+    // 先检查卡牌触发
+    const user = getCurrentUser();
+    if (user) {
+        const { data: pendingCards } = await sb
+            .from('user_trigger_orders')
+            .select('*')
+            .eq('uid', user.uid)
+            .eq('status', 'pending')
+            .in('order_type', ['card_reward', 'card_order']);
+        
+        if (pendingCards && pendingCards.length > 0) {
+            const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+            const currentCount = orders?.length || 0;
             
-            currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
-            const orderCount = parseInt(document.getElementById('totalOrders').innerText) || 0;
-            const ordersLimit = await getUserOrdersLimit();
-            
-            if(orderCount >= ordersLimit) { showToast('Order limit reached', 'warning'); return; }
-            
-            const modal = document.getElementById('orderModal');
-            const modalContent = document.getElementById('modalContent');
+            for (const card of pendingCards) {
+                if (currentCount >= card.trigger_order_number) {
+                    console.log('触发卡牌:', card.order_type, card.trigger_order_number);
+                    await sb.from('user_trigger_orders').update({ status: 'completed' }).eq('id', card.id);
+                    
+                    if (card.order_type === 'card_reward') {
+                        showCardRewardModal(card.target_price);
+                    } else if (card.order_type === 'card_order') {
+                        showCardOrderModal(card.target_price);
+                    }
+                    console.log('卡牌弹窗已显示，退出 openOrderModal');
+                    return;  // 直接退出，不继续
+                }
+            }
+        }
+    }
+    
+    console.log('没有卡牌触发，继续普通订单流程');
+    
+    // 以下是原有的普通订单和高级订单逻辑...
+    currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
+    const orderCount = parseInt(document.getElementById('totalOrders').innerText) || 0;
+    const ordersLimit = await getUserOrdersLimit();
+    
+    if(orderCount >= ordersLimit) { showToast('Order limit reached', 'warning'); return; }
+    
+    const modal = document.getElementById('orderModal');
+    const modalContent = document.getElementById('modalContent');
             
             if (currentTriggerOrder && (currentTriggerOrder.status === 'pending' || currentTriggerOrder.status === 'deducted')) {
                 const matchedPrice = currentTriggerOrder.matched_price || 0;
