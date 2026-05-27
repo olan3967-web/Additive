@@ -406,19 +406,185 @@ body {
         z-index: 1002;
     }
     
+    /* ========== 新的悬浮菜单动画 ========== */
     .sidebar {
         position: fixed;
-        left: -280px;
-        top: 0;
-        transition: left 0.3s ease;
-        z-index: 1001;
-        width: 280px;
-        height: 100%;
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        width: auto;
+        max-width: 300px;
+        height: auto;
         background: rgba(10, 18, 43, 0.98);
+        backdrop-filter: blur(20px);
+        border-radius: 32px;
+        border: 1px solid rgba(201, 176, 149, 0.3);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        padding: 28px 20px;
+        overflow-y: auto;
+        z-index: 1001;
+        transition: none;
+        opacity: 0;
+        transform: translateY(100%);
+        visibility: hidden;
     }
     
+    /* 菜单打开时的状态 */
     .sidebar.open {
-        left: 0;
+        opacity: 1;
+        transform: translateY(0);
+        visibility: visible;
+        animation: slideUpFloat 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+    }
+    
+    /* 从下方渐变上升入场动画 */
+    @keyframes slideUpFloat {
+        0% {
+            opacity: 0;
+            transform: translateY(100%);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* 菜单项入场动画 - 渐变上升 */
+    .sidebar.open .sidebar-top,
+    .sidebar.open .sidebar-upgrade-card {
+        animation: itemFadeUp 0.3s ease-out forwards;
+    }
+    
+    .sidebar.open .nav-item {
+        animation: itemFadeUp 0.3s ease-out forwards;
+        opacity: 0;
+    }
+    
+    /* 菜单项逐个延迟入场 */
+    .sidebar.open .nav-item:nth-child(1) { animation-delay: 0.05s; }
+    .sidebar.open .nav-item:nth-child(2) { animation-delay: 0.1s; }
+    .sidebar.open .nav-item:nth-child(3) { animation-delay: 0.15s; }
+    .sidebar.open .nav-item:nth-child(4) { animation-delay: 0.2s; }
+    .sidebar.open .nav-item:nth-child(5) { animation-delay: 0.25s; }
+    .sidebar.open .nav-item:nth-child(6) { animation-delay: 0.3s; }
+    .sidebar.open .nav-item:nth-child(7) { animation-delay: 0.35s; }
+    .sidebar.open .nav-item:nth-child(8) { animation-delay: 0.4s; }
+    
+    .sidebar.open .sidebar-upgrade-card {
+        animation-delay: 0.45s;
+    }
+    
+    @keyframes itemFadeUp {
+        0% {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Logo 入场动画 */
+    .sidebar.open .logo {
+        animation: logoFadeUp 0.3s ease-out forwards;
+        opacity: 0;
+        animation-delay: 0s;
+    }
+    
+    @keyframes logoFadeUp {
+        0% {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* ========== upgrade 卡片样式（确保脉冲发光生效） ========== */
+    .sidebar-upgrade-card {
+        margin-top: 20px;
+        padding: 24px 20px;
+        background: rgba(20, 30, 55, 0.6);
+        backdrop-filter: blur(12px);
+        border-radius: 20px;
+        text-align: left;
+        border: 1px solid rgba(201, 176, 149, 0.3);
+        flex-shrink: 0;
+        /* 脉冲发光动画 - 持续呼吸效果 */
+        animation: pulseGlow 2.5s ease-in-out infinite;
+    }
+    
+    .sidebar-upgrade-card:hover {
+        animation: none;
+        transform: translateY(-2px);
+    }
+    
+    /* 脉冲发光动画定义 */
+    @keyframes pulseGlow {
+        0% { 
+            box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); 
+            border-color: rgba(201, 176, 149, 0.2); 
+        }
+        50% { 
+            box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12); 
+            border-color: rgba(201, 176, 149, 0.5); 
+        }
+        100% { 
+            box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); 
+            border-color: rgba(201, 176, 149, 0.2); 
+        }
+    }
+    
+    .sidebar-premium-badge {
+        display: inline-block;
+        background: #C9B095;
+        border: 1px solid #C9B095;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #0A122B;
+        letter-spacing: 1px;
+        margin-bottom: 14px;
+    }
+    
+    .sidebar-upgrade-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 12px;
+    }
+    
+    .sidebar-upgrade-desc {
+        font-size: 12px;
+        color: #7a85a5;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+    
+    .sidebar-upgrade-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(201, 176, 149, 0.1);
+        border: 1px solid rgba(201, 176, 149, 0.4);
+        padding: 8px 20px;
+        border-radius: 30px;
+        text-decoration: none;
+        color: #C9B095;
+        font-weight: 600;
+        font-size: 13px;
+        transition: 0.2s;
+    }
+    
+    .sidebar-upgrade-btn:hover {
+        background: rgba(201, 176, 149, 0.2);
+        color: #ffd700;
+        transform: translateX(2px);
     }
     
     .menu-overlay {
@@ -434,13 +600,35 @@ body {
         margin-top: 30px;
     }
 
-.welcome-header {
-    padding-left: 16px;
-    padding-right: 16px;
-}
+    .welcome-header {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
     
     /* 手机版菜单项垂直排列 */
     .nav {
         flex-direction: column;
+    }
+}
+
+/* 强制手机版 upgrade 卡片发光 - 放在文件最底部 */
+@media (max-width: 768px) {
+    .sidebar-upgrade-card {
+        animation: pulseGlow 2.5s ease-in-out infinite !important;
+    }
+    
+    @keyframes pulseGlow {
+        0% { 
+            box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); 
+            border-color: rgba(201, 176, 149, 0.2); 
+        }
+        50% { 
+            box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12); 
+            border-color: rgba(201, 176, 149, 0.5); 
+        }
+        100% { 
+            box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); 
+            border-color: rgba(201, 176, 149, 0.2); 
+        }
     }
 }
