@@ -87,7 +87,7 @@
             const password = document.getElementById('adminPassword').value;
             if (password === ADMIN_PASSWORD) {
                 localStorage.setItem('admin_logged_in', 'true');
-                window.location.href = 'admin-all-in-one.html';
+                window.location.href = 'ad.html';
             } else {
                 document.getElementById('errorMsg').innerText = 'Invalid password';
             }
