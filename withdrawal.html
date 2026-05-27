@@ -496,34 +496,63 @@
     }
 
     function showVerifyingLoading() {
-        const step1 = document.getElementById('step1Container');
-        const step2 = document.getElementById('step2Container');
-        const step3 = document.getElementById('step3Container');
-        const step4 = document.getElementById('step4Container');
-        if (step1) step1.style.display = 'none';
-        if (step2) step2.style.display = 'none';
-        if (step3) step3.style.display = 'none';
-        if (step4) step4.style.display = 'none';
-        const loading = document.getElementById('loadingOverlay');
-        if (loading) loading.classList.add('active');
-        const indicator = document.getElementById('stepIndicator');
-        if (indicator) indicator.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> VERIFYING';
-        
-        const checkInterval = setInterval(async () => {
-            if (!currentUser) return;
-            const stillPending = await isKycUnderReview(currentUser.uid);
-            const nowVerified = await getUserKycStatus(currentUser.uid);
-            if (nowVerified) {
-                clearInterval(checkInterval);
-                if (loading) loading.classList.remove('active');
-                await loadUserData();
-            } else if (!stillPending && !nowVerified) {
-                clearInterval(checkInterval);
-                if (loading) loading.classList.remove('active');
-                location.reload();
-            }
-        }, 5000);
+    const step1 = document.getElementById('step1Container');
+    const step2 = document.getElementById('step2Container');
+    const step3 = document.getElementById('step3Container');
+    const step4 = document.getElementById('step4Container');
+    if (step1) step1.style.display = 'none';
+    if (step2) step2.style.display = 'none';
+    if (step3) step3.style.display = 'none';
+    if (step4) step4.style.display = 'none';
+    
+    // 创建或显示 loading 弹窗（带关闭按钮）
+    let loadingOverlay = document.getElementById('loadingOverlay');
+    if (!loadingOverlay) {
+        const overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = `
+            <div class="loading-content">
+                <i class="fas fa-spinner"></i>
+                <p>Verifying Your Document...</p>
+                <p style="font-size: 12px; color: #a0a8c0; margin-top: 8px;">Please wait, this may take a few minutes</p>
+                <button id="closeLoadingBtn" class="step-btn" style="margin-top: 20px; background: rgba(255,255,255,0.1); color: #fff;">Close</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        loadingOverlay = overlay;
     }
+    
+    loadingOverlay.classList.add('active');
+    
+    // 关闭按钮事件
+    const closeBtn = document.getElementById('closeLoadingBtn');
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            window.location.href = 'dashboard.html';
+        };
+    }
+    
+    const indicator = document.getElementById('stepIndicator');
+    if (indicator) indicator.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> VERIFYING';
+    
+    // 定期检查审核状态
+    if (window.kycCheckInterval) clearInterval(window.kycCheckInterval);
+    window.kycCheckInterval = setInterval(async () => {
+        if (!currentUser) return;
+        const stillPending = await isKycUnderReview(currentUser.uid);
+        const nowVerified = await getUserKycStatus(currentUser.uid);
+        if (nowVerified) {
+            clearInterval(window.kycCheckInterval);
+            if (loadingOverlay) loadingOverlay.classList.remove('active');
+            await loadUserData();
+        } else if (!stillPending && !nowVerified) {
+            clearInterval(window.kycCheckInterval);
+            if (loadingOverlay) loadingOverlay.classList.remove('active');
+            location.reload();
+        }
+    }, 5000);
+}
 
     // 加载用户数据并决定显示哪个步骤
     async function loadUserData() {
@@ -543,17 +572,16 @@
         isKycVerified = await getUserKycStatus(currentUser.uid);
         isKycPending = await isKycUnderReview(currentUser.uid);
         
-        if (isKycVerified) {
-            if (boundAddress) {
-                showStep4();
-            } else {
-                showStep2();
-            }
-        } else if (isKycPending) {
-            showVerifyingLoading();
-        } else {
-            showStep1();
-        }
+        // 在 loadUserData 函数中确认这部分代码正确
+if (isKycVerified) {
+    // 验证通过后必须从 Step 2 开始，让用户重新选择支付方式和绑定地址
+    showStep2();
+}
+} else if (isKycPending) {
+    showVerifyingLoading();  // 确保这行正确执行
+} else {
+    showStep1();
+}
     }
 
     // 证件选择UI

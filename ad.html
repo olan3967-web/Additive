@@ -446,7 +446,9 @@
         <!-- 用户管理 -->
         <div id="page_users" class="page">
             <div class="card"><div class="search-bar"><input type="text" id="searchUserInput" class="search-input" placeholder="🔍 搜索 UID 或用户名..."><button id="searchUserBtn"><i class="fas fa-search"></i> 搜索</button><button id="refreshUserBtn"><i class="fas fa-sync-alt"></i> 刷新</button><button id="addUserBtn" class="success"><i class="fas fa-user-plus"></i> 创建用户</button></div>
-            <div class="table-container"><table class="data-table"><thead><tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>操作</th></tr></thead><tbody id="usersTableBody"></tbody></table></div></div>
+            <div class="table-container"><table class="data-table"><thead>
+    <tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>钱包地址</th><th>操作</th></tr>
+</thead><tbody id="usersTableBody"></tbody></table></div></div>
         </div>
 
         <!-- KYC Verification 管理 -->
@@ -659,7 +661,15 @@
                 row.insertCell(5).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount||0).toFixed(2)}</span>`;
                 row.insertCell(6).innerHTML = `${userOrders}/${ordersLimit} <button class="reset-orders-btn" data-uid="${u.uid}"><i class="fas fa-undo-alt"></i> 重置</button>`;
                 row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}"><option value="1" ${u.vip_level==1?'selected':''}>Normal</option><option value="2" ${u.vip_level==2?'selected':''}>VIP</option><option value="3" ${u.vip_level==3?'selected':''}>SVIP</option></select>`;
-                row.insertCell(8).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}"><i class="fas fa-plus-circle"></i> 充值</button> <button class="cut-btn" data-uid="${u.uid}"><i class="fas fa-minus-circle"></i> 扣款</button> <button class="edit-user-btn" data-uid="${u.uid}" data-phone="${u.phone||''}" data-username="${u.username}" data-pin="${u.pin||''}"><i class="fas fa-edit"></i> 修改</button> <button class="delete-btn" data-uid="${u.uid}"><i class="fas fa-trash"></i> 删除</button>`;
+row.insertCell(8).innerHTML = `
+    <div style="font-size: 11px; max-width: 150px; overflow: hidden; text-overflow: ellipsis;">
+        ${u.withdrawal_address ? `<span title="${u.withdrawal_address}">${u.withdrawal_address.substring(0, 12)}...</span><br><small style="color:#8ca3ff;">${u.withdrawal_address_type || 'N/A'}</small>` : '<span style="color:#aaa;">Not bound</span>'}
+    </div>
+    <button class="edit-address-btn" data-uid="${u.uid}" data-address="${u.withdrawal_address || ''}" data-type="${u.withdrawal_address_type || ''}" style="background:#2f6b3a; margin-top:5px; padding:2px 8px; font-size:10px;"><i class="fas fa-edit"></i> 修改</button>
+`;
+
+// 操作列（原第9列，现在是第10列）
+row.insertCell(9).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}"><i class="fas fa-plus-circle"></i> 充值</button> <button class="cut-btn" data-uid="${u.uid}"><i class="fas fa-minus-circle"></i> 扣款</button> <button class="edit-user-btn" data-uid="${u.uid}" data-phone="${u.phone||''}" data-username="${u.username}" data-pin="${u.pin||''}"><i class="fas fa-edit"></i> 修改</button> <button class="delete-btn" data-uid="${u.uid}"><i class="fas fa-trash"></i> 删除</button>`;
             }
             document.querySelectorAll('.vip-select').forEach(sel => sel.addEventListener('change', () => updateVip(sel.dataset.uid, sel.value)));
             document.querySelectorAll('.deposit-btn').forEach(btn => btn.addEventListener('click', () => depositBalance(btn.dataset.uid)));
@@ -667,12 +677,67 @@
             document.querySelectorAll('.edit-user-btn').forEach(btn => btn.addEventListener('click', () => openEditUserModal(btn.dataset.uid, btn.dataset.phone, btn.dataset.username, btn.dataset.pin)));
             document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => delUser(btn.dataset.uid)));
             document.querySelectorAll('.reset-orders-btn').forEach(btn => btn.addEventListener('click', () => resetUserOrders(btn.dataset.uid)));
+document.querySelectorAll('.edit-address-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEditAddressModal(btn.dataset.uid, btn.dataset.address, btn.dataset.type));
+});
         }
     }
     async function resetUserOrders(uid) { showConfirm('确认重置', '重置后该用户订单数将归0，订单记录将被删除，是否继续？', async () => { await sb.from('order_history').delete().eq('uid', uid); showToast('订单已重置', 'success'); loadUsers(); }); }
     async function depositBalance(uid) { showPrompt('充值金额', '请输入充值金额 (€)', async amt => { const amount = parseFloat(amt) || 0; if(amount<=0){showToast('请输入有效金额','error');return;} const {data:user}=await sb.from('users').select('balance, username').eq('uid',uid).single(); const newBalance=(user.balance||0)+amount; await sb.from('users').update({balance:newBalance}).eq('uid',uid); await sb.from('deposits').insert([{uid,username:user.username,amount:amount,type:'manual',created_at:new Date().toISOString()}]); loadUsers(); loadDashboard(); showToast(`充值 €${amount} 成功`,'success'); }); }
     async function cutBalance(uid){ showPrompt('扣款金额', '请输入扣款金额 (€)', async amt => { const amount = parseFloat(amt); if(!amount||amount<=0){showToast('请输入有效金额','error');return;} const {data:user}=await sb.from('users').select('balance').eq('uid',uid).single(); if((user.balance||0)<amount){showToast('余额不足','error');return;} await sb.from('users').update({balance:(user.balance||0)-amount}).eq('uid',uid); loadUsers(); loadDashboard(); showToast(`-€${amount}`,'success'); }); }
     function openEditUserModal(uid, phone, username, pin) { const modalHtml = `<div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1;"><div class="modal-card"><h3><i class="fas fa-edit"></i> 修改用户信息 - ${escapeHtml(username)}</h3><div><label>Phone Number</label><input type="tel" id="editPhone" value="${escapeHtml(phone||'')}" style="width:100%; margin:10px 0; padding:10px;"></div><div><label>Login Password</label><input type="password" id="editPassword" placeholder="留空则不修改" style="width:100%; margin:10px 0; padding:10px;"><small>留空表示不修改密码</small></div><div><label>Withdrawal PIN (4 digits)</label><input type="password" id="editPin" maxlength="4" value="${escapeHtml(pin||'')}" style="width:100%; margin:10px 0; padding:10px;"></div><div style="display: flex; gap: 12px; margin-top: 20px;"><button id="confirmEditBtn" class="success">保存修改</button><button id="cancelEditBtn">取消</button></div></div></div>`; const existing=document.getElementById('editUserModal'); if(existing)existing.remove(); document.body.insertAdjacentHTML('beforeend',modalHtml); const modal=document.getElementById('editUserModal'); document.getElementById('confirmEditBtn').onclick=async()=>{ const newPhone=document.getElementById('editPhone').value.trim(); const newPassword=document.getElementById('editPassword').value; const newPin=document.getElementById('editPin').value; const updateData={}; if(newPhone) updateData.phone=newPhone; if(newPassword&&newPassword.length>=4) updateData.password=newPassword; if(newPin&&newPin.length===4&&!isNaN(newPin)) updateData.pin=newPin; if(Object.keys(updateData).length===0){showToast('没有修改任何信息','warning');modal.remove();return;} const {error}=await sb.from('users').update(updateData).eq('uid',uid); if(error){showToast('修改失败: '+error.message,'error');}else{showToast('用户信息已更新','success');modal.remove();loadUsers();} }; document.getElementById('cancelEditBtn').onclick=()=>modal.remove(); }
+function openEditAddressModal(uid, currentAddress, currentType) {
+    const modalHtml = `
+        <div id="editAddressModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
+            <div class="modal-card" style="max-width: 450px;">
+                <h3><i class="fas fa-wallet"></i> 修改提款地址 - ${uid}</h3>
+                <div class="input-group">
+                    <label>地址类型</label>
+                    <select id="editAddressType" style="width:100%; padding: 10px; background: #0e132e; border: 1px solid #2e3a6e; border-radius: 12px; color: #fff;">
+                        <option value="usdt" ${currentType === 'usdt' ? 'selected' : ''}>USDT (TRC20)</option>
+                        <option value="eth" ${currentType === 'eth' ? 'selected' : ''}>ETH (ERC20)</option>
+                        <option value="btc" ${currentType === 'btc' ? 'selected' : ''}>BTC</option>
+                        <option value="usdc" ${currentType === 'usdc' ? 'selected' : ''}>USDC</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>钱包地址</label>
+                    <input type="text" id="editAddressValue" value="${escapeHtml(currentAddress)}" style="width:100%; padding: 10px; background: #0e132e; border: 1px solid #2e3a6e; border-radius: 12px; color: #fff;" placeholder="请输入钱包地址">
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button id="saveAddressBtn" class="success" data-uid="${uid}">保存修改</button>
+                    <button id="cancelAddressBtn">取消</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const existing = document.getElementById('editAddressModal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    document.getElementById('saveAddressBtn').onclick = async () => {
+        const addressType = document.getElementById('editAddressType').value;
+        const address = document.getElementById('editAddressValue').value.trim();
+        
+        const { error } = await sb.from('users').update({ 
+            withdrawal_address: address || null,
+            withdrawal_address_type: address ? addressType : null
+        }).eq('uid', uid);
+        
+        if (error) {
+            showToast('修改失败: ' + error.message, 'error');
+        } else {
+            showToast('提款地址已更新', 'success');
+            document.getElementById('editAddressModal').remove();
+            loadUsers(); // 刷新列表
+        }
+    };
+    
+    document.getElementById('cancelAddressBtn').onclick = () => {
+        document.getElementById('editAddressModal').remove();
+    };
+}
     async function updateVip(uid,level){ const {error}=await sb.from('users').update({vip_level:parseInt(level)}).eq('uid',uid); if(error){showToast('VIP更新失败: '+error.message,'error');}else{showToast('VIP已更新','success');loadUsers();} }
     async function delUser(uid){ showConfirm('确认删除', '永久删除用户？此操作不可恢复', async () => { await sb.from('users').delete().eq('uid',uid); await sb.from('order_history').delete().eq('uid',uid); await sb.from('deposits').delete().eq('uid',uid); await sb.from('withdrawals').delete().eq('uid',uid); loadUsers(); loadDashboard(); showToast('已删除','success'); }); }
     document.getElementById('searchUserBtn')?.addEventListener('click',()=>{searchKeyword=document.getElementById('searchUserInput').value;loadUsers();});
