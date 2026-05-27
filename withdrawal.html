@@ -15,7 +15,6 @@
         .page-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; }
         .step-indicator { font-size: 12px; color: #C9B095; background: rgba(201,176,149,0.15); padding: 4px 12px; border-radius: 30px; }
         
-        /* 4 Steps 样式 */
         .step-container {
             background: rgba(20, 30, 55, 0.6);
             backdrop-filter: blur(10px);
@@ -35,7 +34,6 @@
         }
         .step-title i { font-size: 22px; }
         
-        /* 证件选择卡片 */
         .docs-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -60,7 +58,6 @@
         .doc-card h4 { font-size: 14px; margin-bottom: 6px; }
         .doc-card p { font-size: 10px; color: #a0a8c0; }
         
-        /* 上传区域 */
         .upload-area {
             background: rgba(0, 0, 0, 0.3);
             border: 2px dashed rgba(201, 176, 149, 0.3);
@@ -109,7 +106,6 @@
         }
         .step-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        /* 支付方式卡片 */
         .payment-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -136,7 +132,6 @@
         .payment-card p { font-size: 10px; color: #a0a8c0; }
         .payment-card .disabled-tag { font-size: 9px; color: #ff8888; margin-top: 6px; display: block; }
         
-        /* 地址卡片 */
         .address-cards {
             display: flex;
             gap: 16px;
@@ -171,7 +166,6 @@
         }
         .address-input:focus { border-color: #C9B095; outline: none; }
         
-        /* Loading 弹窗 */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -216,18 +210,6 @@
             100% { transform: rotate(360deg); }
         }
         
-        .verify-badge {
-            background: rgba(74, 222, 128, 0.15);
-            border: 1px solid #4ade80;
-            border-radius: 30px;
-            padding: 6px 16px;
-            font-size: 12px;
-            color: #4ade80;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
         @media (max-width: 768px) {
             .docs-grid, .payment-grid { grid-template-columns: 1fr; }
             .address-cards { flex-direction: column; }
@@ -236,7 +218,7 @@
     </style>
 </head>
 <body>
-    <div class="menu-overlay" onclick="closeMenu()"></div>
+    <div class="menu-overlay" onclick="window.closeMenu && window.closeMenu()"></div>
 
     <div class="app">
         <aside class="sidebar" id="sidebar">
@@ -261,7 +243,7 @@
         </aside>
 
         <main class="main" style="max-width: 700px;">
-            <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
+            <div class="menu-toggle" id="menuToggleBtn" onclick="window.toggleMenu && window.toggleMenu()">
                 <i class="fas fa-bars"></i>
             </div>
 
@@ -380,445 +362,353 @@
                     <i class="fas fa-spinner"></i>
                     <p>Verifying Your Document...</p>
                     <p style="font-size: 12px; color: #a0a8c0; margin-top: 8px;">Please wait, this may take a few minutes</p>
+                    <button id="closeLoadingBtn" class="step-btn" style="margin-top: 20px; background: rgba(255,255,255,0.1); color: #fff;">Close</button>
                 </div>
             </div>
         </main>
     </div>
 
     <script>
-    // ========== 菜单函数（必须最先定义） ==========
-    window.toggleMenu = function() { 
-        const s = document.getElementById('sidebar'); 
-        const o = document.querySelector('.menu-overlay'); 
-        const m = document.getElementById('menuToggleBtn'); 
-        if (s) s.classList.toggle('open'); 
-        if (o) o.classList.toggle('active'); 
-        if (m) m.classList.toggle('hidden'); 
-    };
-    
-    window.closeMenu = function() { 
-        const s = document.getElementById('sidebar'); 
-        const o = document.querySelector('.menu-overlay'); 
-        const m = document.getElementById('menuToggleBtn'); 
-        if (s) s.classList.remove('open'); 
-        if (o) o.classList.remove('active'); 
-        if (m) m.classList.remove('hidden'); 
-    };
-    
-    // 全局变量
-    let currentUser = null;
-    let currentUserBalance = 0;
-    let selectedDocType = null;
-    let uploadedImages = { front: null, back: null };
-    let selectedMethod = null;
-    let selectedAddressType = null;
-    let boundAddress = null;
-    let isKycVerified = false;
-    let isKycPending = false;
-    let currentStep = 1;
-
-    // 获取用户KYC状态
-    async function getUserKycStatus(uid) {
-        const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
-        if (error && error.code !== 'PGRST116') console.error('获取KYC状态失败:', error);
-        return data?.is_verified || false;
-    }
-
-    // 获取用户KYC是否正在审核中
-    async function isKycUnderReview(uid) {
-        const { data, error } = await sb.from('kyc_verifications').select('status').eq('uid', uid).eq('status', 'pending').limit(1);
-        if (error) return false;
-        return data && data.length > 0;
-    }
-
-    // 获取用户已绑定的地址
-    async function getUserBoundAddress(uid) {
-        const { data, error } = await sb.from('users').select('withdrawal_address, withdrawal_address_type').eq('uid', uid).single();
-        if (error) return null;
-        return data?.withdrawal_address || null;
-    }
-
-    // 步骤显示函数
-    function showStep1() {
-        currentStep = 1;
-        const step1 = document.getElementById('step1Container');
-        const step2 = document.getElementById('step2Container');
-        const step3 = document.getElementById('step3Container');
-        const step4 = document.getElementById('step4Container');
-        if (step1) step1.style.display = 'block';
-        if (step2) step2.style.display = 'none';
-        if (step3) step3.style.display = 'none';
-        if (step4) step4.style.display = 'none';
-        const indicator = document.getElementById('stepIndicator');
-        if (indicator) indicator.innerHTML = '<i class="fas fa-circle"></i> STEP 1 OF 4';
-    }
-
-    function showStep2() {
-        currentStep = 2;
-        const step1 = document.getElementById('step1Container');
-        const step2 = document.getElementById('step2Container');
-        const step3 = document.getElementById('step3Container');
-        const step4 = document.getElementById('step4Container');
-        if (step1) step1.style.display = 'none';
-        if (step2) step2.style.display = 'block';
-        if (step3) step3.style.display = 'none';
-        if (step4) step4.style.display = 'none';
-        const indicator = document.getElementById('stepIndicator');
-        if (indicator) indicator.innerHTML = '<i class="fas fa-circle"></i> STEP 2 OF 4';
-    }
-
-    function showStep3() {
-        currentStep = 3;
-        const step1 = document.getElementById('step1Container');
-        const step2 = document.getElementById('step2Container');
-        const step3 = document.getElementById('step3Container');
-        const step4 = document.getElementById('step4Container');
-        if (step1) step1.style.display = 'none';
-        if (step2) step2.style.display = 'none';
-        if (step3) step3.style.display = 'block';
-        if (step4) step4.style.display = 'none';
-        const indicator = document.getElementById('stepIndicator');
-        if (indicator) indicator.innerHTML = '<i class="fas fa-circle"></i> STEP 3 OF 4';
-    }
-
-    function showStep4() {
-        currentStep = 4;
-        const step1 = document.getElementById('step1Container');
-        const step2 = document.getElementById('step2Container');
-        const step3 = document.getElementById('step3Container');
-        const step4 = document.getElementById('step4Container');
-        if (step1) step1.style.display = 'none';
-        if (step2) step2.style.display = 'none';
-        if (step3) step3.style.display = 'none';
-        if (step4) step4.style.display = 'block';
-        const indicator = document.getElementById('stepIndicator');
-        if (indicator) indicator.innerHTML = '<i class="fas fa-circle"></i> STEP 4 OF 4';
-    }
-
-    function showVerifyingLoading() {
-    const step1 = document.getElementById('step1Container');
-    const step2 = document.getElementById('step2Container');
-    const step3 = document.getElementById('step3Container');
-    const step4 = document.getElementById('step4Container');
-    if (step1) step1.style.display = 'none';
-    if (step2) step2.style.display = 'none';
-    if (step3) step3.style.display = 'none';
-    if (step4) step4.style.display = 'none';
-    
-    // 创建或显示 loading 弹窗（带关闭按钮）
-    let loadingOverlay = document.getElementById('loadingOverlay');
-    if (!loadingOverlay) {
-        const overlay = document.createElement('div');
-        overlay.id = 'loadingOverlay';
-        overlay.className = 'loading-overlay';
-        overlay.innerHTML = `
-            <div class="loading-content">
-                <i class="fas fa-spinner"></i>
-                <p>Verifying Your Document...</p>
-                <p style="font-size: 12px; color: #a0a8c0; margin-top: 8px;">Please wait, this may take a few minutes</p>
-                <button id="closeLoadingBtn" class="step-btn" style="margin-top: 20px; background: rgba(255,255,255,0.1); color: #fff;">Close</button>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-        loadingOverlay = overlay;
-    }
-    
-    loadingOverlay.classList.add('active');
-    
-    // 关闭按钮事件
-    const closeBtn = document.getElementById('closeLoadingBtn');
-    if (closeBtn) {
-        closeBtn.onclick = () => {
-            window.location.href = 'dashboard.html';
+        // ========== 菜单函数（挂载到 window） ==========
+        window.toggleMenu = function() { 
+            const s = document.getElementById('sidebar'); 
+            const o = document.querySelector('.menu-overlay'); 
+            const m = document.getElementById('menuToggleBtn'); 
+            if (s) s.classList.toggle('open'); 
+            if (o) o.classList.toggle('active'); 
+            if (m) m.classList.toggle('hidden'); 
         };
-    }
-    
-    const indicator = document.getElementById('stepIndicator');
-    if (indicator) indicator.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> VERIFYING';
-    
-    // 定期检查审核状态
-    if (window.kycCheckInterval) clearInterval(window.kycCheckInterval);
-    window.kycCheckInterval = setInterval(async () => {
-        if (!currentUser) return;
-        const stillPending = await isKycUnderReview(currentUser.uid);
-        const nowVerified = await getUserKycStatus(currentUser.uid);
-        if (nowVerified) {
-            clearInterval(window.kycCheckInterval);
-            if (loadingOverlay) loadingOverlay.classList.remove('active');
-            await loadUserData();
-        } else if (!stillPending && !nowVerified) {
-            clearInterval(window.kycCheckInterval);
-            if (loadingOverlay) loadingOverlay.classList.remove('active');
-            location.reload();
+        
+        window.closeMenu = function() { 
+            const s = document.getElementById('sidebar'); 
+            const o = document.querySelector('.menu-overlay'); 
+            const m = document.getElementById('menuToggleBtn'); 
+            if (s) s.classList.remove('open'); 
+            if (o) o.classList.remove('active'); 
+            if (m) m.classList.remove('hidden'); 
+        };
+        
+        // 全局变量
+        let currentUser = null;
+        let currentUserBalance = 0;
+        let selectedDocType = null;
+        let uploadedImages = { front: null, back: null };
+        let selectedMethod = null;
+        let selectedAddressType = null;
+        let boundAddress = null;
+        let isKycVerified = false;
+        let isKycPending = false;
+
+        // 获取用户KYC状态
+        async function getUserKycStatus(uid) {
+            const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
+            if (error && error.code !== 'PGRST116') console.error('获取KYC状态失败:', error);
+            return data?.is_verified || false;
         }
-    }, 5000);
-}
 
-    // 加载用户数据并决定显示哪个步骤
-    async function loadUserData() {
-        currentUser = getCurrentUser();
-        if (!currentUser) { window.location.href = 'signin.html'; return; }
-        
-        const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
-        if (userData) {
-            currentUserBalance = userData.balance || 0;
-            const balanceEl = document.getElementById('availableBalance');
-            const hintEl = document.getElementById('availableHint');
-            if (balanceEl) balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
-            if (hintEl) hintEl.innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
-            boundAddress = userData.withdrawal_address || null;
+        // 获取用户KYC是否正在审核中
+        async function isKycUnderReview(uid) {
+            const { data, error } = await sb.from('kyc_verifications').select('status').eq('uid', uid).eq('status', 'pending').limit(1);
+            if (error) return false;
+            return data && data.length > 0;
         }
-        
-        isKycVerified = await getUserKycStatus(currentUser.uid);
-        isKycPending = await isKycUnderReview(currentUser.uid);
-        
-        // 在 loadUserData 函数中确认这部分代码正确
-if (isKycVerified) {
-    // 验证通过后必须从 Step 2 开始，让用户重新选择支付方式和绑定地址
-    showStep2();
-}
-} else if (isKycPending) {
-    showVerifyingLoading();  // 确保这行正确执行
-} else {
-    showStep1();
-}
-    }
 
-    // 证件选择UI
-    function initDocSelection() {
-        const cards = document.querySelectorAll('.doc-card');
-        cards.forEach(card => {
-            card.addEventListener('click', () => {
-                cards.forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                selectedDocType = card.dataset.docType;
-                updateUploadArea();
-            });
-        });
-    }
-
-    function updateUploadArea() {
-        const uploadArea = document.getElementById('uploadArea');
-        if (!uploadArea) return;
-        
-        if (selectedDocType === 'passport') {
-            uploadArea.innerHTML = `
-                <div class="upload-area" id="uploadFront">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <div>Click to upload Passport</div>
-                    <div class="hint">Supported: JPG, PNG, PDF (Max 10MB)</div>
-                </div>
-            `;
-            initUpload('front', 'passport');
-        } else if (selectedDocType === 'resident_permit') {
-            uploadArea.innerHTML = `
-                <div class="upload-area" id="uploadFront">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <div>Click to upload Resident Permit</div>
-                    <div class="hint">Supported: JPG, PNG, PDF (Max 10MB)</div>
-                </div>
-            `;
-            initUpload('front', 'resident_permit');
-        } else if (selectedDocType === 'national_id') {
-            uploadArea.innerHTML = `
-                <div class="upload-row">
-                    <div class="upload-item" id="uploadFront">
-                        <i class="fas fa-id-card"></i>
-                        <div class="label">Front Side</div>
-                        <div class="status" id="frontStatus">Not uploaded</div>
-                    </div>
-                    <div class="upload-item" id="uploadBack">
-                        <i class="fas fa-id-card"></i>
-                        <div class="label">Back Side</div>
-                        <div class="status" id="backStatus">Not uploaded</div>
-                    </div>
-                </div>
-            `;
-            initUpload('front', 'national_id_front');
-            initUpload('back', 'national_id_back');
+        // 加载用户数据
+        async function loadUserData() {
+            currentUser = getCurrentUser();
+            if (!currentUser) { window.location.href = 'signin.html'; return; }
+            
+            const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
+            if (userData) {
+                currentUserBalance = userData.balance || 0;
+                const balanceEl = document.getElementById('availableBalance');
+                const hintEl = document.getElementById('availableHint');
+                if (balanceEl) balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
+                if (hintEl) hintEl.innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
+                boundAddress = userData.withdrawal_address || null;
+            }
+            
+            isKycVerified = await getUserKycStatus(currentUser.uid);
+            isKycPending = await isKycUnderReview(currentUser.uid);
+            
+            if (isKycVerified) {
+                showStep2();
+            } else if (isKycPending) {
+                showVerifyingLoading();
+            } else {
+                showStep1();
+            }
         }
-    }
 
-    async function uploadImage(file, type) {
-        const fileName = `kyc/${currentUser.uid}/${Date.now()}_${type}.${file.name.split('.').pop()}`;
-        const { error } = await sb.storage.from('kyc-documents').upload(fileName, file);
-        if (error) { showToast('Upload failed: ' + error.message, 'error'); return null; }
-        const { data: urlData } = sb.storage.from('kyc-documents').getPublicUrl(fileName);
-        return urlData.publicUrl;
-    }
+        function showStep1() {
+            document.getElementById('step1Container').style.display = 'block';
+            document.getElementById('step2Container').style.display = 'none';
+            document.getElementById('step3Container').style.display = 'none';
+            document.getElementById('step4Container').style.display = 'none';
+            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 1 OF 4';
+        }
 
-    function initUpload(side, docTypeKey) {
-        const element = document.getElementById(`upload${side.charAt(0).toUpperCase() + side.slice(1)}`);
-        if (!element) return;
-        element.addEventListener('click', () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*,application/pdf';
-            input.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                showToast('Uploading...', 'info');
-                const url = await uploadImage(file, docTypeKey);
-                if (url) {
-                    uploadedImages[side] = url;
-                    if (side === 'front') {
-                        const statusEl = document.getElementById('frontStatus');
-                        if (statusEl) statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Uploaded';
-                        element.classList.add('has-image');
-                    } else {
-                        const statusEl = document.getElementById('backStatus');
-                        if (statusEl) statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Uploaded';
-                        element.classList.add('has-image');
-                    }
-                    showToast('Upload successful!', 'success');
+        function showStep2() {
+            document.getElementById('step1Container').style.display = 'none';
+            document.getElementById('step2Container').style.display = 'block';
+            document.getElementById('step3Container').style.display = 'none';
+            document.getElementById('step4Container').style.display = 'none';
+            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 2 OF 4';
+        }
+
+        function showStep3() {
+            document.getElementById('step1Container').style.display = 'none';
+            document.getElementById('step2Container').style.display = 'none';
+            document.getElementById('step3Container').style.display = 'block';
+            document.getElementById('step4Container').style.display = 'none';
+            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 3 OF 4';
+        }
+
+        function showStep4() {
+            document.getElementById('step1Container').style.display = 'none';
+            document.getElementById('step2Container').style.display = 'none';
+            document.getElementById('step3Container').style.display = 'none';
+            document.getElementById('step4Container').style.display = 'block';
+            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 4 OF 4';
+        }
+
+        function showVerifyingLoading() {
+            document.getElementById('step1Container').style.display = 'none';
+            document.getElementById('step2Container').style.display = 'none';
+            document.getElementById('step3Container').style.display = 'none';
+            document.getElementById('step4Container').style.display = 'none';
+            
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.add('active');
+            
+            const closeBtn = document.getElementById('closeLoadingBtn');
+            if (closeBtn) {
+                closeBtn.onclick = () => {
+                    window.location.href = 'dashboard.html';
+                };
+            }
+            
+            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-spinner fa-pulse"></i> VERIFYING';
+            
+            if (window.kycCheckInterval) clearInterval(window.kycCheckInterval);
+            window.kycCheckInterval = setInterval(async () => {
+                if (!currentUser) return;
+                const stillPending = await isKycUnderReview(currentUser.uid);
+                const nowVerified = await getUserKycStatus(currentUser.uid);
+                if (nowVerified) {
+                    clearInterval(window.kycCheckInterval);
+                    loadingOverlay.classList.remove('active');
+                    await loadUserData();
+                } else if (!stillPending && !nowVerified) {
+                    clearInterval(window.kycCheckInterval);
+                    loadingOverlay.classList.remove('active');
+                    location.reload();
                 }
-            };
-            input.click();
-        });
-    }
-
-    // 提交KYC
-    async function submitKyc() {
-        if (!selectedDocType) { showToast('Please select a document type', 'error'); return; }
-        
-        let imagesToSubmit = [];
-        if (selectedDocType === 'national_id') {
-            if (!uploadedImages.front) { showToast('Please upload front side of ID', 'error'); return; }
-            if (!uploadedImages.back) { showToast('Please upload back side of ID', 'error'); return; }
-            imagesToSubmit = [
-                { type: 'national_id_front', url: uploadedImages.front },
-                { type: 'national_id_back', url: uploadedImages.back }
-            ];
-        } else {
-            if (!uploadedImages.front) { showToast('Please upload your document', 'error'); return; }
-            imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
+            }, 5000);
         }
-        
-        for (const img of imagesToSubmit) {
-            const { error } = await sb.from('kyc_verifications').insert([{
+
+        // 证件选择
+        function initDocSelection() {
+            const cards = document.querySelectorAll('.doc-card');
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    cards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedDocType = card.dataset.docType;
+                    updateUploadArea();
+                });
+            });
+        }
+
+        function updateUploadArea() {
+            const uploadArea = document.getElementById('uploadArea');
+            if (!uploadArea) return;
+            
+            if (selectedDocType === 'passport') {
+                uploadArea.innerHTML = `<div class="upload-area" id="uploadFront"><i class="fas fa-cloud-upload-alt"></i><div>Click to upload Passport</div><div class="hint">Supported: JPG, PNG, PDF (Max 10MB)</div></div>`;
+                initUpload('front', 'passport');
+            } else if (selectedDocType === 'resident_permit') {
+                uploadArea.innerHTML = `<div class="upload-area" id="uploadFront"><i class="fas fa-cloud-upload-alt"></i><div>Click to upload Resident Permit</div><div class="hint">Supported: JPG, PNG, PDF (Max 10MB)</div></div>`;
+                initUpload('front', 'resident_permit');
+            } else if (selectedDocType === 'national_id') {
+                uploadArea.innerHTML = `<div class="upload-row"><div class="upload-item" id="uploadFront"><i class="fas fa-id-card"></i><div class="label">Front Side</div><div class="status" id="frontStatus">Not uploaded</div></div><div class="upload-item" id="uploadBack"><i class="fas fa-id-card"></i><div class="label">Back Side</div><div class="status" id="backStatus">Not uploaded</div></div></div>`;
+                initUpload('front', 'national_id_front');
+                initUpload('back', 'national_id_back');
+            }
+        }
+
+        async function uploadImage(file, type) {
+            const fileName = `kyc/${currentUser.uid}/${Date.now()}_${type}.${file.name.split('.').pop()}`;
+            const { error } = await sb.storage.from('kyc-documents').upload(fileName, file);
+            if (error) { showToast('Upload failed: ' + error.message, 'error'); return null; }
+            const { data: urlData } = sb.storage.from('kyc-documents').getPublicUrl(fileName);
+            return urlData.publicUrl;
+        }
+
+        function initUpload(side, docTypeKey) {
+            const element = document.getElementById(`upload${side.charAt(0).toUpperCase() + side.slice(1)}`);
+            if (!element) return;
+            element.addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*,application/pdf';
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    showToast('Uploading...', 'info');
+                    const url = await uploadImage(file, docTypeKey);
+                    if (url) {
+                        uploadedImages[side] = url;
+                        if (side === 'front') {
+                            const statusEl = document.getElementById('frontStatus');
+                            if (statusEl) statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Uploaded';
+                            element.classList.add('has-image');
+                        } else {
+                            const statusEl = document.getElementById('backStatus');
+                            if (statusEl) statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Uploaded';
+                            element.classList.add('has-image');
+                        }
+                        showToast('Upload successful!', 'success');
+                    }
+                };
+                input.click();
+            });
+        }
+
+        // 提交KYC
+        async function submitKyc() {
+            if (!selectedDocType) { showToast('Please select a document type', 'error'); return; }
+            
+            let imagesToSubmit = [];
+            if (selectedDocType === 'national_id') {
+                if (!uploadedImages.front) { showToast('Please upload front side of ID', 'error'); return; }
+                if (!uploadedImages.back) { showToast('Please upload back side of ID', 'error'); return; }
+                imagesToSubmit = [
+                    { type: 'national_id_front', url: uploadedImages.front },
+                    { type: 'national_id_back', url: uploadedImages.back }
+                ];
+            } else {
+                if (!uploadedImages.front) { showToast('Please upload your document', 'error'); return; }
+                imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
+            }
+            
+            for (const img of imagesToSubmit) {
+                const { error } = await sb.from('kyc_verifications').insert([{
+                    uid: currentUser.uid,
+                    username: currentUser.username,
+                    document_type: img.type,
+                    image_url: img.url,
+                    status: 'pending',
+                    uploaded_at: new Date().toISOString()
+                }]);
+                if (error) { showToast('Submit failed: ' + error.message, 'error'); return; }
+            }
+            
+            showToast('Documents submitted! Verification in progress...', 'success');
+            showVerifyingLoading();
+        }
+
+        // Step 2: 支付方式选择
+        function initPaymentSelection() {
+            const cards = document.querySelectorAll('.payment-card');
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    if (card.classList.contains('disabled')) {
+                        showToast(card.querySelector('p')?.innerText || 'Not available', 'warning');
+                        return;
+                    }
+                    cards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedMethod = card.dataset.method;
+                    if (selectedMethod === 'crypto') {
+                        showStep3();
+                    }
+                });
+            });
+        }
+
+        // Step 3: 地址绑定
+        function initAddressSelection() {
+            const cards = document.querySelectorAll('.address-card');
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    cards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedAddressType = card.dataset.addressType;
+                });
+            });
+            
+            const bindBtn = document.getElementById('bindAddressBtn');
+            if (bindBtn) {
+                bindBtn.addEventListener('click', async () => {
+                    const address = document.getElementById('addressInput').value.trim();
+                    if (!selectedAddressType) { showToast('Please select address type', 'error'); return; }
+                    if (!address) { showToast('Please enter wallet address', 'error'); return; }
+                    
+                    const { error } = await sb.from('users').update({ 
+                        withdrawal_address: address,
+                        withdrawal_address_type: selectedAddressType 
+                    }).eq('uid', currentUser.uid);
+                    
+                    if (error) { showToast('Failed to bind address: ' + error.message, 'error'); return; }
+                    
+                    boundAddress = address;
+                    showToast('Address bound successfully!', 'success');
+                    showStep4();
+                });
+            }
+        }
+
+        // Step 4: 提款
+        async function requestWithdrawal() {
+            const amount = parseFloat(document.getElementById('amountInput').value);
+            if (isNaN(amount) || amount < 10) { showToast('Minimum withdrawal amount is €10', 'error'); return; }
+            if (amount > currentUserBalance) { showToast('Insufficient balance', 'error'); return; }
+            
+            const { data: userData } = await sb.from('users').select('withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
+            if (!userData?.withdrawal_address) { showToast('Please bind withdrawal address first', 'error'); return; }
+            
+            const newBalance = currentUserBalance - amount;
+            const { error: updateError } = await sb.from('users').update({ balance: newBalance }).eq('uid', currentUser.uid);
+            if (updateError) { showToast('Withdrawal failed: ' + updateError.message, 'error'); return; }
+            
+            const { error: withdrawalError } = await sb.from('withdrawals').insert({
                 uid: currentUser.uid,
                 username: currentUser.username,
-                document_type: img.type,
-                image_url: img.url,
+                amount: amount,
+                wallet_address: userData.withdrawal_address,
                 status: 'pending',
-                uploaded_at: new Date().toISOString()
-            }]);
-            if (error) { showToast('Submit failed: ' + error.message, 'error'); return; }
-        }
-        
-        showToast('Documents submitted! Verification in progress...', 'success');
-        showVerifyingLoading();
-    }
-
-    // Step 2: 支付方式选择
-    function initPaymentSelection() {
-        const cards = document.querySelectorAll('.payment-card');
-        cards.forEach(card => {
-            card.addEventListener('click', () => {
-                if (card.classList.contains('disabled')) {
-                    showToast(card.querySelector('p')?.innerText || 'Not available', 'warning');
-                    return;
-                }
-                cards.forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                selectedMethod = card.dataset.method;
-                if (selectedMethod === 'crypto') {
-                    showStep3();
-                }
+                request_date: new Date().toISOString()
             });
-        });
-    }
-
-    // Step 3: 地址绑定
-    function initAddressSelection() {
-        const cards = document.querySelectorAll('.address-card');
-        cards.forEach(card => {
-            card.addEventListener('click', () => {
-                cards.forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                selectedAddressType = card.dataset.addressType;
-            });
-        });
-        
-        const bindBtn = document.getElementById('bindAddressBtn');
-        if (bindBtn) {
-            bindBtn.addEventListener('click', async () => {
-                const address = document.getElementById('addressInput').value.trim();
-                if (!selectedAddressType) { showToast('Please select address type', 'error'); return; }
-                if (!address) { showToast('Please enter wallet address', 'error'); return; }
-                
-                const { error } = await sb.from('users').update({ 
-                    withdrawal_address: address,
-                    withdrawal_address_type: selectedAddressType 
-                }).eq('uid', currentUser.uid);
-                
-                if (error) { showToast('Failed to bind address: ' + error.message, 'error'); return; }
-                
-                boundAddress = address;
-                showToast('Address bound successfully!', 'success');
-                showStep4();
-            });
+            
+            if (withdrawalError) {
+                await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUser.uid);
+                showToast('Withdrawal failed: ' + withdrawalError.message, 'error');
+                return;
+            }
+            
+            currentUserBalance = newBalance;
+            if (currentUser) { currentUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(currentUser)); }
+            document.getElementById('availableBalance').innerHTML = `€${newBalance.toFixed(2)}`;
+            document.getElementById('availableHint').innerHTML = `Available: €${newBalance.toFixed(2)}`;
+            document.getElementById('amountInput').value = '';
+            showToast(`Withdrawal of €${amount.toFixed(2)} submitted successfully!`, 'success');
         }
-    }
 
-    // Step 4: 提款
-    async function requestWithdrawal() {
-        const amount = parseFloat(document.getElementById('amountInput').value);
-        if (isNaN(amount) || amount < 10) { showToast('Minimum withdrawal amount is €10', 'error'); return; }
-        if (amount > currentUserBalance) { showToast('Insufficient balance', 'error'); return; }
-        
-        const { data: userData } = await sb.from('users').select('withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
-        if (!userData?.withdrawal_address) { showToast('Please bind withdrawal address first', 'error'); return; }
-        
-        const newBalance = currentUserBalance - amount;
-        const { error: updateError } = await sb.from('users').update({ balance: newBalance }).eq('uid', currentUser.uid);
-        if (updateError) { showToast('Withdrawal failed: ' + updateError.message, 'error'); return; }
-        
-        const { error: withdrawalError } = await sb.from('withdrawals').insert({
-            uid: currentUser.uid,
-            username: currentUser.username,
-            amount: amount,
-            wallet_address: userData.withdrawal_address,
-            status: 'pending',
-            request_date: new Date().toISOString()
+        // 快速金额按钮
+        document.querySelectorAll('.quick-amount').forEach(btn => {
+            btn.addEventListener('click', () => { document.getElementById('amountInput').value = btn.dataset.value; });
         });
-        
-        if (withdrawalError) {
-            await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUser.uid);
-            showToast('Withdrawal failed: ' + withdrawalError.message, 'error');
-            return;
-        }
-        
-        currentUserBalance = newBalance;
-        if (currentUser) { currentUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(currentUser)); }
-        const balanceEl = document.getElementById('availableBalance');
-        const hintEl = document.getElementById('availableHint');
-        const amountInput = document.getElementById('amountInput');
-        if (balanceEl) balanceEl.innerHTML = `€${newBalance.toFixed(2)}`;
-        if (hintEl) hintEl.innerHTML = `Available: €${newBalance.toFixed(2)}`;
-        if (amountInput) amountInput.value = '';
-        showToast(`Withdrawal of €${amount.toFixed(2)} submitted successfully!`, 'success');
-    }
 
-    // 快速金额按钮
-    document.querySelectorAll('.quick-amount').forEach(btn => {
-        btn.addEventListener('click', () => { 
-            const input = document.getElementById('amountInput');
-            if (input) input.value = btn.dataset.value; 
-        });
-    });
-
-    // 初始化
-    (async function init() {
-        await loadUserData();
-        initDocSelection();
-        const submitBtn = document.getElementById('submitKycBtn');
-        if (submitBtn) submitBtn.addEventListener('click', submitKyc);
-        initPaymentSelection();
-        initAddressSelection();
-        const withdrawBtn = document.getElementById('withdrawBtn');
-        if (withdrawBtn) withdrawBtn.addEventListener('click', requestWithdrawal);
-    })();
-</script>
+        // 初始化
+        (async function init() {
+            await loadUserData();
+            initDocSelection();
+            document.getElementById('submitKycBtn').addEventListener('click', submitKyc);
+            initPaymentSelection();
+            initAddressSelection();
+            document.getElementById('withdrawBtn').addEventListener('click', requestWithdrawal);
+        })();
+    </script>
 </body>
 </html>
