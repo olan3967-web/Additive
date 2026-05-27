@@ -683,104 +683,197 @@
     async function createUser(){ const phone=document.getElementById('newPhone').value.trim(); const username=document.getElementById('newUsername').value.trim(); const pwd=document.getElementById('newPassword').value; if(!phone||!username||!pwd){showToast('手机号、用户名、密码必填','error');return;} const {data:exist}=await sb.from('users').select('username').eq('username',username).single(); if(exist){showToast('用户名已存在','error');return;} const {data:max}=await sb.from('users').select('uid').order('uid',{ascending:false}).limit(1); let newUid='100001'; if(max&&max.length) newUid=(parseInt(max[0].uid)+1).toString(); const inviteCode=Array(6).fill().map(()=>'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random()*36)]).join(''); const {error}=await sb.from('users').insert([{uid:newUid,phone,username,password:pwd,invite_code:inviteCode,balance:0,vip_level:1,trial_bonus_amount:0}]); if(error){showToast(error.message,'error');return;} loadUsers(); document.getElementById('addUserModal').classList.remove('active'); showToast(`用户 ${username} 创建成功`,'success'); document.getElementById('newPhone').value=''; document.getElementById('newUsername').value=''; document.getElementById('newPassword').value=''; }
     
     // ========== KYC Verification 管理 ==========
-    async function loadKycRequests() {
-        const tbody = document.getElementById('kycTableBody');
-        if (!tbody) return;
+async function loadKycRequests() {
+    const tbody = document.getElementById('kycTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">加载中... <i class="fas fa-spinner fa-spin"></i></td></tr>';
+    
+    // 获取所有 KYC 记录（包括 pending、approved、rejected），按用户和上传时间排序
+    const { data: kycList, error } = await sb
+        .from('kyc_verifications')
+        .select('*')
+        .order('uploaded_at', { ascending: false });
+    
+    if (error) {
+        console.error('获取KYC列表失败:', error);
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">加载失败</td></tr>';
+        return;
+    }
+    
+    if (!kycList || kycList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无KYC申请记录</td></tr>';
+        return;
+    }
+    
+    // 按用户分组
+    const grouped = {};
+    for (const item of kycList) {
+        if (!grouped[item.uid]) grouped[item.uid] = [];
+        grouped[item.uid].push(item);
+    }
+    
+    tbody.innerHTML = '';
+    
+    for (const uid in grouped) {
+        const userItems = grouped[uid];
+        const username = userItems[0].username || uid;
         
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">加载中... <i class="fas fa-spinner fa-spin"></i></td></tr>';
+        // 检查该用户是否已验证
+        const { data: statusData } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
+        const isVerified = statusData?.is_verified || false;
         
-        const { data: kycList, error } = await sb
-            .from('kyc_verifications')
-            .select('*')
-            .eq('status', 'pending')
-            .order('uploaded_at', { ascending: false });
+        // 分别处理 National ID 的 front 和 back，合并为一行
+        const nationalIdFront = userItems.find(i => i.document_type === 'national_id_front');
+        const nationalIdBack = userItems.find(i => i.document_type === 'national_id_back');
+        const otherDocs = userItems.filter(i => i.document_type !== 'national_id_front' && i.document_type !== 'national_id_back');
         
-        if (error) {
-            console.error('获取KYC列表失败:', error);
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">加载失败</td></tr>';
-            return;
-        }
-        
-        if (!kycList || kycList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无待审核的KYC申请</td></tr>';
-            return;
-        }
-        
-        const grouped = {};
-        for (const item of kycList) {
-            if (!grouped[item.uid]) grouped[item.uid] = [];
-            grouped[item.uid].push(item);
-        }
-        
-        tbody.innerHTML = '';
-        for (const uid in grouped) {
-            const userItems = grouped[uid];
-            const username = userItems[0].username || uid;
+        // 显示 National ID（合并 front 和 back）
+        if (nationalIdFront || nationalIdBack) {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerHTML = `<span class="badge">${uid}</span>`;
+            row.insertCell(1).innerText = username;
+            row.insertCell(2).innerHTML = `<span class="badge">National ID Card</span>`;
             
-            for (const item of userItems) {
-                const row = tbody.insertRow();
-                row.insertCell(0).innerHTML = `<span class="badge">${item.id}</span>`;
-                row.insertCell(1).innerHTML = `<span class="badge">${item.uid}</span>`;
-                row.insertCell(2).innerText = username;
-                
-                let docTypeName = '';
-                if (item.document_type === 'passport') docTypeName = 'Passport';
-                else if (item.document_type === 'resident_permit') docTypeName = 'Resident Permit';
-                else if (item.document_type === 'national_id_front') docTypeName = 'National ID (Front)';
-                else if (item.document_type === 'national_id_back') docTypeName = 'National ID (Back)';
-                else docTypeName = item.document_type;
-                row.insertCell(3).innerHTML = `<span class="badge">${docTypeName}</span>`;
-                
-                row.insertCell(4).innerHTML = `<img src="${item.image_url}" class="order-image-preview" style="width:60px;height:45px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="window.open('${item.image_url}','_blank')">`;
-                
-                row.insertCell(5).innerText = new Date(item.uploaded_at).toLocaleString();
-                row.insertCell(6).innerHTML = `<span class="badge" style="background:#ffaa33;">PENDING</span>`;
-                
-                row.insertCell(7).innerHTML = `
-                    <button class="approve-kyc-btn" data-id="${item.id}" data-uid="${item.uid}" style="background:#2f6b3a;"><i class="fas fa-check"></i> Approve</button>
-                    <button class="reject-kyc-btn" data-id="${item.id}" data-uid="${item.uid}" style="background:#7a2f2f;"><i class="fas fa-times"></i> Reject</button>
-                `;
-            }
+            // 图片列：左右显示 Front 和 Back
+            const imagesHtml = `
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    ${nationalIdFront ? `<div><img src="${nationalIdFront.image_url}" class="order-image-preview" style="width:80px;height:60px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="window.open('${nationalIdFront.image_url}','_blank')"><div style="font-size:10px; color:#aaa;">Front</div></div>` : ''}
+                    ${nationalIdBack ? `<div><img src="${nationalIdBack.image_url}" class="order-image-preview" style="width:80px;height:60px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="window.open('${nationalIdBack.image_url}','_blank')"><div style="font-size:10px; color:#aaa;">Back</div></div>` : ''}
+                </div>
+            `;
+            row.insertCell(3).innerHTML = imagesHtml;
+            
+            const uploadTime = (nationalIdFront || nationalIdBack)?.uploaded_at;
+            row.insertCell(4).innerText = uploadTime ? new Date(uploadTime).toLocaleString() : '-';
+            
+            // 状态
+            const allApproved = (!nationalIdFront || nationalIdFront.status === 'approved') && (!nationalIdBack || nationalIdBack.status === 'approved');
+            const anyPending = (nationalIdFront?.status === 'pending') || (nationalIdBack?.status === 'pending');
+            let statusHtml = '';
+            if (isVerified) statusHtml = '<span class="badge" style="background:#4ade80;">VERIFIED</span>';
+            else if (anyPending) statusHtml = '<span class="badge" style="background:#ffaa33;">PENDING</span>';
+            else statusHtml = '<span class="badge" style="background:#ff8888;">REJECTED</span>';
+            row.insertCell(5).innerHTML = statusHtml;
+            
+            // 操作按钮
+            row.insertCell(6).innerHTML = `
+                <button class="approve-kyc-btn" data-uid="${uid}" data-type="national_id" style="background:#2f6b3a; margin-right:5px;" ${isVerified ? 'disabled' : ''}><i class="fas fa-check"></i> Approve</button>
+                <button class="delete-kyc-btn" data-uid="${uid}" data-type="national_id" style="background:#7a2f2f;"><i class="fas fa-trash"></i> Delete</button>
+            `;
         }
         
-        document.querySelectorAll('.approve-kyc-btn').forEach(btn => {
-            btn.addEventListener('click', () => approveKyc(btn.dataset.id, btn.dataset.uid));
-        });
-        document.querySelectorAll('.reject-kyc-btn').forEach(btn => {
-            btn.addEventListener('click', () => rejectKyc(btn.dataset.id, btn.dataset.uid));
-        });
+        // 显示其他证件类型（Passport, Resident Permit）
+        for (const item of otherDocs) {
+            const row = tbody.insertRow();
+            row.insertCell(0).innerHTML = `<span class="badge">${item.uid}</span>`;
+            row.insertCell(1).innerText = username;
+            
+            let docTypeName = '';
+            if (item.document_type === 'passport') docTypeName = 'Passport';
+            else if (item.document_type === 'resident_permit') docTypeName = 'Resident Permit';
+            else docTypeName = item.document_type;
+            row.insertCell(2).innerHTML = `<span class="badge">${docTypeName}</span>`;
+            
+            row.insertCell(3).innerHTML = `<img src="${item.image_url}" class="order-image-preview" style="width:80px;height:60px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="window.open('${item.image_url}','_blank')">`;
+            row.insertCell(4).innerText = new Date(item.uploaded_at).toLocaleString();
+            
+            const isItemApproved = item.status === 'approved';
+            let statusHtml = '';
+            if (isVerified) statusHtml = '<span class="badge" style="background:#4ade80;">VERIFIED</span>';
+            else if (item.status === 'pending') statusHtml = '<span class="badge" style="background:#ffaa33;">PENDING</span>';
+            else statusHtml = '<span class="badge" style="background:#ff8888;">REJECTED</span>';
+            row.insertCell(5).innerHTML = statusHtml;
+            
+            row.insertCell(6).innerHTML = `
+                <button class="approve-kyc-btn" data-uid="${item.uid}" data-id="${item.id}" style="background:#2f6b3a; margin-right:5px;" ${isVerified ? 'disabled' : ''}><i class="fas fa-check"></i> Approve</button>
+                <button class="delete-kyc-btn" data-uid="${item.uid}" data-id="${item.id}" style="background:#7a2f2f;"><i class="fas fa-trash"></i> Delete</button>
+            `;
+        }
     }
     
-    async function approveKyc(recordId, uid) {
-        showConfirm('Approve KYC', '确定批准该用户的KYC验证吗？批准后用户将可以进入提款流程。', async () => {
-            try {
-                await sb.from('kyc_verifications').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('uid', uid);
-                await sb.from('user_kyc_status').upsert({ uid: uid, is_verified: true, verified_at: new Date().toISOString() });
-                showToast(`用户 ${uid} 的KYC验证已批准`, 'success');
-                loadKycRequests();
-            } catch (err) {
-                showToast('操作失败: ' + err.message, 'error');
+    // 绑定批准按钮事件
+    document.querySelectorAll('.approve-kyc-btn').forEach(btn => {
+        btn.removeEventListener('click', approveKycHandler);
+        btn.addEventListener('click', approveKycHandler);
+    });
+    
+    // 绑定删除按钮事件
+    document.querySelectorAll('.delete-kyc-btn').forEach(btn => {
+        btn.removeEventListener('click', deleteKycHandler);
+        btn.addEventListener('click', deleteKycHandler);
+    });
+}
+
+async function approveKycHandler(e) {
+    const btn = e.currentTarget;
+    const uid = btn.dataset.uid;
+    const recordId = btn.dataset.id;
+    const type = btn.dataset.type;
+    
+    showConfirm('Approve KYC', '确定批准该用户的KYC验证吗？批准后用户将可以进入提款流程。', async () => {
+        try {
+            if (type === 'national_id') {
+                // 批准该用户的所有 national_id 相关记录
+                await sb.from('kyc_verifications').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('uid', uid).in('document_type', ['national_id_front', 'national_id_back']);
+            } else if (recordId) {
+                await sb.from('kyc_verifications').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', parseInt(recordId));
             }
-        });
-    }
+            
+            // 检查该用户是否所有必要证件都已批准
+            const { data: allDocs } = await sb.from('kyc_verifications').select('status').eq('uid', uid);
+            const allApproved = allDocs?.every(doc => doc.status === 'approved') || false;
+            
+            if (allApproved) {
+                await sb.from('user_kyc_status').upsert({ uid: uid, is_verified: true, verified_at: new Date().toISOString() });
+            }
+            
+            showToast(`用户 ${uid} 的KYC验证已批准`, 'success');
+            loadKycRequests(); // 刷新列表
+        } catch (err) {
+            showToast('操作失败: ' + err.message, 'error');
+        }
+    });
+}
+
+async function deleteKycHandler(e) {
+    const btn = e.currentTarget;
+    const uid = btn.dataset.uid;
+    const recordId = btn.dataset.id;
+    const type = btn.dataset.type;
     
-    async function rejectKyc(recordId, uid) {
-        showConfirm('Reject KYC', '确定拒绝该用户的KYC验证吗？用户可以重新提交。', async () => {
-            try {
-                await sb.from('kyc_verifications').update({ status: 'rejected', rejected_at: new Date().toISOString() }).eq('id', parseInt(recordId));
-                const { data: remaining } = await sb.from('kyc_verifications').select('id').eq('uid', uid).eq('status', 'pending');
-                if (!remaining || remaining.length === 0) {
+    showConfirm('Delete KYC', '确定删除该用户的KYC记录吗？删除后用户需要重新上传验证。', async () => {
+        try {
+            if (type === 'national_id') {
+                // 删除该用户的所有 national_id 相关记录
+                await sb.from('kyc_verifications').delete().eq('uid', uid).in('document_type', ['national_id_front', 'national_id_back']);
+            } else if (recordId) {
+                await sb.from('kyc_verifications').delete().eq('id', parseInt(recordId));
+            }
+            
+            // 检查该用户是否还有其他 KYC 记录
+            const { data: remaining } = await sb.from('kyc_verifications').select('id').eq('uid', uid);
+            if (!remaining || remaining.length === 0) {
+                // 没有其他记录了，将用户验证状态设为 false
+                await sb.from('user_kyc_status').upsert({ uid: uid, is_verified: false });
+            } else {
+                // 还有记录，检查是否全部被拒绝
+                const { data: allDocs } = await sb.from('kyc_verifications').select('status').eq('uid', uid);
+                const hasApproved = allDocs?.some(doc => doc.status === 'approved') || false;
+                if (!hasApproved) {
                     await sb.from('user_kyc_status').upsert({ uid: uid, is_verified: false });
                 }
-                showToast(`用户 ${uid} 的KYC验证已拒绝`, 'success');
-                loadKycRequests();
-            } catch (err) {
-                showToast('操作失败: ' + err.message, 'error');
             }
-        });
-    }
-    
-    document.getElementById('refreshKycBtn')?.addEventListener('click', () => loadKycRequests());
+            
+            showToast(`用户 ${uid} 的KYC记录已删除`, 'success');
+            loadKycRequests(); // 刷新列表
+        } catch (err) {
+            showToast('操作失败: ' + err.message, 'error');
+        }
+    });
+}
+
+document.getElementById('refreshKycBtn')?.addEventListener('click', () => loadKycRequests());
     
     // 体验金管理
     async function loadTrialUsers() { 

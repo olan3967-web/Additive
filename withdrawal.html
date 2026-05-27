@@ -390,90 +390,130 @@
         function closeMenu() { const s=document.getElementById('sidebar'), o=document.querySelector('.menu-overlay'), m=document.getElementById('menuToggleBtn'); if(s)s.classList.remove('open'); if(o)o.classList.remove('active'); if(m)m.classList.remove('hidden'); }
         
         // 全局变量
-        let currentUser = null;
-        let currentUserBalance = 0;
-        let selectedDocType = null;
-        let uploadedImages = { front: null, back: null };
-        let selectedMethod = null;
-        let selectedAddressType = null;
-        let boundAddress = null;
-        let isKycVerified = false;
-        let isKycPending = false;
-        
-        // 获取用户KYC状态
-        async function getUserKycStatus(uid) {
-            const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
-            if (error && error.code !== 'PGRST116') console.error('获取KYC状态失败:', error);
-            return data?.is_verified || false;
+let currentUser = null;
+let currentUserBalance = 0;
+let selectedDocType = null;
+let uploadedImages = { front: null, back: null };
+let selectedMethod = null;
+let selectedAddressType = null;
+let boundAddress = null;
+let isKycVerified = false;
+let isKycPending = false;
+let currentStep = 1; // 1,2,3,4
+
+// 获取用户KYC状态
+async function getUserKycStatus(uid) {
+    const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
+    if (error && error.code !== 'PGRST116') console.error('获取KYC状态失败:', error);
+    return data?.is_verified || false;
+}
+
+// 获取用户KYC是否正在审核中
+async function isKycUnderReview(uid) {
+    const { data, error } = await sb.from('kyc_verifications').select('status').eq('uid', uid).eq('status', 'pending').limit(1);
+    if (error) return false;
+    return data && data.length > 0;
+}
+
+// 获取用户已绑定的地址
+async function getUserBoundAddress(uid) {
+    const { data, error } = await sb.from('users').select('withdrawal_address, withdrawal_address_type').eq('uid', uid).single();
+    if (error) return null;
+    return data?.withdrawal_address || null;
+}
+
+// 加载用户数据并决定显示哪个步骤
+async function loadUserData() {
+    currentUser = getCurrentUser();
+    if (!currentUser) { window.location.href = 'signin.html'; return; }
+    
+    const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
+    if (userData) {
+        currentUserBalance = userData.balance || 0;
+        document.getElementById('availableBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
+        document.getElementById('availableHint').innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
+        boundAddress = userData.withdrawal_address || null;
+    }
+    
+    isKycVerified = await getUserKycStatus(currentUser.uid);
+    isKycPending = await isKycUnderReview(currentUser.uid);
+    
+    // 根据状态显示对应的步骤
+    if (isKycVerified) {
+        // 已验证，检查是否已绑定地址
+        if (boundAddress) {
+            showStep4(); // 已绑定地址，直接显示提款页面
+        } else {
+            showStep2(); // 未绑定地址，从 Step 2 开始
         }
-        
-        // 获取用户KYC是否正在审核中
-        async function isKycUnderReview(uid) {
-            const { data, error } = await sb.from('kyc_verifications').select('status').eq('uid', uid).eq('status', 'pending').limit(1);
-            if (error) return false;
-            return data && data.length > 0;
+    } else if (isKycPending) {
+        showVerifyingLoading();
+    } else {
+        showStep1();
+    }
+}
+
+function showStep1() {
+    currentStep = 1;
+    document.getElementById('step1Container').style.display = 'block';
+    document.getElementById('step2Container').style.display = 'none';
+    document.getElementById('step3Container').style.display = 'none';
+    document.getElementById('step4Container').style.display = 'none';
+    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 1 OF 4';
+}
+
+function showStep2() {
+    currentStep = 2;
+    document.getElementById('step1Container').style.display = 'none';
+    document.getElementById('step2Container').style.display = 'block';
+    document.getElementById('step3Container').style.display = 'none';
+    document.getElementById('step4Container').style.display = 'none';
+    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 2 OF 4';
+}
+
+function showStep3() {
+    currentStep = 3;
+    document.getElementById('step1Container').style.display = 'none';
+    document.getElementById('step2Container').style.display = 'none';
+    document.getElementById('step3Container').style.display = 'block';
+    document.getElementById('step4Container').style.display = 'none';
+    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 3 OF 4';
+}
+
+function showStep4() {
+    currentStep = 4;
+    document.getElementById('step1Container').style.display = 'none';
+    document.getElementById('step2Container').style.display = 'none';
+    document.getElementById('step3Container').style.display = 'none';
+    document.getElementById('step4Container').style.display = 'block';
+    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 4 OF 4';
+}
+
+function showVerifyingLoading() {
+    document.getElementById('step1Container').style.display = 'none';
+    document.getElementById('step2Container').style.display = 'none';
+    document.getElementById('step3Container').style.display = 'none';
+    document.getElementById('step4Container').style.display = 'none';
+    document.getElementById('loadingOverlay').classList.add('active');
+    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-spinner fa-pulse"></i> VERIFYING';
+    
+    // 定期检查审核状态
+    const checkInterval = setInterval(async () => {
+        const stillPending = await isKycUnderReview(currentUser.uid);
+        const nowVerified = await getUserKycStatus(currentUser.uid);
+        if (nowVerified) {
+            clearInterval(checkInterval);
+            document.getElementById('loadingOverlay').classList.remove('active');
+            // 验证通过后，重新加载数据，进入 Step 2
+            await loadUserData();
+        } else if (!stillPending && !nowVerified) {
+            // 被拒绝了，刷新页面回到 step1
+            clearInterval(checkInterval);
+            document.getElementById('loadingOverlay').classList.remove('active');
+            location.reload();
         }
-        
-        // 加载用户数据
-        async function loadUserData() {
-            currentUser = getCurrentUser();
-            if (!currentUser) { window.location.href = 'signin.html'; return; }
-            
-            const { data: userData } = await sb.from('users').select('balance').eq('uid', currentUser.uid).single();
-            if (userData) {
-                currentUserBalance = userData.balance || 0;
-                document.getElementById('availableBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
-                document.getElementById('availableHint').innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
-            }
-            
-            isKycVerified = await getUserKycStatus(currentUser.uid);
-            isKycPending = await isKycUnderReview(currentUser.uid);
-            
-            // 根据状态显示对应的步骤
-            if (isKycVerified) {
-                // 已验证，直接显示原有提款页面
-                showWithdrawalOnly();
-            } else if (isKycPending) {
-                // 正在审核中，显示Loading
-                showVerifyingLoading();
-            } else {
-                // 未验证，显示Step 1
-                showStep1();
-            }
-        }
-        
-        function showWithdrawalOnly() {
-            document.getElementById('step1Container').style.display = 'none';
-            document.getElementById('step2Container').style.display = 'none';
-            document.getElementById('step3Container').style.display = 'none';
-            document.getElementById('step4Container').style.display = 'block';
-            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-check-circle"></i> VERIFIED';
-        }
-        
-        function showVerifyingLoading() {
-            document.getElementById('step1Container').style.display = 'none';
-            document.getElementById('step2Container').style.display = 'none';
-            document.getElementById('step3Container').style.display = 'none';
-            document.getElementById('step4Container').style.display = 'none';
-            document.getElementById('loadingOverlay').classList.add('active');
-            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-spinner fa-pulse"></i> VERIFYING';
-            
-            // 定期检查审核状态
-            const checkInterval = setInterval(async () => {
-                const stillPending = await isKycUnderReview(currentUser.uid);
-                const nowVerified = await getUserKycStatus(currentUser.uid);
-                if (nowVerified) {
-                    clearInterval(checkInterval);
-                    document.getElementById('loadingOverlay').classList.remove('active');
-                    location.reload();
-                } else if (!stillPending && !nowVerified) {
-                    // 被拒绝了，刷新页面回到step1
-                    clearInterval(checkInterval);
-                    document.getElementById('loadingOverlay').classList.remove('active');
-                    location.reload();
-                }
-            }, 5000);
-        }
+    }, 5000);
+}
         
         function showStep1() {
             document.getElementById('step1Container').style.display = 'block';
@@ -600,55 +640,55 @@
         
         // 提交KYC
         async function submitKyc() {
-            if (!selectedDocType) { showToast('Please select a document type', 'error'); return; }
-            
-            let imagesToSubmit = [];
-            if (selectedDocType === 'national_id') {
-                if (!uploadedImages.front) { showToast('Please upload front side of ID', 'error'); return; }
-                if (!uploadedImages.back) { showToast('Please upload back side of ID', 'error'); return; }
-                imagesToSubmit = [
-                    { type: 'national_id_front', url: uploadedImages.front },
-                    { type: 'national_id_back', url: uploadedImages.back }
-                ];
-            } else {
-                if (!uploadedImages.front) { showToast('Please upload your document', 'error'); return; }
-                imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
-            }
-            
-            for (const img of imagesToSubmit) {
-                const { error } = await sb.from('kyc_verifications').insert([{
-                    uid: currentUser.uid,
-                    username: currentUser.username,
-                    document_type: img.type,
-                    image_url: img.url,
-                    status: 'pending',
-                    uploaded_at: new Date().toISOString()
-                }]);
-                if (error) { showToast('Submit failed: ' + error.message, 'error'); return; }
-            }
-            
-            showToast('Documents submitted! Verification in progress...', 'success');
-            showVerifyingLoading();
-        }
+    if (!selectedDocType) { showToast('Please select a document type', 'error'); return; }
+    
+    let imagesToSubmit = [];
+    if (selectedDocType === 'national_id') {
+        if (!uploadedImages.front) { showToast('Please upload front side of ID', 'error'); return; }
+        if (!uploadedImages.back) { showToast('Please upload back side of ID', 'error'); return; }
+        imagesToSubmit = [
+            { type: 'national_id_front', url: uploadedImages.front },
+            { type: 'national_id_back', url: uploadedImages.back }
+        ];
+    } else {
+        if (!uploadedImages.front) { showToast('Please upload your document', 'error'); return; }
+        imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
+    }
+    
+    for (const img of imagesToSubmit) {
+        const { error } = await sb.from('kyc_verifications').insert([{
+            uid: currentUser.uid,
+            username: currentUser.username,
+            document_type: img.type,
+            image_url: img.url,
+            status: 'pending',
+            uploaded_at: new Date().toISOString()
+        }]);
+        if (error) { showToast('Submit failed: ' + error.message, 'error'); return; }
+    }
+    
+    showToast('Documents submitted! Verification in progress...', 'success');
+    showVerifyingLoading();
+}
         
         // Step 2: 支付方式选择
         function initPaymentSelection() {
-            const cards = document.querySelectorAll('.payment-card');
-            cards.forEach(card => {
-                card.addEventListener('click', () => {
-                    if (card.classList.contains('disabled')) {
-                        showToast(card.querySelector('p')?.innerText || 'Not available', 'warning');
-                        return;
-                    }
-                    cards.forEach(c => c.classList.remove('selected'));
-                    card.classList.add('selected');
-                    selectedMethod = card.dataset.method;
-                    if (selectedMethod === 'crypto') {
-                        showStep3();
-                    }
-                });
-            });
-        }
+    const cards = document.querySelectorAll('.payment-card');
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            if (card.classList.contains('disabled')) {
+                showToast(card.querySelector('p')?.innerText || 'Not available', 'warning');
+                return;
+            }
+            cards.forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            selectedMethod = card.dataset.method;
+            if (selectedMethod === 'crypto') {
+                showStep3(); // 跳到 Step 3 绑定地址
+            }
+        });
+    });
+}
         
         // Step 3: 地址绑定
         function initAddressSelection() {
@@ -662,23 +702,21 @@
             });
             
             document.getElementById('bindAddressBtn').addEventListener('click', async () => {
-                const address = document.getElementById('addressInput').value.trim();
-                if (!selectedAddressType) { showToast('Please select address type', 'error'); return; }
-                if (!address) { showToast('Please enter wallet address', 'error'); return; }
-                
-                // 保存地址到用户表或新表
-                const { error } = await sb.from('users').update({ 
-                    withdrawal_address: address,
-                    withdrawal_address_type: selectedAddressType 
-                }).eq('uid', currentUser.uid);
-                
-                if (error) { showToast('Failed to bind address: ' + error.message, 'error'); return; }
-                
-                boundAddress = address;
-                showToast('Address bound successfully!', 'success');
-                showStep4();
-            });
-        }
+    const address = document.getElementById('addressInput').value.trim();
+    if (!selectedAddressType) { showToast('Please select address type', 'error'); return; }
+    if (!address) { showToast('Please enter wallet address', 'error'); return; }
+    
+    const { error } = await sb.from('users').update({ 
+        withdrawal_address: address,
+        withdrawal_address_type: selectedAddressType 
+    }).eq('uid', currentUser.uid);
+    
+    if (error) { showToast('Failed to bind address: ' + error.message, 'error'); return; }
+    
+    boundAddress = address;
+    showToast('Address bound successfully!', 'success');
+    showStep4(); // 跳到 Step 4 提款页面
+});
         
         // Step 4: 提款
         async function requestWithdrawal() {
