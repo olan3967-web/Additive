@@ -406,12 +406,11 @@ body {
         z-index: 1002;
     }
     
-    /* ========== 新的悬浮菜单动画 ========== */
+    /* ========== 新的悬浮菜单动画 - 从左滑出 ========== */
     .sidebar {
         position: fixed;
         top: 8px;
         left: 8px;
-        right: 8px;
         bottom: 8px;
         width: auto;
         max-width: 300px;
@@ -426,39 +425,42 @@ body {
         z-index: 1001;
         transition: none;
         opacity: 0;
-        transform: translateY(100%);
+        transform: translateX(-100%);
         visibility: hidden;
+        will-change: transform, opacity;
+        backface-visibility: hidden;
     }
     
-    /* 菜单打开时的状态 */
+    /* 菜单打开时的状态 - 从左滑出 */
     .sidebar.open {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateX(0);
         visibility: visible;
-        animation: slideUpFloat 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        animation: slideInFromLeft 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
     }
     
-    /* 从下方渐变上升入场动画 */
-    @keyframes slideUpFloat {
+    /* 从左滑出入场动画 */
+    @keyframes slideInFromLeft {
         0% {
             opacity: 0;
-            transform: translateY(100%);
+            transform: translateX(-100%);
         }
         100% {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(0);
         }
     }
     
-    /* 菜单项入场动画 - 渐变上升 */
+    /* 菜单项入场动画 - 从底部缓慢向上 */
     .sidebar.open .sidebar-top,
     .sidebar.open .sidebar-upgrade-card {
-        animation: itemFadeUp 0.3s ease-out forwards;
+        animation: slowFadeUp 0.4s ease-out forwards;
     }
     
     .sidebar.open .nav-item {
-        animation: itemFadeUp 0.3s ease-out forwards;
+        animation: slowFadeUp 0.4s ease-out forwards;
         opacity: 0;
+        transform: translateY(20px);
     }
     
     /* 菜单项逐个延迟入场 */
@@ -475,10 +477,11 @@ body {
         animation-delay: 0.45s;
     }
     
-    @keyframes itemFadeUp {
+    /* 从底部缓慢向上出现动画 */
+    @keyframes slowFadeUp {
         0% {
             opacity: 0;
-            transform: translateY(15px);
+            transform: translateY(20px);
         }
         100% {
             opacity: 1;
@@ -488,15 +491,16 @@ body {
     
     /* Logo 入场动画 */
     .sidebar.open .logo {
-        animation: logoFadeUp 0.3s ease-out forwards;
+        animation: logoFadeUp 0.35s ease-out forwards;
         opacity: 0;
+        transform: translateY(15px);
         animation-delay: 0s;
     }
     
     @keyframes logoFadeUp {
         0% {
             opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(15px);
         }
         100% {
             opacity: 1;
