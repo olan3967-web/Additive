@@ -386,8 +386,24 @@
     </div>
 
     <script>
-    function toggleMenu() { const s=document.getElementById('sidebar'), o=document.querySelector('.menu-overlay'), m=document.getElementById('menuToggleBtn'); if(s)s.classList.toggle('open'); if(o)o.classList.toggle('active'); if(m)m.classList.toggle('hidden'); }
-    function closeMenu() { const s=document.getElementById('sidebar'), o=document.querySelector('.menu-overlay'), m=document.getElementById('menuToggleBtn'); if(s)s.classList.remove('open'); if(o)o.classList.remove('active'); if(m)m.classList.remove('hidden'); }
+    // ========== 菜单函数（必须最先定义） ==========
+    window.toggleMenu = function() { 
+        const s = document.getElementById('sidebar'); 
+        const o = document.querySelector('.menu-overlay'); 
+        const m = document.getElementById('menuToggleBtn'); 
+        if (s) s.classList.toggle('open'); 
+        if (o) o.classList.toggle('active'); 
+        if (m) m.classList.toggle('hidden'); 
+    };
+    
+    window.closeMenu = function() { 
+        const s = document.getElementById('sidebar'); 
+        const o = document.querySelector('.menu-overlay'); 
+        const m = document.getElementById('menuToggleBtn'); 
+        if (s) s.classList.remove('open'); 
+        if (o) o.classList.remove('active'); 
+        if (m) m.classList.remove('hidden'); 
+    };
     
     // 全局变量
     let currentUser = null;
@@ -493,7 +509,6 @@
         const indicator = document.getElementById('stepIndicator');
         if (indicator) indicator.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> VERIFYING';
         
-        // 定期检查审核状态
         const checkInterval = setInterval(async () => {
             if (!currentUser) return;
             const stillPending = await isKycUnderReview(currentUser.uid);
