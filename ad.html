@@ -617,7 +617,7 @@
 
 <script>
     const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
     let searchKeyword = '';
@@ -1268,26 +1268,24 @@ function playSound(type) {
 // 更新菜单徽章数字
 let previousWithdrawalCount = -1;
 let previousKycCount = -1;
+let badgeInterval = null;  // ✅ 关键：先声明变量
 
 async function updateMenuBadges() {
     try {
-        // 获取待处理提现数量
-        const { data: withdrawals, error: wdError } = await sb
+        const { data: withdrawals } = await sb
             .from('withdrawals')
             .select('id', { count: 'exact', head: true })
             .eq('status', 'pending');
         
         const withdrawalCount = withdrawals?.length || 0;
         
-        // 获取待处理KYC数量
-        const { data: kycList, error: kycError } = await sb
+        const { data: kycList } = await sb
             .from('kyc_verifications')
             .select('id', { count: 'exact', head: true })
             .eq('status', 'pending');
         
         const kycCount = kycList?.length || 0;
         
-        // 更新徽章显示
         const withdrawalBadge = document.getElementById('withdrawalBadge');
         const kycBadge = document.getElementById('kycBadge');
         
@@ -1295,7 +1293,6 @@ async function updateMenuBadges() {
             if (withdrawalCount > 0) {
                 withdrawalBadge.innerText = withdrawalCount;
                 withdrawalBadge.style.display = 'inline-block';
-                // 如果数量增加，播放音效
                 if (withdrawalCount > previousWithdrawalCount && previousWithdrawalCount !== -1) {
                     playSound('withdrawal');
                 }
@@ -1308,7 +1305,6 @@ async function updateMenuBadges() {
             if (kycCount > 0) {
                 kycBadge.innerText = kycCount;
                 kycBadge.style.display = 'inline-block';
-                // 如果数量增加，播放音效
                 if (kycCount > previousKycCount && previousKycCount !== -1) {
                     playSound('kyc');
                 }
@@ -1323,14 +1319,10 @@ async function updateMenuBadges() {
     } catch(e) { console.error('更新徽章失败:', e); }
 }
 
-// 启动徽章轮询（每10秒检查一次）
-let badgeInterval = null;
-
+// 启动徽章轮询
 function startBadgePolling() {
     if (badgeInterval) clearInterval(badgeInterval);
-    // 立即执行一次
     updateMenuBadges();
-    // 每10秒检查一次
     badgeInterval = setInterval(updateMenuBadges, 10000);
 }
 
@@ -1340,6 +1332,9 @@ function stopBadgePolling() {
         badgeInterval = null;
     }
 }
+
+// 启动
+startBadgePolling();
 </script>
 </body>
 </html>
