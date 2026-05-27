@@ -407,7 +407,32 @@
             .menu-toggle { display: block; }
             .main { margin-left: 0; padding-top: 70px; }
         }
+
+.menu-badge {
+    background: #ff4444;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: bold;
+    margin-left: auto;
+    animation: pulse 0.5s ease-in-out 3;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
     </style>
+
+<!-- 音频通知 -->
+<audio id="soundWithdrawal" preload="auto" style="display:none;">
+    <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+</audio>
+<audio id="soundKyc" preload="auto" style="display:none;">
+    <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+</audio>
 </head>
 <body>
 <div class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
@@ -418,9 +443,15 @@
         <div class="logo">ADDITIVE<span>®</span> ADMIN</div>
         <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i> 仪表板</div>
         <div class="nav-item" data-page="users"><i class="fas fa-users"></i> 用户管理</div>
-        <div class="nav-item" data-page="kyc"><i class="fas fa-id-card"></i> KYC Verification</div>
+        <div class="nav-item" data-page="kyc">
+    <i class="fas fa-id-card"></i> KYC Verification
+    <span id="kycBadge" class="menu-badge" style="display:none; background:#ff4444; color:white; border-radius:50%; padding:2px 6px; font-size:10px; margin-left:8px;">0</span>
+</div>
         <div class="nav-item" data-page="trial"><i class="fas fa-gift"></i> 体验金管理</div>
-        <div class="nav-item" data-page="withdrawals"><i class="fas fa-money-bill-wave"></i> 提现审核</div>
+        <div class="nav-item" data-page="withdrawals">
+    <i class="fas fa-money-bill-wave"></i> 提现审核 
+    <span id="withdrawalBadge" class="menu-badge" style="display:none; background:#ff4444; color:white; border-radius:50%; padding:2px 6px; font-size:10px; margin-left:8px;">0</span>
+</div>
         <div class="nav-item" data-page="vip"><i class="fas fa-crown"></i> VIP 配置</div>
         <div class="nav-item" data-page="setorders"><i class="fas fa-cog"></i> 设置订单</div>
         <div class="nav-item" data-page="orders"><i class="fas fa-clock"></i> 订单记录</div>
@@ -1213,7 +1244,102 @@ document.getElementById('refreshKycBtn')?.addEventListener('click', () => loadKy
     
     document.getElementById('logoutBtn')?.addEventListener('click',()=>{showConfirm('退出登录', '确定要退出登录吗？',()=>{localStorage.removeItem('admin_logged_in');window.location.href='admin-login.html';});});
     if(localStorage.getItem('admin_logged_in')!=='true') window.location.href='admin-login.html';
+
+// 启动徽章轮询
+startBadgePolling();
     loadDashboard();
+
+// 播放音效
+function playSound(type) {
+    try {
+        let audio;
+        if (type === 'withdrawal') {
+            audio = document.getElementById('soundWithdrawal');
+        } else if (type === 'kyc') {
+            audio = document.getElementById('soundKyc');
+        }
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('音效播放失败:', e));
+        }
+    } catch(e) { console.log('音效错误:', e); }
+}
+
+// 更新菜单徽章数字
+let previousWithdrawalCount = -1;
+let previousKycCount = -1;
+
+async function updateMenuBadges() {
+    try {
+        // 获取待处理提现数量
+        const { data: withdrawals, error: wdError } = await sb
+            .from('withdrawals')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'pending');
+        
+        const withdrawalCount = withdrawals?.length || 0;
+        
+        // 获取待处理KYC数量
+        const { data: kycList, error: kycError } = await sb
+            .from('kyc_verifications')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'pending');
+        
+        const kycCount = kycList?.length || 0;
+        
+        // 更新徽章显示
+        const withdrawalBadge = document.getElementById('withdrawalBadge');
+        const kycBadge = document.getElementById('kycBadge');
+        
+        if (withdrawalBadge) {
+            if (withdrawalCount > 0) {
+                withdrawalBadge.innerText = withdrawalCount;
+                withdrawalBadge.style.display = 'inline-block';
+                // 如果数量增加，播放音效
+                if (withdrawalCount > previousWithdrawalCount && previousWithdrawalCount !== -1) {
+                    playSound('withdrawal');
+                }
+            } else {
+                withdrawalBadge.style.display = 'none';
+            }
+        }
+        
+        if (kycBadge) {
+            if (kycCount > 0) {
+                kycBadge.innerText = kycCount;
+                kycBadge.style.display = 'inline-block';
+                // 如果数量增加，播放音效
+                if (kycCount > previousKycCount && previousKycCount !== -1) {
+                    playSound('kyc');
+                }
+            } else {
+                kycBadge.style.display = 'none';
+            }
+        }
+        
+        previousWithdrawalCount = withdrawalCount;
+        previousKycCount = kycCount;
+        
+    } catch(e) { console.error('更新徽章失败:', e); }
+}
+
+// 启动徽章轮询（每10秒检查一次）
+let badgeInterval = null;
+
+function startBadgePolling() {
+    if (badgeInterval) clearInterval(badgeInterval);
+    // 立即执行一次
+    updateMenuBadges();
+    // 每10秒检查一次
+    badgeInterval = setInterval(updateMenuBadges, 10000);
+}
+
+function stopBadgePolling() {
+    if (badgeInterval) {
+        clearInterval(badgeInterval);
+        badgeInterval = null;
+    }
+}
 </script>
 </body>
 </html>
