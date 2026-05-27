@@ -415,30 +415,35 @@
 
         // 加载用户数据
         async function loadUserData() {
-            currentUser = getCurrentUser();
-            if (!currentUser) { window.location.href = 'signin.html'; return; }
-            
-            const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
-            if (userData) {
-                currentUserBalance = userData.balance || 0;
-                const balanceEl = document.getElementById('availableBalance');
-                const hintEl = document.getElementById('availableHint');
-                if (balanceEl) balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
-                if (hintEl) hintEl.innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
-                boundAddress = userData.withdrawal_address || null;
-            }
-            
-            isKycVerified = await getUserKycStatus(currentUser.uid);
-            isKycPending = await isKycUnderReview(currentUser.uid);
-            
-            if (isKycVerified) {
-                showStep2();
-            } else if (isKycPending) {
-                showVerifyingLoading();
-            } else {
-                showStep1();
-            }
+    currentUser = getCurrentUser();
+    if (!currentUser) { window.location.href = 'signin.html'; return; }
+    
+    const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
+    if (userData) {
+        currentUserBalance = userData.balance || 0;
+        const balanceEl = document.getElementById('availableBalance');
+        const hintEl = document.getElementById('availableHint');
+        if (balanceEl) balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
+        if (hintEl) hintEl.innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
+        boundAddress = userData.withdrawal_address || null;
+    }
+    
+    isKycVerified = await getUserKycStatus(currentUser.uid);
+    isKycPending = await isKycUnderReview(currentUser.uid);
+    
+    if (isKycVerified) {
+        // 已验证：检查是否已绑定地址
+        if (boundAddress) {
+            showStep4();  // 已绑定地址，直接提款
+        } else {
+            showStep2();  // 未绑定地址，需要绑定
         }
+    } else if (isKycPending) {
+        showVerifyingLoading();
+    } else {
+        showStep1();
+    }
+}
 
         function showStep1() {
             document.getElementById('step1Container').style.display = 'block';
