@@ -710,6 +710,49 @@
     <div class="card">
         <h3><i class="fas fa-box-open"></i> Dashboard Product Sample</h3>
         <p style="color: #a0a8c0; font-size: 13px; margin-bottom: 16px;">管理 Dashboard 首页展示的产品卡片（支持图片和视频）</p>
+
+            <!-- 新增：首页配置 (Index Animation) -->
+            <div class="card">
+                <h3><i class="fas fa-home"></i> 首页配置 (Index Animation)</h3>
+                <p style="color: #a0a8c0; font-size: 13px; margin-bottom: 20px;">管理首页的背景视频、Logo、平台图标等资源</p>
+                
+                <!-- 背景视频上传 -->
+                <div style="margin-bottom: 25px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;"><i class="fas fa-play-circle"></i> 首页背景视频</label>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                        <input type="text" id="indexVideoUrl" placeholder="视频URL 或 点击上传" style="flex: 1; background: #0e132e; border: 1px solid #2e3a6e; border-radius: 12px; padding: 10px 16px; color: white;">
+                        <button id="uploadIndexVideoBtn" class="primary"><i class="fas fa-upload"></i> 上传视频</button>
+                        <button id="previewIndexVideoBtn" class="secondary"><i class="fas fa-eye"></i> 预览</button>
+                    </div>
+                    <div id="indexVideoPreview" style="margin-top: 12px; background: #0a0f2a; border-radius: 12px; padding: 12px; text-align: center; display: none;">
+                        <video controls style="max-width: 100%; max-height: 200px; border-radius: 8px;"></video>
+                    </div>
+                </div>
+                
+                <!-- Logo 上传 -->
+                <div style="margin-bottom: 25px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;"><i class="fas fa-image"></i> 网站 Logo</label>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                        <input type="text" id="logoUrl" placeholder="Logo URL" style="flex: 1; background: #0e132e; border: 1px solid #2e3a6e; border-radius: 12px; padding: 10px 16px; color: white;">
+                        <button id="uploadLogoBtn" class="primary"><i class="fas fa-upload"></i> 上传图片</button>
+                    </div>
+                    <div id="logoPreview" style="margin-top: 12px;">
+                        <img id="logoPreviewImg" style="max-height: 60px; border-radius: 8px; display: none;">
+                    </div>
+                </div>
+                
+                <!-- 平台图标批量管理 -->
+                <div style="margin-bottom: 25px; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 16px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;"><i class="fab fa-shopify"></i> 平台图标 (180x110px)</label>
+                    <div id="platformIconsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; max-height: 400px; overflow-y: auto;"></div>
+                </div>
+                
+                <!-- 一键同步到首页 -->
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <button id="syncIndexAssetsBtn" class="primary" style="width: 100%;"><i class="fas fa-sync-alt"></i> 同步到首页</button>
+                    <p class="text-muted" style="font-size: 11px; margin-top: 8px; text-align: center;">保存后，首页将自动加载最新配置</p>
+                </div>
+            </div>
         
         <div class="search-bar" style="margin-bottom: 15px;">
             <input type="text" id="productNameInput" class="search-input" placeholder="产品名称">
@@ -2098,6 +2141,168 @@
         if (badgeInterval) { clearInterval(badgeInterval); badgeInterval = null; }
     }
     
+    // ========== 首页配置管理 (Index Animation) ==========
+    let platformList = ["Shopify", "WooCommerce", "TikTok Shop", "eBay", "Shopee", "Lazada", "Mercado", "Etsy", "API"];
+    
+    // 加载已保存的首页配置
+    function loadIndexConfig() {
+        const savedVideoUrl = localStorage.getItem('heroVideoUrl') || '';
+        const savedLogoUrl = localStorage.getItem('logoImageUrl') || '';
+        const savedPlatformImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
+        
+        const videoInput = document.getElementById('indexVideoUrl');
+        const logoInput = document.getElementById('logoUrl');
+        if (videoInput) videoInput.value = savedVideoUrl;
+        if (logoInput) logoInput.value = savedLogoUrl;
+        if (savedLogoUrl) {
+            const previewImg = document.getElementById('logoPreviewImg');
+            if (previewImg) {
+                previewImg.src = savedLogoUrl;
+                previewImg.style.display = 'block';
+            }
+        }
+        
+        renderPlatformIconsGrid(savedPlatformImages);
+    }
+    
+    function renderPlatformIconsGrid(savedImages) {
+        const grid = document.getElementById('platformIconsGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        platformList.forEach(platform => {
+            const imgUrl = savedImages[platform] || '';
+            const div = document.createElement('div');
+            div.style.cssText = 'background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; text-align: center;';
+            div.innerHTML = `
+                <div style="font-size: 12px; margin-bottom: 8px; color: #C9B095;">${platform}</div>
+                <div style="width: 180px; height: 110px; background: #0a0f2a; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto; overflow: hidden;">
+                    ${imgUrl ? `<img src="${imgUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<i class="fas fa-image" style="font-size: 32px; color: #5a6388;"></i>'}
+                </div>
+                <button class="upload-platform-icon-btn" data-platform="${platform}" style="margin-top: 8px; padding: 4px 12px; font-size: 11px; background: #2f6b3a;">📷 上传图标</button>
+                <button class="clear-platform-icon-btn" data-platform="${platform}" style="margin-top: 8px; padding: 4px 12px; font-size: 11px; background: #7a2f2f;">🗑️ 清除</button>
+            `;
+            grid.appendChild(div);
+        });
+        
+        document.querySelectorAll('.upload-platform-icon-btn').forEach(btn => {
+            btn.onclick = () => uploadPlatformIcon(btn.dataset.platform);
+        });
+        document.querySelectorAll('.clear-platform-icon-btn').forEach(btn => {
+            btn.onclick = () => clearPlatformIcon(btn.dataset.platform);
+        });
+    }
+    
+    function uploadPlatformIcon(platformName) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const savedImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
+                    savedImages[platformName] = event.target.result;
+                    localStorage.setItem('platformImages', JSON.stringify(savedImages));
+                    renderPlatformIconsGrid(savedImages);
+                    showToast(`${platformName} 图标已保存`, 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    }
+    
+    function clearPlatformIcon(platformName) {
+        const savedImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
+        delete savedImages[platformName];
+        localStorage.setItem('platformImages', JSON.stringify(savedImages));
+        renderPlatformIconsGrid(savedImages);
+        showToast(`${platformName} 图标已清除`, 'success');
+    }
+    
+    // 上传首页视频
+    const uploadIndexVideoBtn = document.getElementById('uploadIndexVideoBtn');
+    if (uploadIndexVideoBtn) {
+        uploadIndexVideoBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'video/mp4,video/webm';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const videoUrl = event.target.result;
+                        localStorage.setItem('heroVideoUrl', videoUrl);
+                        document.getElementById('indexVideoUrl').value = videoUrl;
+                        showToast('视频已保存', 'success');
+                        const previewDiv = document.getElementById('indexVideoPreview');
+                        const video = previewDiv.querySelector('video');
+                        video.src = videoUrl;
+                        previewDiv.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        });
+    }
+    
+    // 上传Logo
+    const uploadLogoBtn = document.getElementById('uploadLogoBtn');
+    if (uploadLogoBtn) {
+        uploadLogoBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/png,image/jpeg';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const logoUrl = event.target.result;
+                        localStorage.setItem('logoImageUrl', logoUrl);
+                        document.getElementById('logoUrl').value = logoUrl;
+                        const previewImg = document.getElementById('logoPreviewImg');
+                        previewImg.src = logoUrl;
+                        previewImg.style.display = 'block';
+                        showToast('Logo已保存', 'success');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        });
+    }
+    
+    // 预览视频
+    const previewIndexVideoBtn = document.getElementById('previewIndexVideoBtn');
+    if (previewIndexVideoBtn) {
+        previewIndexVideoBtn.addEventListener('click', () => {
+            const videoUrl = document.getElementById('indexVideoUrl').value;
+            if (videoUrl) {
+                const previewDiv = document.getElementById('indexVideoPreview');
+                const video = previewDiv.querySelector('video');
+                video.src = videoUrl;
+                previewDiv.style.display = 'block';
+            } else {
+                showToast('请先上传视频', 'warning');
+            }
+        });
+    }
+    
+    // 同步到首页
+    const syncIndexAssetsBtn = document.getElementById('syncIndexAssetsBtn');
+    if (syncIndexAssetsBtn) {
+        syncIndexAssetsBtn.addEventListener('click', () => {
+            showToast('配置已同步，刷新首页即可查看', 'success');
+        });
+    }
+    
+    // 初始化加载首页配置
+    loadIndexConfig();
+
     // 启动所有功能
     startBadgePolling();
     loadDashboard();

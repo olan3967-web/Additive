@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ADDITIVE | The Hotel Performance Marketing Agency</title>
+    <title>CJDropshipping - Global Dropshipping Sourcing & Fulfillment</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -14,9 +14,9 @@
         }
 
         body {
-            background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
+            background: #ffffff;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            color: #ffffff;
+            color: #1A1F2E;
             line-height: 1.5;
             min-height: 100vh;
         }
@@ -25,17 +25,79 @@
             max-width: 1280px;
             margin: 0 auto;
             padding: 0 32px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ========== 褐色渐变背景区域 (从底部向上渐变到白色) ========== */
+        .gradient-wrapper {
+            background: linear-gradient(180deg, #ffffff 0%, #F5F0EB 15%, #8B6B50 40%, #5C3A2A 70%, #2C1810 100%);
+        }
+
+        /* 视频 Hero 区域 */
+        .video-hero-section {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 视频背景 - 覆盖整个 Hero 区域 */
+        .hero-video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            opacity: 0.4;
+        }
+        
+        .hero-video-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(44,24,16,0.5);
+            z-index: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .video-control-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.6);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+        }
+        .video-control-btn:hover {
+            background: #FF7A2E;
+        }
+
+        /* 所有内容都在视频上层 */
+        .hero-content-wrapper {
+            position: relative;
+            z-index: 2;
         }
 
         /* ========== HEADER ========== */
         .site-header {
-            padding: 24px 0;
-            border-bottom: 1px solid rgba(201, 176, 149, 0.15);
-            background: rgba(10, 18, 43, 0.8);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            padding: 16px 0;
         }
 
         .header-inner {
@@ -47,18 +109,48 @@
         }
 
         .logo {
-            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo img {
+            height: 48px;
+            width: auto;
+            max-width: 200px;
+            object-fit: contain;
+        }
+        .logo-placeholder {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px dashed #FF7A2E;
+        }
+        .logo-placeholder:hover {
+            background: rgba(255,122,46,0.3);
+        }
+        .logo-placeholder i {
+            font-size: 24px;
+            color: #FF7A2E;
+        }
+        .logo-text {
+            font-size: 20px;
             font-weight: 800;
-            color: #ffffff;
+            color: white;
             text-decoration: none;
         }
-        .logo span {
-            color: #C9B095;
+        .logo-text span {
+            color: #FF7A2E;
         }
 
         .nav-links {
             display: flex;
-            gap: 20px;
+            gap: 24px;
             align-items: center;
             flex-wrap: wrap;
         }
@@ -66,103 +158,185 @@
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
-            color: #a0a8c0;
+            color: #E0D0C0;
             transition: 0.2s;
         }
         .nav-links a:hover {
-            color: #C9B095;
+            color: #FF7A2E;
         }
         .btn-outline {
-            border: 1px solid rgba(201, 176, 149, 0.4);
+            border: 1px solid #FF7A2E;
             padding: 8px 24px;
             border-radius: 40px;
             font-weight: 600;
-            color: #C9B095;
+            color: #FF7A2E;
             background: transparent;
             transition: 0.2s;
             cursor: pointer;
         }
         .btn-outline:hover {
-            background: rgba(201, 176, 149, 0.1);
-            transform: translateY(-2px);
+            background: #FF7A2E;
+            color: white;
+            transform: translateY(-1px);
         }
 
-        /* ========== HERO ========== */
-        .hero {
-            padding: 80px 0 60px;
+        /* ========== HERO 内容 ========== */
+        .hero-content {
+            text-align: center;
+            padding: 60px 0 40px;
         }
-        .hero h1 {
-            font-size: 56px;
+        .hero-content h1 {
+            font-size: 52px;
             font-weight: 700;
             line-height: 1.2;
-            letter-spacing: -1px;
+            letter-spacing: -0.5px;
             max-width: 900px;
+            margin: 0 auto;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        .hero h1 span {
-            color: #C9B095;
+        .hero-content h1 .orange-text {
+            color: #FF7A2E;
         }
-        .hero p {
-            font-size: 18px;
-            color: #a0a8c0;
-            max-width: 680px;
-            margin: 24px 0 32px;
+        .hero-content .sub-headline {
+            font-size: 20px;
+            font-weight: 500;
+            color: #F0E0D0;
+            margin: 16px auto 12px;
+            max-width: 700px;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.2);
+        }
+        .hero-content p {
+            font-size: 16px;
+            color: #E0D0C0;
+            max-width: 600px;
+            margin: 16px auto 28px;
             line-height: 1.5;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #C9B095, #b8944a);
+            background: #FF7A2E;
             border: none;
-            padding: 14px 36px;
+            padding: 12px 32px;
             border-radius: 40px;
-            font-weight: 700;
-            font-size: 16px;
-            color: #0A122B;
+            font-weight: 600;
+            font-size: 15px;
+            color: white;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             transition: 0.2s;
         }
         .btn-primary:hover {
-            transform: scale(1.02);
-            opacity: 0.9;
+            background: #E5671C;
+            transform: scale(1.01);
         }
 
         /* ========== TRUSTED ROW ========== */
         .trusted-row {
-            border-top: 1px solid rgba(201, 176, 149, 0.15);
-            border-bottom: 1px solid rgba(201, 176, 149, 0.15);
-            padding: 32px 0;
-            margin: 40px 0 20px;
+            border-top: 1px solid rgba(255,255,255,0.25);
+            border-bottom: 1px solid rgba(255,255,255,0.25);
+            padding: 24px 0;
+            margin: 0;
             display: flex;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 24px;
+            background: rgba(0,0,0,0.15);
         }
         .trusted-item {
-            font-size: 14px;
-            font-weight: 500;
-            color: #a0a8c0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #F0E0D0;
             letter-spacing: 0.3px;
+        }
+
+        /* ========== 平台集成区域 ========== */
+        .platforms-section {
+            margin: 56px 0 40px;
+            text-align: center;
+        }
+        .platforms-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #D4B896;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+        }
+        .platforms-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 28px;
+        }
+        .platform-item {
+            text-align: center;
+        }
+        .platform-img-wrapper {
+            width: 180px;
+            height: 110px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px dashed rgba(255,122,46,0.5);
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+        }
+        .platform-img-wrapper:hover {
+            background: rgba(255,122,46,0.3);
+            border-color: #FF7A2E;
+        }
+        .platform-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .platform-img-wrapper i {
+            font-size: 32px;
+            color: #FF7A2E;
+        }
+        .platform-name {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #D4B896;
+        }
+        .upload-icon-small {
+            font-size: 10px;
+            display: block;
+            color: #C0A080;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        .upload-icon-small:hover {
+            color: #FF7A2E;
         }
 
         /* ========== 滚动评价区域 ========== */
         .section-title {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 700;
-            margin: 64px 0 32px;
+            margin: 56px 0 28px;
+            text-align: center;
+            color: #2C1810;
         }
-        .section-title span {
-            color: #C9B095;
+        .section-title .orange-text {
+            color: #FF7A2E;
         }
         
         .marquee-container {
             overflow: hidden;
             white-space: nowrap;
-            background: rgba(10, 18, 43, 0.4);
-            border-radius: 28px;
-            padding: 24px 0;
-            border: 1px solid rgba(201, 176, 149, 0.15);
-            margin-bottom: 64px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 24px;
+            padding: 20px 0;
+            border: 1px solid rgba(44,24,16,0.1);
+            margin-bottom: 56px;
         }
         .marquee-content {
             display: inline-block;
@@ -170,38 +344,39 @@
         }
         .testimonial-item {
             display: inline-block;
-            width: 360px;
+            width: 340px;
             margin: 0 16px;
             vertical-align: top;
-            background: rgba(20, 30, 55, 0.7);
-            backdrop-filter: blur(10px);
+            background: #ffffff;
             border-radius: 20px;
-            padding: 24px;
-            border: 1px solid rgba(201, 176, 149, 0.15);
+            padding: 20px;
+            border: 1px solid #EBF0F5;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
             white-space: normal;
             text-align: left;
             transition: all 0.3s;
         }
         .testimonial-item:hover {
-            transform: translateY(-4px);
-            border-color: rgba(201, 176, 149, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.04);
+            border-color: #FF7A2E40;
         }
         .testimonial-text {
-            font-size: 14px;
+            font-size: 13px;
             line-height: 1.6;
-            color: #c0c8e0;
-            margin-bottom: 20px;
+            color: #4A5A6A;
+            margin-bottom: 16px;
             font-style: italic;
         }
         .testimonial-author {
             font-weight: 700;
-            color: #C9B095;
+            color: #FF7A2E;
             margin-bottom: 4px;
-            font-size: 14px;
+            font-size: 13px;
         }
         .testimonial-title {
             font-size: 11px;
-            color: #7a85a5;
+            color: #7A8A9A;
         }
         
         @keyframes scrollTestimonials {
@@ -214,25 +389,31 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 24px;
-            margin: 48px 0 40px;
+            margin: 40px 0 40px;
         }
         .stat-card {
-            background: rgba(20, 30, 55, 0.5);
-            backdrop-filter: blur(8px);
+            background: rgba(255,255,255,0.95);
+            border: 1px solid rgba(44,24,16,0.1);
             border-radius: 20px;
-            padding: 28px 20px;
+            padding: 24px 16px;
             text-align: center;
-            border: 1px solid rgba(201, 176, 149, 0.1);
+            transition: 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: #FF7A2E40;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
         }
         .stat-number {
-            font-size: 42px;
+            font-size: 36px;
             font-weight: 800;
-            color: #C9B095;
-            margin-bottom: 8px;
+            color: #FF7A2E;
+            margin-bottom: 6px;
         }
         .stat-label {
-            font-size: 13px;
-            color: #a0a8c0;
+            font-size: 12px;
+            color: #6B7A8A;
+            font-weight: 500;
         }
 
         /* ========== FEATURE 2-COLUMN ========== */
@@ -241,291 +422,566 @@
             grid-template-columns: 1fr 1fr;
             gap: 48px;
             align-items: start;
-            margin: 80px 0;
+            margin: 64px 0;
         }
         .feature-title {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
+            color: #2C1810;
         }
-        .feature-title span {
-            color: #C9B095;
+        .feature-title .orange-text {
+            color: #FF7A2E;
         }
         .feature-desc {
-            color: #a0a8c0;
-            margin-bottom: 24px;
+            color: #6B7A8A;
+            margin-bottom: 20px;
             line-height: 1.6;
+            font-size: 14px;
         }
         .feature-list {
             list-style: none;
         }
         .feature-list li {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 14px;
-            color: #c0c8e0;
+            gap: 10px;
+            font-size: 13px;
+            color: #4A5A6A;
         }
         .feature-list i {
-            color: #C9B095;
+            color: #FF7A2E;
+            font-size: 16px;
+            width: 22px;
+        }
+
+        /* ========== SOURCING AGENTS SECTION ========== */
+        .agents-section {
+            margin: 72px 0 56px;
+        }
+        .agents-header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 48px;
+        }
+        .agents-header h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2C1810;
+            margin-bottom: 16px;
+        }
+        .agents-header p {
+            font-size: 15px;
+            color: #6B7A8A;
+            line-height: 1.6;
+        }
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+        .agent-card {
+            background: #ffffff;
+            border: 1px solid #EBF0F5;
+            border-radius: 20px;
+            padding: 24px 16px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .agent-card:hover {
+            transform: translateY(-4px);
+            border-color: #FF7A2E40;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+        }
+        .agent-avatar {
+            width: 80px;
+            height: 80px;
+            background: #F4F7FB;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #B0C0D0;
+            font-size: 32px;
+            border: 1px solid #EBF0F5;
+        }
+        .agent-name {
             font-size: 18px;
-            width: 24px;
+            font-weight: 700;
+            color: #1A1F2E;
+            margin-bottom: 4px;
+        }
+        .agent-role {
+            font-size: 12px;
+            color: #FF7A2E;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .agent-badge {
+            background: #F8FAFD;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #2C3E50;
+            margin-bottom: 14px;
+            border: 1px solid #EBF0F5;
+        }
+        .agent-stats {
+            font-size: 11px;
+            color: #6B7A8A;
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+        .agent-stats i {
+            color: #FF7A2E;
+            margin-right: 6px;
+            width: 14px;
+        }
+        .btn-outline-small {
+            background: transparent;
+            border: 1px solid #FF7A2E;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 12px;
+            color: #FF7A2E;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        .btn-outline-small:hover {
+            background: #FF7A2E;
+            color: white;
         }
 
         /* ========== CTA ========== */
         .cta-section {
-            background: linear-gradient(145deg, rgba(20, 30, 55, 0.8), rgba(10, 18, 43, 0.9));
-            border-radius: 32px;
-            padding: 64px 48px;
-            margin: 60px 0;
+            background: #F8FAFD;
+            border-radius: 28px;
+            padding: 56px 40px;
+            margin: 56px 0;
             text-align: center;
-            border: 1px solid rgba(201, 176, 149, 0.25);
+            border: 1px solid #EBF0F5;
         }
         .cta-section h2 {
-            font-size: 32px;
+            font-size: 30px;
             font-weight: 700;
-            margin-bottom: 16px;
+            color: #2C1810;
+            margin-bottom: 14px;
         }
         .cta-section p {
-            font-size: 16px;
-            color: #a0a8c0;
-            max-width: 550px;
-            margin: 0 auto 32px;
+            font-size: 15px;
+            color: #6B7A8A;
+            max-width: 520px;
+            margin: 0 auto 28px;
         }
 
         /* ========== FOOTER ========== */
         .footer {
-            border-top: 1px solid rgba(201, 176, 149, 0.1);
-            padding: 48px 0 32px;
+            border-top: 1px solid #EBF0F5;
+            padding: 40px 0 32px;
             font-size: 12px;
-            color: #5a6388;
+            color: #7A8A9A;
             text-align: center;
+            background: #ffffff;
         }
         .footer-links {
             display: flex;
             justify-content: center;
-            gap: 32px;
-            margin-bottom: 24px;
+            gap: 28px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
         }
         .footer-links a {
-            color: #7a85a5;
+            color: #5A6874;
             text-decoration: none;
             transition: 0.2s;
+            font-weight: 500;
+            font-size: 12px;
         }
         .footer-links a:hover {
-            color: #C9B095;
-        }
-
-        /* ========== 波浪背景 ========== */
-        .waves-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            pointer-events: none;
-            opacity: 0.4;
+            color: #FF7A2E;
         }
 
         @media (max-width: 900px) {
             .container { padding: 0 20px; }
-            .hero h1 { font-size: 38px; }
+            .hero-content h1 { font-size: 32px; }
+            .hero-content .sub-headline { font-size: 18px; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .feature-grid { grid-template-columns: 1fr; gap: 48px; }
-            .testimonial-item { width: 300px; }
+            .feature-grid { grid-template-columns: 1fr; gap: 40px; }
+            .testimonial-item { width: 280px; }
+            .agents-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .agents-header h2 { font-size: 26px; }
+            .platform-img-wrapper { width: 140px; height: 86px; }
+            .hero-content { padding: 40px 0 30px; }
         }
         @media (max-width: 600px) {
             .stats-grid { grid-template-columns: 1fr; }
-            .hero h1 { font-size: 32px; }
-            .cta-section { padding: 40px 24px; }
-            .section-title { font-size: 28px; }
-            .testimonial-item { width: 280px; }
+            .hero-content h1 { font-size: 28px; }
+            .hero-content { padding: 30px 0 25px; }
+            .cta-section { padding: 32px 24px; }
+            .section-title { font-size: 24px; }
+            .agents-grid { grid-template-columns: 1fr; }
+            .platforms-grid { gap: 16px; }
+            .platform-img-wrapper { width: 120px; height: 74px; }
         }
     </style>
 </head>
 <body>
-    <!-- 波浪背景 Canvas -->
-    <canvas id="wavesBg" class="waves-bg"></canvas>
+    <!-- 褐色渐变从底部向上蔓延，到 "What our partners say" 区域变白 -->
+    <div class="gradient-wrapper">
+        <!-- 视频 Hero 区域 -->
+        <div class="video-hero-section">
+            <!-- 视频背景 -->
+            <video class="hero-video-background" id="heroVideo" autoplay loop muted playsinline style="display: none;"></video>
+            <div class="hero-video-placeholder" id="heroVideoPlaceholder">
+                <i class="fas fa-play-circle" style="font-size: 48px;"></i>
+                <p>点击上传背景视频</p>
+                <small>支持 MP4 格式，将作为背景播放</small>
+            </div>
+            <button class="video-control-btn" id="heroVideoUploadBtn"><i class="fas fa-upload"></i> 上传背景视频</button>
 
-    <header class="site-header">
-        <div class="container header-inner">
-            <a href="#" class="logo">ADDITIVE<span>®</span></a>
-            <div class="nav-links">
-                <a href="register.html" class="btn-outline">Register</a>
-                <a href="signin.html" class="btn-outline">Sign In</a>
+            <!-- 所有内容都在视频上层 -->
+            <div class="hero-content-wrapper">
+                <div class="container">
+                    <header class="site-header">
+                        <div class="header-inner">
+                            <div class="logo" id="logoContainer">
+                                <div class="logo-placeholder" id="logoUploadBtn">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <span class="logo-text">CJD<span> | ADDITIVE</span></span>
+                            </div>
+                            <div class="nav-links">
+                                <a href="#">Sourcing</a>
+                                <a href="#">Fulfillment</a>
+                                <a href="#">Pricing</a>
+                                <a href="#">Resources</a>
+                                <a href="register.html" class="btn-outline">Sign Up</a>
+                                <a href="signin.html" class="btn-outline">Sign In</a>
+                            </div>
+                        </div>
+                    </header>
+
+                    <!-- Hero 内容 -->
+                    <div class="hero-content">
+                        <h1>Fulfill Your Dropshipping Dreams <br>with <span class="orange-text">CJ's All-in-One Solution</span></h1>
+                        <div class="sub-headline">From Global Suppliers to Seamless Automation – Your Gateway to Hassle-Free Success Starts Here!</div>
+                        <p>Connect your store, source trending products, and ship orders from 20+ warehouses worldwide. Start your dropshipping business today.</p>
+                        <button class="btn-primary" onclick="location.href='register.html'">Get Started <i class="fas fa-arrow-right"></i></button>
+                    </div>
+
+                    <!-- Trusted row -->
+                    <div class="trusted-row">
+                        <span class="trusted-item">Trusted by 50,000+ brands</span>
+                        <span class="trusted-item">20+ global warehouses</span>
+                        <span class="trusted-item">⭐ 4.8/5 from 2,000+ reviews</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </header>
 
-    <main>
+        <!-- 平台集成区域 -->
         <div class="container">
-            <!-- Hero 区域 -->
-            <div class="hero">
-                <h1>Digital hotel marketing.<br><span>Measurable, precise & specialized.</span></h1>
-                <p>Hotels are facing a new reality: high advertising costs, shrinking profit margins, ever shorter bookings. Standard solutions and traditional agencies reach their limits here. A new level of precision and performance is needed.</p>
-                <p style="font-size: 16px; margin-top: -20px; margin-bottom: 32px; color: #C9B095;">ADDITIVE is the first specialized performance marketing agency for hotels. With a clear focus on measurable results and more direct bookings through data.</p>
-                <button class="btn-primary" onclick="location.href='register.html'"><i class="fas fa-arrow-right"></i> Get started</button>
+            <div class="platforms-section">
+                <div class="platforms-title">INTEGRATED WITH LEADING PLATFORMS</div>
+                <div class="platforms-grid" id="platformsGrid"></div>
             </div>
+        </div>
 
-            <!-- Trusted by row -->
-            <div class="trusted-row">
-                <span class="trusted-item">Trusted Marketing Partner</span>
-                <span class="trusted-item">for over 500 Hotels across Europe</span>
-                <span class="trusted-item">⭐ 4.9 / 5 Client Rating</span>
-            </div>
-
-            <!-- 滚动评价区域 -->
-            <h2 class="section-title">What our <span>partners say</span></h2>
+        <!-- 滚动评价区域 - 从这里开始变白 -->
+        <div class="container">
+            <h2 class="section-title">What our <span class="orange-text">partners say</span></h2>
             <div class="marquee-container">
                 <div class="marquee-content" id="marqueeContent"></div>
             </div>
 
-            <!-- 案例数据卡片 -->
+            <!-- 数据卡片 -->
             <div class="stats-grid">
-                <div class="stat-card"><div class="stat-number">2,251</div><div class="stat-label">Reservations in just one year</div></div>
-                <div class="stat-card"><div class="stat-number">75%</div><div class="stat-label">Reservations from new guests</div></div>
-                <div class="stat-card"><div class="stat-number">1,920%</div><div class="stat-label">ROI for clients</div></div>
-                <div class="stat-card"><div class="stat-number">+500</div><div class="stat-label">Hotels across Europe</div></div>
+                <div class="stat-card"><div class="stat-number">250K+</div><div class="stat-label">Products Available</div></div>
+                <div class="stat-card"><div class="stat-number">20+</div><div class="stat-label">Warehouses Worldwide</div></div>
+                <div class="stat-card"><div class="stat-number">99.5%</div><div class="stat-label">Fulfillment Rate</div></div>
+                <div class="stat-card"><div class="stat-number">30%</div><div class="stat-label">Avg. Cost Savings</div></div>
             </div>
 
-            <!-- Marketing Excellence meets Technology -->
+            <!-- 双栏功能块 -->
             <div class="feature-grid">
                 <div>
-                    <h2 class="feature-title">Marketing Excellence <br><span>meets Technology.</span></h2>
-                    <p class="feature-desc">We combine high-end marketing campaigns with advanced data analysis and proprietary technology that shows for the first time which measures really work.</p>
+                    <h2 class="feature-title">AI‑Powered <span class="orange-text">Product Sourcing</span></h2>
+                    <p class="feature-desc">Find winning products in seconds. Our AI analyzes market trends, supplier reliability, and profit margins to recommend the best items for your store.</p>
                     <ul class="feature-list">
-                        <li><i class="fas fa-check-circle"></i> 100% specialized in performance, no "full service" philosophy</li>
-                        <li><i class="fas fa-check-circle"></i> +80 specialized experts in digital hotel marketing</li>
-                        <li><i class="fas fa-check-circle"></i> 20 years of experience in online marketing and software</li>
+                        <li><i class="fas fa-check-circle"></i> 1‑click import to your store</li>
+                        <li><i class="fas fa-check-circle"></i> Private labeling & custom packaging</li>
+                        <li><i class="fas fa-check-circle"></i> Dedicated sourcing agent</li>
                     </ul>
                 </div>
                 <div>
-                    <h2 class="feature-title">Not clicks, but <span>revenue.</span></h2>
-                    <p class="feature-desc">Our marketing solutions are 100% optimized for performance. What matters? Turnover, reservations, profitability and a predictable occupancy for your hotel business.</p>
+                    <h2 class="feature-title">Automated <span class="orange-text">Global Fulfillment</span></h2>
+                    <p class="feature-desc">Sync orders automatically, pick from the nearest warehouse, and deliver to customers in 2‑5 days. Reduce shipping costs by up to 60%.</p>
                     <ul class="feature-list">
-                        <li><i class="fas fa-chart-line"></i> Balancing seasonality gaps in a targeted manner</li>
-                        <li><i class="fas fa-chart-pie"></i> Reliably evaluate campaign effectiveness thanks to ROI</li>
-                        <li><i class="fas fa-euro-sign"></i> Invest advertising budget where reservations occur</li>
+                        <li><i class="fas fa-chart-line"></i> Real‑time inventory sync</li>
+                        <li><i class="fas fa-chart-pie"></i> Branded tracking & packing slips</li>
+                        <li><i class="fas fa-euro-sign"></i> Transparent per‑unit pricing</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Use data. Don't rely on gut feelings. -->
-            <div class="feature-grid" style="margin-top: 0;">
-                <div>
-                    <h2 class="feature-title">Use data. <span>Don't rely on gut feelings.</span></h2>
-                    <p class="feature-desc">Our marketing system analyses guest behavior and reservation data in real time and enables targeted marketing with a clear focus: More bookings and higher ROI.</p>
-                    <ul class="feature-list">
-                        <li><i class="fas fa-chart-simple"></i> 24/7 Measurability and transparency instead of marketing black box</li>
-                        <li><i class="fas fa-chart-simple"></i> No superficial marketing figures, but hotel-specific KPIs</li>
-                        <li><i class="fas fa-calendar"></i> Individual campaign optimization based on your hotel occupancy</li>
-                    </ul>
+            <!-- Get the Best Sourcing Agent Services -->
+            <div class="agents-section">
+                <div class="agents-header">
+                    <h2>Get the Best Sourcing Agent Services</h2>
+                    <p>We possess extensive sourcing agent resources and high-quality cross-border procurement services to ensure that your project objectives and deadlines are fulfilled. Please review the profiles of our premium sourcing agents below to identify the best match for your business.</p>
                 </div>
-                <div>
-                    <h2 class="feature-title">Our Numbers <br><span>Tell a Clear Story.</span></h2>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
-                        <div><div style="font-size: 28px; font-weight: 800; color: #C9B095;">€30M</div><div style="font-size: 12px; color: #a0a8c0;">managed ad budget</div></div>
-                        <div><div style="font-size: 28px; font-weight: 800; color: #C9B095;">960%</div><div style="font-size: 12px; color: #a0a8c0;">average ROI</div></div>
-                        <div><div style="font-size: 28px; font-weight: 800; color: #C9B095;">€500M</div><div style="font-size: 12px; color: #a0a8c0;">generated value</div></div>
-                        <div><div style="font-size: 28px; font-weight: 800; color: #C9B095;">+50</div><div style="font-size: 12px; color: #a0a8c0;">partners & agencies</div></div>
-                    </div>
-                </div>
+                <div class="agents-grid" id="agentsGrid"></div>
             </div>
 
-            <!-- CTA 区域 -->
+            <!-- 底部 CTA -->
             <div class="cta-section">
-                <h2>Your strategic partner for measurable marketing success.</h2>
-                <p>Over 500 hotels already place their trust in our technology and expertise. You too can leverage the first data-driven and performance-oriented marketing system developed specifically for the hotel industry.</p>
-                <button class="btn-primary" onclick="location.href='register.html'"><i class="fas fa-arrow-right"></i> Start now</button>
+                <h2>Ready to scale your dropshipping business?</h2>
+                <p>Join 50,000+ merchants who trust us for sourcing, fulfillment, and growth.</p>
+                <button class="btn-primary" onclick="location.href='register.html'">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
             </div>
         </div>
-    </main>
+    </div>
 
     <footer class="footer">
         <div class="container">
             <div class="footer-links">
-                <a href="#">Imprint</a>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms & Conditions</a>
+                <a href="#">About Us</a>
+                <a href="#">Sourcing</a>
+                <a href="#">Fulfillment</a>
+                <a href="#">Pricing</a>
+                <a href="#">Affiliate Program</a>
+                <a href="#">API</a>
                 <a href="#">Contact</a>
             </div>
-            <div>© 2025 ADDITIVE – The Hotel Performance Marketing Agency</div>
+            <div>© 2025 CJDropshipping | ADDITIVE – Global Dropshipping Platform</div>
         </div>
     </footer>
 
-    <!-- 波浪效果脚本 -->
     <script>
-    (function() {
-        const canvas = document.getElementById('wavesBg');
-        if(!canvas) return;
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let time = 0;
-        
-        function resize() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-        }
-        
-        function animate() {
-            time += 0.02;
-            ctx.fillStyle = '#0a0f2a';
-            ctx.fillRect(0, 0, width, height);
-            
-            for(let i = 0; i < 3; i++) {
-                ctx.beginPath();
-                for(let x = 0; x <= width; x += 10) {
-                    const y = height * (0.4 + i * 0.2) + Math.sin(x * 0.01 + time * (1 + i * 0.5)) * 30 + Math.cos(x * 0.02 + time) * 15;
-                    if(x === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                }
-                ctx.strokeStyle = `rgba(201, 176, 149, ${0.12 - i * 0.02})`;
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-            
-            requestAnimationFrame(animate);
-        }
-        
-        window.addEventListener('resize', resize);
-        resize();
-        animate();
-    })();
-    
-    // 滚动评价数据
-    (function() {
-        const testimonials = [
-            { text: "“With ADDITIVE, we have really found a good partner who has excellent marketing skills.”", author: "Berger Family", title: "Mountain Resort Feuerberg, Carinthia" },
-            { text: "“The collaboration is always professional, friendly and based on facts. We are very grateful to the team for their top performance.”", author: "Madreiter Family", title: "Der Löwe, Salzburg" },
-            { text: "“We have already received numerous bookings. As a company, ADDITIVE has shown what modern hotel marketing really looks like.”", author: "Bettina Ortner-Zwicklbauer", title: "Ortner's Resort, Bavaria" },
-            { text: "“ADDITIVE helps us to address our preferred guests and to measure the inquiries and bookings we have received with sales in a targeted manner.”", author: "Peter Mader", title: "Feuerstein Nature Family Resort, South Tyrol" },
-            { text: "“The ROI we achieved within the first three months exceeded all expectations. A game-changer for our marketing strategy.”", author: "Sabine Weber", title: "Grand Hotel Dolomites" },
-            { text: "“Finally a marketing partner that understands the hotel business. Their data-driven approach brought us 40% more direct bookings.”", author: "Thomas Reinisch", title: "Alpine Hideaway, Tyrol" },
-            { text: "“We've worked with several agencies before, but ADDITIVE is the only one that delivers measurable results consistently. Highly recommended.”", author: "Family Hofer", title: "Seeblick Wellness Hotel" },
-            { text: "“The team is extremely responsive and proactive. They don't just run campaigns — they optimize daily based on real booking data.”", author: "Markus Leitner", title: "City Hotel Innsbruck" }
+        // 平台数据
+        const platforms = [
+            { name: "Shopify", icon: "fab fa-shopify" },
+            { name: "WooCommerce", icon: "fab fa-wordpress" },
+            { name: "TikTok Shop", icon: "fab fa-tiktok" },
+            { name: "eBay", icon: "fab fa-ebay" },
+            { name: "Shopee", icon: "fas fa-store" },
+            { name: "Lazada", icon: "fas fa-shopping-cart" },
+            { name: "Mercado", icon: "fas fa-chart-line" },
+            { name: "Etsy", icon: "fab fa-etsy" },
+            { name: "API", icon: "fas fa-code" }
         ];
-        
-        const container = document.getElementById('marqueeContent');
-        if(container) {
-            for (let i = 0; i < 2; i++) {
-                testimonials.forEach(t => {
-                    const div = document.createElement('div');
-                    div.className = 'testimonial-item';
-                    div.innerHTML = `
-                        <div class="testimonial-text">${t.text}</div>
-                        <div class="testimonial-author">${t.author}</div>
-                        <div class="testimonial-title">${t.title}</div>
-                    `;
-                    container.appendChild(div);
-                });
+
+        // 存储平台图片URL
+        let platformImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
+        let logoImageUrl = localStorage.getItem('logoImageUrl') || '';
+        let heroVideoUrl = localStorage.getItem('heroVideoUrl') || '';
+
+        // 渲染平台区域
+        function renderPlatforms() {
+            const grid = document.getElementById('platformsGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            platforms.forEach(p => {
+                const imgUrl = platformImages[p.name] || '';
+                const div = document.createElement('div');
+                div.className = 'platform-item';
+                div.innerHTML = `
+                    <div class="platform-img-wrapper" data-platform="${p.name}" style="cursor: pointer;">
+                        ${imgUrl ? `<img src="${imgUrl}" alt="${p.name}" style="width:100%; height:100%; object-fit:contain;">` : `<i class="${p.icon}"></i>`}
+                    </div>
+                    <span class="platform-name">${p.name}</span>
+                    <span class="upload-icon-small" onclick="uploadPlatformImage('${p.name}')">📷 上传图片</span>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // 上传平台图片
+        window.uploadPlatformImage = function(platformName) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        platformImages[platformName] = event.target.result;
+                        localStorage.setItem('platformImages', JSON.stringify(platformImages));
+                        renderPlatforms();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        };
+
+        // 上传Logo
+        document.getElementById('logoUploadBtn')?.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/png,image/jpeg';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        logoImageUrl = event.target.result;
+                        localStorage.setItem('logoImageUrl', logoImageUrl);
+                        const logoContainer = document.getElementById('logoContainer');
+                        if (logoContainer) {
+                            logoContainer.innerHTML = `<img src="${logoImageUrl}" alt="Logo" style="height:48px; width:auto;">`;
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        });
+
+        // 加载保存的Logo
+        if (logoImageUrl) {
+            const logoContainer = document.getElementById('logoContainer');
+            if (logoContainer) {
+                logoContainer.innerHTML = `<img src="${logoImageUrl}" alt="Logo" style="height:48px; width:auto;">`;
             }
         }
-    })();
+
+        // 上传Hero背景视频
+        function setupHeroVideo(videoUrl) {
+            const video = document.getElementById('heroVideo');
+            const placeholder = document.getElementById('heroVideoPlaceholder');
+            if (videoUrl && video) {
+                video.src = videoUrl;
+                video.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+                video.play().catch(e => console.log('自动播放被阻止，需要用户交互'));
+            } else if (video) {
+                video.style.display = 'none';
+                if (placeholder) placeholder.style.display = 'flex';
+            }
+        }
+
+        document.getElementById('heroVideoUploadBtn')?.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'video/mp4,video/webm';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        heroVideoUrl = event.target.result;
+                        localStorage.setItem('heroVideoUrl', heroVideoUrl);
+                        setupHeroVideo(heroVideoUrl);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        });
+
+        // 加载保存的视频
+        if (heroVideoUrl) {
+            setupHeroVideo(heroVideoUrl);
+        }
+
+        // 滚动评价数据
+        (function() {
+            const testimonials = [
+                { text: "“The sourcing agent found me a supplier with 30% lower cost. My profit margin has never been better.”", author: "Emma Richardson", title: "Shopify Store Owner" },
+                { text: "“Fulfillment to the US takes only 4 days on average. My customers are thrilled.”", author: "James O'Connor", title: "TikTok Shop Seller" },
+                { text: "“I've scaled from zero to $50k/month in 6 months thanks to their product research tools.”", author: "Sophie Laurent", title: "E‑commerce Entrepreneur" },
+                { text: "“The private labeling service helped me build a real brand. Highly recommended.”", author: "Liam Wilson", title: "Brand Founder" },
+                { text: "“Their warehousing network saved me thousands in shipping costs. Game changer.”", author: "Chloe Martinez", title: "Dropshipper since 2021" },
+                { text: "“Best decision for my business. Support team is responsive and actually helpful.”", author: "Oliver Schmidt", title: "German Online Seller" }
+            ];
+            
+            const container = document.getElementById('marqueeContent');
+            if(container) {
+                for (let i = 0; i < 2; i++) {
+                    testimonials.forEach(t => {
+                        const div = document.createElement('div');
+                        div.className = 'testimonial-item';
+                        div.innerHTML = `
+                            <div class="testimonial-text">${t.text}</div>
+                            <div class="testimonial-author">${t.author}</div>
+                            <div class="testimonial-title">${t.title}</div>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+            }
+        })();
+
+        // 欧洲真实人名
+        const agentsData = [
+            {
+                name: "Lukas Weber",
+                role: "Senior Sourcing Specialist",
+                badge: "Premium Agent",
+                experience: "8+ years in EU sourcing",
+                successRate: "98% client satisfaction",
+                languages: "English, German, French"
+            },
+            {
+                name: "Eleonora Conti",
+                role: "Procurement Manager",
+                badge: "Top Rated",
+                experience: "12 years in fashion & electronics",
+                successRate: "99% on-time delivery",
+                languages: "Italian, English, Spanish"
+            },
+            {
+                name: "Thomas Andersen",
+                role: "Global Supply Chain Expert",
+                badge: "Verified Partner",
+                experience: "10+ years cross-border",
+                successRate: "300+ happy brands",
+                languages: "Danish, English, Mandarin"
+            },
+            {
+                name: "Clara Dubois",
+                role: "Quality Control Agent",
+                badge: "Gold Supplier",
+                experience: "Specialized in hard goods",
+                successRate: "99.5% quality pass rate",
+                languages: "French, English, German"
+            }
+        ];
+
+        const agentsGrid = document.getElementById('agentsGrid');
+        if (agentsGrid) {
+            agentsData.forEach(agent => {
+                const card = document.createElement('div');
+                card.className = 'agent-card';
+                card.innerHTML = `
+                    <div class="agent-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="agent-name">${agent.name}</div>
+                    <div class="agent-role">${agent.role}</div>
+                    <div class="agent-badge">${agent.badge}</div>
+                    <div class="agent-stats">
+                        <div><i class="fas fa-briefcase"></i> ${agent.experience}</div>
+                        <div><i class="fas fa-chart-line"></i> ${agent.successRate}</div>
+                        <div><i class="fas fa-language"></i> ${agent.languages}</div>
+                    </div>
+                    <button class="btn-outline-small">Contact Agent →</button>
+                `;
+                agentsGrid.appendChild(card);
+            });
+        }
+
+        // 初始化平台渲染
+        renderPlatforms();
     </script>
 </body>
 </html>
