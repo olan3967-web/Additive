@@ -2141,171 +2141,217 @@
         if (badgeInterval) { clearInterval(badgeInterval); badgeInterval = null; }
     }
     
-    // ========== 首页配置管理 (Index Animation) ==========
-    let platformList = ["Shopify", "WooCommerce", "TikTok Shop", "eBay", "Shopee", "Lazada", "Mercado", "Etsy", "API"];
+    // ========== 首页配置管理 (Index Animation) - 修复版 ==========
+let platformList = ["Shopify", "WooCommerce", "TikTok Shop", "eBay", "Shopee", "Lazada", "Mercado", "Etsy", "API"];
+
+// 加载已保存的首页配置
+function loadIndexConfig() {
+    const savedVideoUrl = localStorage.getItem('heroVideoUrl') || '';
+    const savedLogoUrl = localStorage.getItem('logoImageUrl') || '';
+    const savedPlatformImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
     
-    // 加载已保存的首页配置
-    function loadIndexConfig() {
-        const savedVideoUrl = localStorage.getItem('heroVideoUrl') || '';
-        const savedLogoUrl = localStorage.getItem('logoImageUrl') || '';
-        const savedPlatformImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
-        
-        const videoInput = document.getElementById('indexVideoUrl');
-        const logoInput = document.getElementById('logoUrl');
-        if (videoInput) videoInput.value = savedVideoUrl;
-        if (logoInput) logoInput.value = savedLogoUrl;
-        if (savedLogoUrl) {
-            const previewImg = document.getElementById('logoPreviewImg');
-            if (previewImg) {
-                previewImg.src = savedLogoUrl;
-                previewImg.style.display = 'block';
-            }
+    const videoInput = document.getElementById('indexVideoUrl');
+    const logoInput = document.getElementById('logoUrl');
+    if (videoInput) videoInput.value = savedVideoUrl;
+    if (logoInput) logoInput.value = savedLogoUrl;
+    if (savedLogoUrl) {
+        const previewImg = document.getElementById('logoPreviewImg');
+        if (previewImg) {
+            previewImg.src = savedLogoUrl;
+            previewImg.style.display = 'block';
         }
-        
-        renderPlatformIconsGrid(savedPlatformImages);
     }
     
-    function renderPlatformIconsGrid(savedImages) {
-        const grid = document.getElementById('platformIconsGrid');
-        if (!grid) return;
-        grid.innerHTML = '';
-        platformList.forEach(platform => {
-            const imgUrl = savedImages[platform] || '';
-            const div = document.createElement('div');
-            div.style.cssText = 'background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; text-align: center;';
-            div.innerHTML = `
-                <div style="font-size: 12px; margin-bottom: 8px; color: #C9B095;">${platform}</div>
-                <div style="width: 180px; height: 110px; background: #0a0f2a; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto; overflow: hidden;">
-                    ${imgUrl ? `<img src="${imgUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<i class="fas fa-image" style="font-size: 32px; color: #5a6388;"></i>'}
-                </div>
-                <button class="upload-platform-icon-btn" data-platform="${platform}" style="margin-top: 8px; padding: 4px 12px; font-size: 11px; background: #2f6b3a;">📷 上传图标</button>
-                <button class="clear-platform-icon-btn" data-platform="${platform}" style="margin-top: 8px; padding: 4px 12px; font-size: 11px; background: #7a2f2f;">🗑️ 清除</button>
-            `;
-            grid.appendChild(div);
-        });
-        
-        document.querySelectorAll('.upload-platform-icon-btn').forEach(btn => {
-            btn.onclick = () => uploadPlatformIcon(btn.dataset.platform);
-        });
-        document.querySelectorAll('.clear-platform-icon-btn').forEach(btn => {
-            btn.onclick = () => clearPlatformIcon(btn.dataset.platform);
-        });
-    }
+    renderPlatformIconsGrid(savedPlatformImages);
+}
+
+function renderPlatformIconsGrid(savedImages) {
+    const grid = document.getElementById('platformIconsGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    platformList.forEach(platform => {
+        const imgUrl = savedImages[platform] || '';
+        const div = document.createElement('div');
+        div.style.cssText = 'background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; text-align: center;';
+        div.innerHTML = `
+            <div style="font-size: 12px; margin-bottom: 8px; color: #C9B095;">${platform}</div>
+            <div style="width: 180px; height: 110px; background: #0a0f2a; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto; overflow: hidden;">
+                ${imgUrl ? `<img src="${imgUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;">` : '<i class="fas fa-image" style="font-size: 32px; color: #5a6388;"></i>'}
+            </div>
+            <button class="upload-platform-icon-btn" data-platform="${platform}" style="margin-top: 8px; padding: 4px 12px; font-size: 11px; background: #2f6b3a;">📷 上传图标</button>
+            <button class="clear-platform-icon-btn" data-platform="${platform}" style="margin-top: 8px; padding: 4px 12px; font-size: 11px; background: #7a2f2f;">🗑️ 清除</button>
+        `;
+        grid.appendChild(div);
+    });
     
-    function uploadPlatformIcon(platformName) {
+    document.querySelectorAll('.upload-platform-icon-btn').forEach(btn => {
+        btn.onclick = () => uploadPlatformIcon(btn.dataset.platform);
+    });
+    document.querySelectorAll('.clear-platform-icon-btn').forEach(btn => {
+        btn.onclick = () => clearPlatformIcon(btn.dataset.platform);
+    });
+}
+
+function uploadPlatformIcon(platformName) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const savedImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
+                savedImages[platformName] = event.target.result;
+                localStorage.setItem('platformImages', JSON.stringify(savedImages));
+                renderPlatformIconsGrid(savedImages);
+                showToast(`${platformName} 图标已保存`, 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    input.click();
+}
+
+function clearPlatformIcon(platformName) {
+    const savedImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
+    delete savedImages[platformName];
+    localStorage.setItem('platformImages', JSON.stringify(savedImages));
+    renderPlatformIconsGrid(savedImages);
+    showToast(`${platformName} 图标已清除`, 'success');
+}
+
+// 上传首页视频 - 修复版
+function setupVideoUpload() {
+    const uploadBtn = document.getElementById('uploadIndexVideoBtn');
+    if (!uploadBtn) return;
+    
+    const newBtn = uploadBtn.cloneNode(true);
+    uploadBtn.parentNode.replaceChild(newBtn, uploadBtn);
+    
+    newBtn.addEventListener('click', function(e) {
+        e.preventDefault();
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = (e) => {
-            const file = e.target.files[0];
+        input.accept = 'video/mp4,video/webm';
+        input.onchange = function(e2) {
+            const file = e2.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = (event) => {
-                    const savedImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
-                    savedImages[platformName] = event.target.result;
-                    localStorage.setItem('platformImages', JSON.stringify(savedImages));
-                    renderPlatformIconsGrid(savedImages);
-                    showToast(`${platformName} 图标已保存`, 'success');
+                reader.onload = function(event) {
+                    const videoUrl = event.target.result;
+                    localStorage.setItem('heroVideoUrl', videoUrl);
+                    const videoInput = document.getElementById('indexVideoUrl');
+                    if (videoInput) videoInput.value = videoUrl;
+                    showToast('视频已保存', 'success');
+                    
+                    const previewDiv = document.getElementById('indexVideoPreview');
+                    if (previewDiv) {
+                        const video = previewDiv.querySelector('video');
+                        if (video) video.src = videoUrl;
+                        previewDiv.style.display = 'block';
+                    }
                 };
                 reader.readAsDataURL(file);
             }
         };
         input.click();
-    }
+    });
+}
+
+// 上传Logo
+function setupLogoUpload() {
+    const uploadBtn = document.getElementById('uploadLogoBtn');
+    if (!uploadBtn) return;
     
-    function clearPlatformIcon(platformName) {
-        const savedImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
-        delete savedImages[platformName];
-        localStorage.setItem('platformImages', JSON.stringify(savedImages));
-        renderPlatformIconsGrid(savedImages);
-        showToast(`${platformName} 图标已清除`, 'success');
-    }
+    const newBtn = uploadBtn.cloneNode(true);
+    uploadBtn.parentNode.replaceChild(newBtn, uploadBtn);
     
-    // 上传首页视频
-    const uploadIndexVideoBtn = document.getElementById('uploadIndexVideoBtn');
-    if (uploadIndexVideoBtn) {
-        uploadIndexVideoBtn.addEventListener('click', () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'video/mp4,video/webm';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const videoUrl = event.target.result;
-                        localStorage.setItem('heroVideoUrl', videoUrl);
-                        document.getElementById('indexVideoUrl').value = videoUrl;
-                        showToast('视频已保存', 'success');
-                        const previewDiv = document.getElementById('indexVideoPreview');
-                        const video = previewDiv.querySelector('video');
-                        video.src = videoUrl;
-                        previewDiv.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-            input.click();
-        });
-    }
-    
-    // 上传Logo
-    const uploadLogoBtn = document.getElementById('uploadLogoBtn');
-    if (uploadLogoBtn) {
-        uploadLogoBtn.addEventListener('click', () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/png,image/jpeg';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const logoUrl = event.target.result;
-                        localStorage.setItem('logoImageUrl', logoUrl);
-                        document.getElementById('logoUrl').value = logoUrl;
-                        const previewImg = document.getElementById('logoPreviewImg');
+    newBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/png,image/jpeg';
+        input.onchange = function(e2) {
+            const file = e2.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const logoUrl = event.target.result;
+                    localStorage.setItem('logoImageUrl', logoUrl);
+                    const logoInput = document.getElementById('logoUrl');
+                    if (logoInput) logoInput.value = logoUrl;
+                    const previewImg = document.getElementById('logoPreviewImg');
+                    if (previewImg) {
                         previewImg.src = logoUrl;
                         previewImg.style.display = 'block';
-                        showToast('Logo已保存', 'success');
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-            input.click();
-        });
-    }
-    
-    // 预览视频
-    const previewIndexVideoBtn = document.getElementById('previewIndexVideoBtn');
-    if (previewIndexVideoBtn) {
-        previewIndexVideoBtn.addEventListener('click', () => {
-            const videoUrl = document.getElementById('indexVideoUrl').value;
-            if (videoUrl) {
-                const previewDiv = document.getElementById('indexVideoPreview');
-                const video = previewDiv.querySelector('video');
-                video.src = videoUrl;
-                previewDiv.style.display = 'block';
-            } else {
-                showToast('请先上传视频', 'warning');
+                    }
+                    showToast('Logo已保存', 'success');
+                };
+                reader.readAsDataURL(file);
             }
-        });
-    }
-    
-    // 同步到首页
-    const syncIndexAssetsBtn = document.getElementById('syncIndexAssetsBtn');
-    if (syncIndexAssetsBtn) {
-        syncIndexAssetsBtn.addEventListener('click', () => {
-            showToast('配置已同步，刷新首页即可查看', 'success');
-        });
-    }
-    
-    // 初始化加载首页配置
-    loadIndexConfig();
+        };
+        input.click();
+    });
+}
 
-    // 启动所有功能
-    startBadgePolling();
-    loadDashboard();
+// 预览视频
+function setupVideoPreview() {
+    const previewBtn = document.getElementById('previewIndexVideoBtn');
+    if (!previewBtn) return;
+    
+    const newBtn = previewBtn.cloneNode(true);
+    previewBtn.parentNode.replaceChild(newBtn, previewBtn);
+    
+    newBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const videoUrl = document.getElementById('indexVideoUrl').value;
+        if (videoUrl) {
+            const previewDiv = document.getElementById('indexVideoPreview');
+            if (previewDiv) {
+                const video = previewDiv.querySelector('video');
+                if (video) video.src = videoUrl;
+                previewDiv.style.display = 'block';
+            }
+        } else {
+            showToast('请先上传视频', 'warning');
+        }
+    });
+}
+
+// 同步到首页
+function setupSyncBtn() {
+    const syncBtn = document.getElementById('syncIndexAssetsBtn');
+    if (!syncBtn) return;
+    
+    const newBtn = syncBtn.cloneNode(true);
+    syncBtn.parentNode.replaceChild(newBtn, syncBtn);
+    
+    newBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        showToast('配置已同步，刷新首页即可查看', 'success');
+    });
+}
+
+// 初始化所有功能
+function initIndexConfig() {
+    loadIndexConfig();
+    setupVideoUpload();
+    setupLogoUpload();
+    setupVideoPreview();
+    setupSyncBtn();
+}
+
+// 页面加载完成后执行
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initIndexConfig);
+} else {
+    initIndexConfig();
+}
+
+// 启动所有功能
+startBadgePolling();
+loadDashboard();
 loadAnimatedSettings();
 loadDashboardProducts();
 </script>

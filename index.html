@@ -29,9 +29,9 @@
             z-index: 2;
         }
 
-        /* ========== 褐色渐变背景区域 (从底部向上渐变到白色) ========== */
+        /* ========== 褐色渐变背景区域 - 从 Get the Best Sourcing Agent Services 上方延伸到视频内部 ========== */
         .gradient-wrapper {
-            background: linear-gradient(180deg, #ffffff 0%, #F5F0EB 15%, #8B6B50 40%, #5C3A2A 70%, #2C1810 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #F5F0EB 20%, #8B6B50 50%, #5C3A2A 75%, #2C1810 100%);
         }
 
         /* 视频 Hero 区域 */
@@ -52,43 +52,6 @@
             opacity: 0.4;
         }
         
-        .hero-video-placeholder {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(44,24,16,0.5);
-            z-index: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 12px;
-            color: rgba(255,255,255,0.7);
-        }
-        
-        .video-control-btn {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.6);
-            border: none;
-            padding: 8px 16px;
-            border-radius: 30px;
-            color: white;
-            cursor: pointer;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 10;
-            backdrop-filter: blur(4px);
-        }
-        .video-control-btn:hover {
-            background: #FF7A2E;
-        }
-
         /* 所有内容都在视频上层 */
         .hero-content-wrapper {
             position: relative;
@@ -118,25 +81,6 @@
             width: auto;
             max-width: 200px;
             object-fit: contain;
-        }
-        .logo-placeholder {
-            width: 48px;
-            height: 48px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: 0.2s;
-            border: 1px dashed #FF7A2E;
-        }
-        .logo-placeholder:hover {
-            background: rgba(255,122,46,0.3);
-        }
-        .logo-placeholder i {
-            font-size: 24px;
-            color: #FF7A2E;
         }
         .logo-text {
             font-size: 20px;
@@ -280,15 +224,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: 0.2s;
-            border: 1px dashed rgba(255,122,46,0.5);
             overflow: hidden;
             backdrop-filter: blur(4px);
-        }
-        .platform-img-wrapper:hover {
-            background: rgba(255,122,46,0.3);
-            border-color: #FF7A2E;
         }
         .platform-img-wrapper img {
             width: 100%;
@@ -305,16 +242,6 @@
             font-size: 12px;
             font-weight: 500;
             color: #D4B896;
-        }
-        .upload-icon-small {
-            font-size: 10px;
-            display: block;
-            color: #C0A080;
-            cursor: pointer;
-            margin-top: 4px;
-        }
-        .upload-icon-small:hover {
-            color: #FF7A2E;
         }
 
         /* ========== 滚动评价区域 ========== */
@@ -456,9 +383,10 @@
             width: 22px;
         }
 
-        /* ========== SOURCING AGENTS SECTION ========== */
+        /* ========== SOURCING AGENTS SECTION - 从这里开始变白 ========== */
         .agents-section {
             margin: 72px 0 56px;
+            background: #ffffff;
         }
         .agents-header {
             text-align: center;
@@ -633,28 +561,18 @@
     </style>
 </head>
 <body>
-    <!-- 褐色渐变从底部向上蔓延，到 "What our partners say" 区域变白 -->
-    <div class="gradient-wrapper">
+    <!-- 褐色渐变从 Get the Best Sourcing Agent Services 上方延伸到视频内部 -->
+    <div class="gradient-wrapper" id="gradientWrapper">
         <!-- 视频 Hero 区域 -->
         <div class="video-hero-section">
-            <!-- 视频背景 -->
-            <video class="hero-video-background" id="heroVideo" autoplay loop muted playsinline style="display: none;"></video>
-            <div class="hero-video-placeholder" id="heroVideoPlaceholder">
-                <i class="fas fa-play-circle" style="font-size: 48px;"></i>
-                <p>点击上传背景视频</p>
-                <small>支持 MP4 格式，将作为背景播放</small>
-            </div>
-            <button class="video-control-btn" id="heroVideoUploadBtn"><i class="fas fa-upload"></i> 上传背景视频</button>
+            <!-- 视频背景 - 只显示，无上传按钮 -->
+            <video class="hero-video-background" id="heroVideo" autoplay loop muted playsinline></video>
 
-            <!-- 所有内容都在视频上层 -->
             <div class="hero-content-wrapper">
                 <div class="container">
                     <header class="site-header">
                         <div class="header-inner">
                             <div class="logo" id="logoContainer">
-                                <div class="logo-placeholder" id="logoUploadBtn">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                </div>
                                 <span class="logo-text">CJD<span> | ADDITIVE</span></span>
                             </div>
                             <div class="nav-links">
@@ -668,7 +586,6 @@
                         </div>
                     </header>
 
-                    <!-- Hero 内容 -->
                     <div class="hero-content">
                         <h1>Fulfill Your Dropshipping Dreams <br>with <span class="orange-text">CJ's All-in-One Solution</span></h1>
                         <div class="sub-headline">From Global Suppliers to Seamless Automation – Your Gateway to Hassle-Free Success Starts Here!</div>
@@ -676,7 +593,6 @@
                         <button class="btn-primary" onclick="location.href='register.html'">Get Started <i class="fas fa-arrow-right"></i></button>
                     </div>
 
-                    <!-- Trusted row -->
                     <div class="trusted-row">
                         <span class="trusted-item">Trusted by 50,000+ brands</span>
                         <span class="trusted-item">20+ global warehouses</span>
@@ -694,7 +610,7 @@
             </div>
         </div>
 
-        <!-- 滚动评价区域 - 从这里开始变白 -->
+        <!-- 滚动评价区域 -->
         <div class="container">
             <h2 class="section-title">What our <span class="orange-text">partners say</span></h2>
             <div class="marquee-container">
@@ -730,22 +646,24 @@
                     </ul>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Get the Best Sourcing Agent Services -->
-            <div class="agents-section">
-                <div class="agents-header">
-                    <h2>Get the Best Sourcing Agent Services</h2>
-                    <p>We possess extensive sourcing agent resources and high-quality cross-border procurement services to ensure that your project objectives and deadlines are fulfilled. Please review the profiles of our premium sourcing agents below to identify the best match for your business.</p>
-                </div>
-                <div class="agents-grid" id="agentsGrid"></div>
+    <!-- Get the Best Sourcing Agent Services - 下方全部白色 -->
+    <div class="container" style="background: #ffffff;">
+        <div class="agents-section">
+            <div class="agents-header">
+                <h2>Get the Best Sourcing Agent Services</h2>
+                <p>We possess extensive sourcing agent resources and high-quality cross-border procurement services to ensure that your project objectives and deadlines are fulfilled. Please review the profiles of our premium sourcing agents below to identify the best match for your business.</p>
             </div>
+            <div class="agents-grid" id="agentsGrid"></div>
+        </div>
 
-            <!-- 底部 CTA -->
-            <div class="cta-section">
-                <h2>Ready to scale your dropshipping business?</h2>
-                <p>Join 50,000+ merchants who trust us for sourcing, fulfillment, and growth.</p>
-                <button class="btn-primary" onclick="location.href='register.html'">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
-            </div>
+        <!-- 底部 CTA -->
+        <div class="cta-section">
+            <h2>Ready to scale your dropshipping business?</h2>
+            <p>Join 50,000+ merchants who trust us for sourcing, fulfillment, and growth.</p>
+            <button class="btn-primary" onclick="location.href='register.html'">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
         </div>
     </div>
 
@@ -778,12 +696,12 @@
             { name: "API", icon: "fas fa-code" }
         ];
 
-        // 存储平台图片URL
+        // 从 localStorage 加载配置
         let platformImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
         let logoImageUrl = localStorage.getItem('logoImageUrl') || '';
         let heroVideoUrl = localStorage.getItem('heroVideoUrl') || '';
 
-        // 渲染平台区域
+        // 渲染平台区域（无上传按钮）
         function renderPlatforms() {
             const grid = document.getElementById('platformsGrid');
             if (!grid) return;
@@ -793,60 +711,16 @@
                 const div = document.createElement('div');
                 div.className = 'platform-item';
                 div.innerHTML = `
-                    <div class="platform-img-wrapper" data-platform="${p.name}" style="cursor: pointer;">
-                        ${imgUrl ? `<img src="${imgUrl}" alt="${p.name}" style="width:100%; height:100%; object-fit:contain;">` : `<i class="${p.icon}"></i>`}
+                    <div class="platform-img-wrapper">
+                        ${imgUrl ? `<img src="${imgUrl}" alt="${p.name}">` : `<i class="${p.icon}"></i>`}
                     </div>
                     <span class="platform-name">${p.name}</span>
-                    <span class="upload-icon-small" onclick="uploadPlatformImage('${p.name}')">📷 上传图片</span>
                 `;
                 grid.appendChild(div);
             });
         }
 
-        // 上传平台图片
-        window.uploadPlatformImage = function(platformName) {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        platformImages[platformName] = event.target.result;
-                        localStorage.setItem('platformImages', JSON.stringify(platformImages));
-                        renderPlatforms();
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-            input.click();
-        };
-
-        // 上传Logo
-        document.getElementById('logoUploadBtn')?.addEventListener('click', () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/png,image/jpeg';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        logoImageUrl = event.target.result;
-                        localStorage.setItem('logoImageUrl', logoImageUrl);
-                        const logoContainer = document.getElementById('logoContainer');
-                        if (logoContainer) {
-                            logoContainer.innerHTML = `<img src="${logoImageUrl}" alt="Logo" style="height:48px; width:auto;">`;
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-            input.click();
-        });
-
-        // 加载保存的Logo
+        // 加载Logo
         if (logoImageUrl) {
             const logoContainer = document.getElementById('logoContainer');
             if (logoContainer) {
@@ -854,43 +728,13 @@
             }
         }
 
-        // 上传Hero背景视频
-        function setupHeroVideo(videoUrl) {
-            const video = document.getElementById('heroVideo');
-            const placeholder = document.getElementById('heroVideoPlaceholder');
-            if (videoUrl && video) {
-                video.src = videoUrl;
-                video.style.display = 'block';
-                if (placeholder) placeholder.style.display = 'none';
-                video.play().catch(e => console.log('自动播放被阻止，需要用户交互'));
-            } else if (video) {
-                video.style.display = 'none';
-                if (placeholder) placeholder.style.display = 'flex';
-            }
-        }
-
-        document.getElementById('heroVideoUploadBtn')?.addEventListener('click', () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'video/mp4,video/webm';
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        heroVideoUrl = event.target.result;
-                        localStorage.setItem('heroVideoUrl', heroVideoUrl);
-                        setupHeroVideo(heroVideoUrl);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            };
-            input.click();
-        });
-
-        // 加载保存的视频
+        // 加载视频背景
         if (heroVideoUrl) {
-            setupHeroVideo(heroVideoUrl);
+            const video = document.getElementById('heroVideo');
+            if (video) {
+                video.src = heroVideoUrl;
+                video.play().catch(e => console.log('自动播放被阻止'));
+            }
         }
 
         // 滚动评价数据
@@ -980,7 +824,7 @@
             });
         }
 
-        // 初始化平台渲染
+        // 初始化
         renderPlatforms();
     </script>
 </body>
