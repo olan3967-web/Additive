@@ -21,6 +21,7 @@
         }
         .welcome-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
         
+        /* Username 颜色改为 #C9B095 */
         .username {
             color: #C9B095 !important;
             background: none !important;
@@ -39,6 +40,7 @@
             border-radius: 20px;
         }
         
+        /* Operator Access 颜色改为 #C9B095 */
         .premium-tag {
             background: rgba(201, 176, 149, 0.12);
             border: 1px solid rgba(201, 176, 149, 0.3);
@@ -48,8 +50,11 @@
             font-weight: 600;
             color: #C9B095;
         }
-        .premium-tag i { color: #C9B095; }
+        .premium-tag i {
+            color: #C9B095;
+        }
 
+        /* 两列布局 */
         .two-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -73,6 +78,7 @@
         }
         .balance-amount { font-size: 42px; font-weight: 800; margin: 12px 0; color: #fff; }
         
+        /* Membership 标签和 Upgrade Now 链接颜色改为 #C9B095 */
         .membership-badge {
             background: rgba(201, 176, 149, 0.15);
             padding: 4px 12px;
@@ -86,6 +92,7 @@
             font-size: 12px;
         }
 
+        /* 快捷按钮 - 图标颜色改为 #C9B095 */
         .action-row {
             display: grid;
             grid-template-columns: repeat(4,1fr);
@@ -117,6 +124,7 @@
         .action-text { font-weight: 600; margin-bottom: 4px; font-size: 14px; color: #fff; }
         .action-sub { font-size: 11px; color: #a0a8c0; }
 
+        /* Overview 卡片 */
         .section-header {
             display: flex;
             justify-content: space-between;
@@ -143,18 +151,18 @@
             overflow: hidden;
         }
         .overview-card-content {
-            background: linear-gradient(135deg, #2a2418 0%, #4a3a28 50%, #8b7355 100%);
-            border-radius: 20px;
-            padding: 24px 20px;
-            border: 1px solid rgba(201, 176, 149, 0.4);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            z-index: 2;
-            overflow: hidden;
-        }
+    background: linear-gradient(135deg, #2a2418 0%, #4a3a28 50%, #8b7355 100%);
+    border-radius: 20px;
+    padding: 24px 20px;
+    border: 1px solid rgba(201, 176, 149, 0.4);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 2;
+    overflow: hidden;
+}
         .overview-title-row {
             display: flex;
             justify-content: space-between;
@@ -211,7 +219,13 @@
             z-index: 0;
             border-radius: 20px;
         }
+        .certificate-icon {
+            font-size: 26px;
+            color: #ff9f4a;
+            margin-bottom: 8px;
+        }
 
+        /* 最近订单 */
         .bookings-list {
             background: rgba(20,30,55,0.4);
             backdrop-filter: blur(8px);
@@ -275,6 +289,7 @@
             border: 1px solid rgba(255,140,0,0.3);
         }
 
+        /* 手机版 */
         @media (max-width: 768px) {
             .two-columns .upgrade-card-pulse { display: none; }
             .two-columns {
@@ -292,30 +307,79 @@
                 padding: 0 8px;
                 gap: 8px;
             }
-            .action-card { padding: 10px 4px; }
-            .action-card i { font-size: 20px; }
-            .action-text { font-size: 11px; }
-            .action-sub { font-size: 9px; }
+            .action-card {
+                padding: 10px 4px;
+            }
+            .action-card i {
+                font-size: 20px;
+            }
+            .action-text {
+                font-size: 11px;
+            }
+            .action-sub {
+                font-size: 9px;
+            }
             .welcome-header {
                 flex-direction: column;
                 align-items: flex-start;
                 padding: 0 0px;
             }
-            .welcome-header h1 { font-size: 22px; margin-bottom: 4px; }
-            .welcome-header h1 .username { font-size: 20px; display: inline; margin-left: 4px; }
-            .premium-tag { align-self: flex-end; margin-top: -40px; }
-            .uid-badge { font-size: 12px; padding: 4px 12px; }
-            .section-header { padding: 0 16px; }
-            .cards-grid { gap: 12px; padding: 0 16px 16px 16px; }
-            .overview-card { flex: 0 0 260px; }
-            .overview-card-content { padding: 18px 14px; min-height: 170px; }
-            .overview-label { font-size: 13px; }
-            .overview-value { font-size: 26px; }
-            .card-icon, .coin-icon { font-size: 70px; bottom: 8px; }
-            .coin-icon { right: 0px; }
-            .card-icon { right: 12px; }
-            .bookings-list { margin: 0 16px; }
-            .footer-note { margin: 0 16px; }
+            .welcome-header h1 {
+                font-size: 22px;
+                margin-bottom: 4px;
+            }
+            .welcome-header h1 .username {
+                font-size: 20px;
+                display: inline;
+                margin-left: 4px;
+            }
+            .premium-tag {
+                align-self: flex-end;
+                margin-top: -40px;
+            }
+            .uid-badge {
+                font-size: 12px;
+                padding: 4px 12px;
+            }
+            .section-header {
+                padding: 0 16px;
+            }
+            .cards-grid {
+                gap: 12px;
+                padding: 0 16px 16px 16px;
+            }
+            .overview-card {
+                flex: 0 0 260px;
+            }
+            .overview-card-content {
+                padding: 18px 14px;
+                min-height: 170px;
+            }
+            .overview-label {
+                font-size: 13px;
+            }
+            .overview-value {
+                font-size: 26px;
+            }
+            .card-icon, .coin-icon {
+                font-size: 70px;
+                bottom: 8px;
+            }
+            .coin-icon {
+                right: 0px;
+            }
+            .card-icon {
+                right: 12px;
+            }
+            .certificate-icon {
+                font-size: 22px;
+            }
+            .bookings-list {
+                margin: 0 16px;
+            }
+            .footer-note {
+                margin: 0 16px;
+            }
         }
     </style>
 </head>
@@ -429,135 +493,6 @@
                 </div>
             </div>
 
-            <!-- 产品推荐区域 (CJ风格) -->
-            <div class="section-header" style="margin-top: 20px;">
-                <h3><i class="fas fa-box-open"></i> RECOMMENDED PRODUCTS</h3>
-                <a href="start.html" class="view-all">View all →</a>
-            </div>
-
-            <div class="products-slider-container" style="position: relative; overflow-x: hidden; padding: 10px 0 30px 0;">
-                <div id="featuredProductsGrid" class="step-scroll-products" style="display: flex; gap: 20px; transition: transform 0.5s ease-in-out; will-change: transform;">
-                    <div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">加载产品中...</div>
-                </div>
-            </div>
-
-            <style>
-                .step-scroll-products {
-                    display: flex;
-                    gap: 20px;
-                    transition: transform 0.5s ease-in-out;
-                    will-change: transform;
-                }
-                
-                .products-slider-container {
-                    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-                    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-                }
-                
-                .product-card-style7 {
-                    width: 240px;
-                    background: transparent;
-                    cursor: pointer;
-                    flex-shrink: 0;
-                }
-                
-                .product-card-style7 .image-wrapper {
-                    position: relative;
-                    height: 180px;
-                    overflow: hidden;
-                    border-radius: 20px 20px 0 0;
-                }
-                
-                .product-card-style7 .image-wrapper img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                }
-                
-                .product-card-style7 .video-badge {
-                    position: absolute;
-                    top: 10px;
-                    right: 10px;
-                    background: rgba(0,0,0,0.6);
-                    backdrop-filter: blur(4px);
-                    padding: 4px 10px;
-                    border-radius: 20px;
-                    font-size: 11px;
-                    color: white;
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                }
-                
-                .product-card-style7 .floating-content {
-                    background: white;
-                    margin: -20px 12px 0 12px;
-                    padding: 14px 12px;
-                    border-radius: 16px;
-                    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-                    position: relative;
-                    transition: transform 0.2s, box-shadow 0.2s;
-                }
-                
-                .product-card-style7:hover .floating-content {
-                    transform: translateY(-3px);
-                    box-shadow: 0 12px 28px rgba(0,0,0,0.15);
-                }
-                
-                .product-card-style7 .product-name {
-                    font-weight: 600;
-                    font-size: 14px;
-                    color: #1e293b;
-                    margin-bottom: 10px;
-                    line-height: 1.4;
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                    min-height: 38px;
-                }
-                
-                .product-card-style7 .price-row {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: baseline;
-                    margin-bottom: 8px;
-                }
-                
-                .product-card-style7 .price-label {
-                    font-size: 12px;
-                    color: #94a3b8;
-                }
-                
-                .product-card-style7 .price-value {
-                    font-weight: 700;
-                    font-size: 18px;
-                    color: #CBB79C;
-                }
-                
-                .product-card-style7 .margin-badge {
-                    display: inline-block;
-                    background: #dcfce7;
-                    color: #15803d;
-                    font-size: 11px;
-                    font-weight: 600;
-                    padding: 4px 10px;
-                    border-radius: 20px;
-                    margin-top: 6px;
-                }
-                
-                @media (max-width: 768px) {
-                    .product-card-style7 { width: 170px; }
-                    .product-card-style7 .image-wrapper { height: 130px; }
-                    .product-card-style7 .floating-content { margin: -16px 8px 0 8px; padding: 10px 10px; }
-                    .product-card-style7 .product-name { font-size: 12px; margin-bottom: 6px; min-height: 32px; }
-                    .product-card-style7 .price-label { font-size: 10px; }
-                    .product-card-style7 .price-value { font-size: 14px; }
-                    .product-card-style7 .margin-badge { font-size: 9px; padding: 3px 8px; }
-                    .step-scroll-products { gap: 12px; }
-                }
-            </style>
-
             <div class="section-header"><h3>RECENT BOOKINGS</h3><a href="history.html" class="view-all">View all <i class="fas fa-chevron-right"></i></a></div>
             <div class="bookings-list" id="recentBookings">
                 <div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>
@@ -568,322 +503,176 @@
     </div>
 
     <script>
-    // ========== 辅助函数 ==========
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-    
-    function toggleMenu() { 
-        const sidebar = document.getElementById('sidebar'); 
-        const overlay = document.querySelector('.menu-overlay'); 
-        const menuBtn = document.getElementById('menuToggleBtn'); 
-        if (sidebar) sidebar.classList.toggle('open'); 
-        if (overlay) overlay.classList.toggle('active'); 
-        if (menuBtn) menuBtn.classList.toggle('hidden'); 
-    }
-    function closeMenu() { 
-        const sidebar = document.getElementById('sidebar'); 
-        const overlay = document.querySelector('.menu-overlay'); 
-        const menuBtn = document.getElementById('menuToggleBtn'); 
-        if (sidebar) sidebar.classList.remove('open'); 
-        if (overlay) overlay.classList.remove('active'); 
-        if (menuBtn) menuBtn.classList.remove('hidden'); 
-    }
+        // 菜单控制
+        function toggleMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.toggle('open'); 
+            if (overlay) overlay.classList.toggle('active'); 
+            if (menuBtn) menuBtn.classList.toggle('hidden'); 
+        }
+        function closeMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.remove('open'); 
+            if (overlay) overlay.classList.remove('active'); 
+            if (menuBtn) menuBtn.classList.remove('hidden'); 
+        }
 
-    // 气泡特效
-    function startBubble(canvasId, wrapperId) {
-        const canvas = document.getElementById(canvasId);
-        const wrapper = document.getElementById(wrapperId);
-        if (!canvas || !wrapper) return;
-        const ctx = canvas.getContext('2d');
-        let w = 0, h = 0, bubbles = [];
-        
-        function resize() {
-            const rect = wrapper.getBoundingClientRect();
-            w = rect.width;
-            h = rect.height;
-            canvas.width = w;
-            canvas.height = h;
-        }
-        
-        function createBubble() {
-            return {
-                x: Math.random() * w,
-                y: h + 15,
-                radius: Math.random() * 10 + 4,
-                alpha: Math.random() * 0.3 + 0.1,
-                speedY: -0.8 - Math.random() * 1.0,
-                wobble: Math.random() * Math.PI * 2,
-                wobbleSpeed: 0.02 + Math.random() * 0.04
-            };
-        }
-        
-        function animate() {
-            if (!w || !h) {
-                requestAnimationFrame(animate);
-                return;
+        // 气泡特效
+        function startBubble(canvasId, wrapperId) {
+            const canvas = document.getElementById(canvasId);
+            const wrapper = document.getElementById(wrapperId);
+            if (!canvas || !wrapper) return;
+            const ctx = canvas.getContext('2d');
+            let w = 0, h = 0, bubbles = [];
+            
+            function resize() {
+                const rect = wrapper.getBoundingClientRect();
+                w = rect.width;
+                h = rect.height;
+                canvas.width = w;
+                canvas.height = h;
             }
-            if (Math.random() < 0.04 && bubbles.length < 15) {
-                bubbles.push(createBubble());
+            
+            function createBubble() {
+                return {
+                    x: Math.random() * w,
+                    y: h + 15,
+                    radius: Math.random() * 10 + 4,
+                    alpha: Math.random() * 0.3 + 0.1,
+                    speedY: -0.8 - Math.random() * 1.0,
+                    wobble: Math.random() * Math.PI * 2,
+                    wobbleSpeed: 0.02 + Math.random() * 0.04
+                };
             }
-            ctx.clearRect(0, 0, w, h);
-            for (let i = bubbles.length - 1; i >= 0; i--) {
-                const b = bubbles[i];
-                b.y += b.speedY;
-                b.wobble += b.wobbleSpeed;
-                b.x += Math.sin(b.wobble) * 0.4;
-                b.alpha -= 0.002;
-                if (b.y < -30 || b.alpha <= 0.01) {
-                    bubbles.splice(i, 1);
-                    continue;
+            
+            function animate() {
+                if (!w || !h) {
+                    requestAnimationFrame(animate);
+                    return;
                 }
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 140, 0, ${b.alpha * 0.5})`;
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-                ctx.strokeStyle = `rgba(255, 140, 0, ${b.alpha * 0.6})`;
-                ctx.lineWidth = 1;
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.2, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 200, 100, ${b.alpha * 0.5})`;
-                ctx.fill();
+                
+                if (Math.random() < 0.04 && bubbles.length < 15) {
+                    bubbles.push(createBubble());
+                }
+                
+                ctx.clearRect(0, 0, w, h);
+                
+                for (let i = bubbles.length - 1; i >= 0; i--) {
+                    const b = bubbles[i];
+                    b.y += b.speedY;
+                    b.wobble += b.wobbleSpeed;
+                    b.x += Math.sin(b.wobble) * 0.4;
+                    b.alpha -= 0.002;
+                    
+                    if (b.y < -30 || b.alpha <= 0.01) {
+                        bubbles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 140, 0, ${b.alpha * 0.5})`;
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255, 140, 0, ${b.alpha * 0.6})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.2, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 200, 100, ${b.alpha * 0.5})`;
+                    ctx.fill();
+                }
+                
+                requestAnimationFrame(animate);
             }
-            requestAnimationFrame(animate);
-        }
-        
-        const observer = new ResizeObserver(() => {
+            
+            const observer = new ResizeObserver(() => {
+                resize();
+                bubbles = [];
+            });
+            observer.observe(wrapper);
+            
             resize();
-            bubbles = [];
-        });
-        observer.observe(wrapper);
-        resize();
-        animate();
-        return () => observer.disconnect();
-    }
-    
-    function initAllBubbles() {
-        startBubble('bubbleCanvas1', 'card1');
-        startBubble('bubbleCanvas2', 'card2');
-        startBubble('bubbleCanvas3', 'card3');
-        startBubble('bubbleCanvas4', 'card4');
-    }
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initAllBubbles);
-    } else {
-        initAllBubbles();
-    }
-    window.addEventListener('resize', function() { setTimeout(initAllBubbles, 200); });
-
-    // ========== 产品视频弹窗 ==========
-    function showProductVideoModal(product) {
-        const modalHtml = `
-            <div id="productVideoModal" class="modal-overlay" style="visibility: visible; opacity: 1; z-index: 10001;">
-                <div class="modal-card" style="max-width: 700px; width: 90%;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                        <h3 style="color: #8ca3ff;">${escapeHtml(product.name)}</h3>
-                        <button onclick="closeProductVideoModal()" style="background: none; font-size: 24px; border: none; cursor: pointer; color: white;">&times;</button>
-                    </div>
-                    <div style="background: #000; border-radius: 12px; overflow: hidden;">
-                        <video src="${product.video_url}" controls autoplay style="width: 100%; max-height: 400px;"></video>
-                    </div>
-                    <div style="margin-top: 12px; color: #666;">价格: $${product.price?.toFixed(2)}</div>
-                </div>
-            </div>
-        `;
-        const existing = document.getElementById('productVideoModal');
-        if (existing) existing.remove();
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-    }
-
-    function closeProductVideoModal() {
-        const modal = document.getElementById('productVideoModal');
-        if (modal) modal.remove();
-    }
-
-    function handleProductClick(product) {
-        if (product.video_url) {
-            showProductVideoModal(product);
-        } else if (product.image_url) {
-            window.open(product.image_url, '_blank');
-        }
-    }
-
-    // ========== 生成风格7卡片HTML ==========
-    function generateProductCardHtml(product, randomMargin) {
-        return `
-            <div class="product-card-style7" onclick='handleProductClick(${JSON.stringify(product).replace(/'/g, "\\'")})'>
-                <div class="image-wrapper">
-                    <img src="${product.image_url || 'https://placehold.co/240x180/e2e8f0/64748b?text=No+Image'}" 
-                         onerror="this.src='https://placehold.co/240x180/e2e8f0/64748b?text=No+Image'"
-                         alt="${escapeHtml(product.name)}">
-                    ${product.video_url ? '<div class="video-badge"><i class="fas fa-play"></i> 视频</div>' : ''}
-                </div>
-                <div class="floating-content">
-                    <div class="product-name">${escapeHtml(product.name)}</div>
-                    <div class="price-row">
-                        <span class="price-label">Price</span>
-                        <span class="price-value">$${product.price?.toFixed(2) || '0.00'}</span>
-                    </div>
-                    <div class="margin-badge">Margin: +${randomMargin}%</div>
-                </div>
-            </div>
-        `;
-    }
-
-    // ========== 步进式滚动功能 ==========
-    let currentStepIndex = 0;
-    let scrollInterval = null;
-    let cardsPerStep = 2;
-    let originalProducts = [];
-
-    function initStepScroll() {
-        if (scrollInterval) clearInterval(scrollInterval);
-        const container = document.getElementById('featuredProductsGrid');
-        if (!container) return;
-        const cards = container.querySelectorAll('.product-card-style7');
-        const actualProductCount = originalProducts.length;
-        if (actualProductCount <= cardsPerStep) return;
-        
-        scrollInterval = setInterval(() => { stepScrollNextSmooth(); }, 1500);
-        
-        const sliderContainer = document.querySelector('.products-slider-container');
-        if (sliderContainer) {
-            sliderContainer.addEventListener('mouseenter', () => {
-                if (scrollInterval) clearInterval(scrollInterval);
-            });
-            sliderContainer.addEventListener('mouseleave', () => {
-                if (scrollInterval) clearInterval(scrollInterval);
-                scrollInterval = setInterval(() => stepScrollNextSmooth(), 1500);
-            });
-        }
-    }
-
-    function stepScrollNextSmooth() {
-        const container = document.getElementById('featuredProductsGrid');
-        if (!container) return;
-        const cards = container.querySelectorAll('.product-card-style7');
-        const totalCards = cards.length;
-        const actualProductCount = originalProducts.length;
-        const cardWidth = cards[0]?.offsetWidth || 240;
-        const gap = 20;
-        const stepWidth = (cardWidth + gap) * cardsPerStep;
-        
-        currentStepIndex++;
-        
-        if (currentStepIndex * stepWidth + (cardWidth + gap) * cardsPerStep >= totalCards * (cardWidth + gap)) {
-            let newHtml = '';
-            originalProducts.forEach(product => {
-                const randomMargin = (Math.random() * 10 + 5).toFixed(2);
-                newHtml += generateProductCardHtml(product, randomMargin);
-            });
-            container.insertAdjacentHTML('beforeend', newHtml);
-        }
-        container.style.transform = `translateX(-${currentStepIndex * stepWidth}px)`;
-    }
-
-    // ========== 加载 Dashboard 产品展示 ==========
-    async function loadDashboardProducts() {
-        const container = document.getElementById('featuredProductsGrid');
-        if (!container) return;
-        
-        try {
-            const { data: products, error } = await sb
-                .from('dashboard_products')
-                .select('*')
-                .eq('status', 'active')
-                .order('sort_order', { ascending: true })
-                .limit(20);
+            animate();
             
-            if (error) throw error;
-            if (!products || products.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">暂无产品，请在后台添加</div>';
-                return;
+            return () => observer.disconnect();
+        }
+        
+        function initAllBubbles() {
+            startBubble('bubbleCanvas1', 'card1');
+            startBubble('bubbleCanvas2', 'card2');
+            startBubble('bubbleCanvas3', 'card3');
+            startBubble('bubbleCanvas4', 'card4');
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAllBubbles);
+        } else {
+            initAllBubbles();
+        }
+        
+        window.addEventListener('resize', function() {
+            setTimeout(initAllBubbles, 200);
+        });
+
+        // 数据加载
+        async function loadDashboard() {
+            const user = checkLogin();
+            if (!user) return;
+            const fresh = await syncUserData();
+            if (fresh) {
+                document.getElementById('displayUsername').innerText = fresh.username;
+                document.getElementById('displayUid').innerText = fresh.uid;
+                document.getElementById('displayBalance').innerHTML = '€' + (fresh.balance || 0).toFixed(2);
+                const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
+                const currentLevel = vipMap[fresh.vipLevel] || 'Normal';
+                document.getElementById('displayMembership').innerText = `Membership ${currentLevel}`;
+                document.getElementById('premiumStatusText').innerHTML = currentLevel;
             }
             
-            originalProducts = products;
-            let productsHtml = '';
-            products.forEach(product => {
-                const randomMargin = (Math.random() * 10 + 5).toFixed(2);
-                productsHtml += generateProductCardHtml(product, randomMargin);
-            });
+            const { data: allOrders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
+            const totalEarnings = allOrders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
+            document.getElementById('totalEarnings').innerHTML = '€' + totalEarnings.toFixed(2);
             
-            container.innerHTML = productsHtml + productsHtml + productsHtml;
-            currentStepIndex = 0;
-            container.style.transform = `translateX(0)`;
-            setTimeout(() => initStepScroll(), 100);
-        } catch(e) {
-            console.error('加载产品失败:', e);
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">加载失败</div>';
-        }
-    }
-
-    // ========== 数据加载 ==========
-    async function loadDashboard() {
-        const user = checkLogin();
-        if (!user) return;
-        const fresh = await syncUserData();
-        if (fresh) {
-            document.getElementById('displayUsername').innerText = fresh.username;
-            document.getElementById('displayUid').innerText = fresh.uid;
-            document.getElementById('displayBalance').innerHTML = '€' + (fresh.balance || 0).toFixed(2);
-            const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
-            const currentLevel = vipMap[fresh.vipLevel] || 'Normal';
-            document.getElementById('displayMembership').innerText = `Membership ${currentLevel}`;
-            document.getElementById('premiumStatusText').innerHTML = currentLevel;
+            const orderCount = allOrders?.length || 0;
+            const certStatus = document.getElementById('certificateStatus');
+            const certTag = document.getElementById('certificateTag');
+            if (orderCount >= 100) {
+                certStatus.innerHTML = '✓ Earned';
+                certStatus.style.color = '#4ade80';
+                certTag.innerHTML = 'Congratulations!';
+                certTag.style.background = 'rgba(74,222,128,0.2)';
+                certTag.style.color = '#4ade80';
+            } else {
+                certStatus.innerHTML = `${orderCount}/100`;
+                certStatus.style.color = '#ff9f4a';
+                certTag.innerHTML = `${100 - orderCount} orders to go`;
+                certTag.style.background = 'rgba(255,140,0,0.1)';
+                certTag.style.color = '#ff9f4a';
+            }
         }
         
-        const { data: allOrders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
-        const totalEarnings = allOrders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
-        document.getElementById('totalEarnings').innerHTML = '€' + totalEarnings.toFixed(2);
-        
-        const orderCount = allOrders?.length || 0;
-        const certStatus = document.getElementById('certificateStatus');
-        const certTag = document.getElementById('certificateTag');
-        if (orderCount >= 100) {
-            certStatus.innerHTML = '✓ Earned';
-            certStatus.style.color = '#4ade80';
-            certTag.innerHTML = 'Congratulations!';
-            certTag.style.background = 'rgba(74,222,128,0.2)';
-            certTag.style.color = '#4ade80';
-        } else {
-            certStatus.innerHTML = `${orderCount}/100`;
-            certStatus.style.color = '#ff9f4a';
-            certTag.innerHTML = `${100 - orderCount} orders to go`;
-            certTag.style.background = 'rgba(255,140,0,0.1)';
-            certTag.style.color = '#ff9f4a';
+        async function loadRecent() {
+            const user = getCurrentUser(); if (!user) return;
+            const orders = await fetchUserOrders(user.uid, 5);
+            const container = document.getElementById('recentBookings');
+            if (!orders.length) { container.innerHTML = '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>'; return; }
+            container.innerHTML = '';
+            orders.forEach(o => {
+                const d = new Date(o.date);
+                container.innerHTML += `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
+            });
         }
         
-        await loadDashboardProducts();
-    }
-    
-    async function loadRecent() {
-        const user = getCurrentUser(); 
-        if (!user) return;
-        const orders = await fetchUserOrders(user.uid, 5);
-        const container = document.getElementById('recentBookings');
-        if (!orders.length) { 
-            container.innerHTML = '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>'; 
-            return; 
-        }
-        container.innerHTML = '';
-        orders.forEach(o => {
-            const d = new Date(o.date);
-            container.innerHTML += `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
-        });
-    }
-    
-    loadDashboard();
-    loadRecent();
-</script>
+        loadDashboard();
+        loadRecent();
+    </script>
 </body>
 </html>
