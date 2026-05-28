@@ -499,99 +499,30 @@
     <a href="start.html" class="view-all">View all →</a>
 </div>
 
-<div class="products-slider-container" style="position: relative; overflow-x: auto; white-space: nowrap; padding: 10px 0 20px 0; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
-    <div id="featuredProductsGrid" style="display: inline-flex; gap: 16px; white-space: normal;">
+<div class="products-slider-container" style="position: relative; overflow-x: hidden; white-space: nowrap; padding: 10px 0 20px 0;">
+    <div id="featuredProductsGrid" class="marquee-products" style="display: inline-flex; gap: 16px; white-space: normal; animation: marqueeScroll 30s linear infinite;">
         <!-- 产品卡片会动态加载到这里 -->
         <div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">加载产品中...</div>
     </div>
 </div>
 
 <style>
-    .product-card-dashboard {
-        width: 220px;
-        background: white;
-        border-radius: 16px;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-        transition: transform 0.2s, box-shadow 0.2s;
-        display: inline-block;
-        vertical-align: top;
-        white-space: normal;
-        cursor: pointer;
+    @keyframes marqueeScroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
     }
-    .product-card-dashboard:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+    
+    .marquee-products {
+        animation: marqueeScroll 30s linear infinite;
     }
-    .product-image-dashboard {
-        position: relative;
-        width: 100%;
-        height: 160px;
-        background: #f1f5f9;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
+    
+    .marquee-products:hover {
+        animation-play-state: paused;
     }
-    .product-image-dashboard img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .product-video-badge {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        background: rgba(0,0,0,0.6);
-        color: white;
-        border-radius: 20px;
-        padding: 4px 8px;
-        font-size: 10px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-    .product-info-dashboard {
-        padding: 12px;
-    }
-    .product-name-dashboard {
-        font-size: 13px;
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 6px;
-        line-height: 1.4;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    .product-price-dashboard {
-        font-size: 16px;
-        font-weight: 700;
-        color: #3b82f6;
-    }
-    .slider-nav {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 32px;
-        height: 32px;
-        background: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        z-index: 10;
-    }
-    .slider-nav-left { left: -10px; }
-    .slider-nav-right { right: -10px; }
-    @media (max-width: 768px) {
-        .product-card-dashboard { width: 160px; }
-        .product-image-dashboard { height: 120px; }
-        .product-name-dashboard { font-size: 11px; }
-        .product-price-dashboard { font-size: 13px; }
+    
+    .products-slider-container {
+        mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+        -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
     }
 </style>
 
@@ -763,35 +694,60 @@
 
     // ========== 加载 Dashboard 产品展示 ==========
     async function loadDashboardProducts() {
-        const container = document.getElementById('featuredProductsGrid');
-        if (!container) return;
+    const container = document.getElementById('featuredProductsGrid');
+    if (!container) return;
+    
+    try {
+        const { data: products, error } = await sb
+            .from('dashboard_products')
+            .select('*')
+            .eq('status', 'active')
+            .order('sort_order', { ascending: true })
+            .limit(20);
         
-        try {
-            const { data: products, error } = await sb
-                .from('dashboard_products')
-                .select('*')
-                .eq('status', 'active')
-                .order('sort_order', { ascending: true })
-                .limit(10);
-            
-            if (error) throw error;
-            
-            if (!products || products.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">暂无产品，请在后台添加</div>';
-                return;
-            }
-            
-            container.innerHTML = '';
-            products.forEach(product => {
-                const card = document.createElement('div');
-                card.className = 'product-card-dashboard';
-                card.onclick = () => {
-                    if (product.video_url) {
-                        showProductVideoModal(product);
-                    } else if (product.image_url) {
-                        window.open(product.image_url, '_blank');
-                    }
-                };
+        if (error) throw error;
+        
+        if (!products || products.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">暂无产品，请在后台添加</div>';
+            return;
+        }
+        
+        // 生成产品卡片HTML
+        let productsHtml = '';
+        products.forEach(product => {
+            productsHtml += `
+                <div class="product-card-dashboard" onclick="handleProductClick(${JSON.stringify(product).replace(/"/g, '&quot;')})">
+                    <div class="product-image-dashboard">
+                        <img src="${product.image_url || 'https://placehold.co/220x160/e2e8f0/64748b?text=No+Image'}" 
+                             onerror="this.src='https://placehold.co/220x160/e2e8f0/64748b?text=No+Image'"
+                             alt="${escapeHtml(product.name)}">
+                        ${product.video_url ? '<div class="product-video-badge"><i class="fas fa-play"></i> 视频</div>' : ''}
+                    </div>
+                    <div class="product-info-dashboard">
+                        <div class="product-name-dashboard">${escapeHtml(product.name)}</div>
+                        <div class="product-price-dashboard">$${product.price?.toFixed(2) || '0.00'}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        // 复制一份实现无缝循环
+        container.innerHTML = productsHtml + productsHtml;
+        
+    } catch(e) {
+        console.error('加载产品失败:', e);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">加载失败</div>';
+    }
+}
+
+// 产品点击处理函数
+function handleProductClick(product) {
+    if (product.video_url) {
+        showProductVideoModal(product);
+    } else if (product.image_url) {
+        window.open(product.image_url, '_blank');
+    }
+}
                 
                 card.innerHTML = `
                     <div class="product-image-dashboard">
