@@ -6,6 +6,7 @@
     <title>CJDropshipping - Global Dropshipping Sourcing & Fulfillment</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -29,7 +30,7 @@
             z-index: 2;
         }
 
-        /* ========== 褐色渐变背景区域 - 从 Get the Best Sourcing Agent Services 上方延伸到视频内部 ========== */
+        /* ========== 褐色渐变背景区域 ========== */
         .gradient-wrapper {
             background: linear-gradient(180deg, #ffffff 0%, #F5F0EB 20%, #8B6B50 50%, #5C3A2A 75%, #2C1810 100%);
         }
@@ -40,7 +41,7 @@
             overflow: hidden;
         }
         
-        /* 视频背景 - 覆盖整个 Hero 区域 */
+        /* 视频背景 */
         .hero-video-background {
             position: absolute;
             top: 0;
@@ -52,7 +53,6 @@
             opacity: 0.4;
         }
         
-        /* 所有内容都在视频上层 */
         .hero-content-wrapper {
             position: relative;
             z-index: 2;
@@ -383,7 +383,7 @@
             width: 22px;
         }
 
-        /* ========== SOURCING AGENTS SECTION - 从这里开始变白 ========== */
+        /* ========== SOURCING AGENTS SECTION ========== */
         .agents-section {
             margin: 72px 0 56px;
             background: #ffffff;
@@ -562,10 +562,9 @@
 </head>
 <body>
     <!-- 褐色渐变从 Get the Best Sourcing Agent Services 上方延伸到视频内部 -->
-    <div class="gradient-wrapper" id="gradientWrapper">
+    <div class="gradient-wrapper">
         <!-- 视频 Hero 区域 -->
         <div class="video-hero-section">
-            <!-- 视频背景 - 只显示，无上传按钮 -->
             <video class="hero-video-background" id="heroVideo" autoplay loop muted playsinline></video>
 
             <div class="hero-content-wrapper">
@@ -659,7 +658,6 @@
             <div class="agents-grid" id="agentsGrid"></div>
         </div>
 
-        <!-- 底部 CTA -->
         <div class="cta-section">
             <h2>Ready to scale your dropshipping business?</h2>
             <p>Join 50,000+ merchants who trust us for sourcing, fulfillment, and growth.</p>
@@ -683,6 +681,11 @@
     </footer>
 
     <script>
+        // Supabase 配置
+        const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         // 平台数据
         const platforms = [
             { name: "Shopify", icon: "fab fa-shopify" },
@@ -696,13 +699,39 @@
             { name: "API", icon: "fas fa-code" }
         ];
 
-        // 从 localStorage 加载配置
-        let platformImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
-        let logoImageUrl = localStorage.getItem('logoImageUrl') || '';
-        let heroVideoUrl = localStorage.getItem('heroVideoUrl') || '';
+        // 从 Supabase 加载配置
+        async function loadWebsiteConfig() {
+            const { data: config, error } = await sb
+                .from('website_config')
+                .select('*')
+                .eq('id', 1)
+                .single();
+            
+            if (config) {
+                // 加载 Logo
+                if (config.logo_url) {
+                    const logoContainer = document.getElementById('logoContainer');
+                    if (logoContainer) {
+                        logoContainer.innerHTML = `<img src="${config.logo_url}" alt="Logo" style="height:48px; width:auto;">`;
+                    }
+                }
+                
+                // 加载视频背景
+                if (config.hero_video_url) {
+                    const video = document.getElementById('heroVideo');
+                    if (video) {
+                        video.src = config.hero_video_url;
+                        video.play().catch(e => console.log('自动播放被阻止'));
+                    }
+                }
+                
+                // 加载平台图标
+                const platformImages = config.platform_images || {};
+                renderPlatformsFromConfig(platformImages);
+            }
+        }
 
-        // 渲染平台区域（无上传按钮）
-        function renderPlatforms() {
+        function renderPlatformsFromConfig(platformImages) {
             const grid = document.getElementById('platformsGrid');
             if (!grid) return;
             grid.innerHTML = '';
@@ -718,23 +747,6 @@
                 `;
                 grid.appendChild(div);
             });
-        }
-
-        // 加载Logo
-        if (logoImageUrl) {
-            const logoContainer = document.getElementById('logoContainer');
-            if (logoContainer) {
-                logoContainer.innerHTML = `<img src="${logoImageUrl}" alt="Logo" style="height:48px; width:auto;">`;
-            }
-        }
-
-        // 加载视频背景
-        if (heroVideoUrl) {
-            const video = document.getElementById('heroVideo');
-            if (video) {
-                video.src = heroVideoUrl;
-                video.play().catch(e => console.log('自动播放被阻止'));
-            }
         }
 
         // 滚动评价数据
@@ -824,8 +836,8 @@
             });
         }
 
-        // 初始化
-        renderPlatforms();
+        // 初始化加载配置
+        loadWebsiteConfig();
     </script>
 </body>
 </html>
