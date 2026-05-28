@@ -21,7 +21,6 @@
         }
         .welcome-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
         
-        /* Username 颜色改为 #C9B095 */
         .username {
             color: #C9B095 !important;
             background: none !important;
@@ -40,7 +39,6 @@
             border-radius: 20px;
         }
         
-        /* Operator Access 颜色改为 #C9B095 */
         .premium-tag {
             background: rgba(201, 176, 149, 0.12);
             border: 1px solid rgba(201, 176, 149, 0.3);
@@ -50,11 +48,8 @@
             font-weight: 600;
             color: #C9B095;
         }
-        .premium-tag i {
-            color: #C9B095;
-        }
+        .premium-tag i { color: #C9B095; }
 
-        /* 两列布局 */
         .two-columns {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -78,7 +73,6 @@
         }
         .balance-amount { font-size: 42px; font-weight: 800; margin: 12px 0; color: #fff; }
         
-        /* Membership 标签和 Upgrade Now 链接颜色改为 #C9B095 */
         .membership-badge {
             background: rgba(201, 176, 149, 0.15);
             padding: 4px 12px;
@@ -92,7 +86,6 @@
             font-size: 12px;
         }
 
-        /* 快捷按钮 - 图标颜色改为 #C9B095 */
         .action-row {
             display: grid;
             grid-template-columns: repeat(4,1fr);
@@ -124,7 +117,6 @@
         .action-text { font-weight: 600; margin-bottom: 4px; font-size: 14px; color: #fff; }
         .action-sub { font-size: 11px; color: #a0a8c0; }
 
-        /* Overview 卡片 */
         .section-header {
             display: flex;
             justify-content: space-between;
@@ -151,18 +143,18 @@
             overflow: hidden;
         }
         .overview-card-content {
-    background: linear-gradient(135deg, #2a2418 0%, #4a3a28 50%, #8b7355 100%);
-    border-radius: 20px;
-    padding: 24px 20px;
-    border: 1px solid rgba(201, 176, 149, 0.4);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    min-height: 200px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    z-index: 2;
-    overflow: hidden;
-}
+            background: linear-gradient(135deg, #2a2418 0%, #4a3a28 50%, #8b7355 100%);
+            border-radius: 20px;
+            padding: 24px 20px;
+            border: 1px solid rgba(201, 176, 149, 0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
         .overview-title-row {
             display: flex;
             justify-content: space-between;
@@ -219,13 +211,7 @@
             z-index: 0;
             border-radius: 20px;
         }
-        .certificate-icon {
-            font-size: 26px;
-            color: #ff9f4a;
-            margin-bottom: 8px;
-        }
 
-        /* 最近订单 */
         .bookings-list {
             background: rgba(20,30,55,0.4);
             backdrop-filter: blur(8px);
@@ -289,7 +275,6 @@
             border: 1px solid rgba(255,140,0,0.3);
         }
 
-        /* 手机版 */
         @media (max-width: 768px) {
             .two-columns .upgrade-card-pulse { display: none; }
             .two-columns {
@@ -307,79 +292,30 @@
                 padding: 0 8px;
                 gap: 8px;
             }
-            .action-card {
-                padding: 10px 4px;
-            }
-            .action-card i {
-                font-size: 20px;
-            }
-            .action-text {
-                font-size: 11px;
-            }
-            .action-sub {
-                font-size: 9px;
-            }
+            .action-card { padding: 10px 4px; }
+            .action-card i { font-size: 20px; }
+            .action-text { font-size: 11px; }
+            .action-sub { font-size: 9px; }
             .welcome-header {
                 flex-direction: column;
                 align-items: flex-start;
                 padding: 0 0px;
             }
-            .welcome-header h1 {
-                font-size: 22px;
-                margin-bottom: 4px;
-            }
-            .welcome-header h1 .username {
-                font-size: 20px;
-                display: inline;
-                margin-left: 4px;
-            }
-            .premium-tag {
-                align-self: flex-end;
-                margin-top: -40px;
-            }
-            .uid-badge {
-                font-size: 12px;
-                padding: 4px 12px;
-            }
-            .section-header {
-                padding: 0 16px;
-            }
-            .cards-grid {
-                gap: 12px;
-                padding: 0 16px 16px 16px;
-            }
-            .overview-card {
-                flex: 0 0 260px;
-            }
-            .overview-card-content {
-                padding: 18px 14px;
-                min-height: 170px;
-            }
-            .overview-label {
-                font-size: 13px;
-            }
-            .overview-value {
-                font-size: 26px;
-            }
-            .card-icon, .coin-icon {
-                font-size: 70px;
-                bottom: 8px;
-            }
-            .coin-icon {
-                right: 0px;
-            }
-            .card-icon {
-                right: 12px;
-            }
-            .certificate-icon {
-                font-size: 22px;
-            }
-            .bookings-list {
-                margin: 0 16px;
-            }
-            .footer-note {
-                margin: 0 16px;
-            }
+            .welcome-header h1 { font-size: 22px; margin-bottom: 4px; }
+            .welcome-header h1 .username { font-size: 20px; display: inline; margin-left: 4px; }
+            .premium-tag { align-self: flex-end; margin-top: -40px; }
+            .uid-badge { font-size: 12px; padding: 4px 12px; }
+            .section-header { padding: 0 16px; }
+            .cards-grid { gap: 12px; padding: 0 16px 16px 16px; }
+            .overview-card { flex: 0 0 260px; }
+            .overview-card-content { padding: 18px 14px; min-height: 170px; }
+            .overview-label { font-size: 13px; }
+            .overview-value { font-size: 26px; }
+            .card-icon, .coin-icon { font-size: 70px; bottom: 8px; }
+            .coin-icon { right: 0px; }
+            .card-icon { right: 12px; }
+            .bookings-list { margin: 0 16px; }
+            .footer-note { margin: 0 16px; }
         }
     </style>
 </head>
@@ -493,38 +429,134 @@
                 </div>
             </div>
 
-<!-- 产品推荐区域 (CJ风格) -->
-<div class="section-header" style="margin-top: 20px;">
-    <h3><i class="fas fa-box-open"></i> RECOMMENDED PRODUCTS</h3>
-    <a href="start.html" class="view-all">View all →</a>
-</div>
+            <!-- 产品推荐区域 (CJ风格) -->
+            <div class="section-header" style="margin-top: 20px;">
+                <h3><i class="fas fa-box-open"></i> RECOMMENDED PRODUCTS</h3>
+                <a href="start.html" class="view-all">View all →</a>
+            </div>
 
-<div class="products-slider-container" style="position: relative; overflow-x: hidden; white-space: nowrap; padding: 10px 0 20px 0;">
-    <div id="featuredProductsGrid" class="marquee-products" style="display: inline-flex; gap: 16px; white-space: normal; animation: marqueeScroll 30s linear infinite;">
-        <!-- 产品卡片会动态加载到这里 -->
-        <div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">加载产品中...</div>
-    </div>
-</div>
+            <div class="products-slider-container" style="position: relative; overflow-x: hidden; padding: 10px 0 30px 0;">
+                <div id="featuredProductsGrid" class="step-scroll-products" style="display: flex; gap: 20px; transition: transform 0.5s ease-in-out; will-change: transform;">
+                    <div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">加载产品中...</div>
+                </div>
+            </div>
 
-<style>
-    @keyframes marqueeScroll {
-        0% { transform: translateX(0); }
-        100% { transform: translateX(-50%); }
-    }
-    
-    .marquee-products {
-        animation: marqueeScroll 30s linear infinite;
-    }
-    
-    .marquee-products:hover {
-        animation-play-state: paused;
-    }
-    
-    .products-slider-container {
-        mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-        -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-    }
-</style>
+            <style>
+                .step-scroll-products {
+                    display: flex;
+                    gap: 20px;
+                    transition: transform 0.5s ease-in-out;
+                    will-change: transform;
+                }
+                
+                .products-slider-container {
+                    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+                    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+                }
+                
+                .product-card-style7 {
+                    width: 240px;
+                    background: transparent;
+                    cursor: pointer;
+                    flex-shrink: 0;
+                }
+                
+                .product-card-style7 .image-wrapper {
+                    position: relative;
+                    height: 180px;
+                    overflow: hidden;
+                    border-radius: 20px 20px 0 0;
+                }
+                
+                .product-card-style7 .image-wrapper img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+                
+                .product-card-style7 .video-badge {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    background: rgba(0,0,0,0.6);
+                    backdrop-filter: blur(4px);
+                    padding: 4px 10px;
+                    border-radius: 20px;
+                    font-size: 11px;
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+                
+                .product-card-style7 .floating-content {
+                    background: white;
+                    margin: -20px 12px 0 12px;
+                    padding: 14px 12px;
+                    border-radius: 16px;
+                    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+                    position: relative;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                }
+                
+                .product-card-style7:hover .floating-content {
+                    transform: translateY(-3px);
+                    box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+                }
+                
+                .product-card-style7 .product-name {
+                    font-weight: 600;
+                    font-size: 14px;
+                    color: #1e293b;
+                    margin-bottom: 10px;
+                    line-height: 1.4;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    min-height: 38px;
+                }
+                
+                .product-card-style7 .price-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: baseline;
+                    margin-bottom: 8px;
+                }
+                
+                .product-card-style7 .price-label {
+                    font-size: 12px;
+                    color: #94a3b8;
+                }
+                
+                .product-card-style7 .price-value {
+                    font-weight: 700;
+                    font-size: 18px;
+                    color: #CBB79C;
+                }
+                
+                .product-card-style7 .margin-badge {
+                    display: inline-block;
+                    background: #dcfce7;
+                    color: #15803d;
+                    font-size: 11px;
+                    font-weight: 600;
+                    padding: 4px 10px;
+                    border-radius: 20px;
+                    margin-top: 6px;
+                }
+                
+                @media (max-width: 768px) {
+                    .product-card-style7 { width: 170px; }
+                    .product-card-style7 .image-wrapper { height: 130px; }
+                    .product-card-style7 .floating-content { margin: -16px 8px 0 8px; padding: 10px 10px; }
+                    .product-card-style7 .product-name { font-size: 12px; margin-bottom: 6px; min-height: 32px; }
+                    .product-card-style7 .price-label { font-size: 10px; }
+                    .product-card-style7 .price-value { font-size: 14px; }
+                    .product-card-style7 .margin-badge { font-size: 9px; padding: 3px 8px; }
+                    .step-scroll-products { gap: 12px; }
+                }
+            </style>
 
             <div class="section-header"><h3>RECENT BOOKINGS</h3><a href="history.html" class="view-all">View all <i class="fas fa-chevron-right"></i></a></div>
             <div class="bookings-list" id="recentBookings">
@@ -536,7 +568,7 @@
     </div>
 
     <script>
-    // ========== 辅助函数（最先定义） ==========
+    // ========== 辅助函数 ==========
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, function(m) {
@@ -547,7 +579,6 @@
         });
     }
     
-    // 菜单控制
     function toggleMenu() { 
         const sidebar = document.getElementById('sidebar'); 
         const overlay = document.querySelector('.menu-overlay'); 
@@ -621,19 +652,16 @@
                 ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(255, 140, 0, ${b.alpha * 0.5})`;
                 ctx.fill();
-                
                 ctx.beginPath();
                 ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
                 ctx.strokeStyle = `rgba(255, 140, 0, ${b.alpha * 0.6})`;
                 ctx.lineWidth = 1;
                 ctx.stroke();
-                
                 ctx.beginPath();
                 ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.2, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(255, 200, 100, ${b.alpha * 0.5})`;
                 ctx.fill();
             }
-            
             requestAnimationFrame(animate);
         }
         
@@ -642,10 +670,8 @@
             bubbles = [];
         });
         observer.observe(wrapper);
-        
         resize();
         animate();
-        
         return () => observer.disconnect();
     }
     
@@ -661,10 +687,7 @@
     } else {
         initAllBubbles();
     }
-    
-    window.addEventListener('resize', function() {
-        setTimeout(initAllBubbles, 200);
-    });
+    window.addEventListener('resize', function() { setTimeout(initAllBubbles, 200); });
 
     // ========== 产品视频弹窗 ==========
     function showProductVideoModal(product) {
@@ -692,62 +715,121 @@
         if (modal) modal.remove();
     }
 
+    function handleProductClick(product) {
+        if (product.video_url) {
+            showProductVideoModal(product);
+        } else if (product.image_url) {
+            window.open(product.image_url, '_blank');
+        }
+    }
+
+    // ========== 步进式滚动功能 ==========
+    let currentStepIndex = 0;
+    let scrollInterval = null;
+    let cardsPerStep = 2;
+    let originalProducts = [];
+
+    function generateProductCardHtml(product, randomMargin) {
+        return `
+            <div class="product-card-style7" onclick='handleProductClick(${JSON.stringify(product).replace(/'/g, "\\'")})'>
+                <div class="image-wrapper">
+                    <img src="${product.image_url || 'https://placehold.co/240x180/e2e8f0/64748b?text=No+Image'}" 
+                         onerror="this.src='https://placehold.co/240x180/e2e8f0/64748b?text=No+Image'"
+                         alt="${escapeHtml(product.name)}">
+                    ${product.video_url ? '<div class="video-badge"><i class="fas fa-play"></i> 视频</div>' : ''}
+                </div>
+                <div class="floating-content">
+                    <div class="product-name">${escapeHtml(product.name)}</div>
+                    <div class="price-row">
+                        <span class="price-label">Price</span>
+                        <span class="price-value">$${product.price?.toFixed(2) || '0.00'}</span>
+                    </div>
+                    <div class="margin-badge">Margin: +${randomMargin}%</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function initStepScroll() {
+        if (scrollInterval) clearInterval(scrollInterval);
+        const container = document.getElementById('featuredProductsGrid');
+        if (!container) return;
+        const cards = container.querySelectorAll('.product-card-style7');
+        const actualProductCount = originalProducts.length;
+        if (actualProductCount <= cardsPerStep) return;
+        
+        scrollInterval = setInterval(() => { stepScrollNextSmooth(); }, 1500);
+        
+        const sliderContainer = document.querySelector('.products-slider-container');
+        if (sliderContainer) {
+            sliderContainer.addEventListener('mouseenter', () => {
+                if (scrollInterval) clearInterval(scrollInterval);
+            });
+            sliderContainer.addEventListener('mouseleave', () => {
+                if (scrollInterval) clearInterval(scrollInterval);
+                scrollInterval = setInterval(() => stepScrollNextSmooth(), 1500);
+            });
+        }
+    }
+
+    function stepScrollNextSmooth() {
+        const container = document.getElementById('featuredProductsGrid');
+        if (!container) return;
+        const cards = container.querySelectorAll('.product-card-style7');
+        const totalCards = cards.length;
+        const actualProductCount = originalProducts.length;
+        const cardWidth = cards[0]?.offsetWidth || 240;
+        const gap = 20;
+        const stepWidth = (cardWidth + gap) * cardsPerStep;
+        
+        currentStepIndex++;
+        
+        if (currentStepIndex * stepWidth + (cardWidth + gap) * cardsPerStep >= totalCards * (cardWidth + gap)) {
+            let newHtml = '';
+            originalProducts.forEach(product => {
+                const randomMargin = (Math.random() * 10 + 5).toFixed(2);
+                newHtml += generateProductCardHtml(product, randomMargin);
+            });
+            container.insertAdjacentHTML('beforeend', newHtml);
+        }
+        container.style.transform = `translateX(-${currentStepIndex * stepWidth}px)`;
+    }
+
     // ========== 加载 Dashboard 产品展示 ==========
     async function loadDashboardProducts() {
-    const container = document.getElementById('featuredProductsGrid');
-    if (!container) return;
-    
-    try {
-        const { data: products, error } = await sb
-            .from('dashboard_products')
-            .select('*')
-            .eq('status', 'active')
-            .order('sort_order', { ascending: true })
-            .limit(20);
+        const container = document.getElementById('featuredProductsGrid');
+        if (!container) return;
         
-        if (error) throw error;
-        
-        if (!products || products.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">暂无产品，请在后台添加</div>';
-            return;
+        try {
+            const { data: products, error } = await sb
+                .from('dashboard_products')
+                .select('*')
+                .eq('status', 'active')
+                .order('sort_order', { ascending: true })
+                .limit(20);
+            
+            if (error) throw error;
+            if (!products || products.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">暂无产品，请在后台添加</div>';
+                return;
+            }
+            
+            originalProducts = products;
+            let productsHtml = '';
+            products.forEach(product => {
+                const randomMargin = (Math.random() * 10 + 5).toFixed(2);
+                productsHtml += generateProductCardHtml(product, randomMargin);
+            });
+            
+            container.innerHTML = productsHtml + productsHtml + productsHtml;
+            currentStepIndex = 0;
+            container.style.transform = `translateX(0)`;
+            setTimeout(() => initStepScroll(), 100);
+        } catch(e) {
+            console.error('加载产品失败:', e);
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">加载失败</div>';
         }
-        
-        // 生成产品卡片HTML
-        let productsHtml = '';
-        products.forEach(product => {
-            productsHtml += `
-                <div class="product-card-dashboard" onclick="handleProductClick(${JSON.stringify(product).replace(/"/g, '&quot;')})">
-                    <div class="product-image-dashboard">
-                        <img src="${product.image_url || 'https://placehold.co/220x160/e2e8f0/64748b?text=No+Image'}" 
-                             onerror="this.src='https://placehold.co/220x160/e2e8f0/64748b?text=No+Image'"
-                             alt="${escapeHtml(product.name)}">
-                        ${product.video_url ? '<div class="product-video-badge"><i class="fas fa-play"></i> 视频</div>' : ''}
-                    </div>
-                    <div class="product-info-dashboard">
-                        <div class="product-name-dashboard">${escapeHtml(product.name)}</div>
-                        <div class="product-price-dashboard">$${product.price?.toFixed(2) || '0.00'}</div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        // 复制一份实现无缝循环
-        container.innerHTML = productsHtml + productsHtml;
-        
-    } catch(e) {
-        console.error('加载产品失败:', e);
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">加载失败</div>';
     }
-}
-
-// 产品点击处理函数
-function handleProductClick(product) {
-    if (product.video_url) {
-        showProductVideoModal(product);
-    } else if (product.image_url) {
-        window.open(product.image_url, '_blank');
-    }
-}
 
     // ========== 数据加载 ==========
     async function loadDashboard() {
@@ -785,7 +867,6 @@ function handleProductClick(product) {
             certTag.style.color = '#ff9f4a';
         }
         
-        // 加载产品展示
         await loadDashboardProducts();
     }
     
@@ -805,9 +886,8 @@ function handleProductClick(product) {
         });
     }
     
-    // 初始化
     loadDashboard();
     loadRecent();
-</script>
+    </script>
 </body>
 </html>
