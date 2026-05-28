@@ -1637,6 +1637,208 @@
             renderHotelsList(); 
         }catch(e){ console.error(e); } 
     }
+
+    
+    // ========== Dashboard 产品管理 ==========
+    let dashboardProducts = [];
+
+    async function loadDashboardProducts() {
+        const { data, error } = await sb.from('dashboard_products').select('*').order('sort_order', { ascending: true });
+        if (error) { console.error('加载产品失败:', error); return; }
+        dashboardProducts = data || [];
+        renderProductsList();
+    }
+
+    function renderProductsList() {
+        const container = document.getElementById('productsListContainer');
+        if (!container) return;
+        
+        if (dashboardProducts.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无产品，点击"添加产品"开始</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        dashboardProducts.forEach((product, index) => {
+            const div = document.createElement('div');
+            div.className = 'hotel-item';
+            div.setAttribute('data-id', product.id);
+            div.innerHTML = `
+                <div class="img-wrapper" style="width: 80px; height: 60px;">
+                    <img src="${product.image_url || ''}" onerror="this.src='https://placehold.co/80x60/e2e8f0/64748b?text=No+Image'" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+                <div class="hotel-fields" style="flex: 2;">
+                    <input type="text" class="product-name-edit" data-id="${product.id}" value="${escapeHtml(product.name || '')}" placeholder="产品名称" style="width:100%; margin-bottom:8px;">
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <input type="number" step="0.01" class="product-price-edit" data-id="${product.id}" value="${product.price || 0}" placeholder="价格" style="width: 100px;">
+                        <input type="text" class="product-image-edit" data-id="${product.id}" value="${escapeHtml(product.image_url || '')}" placeholder="图片 URL" style="flex:2;">
+                        <input type="text" class="product-video-edit" data-id="${product.id}" value="${escapeHtml(product.video_url || '')}" placeholder="视频 URL (可选)" style="flex:2;">
+                        <select class="product-status-edit" data-id="${product.id}" style="width: 80px;">
+                            <option value="active" ${product.status === 'active' ? 'selected' : ''}>显示</option>
+                            <option value="inactive" ${product.status === 'inactive' ? 'selected' : ''}>隐藏</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="preview-product-btn" data-id="${product.id}" style="background:#2f6b3a;"><i class="fas fa-eye"></i> 预览</button>
+                    <button class="delete-product-btn" data-id="${product.id}" style="background:#7a2f2f;"><i class="fas fa-trash"></i> 删除</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        
+        // 绑定事件
+        document.querySelectorAll('.product-name-edit').forEach(input => {
+            input.addEventListener('change', () => updateProductField(input.dataset.id, 'name', input.value));
+        });
+        document.querySelectorAll('.product-price-edit').forEach(input => {
+            input.addEventListener('change', () => updateProductField(input.dataset.id, 'price', parseFloat(input.value) || 0));
+        });
+        document.querySelectorAll('.product-image-edit').forEach(input => {
+            input.addEventListener('change', () => updateProductField(input.dataset.id, 'image_url', input.value));
+        });
+        document.querySelectorAll('.product-video-edit').forEach(input => {
+            input.addEventListener('change', () => updateProductField(input.dataset.id, 'video_url', input.value));
+        });
+        document.querySelectorAll('.product-status-edit').forEach(select => {
+            select.addEventListener('change', () => updateProductField(select.dataset.id, 'status', select.value));
+        });
+        document.querySelectorAll('.preview-product-btn').forEach(btn => {
+            btn.onclick = () => previewProduct(btn.dataset.id);
+        });
+        document.querySelectorAll('.delete-product-btn').forEach(btn => {
+            btn.onclick = () => deleteProduct(btn.dataset.id);
+        });
+    }
+
+    async function updateProductField(id, field, value) {
+        const { error } = await sb.from('dashboard_products').update({ [field]: value }).eq('id', parseInt(id));
+        if (error) { showToast('更新失败: ' + error.message, 'error'); } 
+        else { showToast('已更新', 'success'); loadDashboardProducts(); }
+    }
+
+    async function deleteProduct(id) {
+        showConfirm('确认删除', '确定删除此产品吗？', async () => {
+            const { error } = await sb.from('dashboard_products').delete().eq('id', parseInt(id));
+            if (error) { showToast('删除失败: ' + error.message, 'error'); } 
+            else { showToast('已删除', 'success'); loadDashboardProducts(); }
+        });
+    }
+
+    function previewProduct(id) {
+        const product = dashboardProducts.find(p => p.id == id);
+        if (!product) return;
+        
+        const modalHtml = `
+            <div id="previewProductModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
+                <div class="modal-card" style="max-width: 500px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3>预览: ${escapeHtml(product.name)}</h3>
+                        <button onclick="closePreviewModal()" style="background: none; font-size: 20px;">&times;</button>
+                    </div>
+                    <div style="background: #f1f5f9; border-radius: 12px; overflow: hidden; text-align: center;">
+                        ${product.video_url ? 
+                            `<video src="${product.video_url}" controls style="width:100%; max-height: 300px;"></video>` : 
+                            `<img src="${product.image_url}" style="max-width:100%; max-height: 300px;" onerror="this.src='https://placehold.co/300x200/e2e8f0/64748b?text=No+Image'">`
+                        }
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <div><strong>产品名称:</strong> ${escapeHtml(product.name)}</div>
+                        <div><strong>价格:</strong> $${(product.price || 0).toFixed(2)}</div>
+                        <div><strong>状态:</strong> ${product.status === 'active' ? '显示' : '隐藏'}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+        const existing = document.getElementById('previewProductModal');
+        if (existing) existing.remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    window.closePreviewModal = function() {
+        const modal = document.getElementById('previewProductModal');
+        if (modal) modal.remove();
+    };
+
+    async function addProduct() {
+        const name = document.getElementById('productNameInput').value.trim();
+        const price = parseFloat(document.getElementById('productPriceInput').value) || 0;
+        const image_url = document.getElementById('productImageInput').value.trim();
+        const video_url = document.getElementById('productVideoInput').value.trim();
+        const status = document.getElementById('productStatusSelect').value;
+        
+        if (!name) { showToast('请输入产品名称', 'error'); return; }
+        if (!image_url) { showToast('请填写图片URL或上传图片', 'error'); return; }
+        
+        const sort_order = dashboardProducts.length;
+        
+        const { error } = await sb.from('dashboard_products').insert([{
+            name, price, image_url, video_url: video_url || null, status, sort_order, created_at: new Date().toISOString()
+        }]);
+        
+        if (error) { showToast('添加失败: ' + error.message, 'error'); } 
+        else { 
+            showToast('添加成功', 'success'); 
+            document.getElementById('productNameInput').value = '';
+            document.getElementById('productPriceInput').value = '';
+            document.getElementById('productImageInput').value = '';
+            document.getElementById('productVideoInput').value = '';
+            document.getElementById('productPreviewImg').style.display = 'none';
+            loadDashboardProducts(); 
+        }
+    }
+
+    async function saveProductsOrder() {
+        const items = document.querySelectorAll('#productsListContainer .hotel-item');
+        const updates = [];
+        items.forEach((item, index) => {
+            const id = item.getAttribute('data-id');
+            if (id) {
+                updates.push({ id: parseInt(id), sort_order: index });
+            }
+        });
+        
+        for (const update of updates) {
+            await sb.from('dashboard_products').update({ sort_order: update.sort_order }).eq('id', update.id);
+        }
+        showToast('排序已保存', 'success');
+        loadDashboardProducts();
+    }
+
+    // 图片上传
+    let uploadedProductImageUrl = '';
+    document.getElementById('productImageFile')?.addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            document.getElementById('previewProductImg').src = event.target.result;
+            document.getElementById('productPreviewImg').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+        
+        const fileName = `products/${Date.now()}_${file.name}`;
+        const { error } = await sb.storage.from('product-images').upload(fileName, file);
+        if (error) {
+            if (error.message.includes("bucket not found")) {
+                showToast('Storage bucket "product-images" 不存在，请在 Supabase 中创建该 bucket 并设置为公开', 'error');
+            } else {
+                showToast('上传失败: ' + error.message, 'error');
+            }
+            return;
+        }
+        const { data: urlData } = sb.storage.from('product-images').getPublicUrl(fileName);
+        uploadedProductImageUrl = urlData.publicUrl;
+        document.getElementById('productImageInput').value = uploadedProductImageUrl;
+        showToast('图片上传成功！', 'success');
+    });
+
+    // 绑定按钮
+    document.getElementById('addProductBtn')?.addEventListener('click', addProduct);
+    document.getElementById('saveProductsOrderBtn')?.addEventListener('click', saveProductsOrder);
+    document.getElementById('refreshProductsBtn')?.addEventListener('click', loadDashboardProducts);
+    document.getElementById('uploadProductImageBtn')?.addEventListener('click', () => document.getElementById('productImageFile').click());
     
     function renderHotelsList(){ 
         const container=document.getElementById('hotelsListContainer'); 
