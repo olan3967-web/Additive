@@ -424,6 +424,61 @@
             50% { transform: scale(1.2); }
             100% { transform: scale(1); }
         }
+
+.upload-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:24px;
+}
+
+.upload-box{
+    background:#0e132e;
+    border:1px solid #2e3a6e;
+    border-radius:18px;
+    padding:20px;
+}
+
+.upload-box label{
+    display:block;
+    margin-bottom:12px;
+    color:#fff;
+    font-weight:700;
+}
+
+.upload-box input[type="file"],
+.upload-box input[type="text"]{
+    width:100%;
+    margin-top:12px;
+    padding:12px;
+    background:#111933;
+    border:1px solid #2e3a6e;
+    border-radius:12px;
+    color:#fff;
+}
+
+.preview-wrapper{
+    margin-top:18px;
+}
+
+.preview-image{
+    width:100%;
+    max-width:220px;
+    border-radius:14px;
+}
+
+.preview-video{
+    width:100%;
+    max-width:320px;
+    border-radius:14px;
+}
+
+@media(max-width:900px){
+
+    .upload-grid{
+        grid-template-columns:1fr;
+    }
+
+}
     </style>
 
     <!-- 音频通知 -->
@@ -457,6 +512,7 @@
         <div class="nav-item" data-page="orders"><i class="fas fa-clock"></i> 订单记录</div>
         <div class="nav-item" data-page="orderpool"><i class="fas fa-hotel"></i> 订单池</div>
         <div class="nav-item" data-page="animated"><i class="fas fa-play-circle"></i> 动画/视频</div>
+<div class="nav-item" data-page="homepage"><i class="fas fa-image"></i> 首页媒体</div>
         <div class="nav-item" data-page="signin"><i class="fas fa-calendar-check"></i> 签到奖励</div>
         <div class="nav-item" data-page="content"><i class="fas fa-file-alt"></i> 内容管理</div>
         <div style="margin-top: 40px;"><button id="logoutBtn" class="danger" style="width:100%;"><i class="fas fa-sign-out-alt"></i> 退出登录</button></div>
@@ -735,6 +791,94 @@
             <button id="saveProductsOrderBtn" class="primary"><i class="fas fa-save"></i> 保存排序</button>
         </div>
     </div>
+
+<!-- Homepage Media -->
+                           class="preview-video"
+                           controls></video>
+                </div>
+
+                <input type="text"
+                       id="homepageVideoUrl"
+                       placeholder="Video URL">
+
+            </div>
+
+            <!-- PRODUCT 1 -->
+
+            <div class="upload-box">
+
+                <label>Product Image 1</label>
+
+                <input type="file"
+                       class="homepage-product-file"
+                       data-id="1"
+                       accept="image/*">
+
+                <div class="preview-wrapper">
+                    <img id="productPreview1" class="preview-image">
+                </div>
+
+                <input type="text"
+                       id="productUrl1"
+                       placeholder="Product Image URL">
+
+            </div>
+
+            <!-- PRODUCT 2 -->
+
+            <div class="upload-box">
+
+                <label>Product Image 2</label>
+
+                <input type="file"
+                       class="homepage-product-file"
+                       data-id="2"
+                       accept="image/*">
+
+                <div class="preview-wrapper">
+                    <img id="productPreview2" class="preview-image">
+                </div>
+
+                <input type="text"
+                       id="productUrl2"
+                       placeholder="Product Image URL">
+
+            </div>
+
+            <!-- PRODUCT 3 -->
+
+            <div class="upload-box">
+
+                <label>Product Image 3</label>
+
+                <input type="file"
+                       class="homepage-product-file"
+                       data-id="3"
+                       accept="image/*">
+
+                <div class="preview-wrapper">
+                    <img id="productPreview3" class="preview-image">
+                </div>
+
+                <input type="text"
+                       id="productUrl3"
+                       placeholder="Product Image URL">
+
+            </div>
+
+        </div>
+
+        <div style="margin-top:30px; display:flex; gap:14px;">
+
+            <button id="saveHomepageMediaBtn" class="success">
+                保存首页媒体
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
 
         <!-- 签到奖励 -->
         <div id="page_signin" class="page">
@@ -2103,6 +2247,86 @@
     loadDashboard();
 loadAnimatedSettings();
 loadDashboardProducts();
+
+<script>
+    const url = await uploadHomepageFile(file, 'videos');
+
+    if(url){
+
+        document.getElementById('homepageVideoUrl').value = url;
+
+    }
+
+});
+
+// PRODUCTS
+
+document.querySelectorAll('.homepage-product-file').forEach(input => {
+
+    input.addEventListener('change', async function(e){
+
+        const file = e.target.files[0];
+
+        if(!file) return;
+
+        const id = this.dataset.id;
+
+        document.getElementById(`productPreview${id}`).src =
+            URL.createObjectURL(file);
+
+        const url = await uploadHomepageFile(file, 'products');
+
+        if(url){
+
+            document.getElementById(`productUrl${id}`).value = url;
+
+        }
+
+    });
+
+});
+
+// SAVE
+
+document.getElementById('saveHomepageMediaBtn')?.addEventListener('click', async () => {
+
+    const payload = {
+
+        logo_url: document.getElementById('homepageLogoUrl').value,
+
+        hero_url: document.getElementById('homepageHeroUrl').value,
+
+        video_url: document.getElementById('homepageVideoUrl').value,
+
+        product_1: document.getElementById('productUrl1').value,
+
+        product_2: document.getElementById('productUrl2').value,
+
+        product_3: document.getElementById('productUrl3').value,
+
+        updated_at: new Date()
+
+    };
+
+    const { error } = await sb
+        .from('homepage_media')
+        .upsert([{
+            id:1,
+            ...payload
+        }]);
+
+    if(error){
+
+        showToast('保存失败: ' + error.message, 'error');
+
+    }else{
+
+        showToast('首页媒体已保存', 'success');
+
+    }
+
+});
+
 </script>
 </body>
 </html>
