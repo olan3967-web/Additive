@@ -629,25 +629,20 @@
                 requestAnimationFrame(animate);
                 return;
             }
-            
             if (Math.random() < 0.04 && bubbles.length < 15) {
                 bubbles.push(createBubble());
             }
-            
             ctx.clearRect(0, 0, w, h);
-            
             for (let i = bubbles.length - 1; i >= 0; i--) {
                 const b = bubbles[i];
                 b.y += b.speedY;
                 b.wobble += b.wobbleSpeed;
                 b.x += Math.sin(b.wobble) * 0.4;
                 b.alpha -= 0.002;
-                
                 if (b.y < -30 || b.alpha <= 0.01) {
                     bubbles.splice(i, 1);
                     continue;
                 }
-                
                 ctx.beginPath();
                 ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(255, 140, 0, ${b.alpha * 0.5})`;
@@ -723,12 +718,7 @@
         }
     }
 
-    // ========== 步进式滚动功能 ==========
-    let currentStepIndex = 0;
-    let scrollInterval = null;
-    let cardsPerStep = 2;
-    let originalProducts = [];
-
+    // ========== 生成风格7卡片HTML ==========
     function generateProductCardHtml(product, randomMargin) {
         return `
             <div class="product-card-style7" onclick='handleProductClick(${JSON.stringify(product).replace(/'/g, "\\'")})'>
@@ -749,6 +739,12 @@
             </div>
         `;
     }
+
+    // ========== 步进式滚动功能 ==========
+    let currentStepIndex = 0;
+    let scrollInterval = null;
+    let cardsPerStep = 2;
+    let originalProducts = [];
 
     function initStepScroll() {
         if (scrollInterval) clearInterval(scrollInterval);
@@ -888,6 +884,6 @@
     
     loadDashboard();
     loadRecent();
-    </script>
+</script>
 </body>
 </html>
