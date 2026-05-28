@@ -2141,28 +2141,46 @@
         if (badgeInterval) { clearInterval(badgeInterval); badgeInterval = null; }
     }
     
-    // ========== 首页配置管理 (Index Animation) - 修复版 ==========
+    // ========== 首页配置管理 (Index Animation) - 使用 Supabase Storage ==========
 let platformList = ["Shopify", "WooCommerce", "TikTok Shop", "eBay", "Shopee", "Lazada", "Mercado", "Etsy", "API"];
 
-// 加载已保存的首页配置
-function loadIndexConfig() {
-    const savedVideoUrl = localStorage.getItem('heroVideoUrl') || '';
-    const savedLogoUrl = localStorage.getItem('logoImageUrl') || '';
-    const savedPlatformImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
+// 加载已保存的首页配置（从 Supabase 读取）
+async function loadIndexConfig() {
+    // 从 Supabase 读取配置
+    const { data: config, error } = await sb
+        .from('website_config')
+        .select('*')
+        .eq('id', 1)
+        .single();
     
-    const videoInput = document.getElementById('indexVideoUrl');
-    const logoInput = document.getElementById('logoUrl');
-    if (videoInput) videoInput.value = savedVideoUrl;
-    if (logoInput) logoInput.value = savedLogoUrl;
-    if (savedLogoUrl) {
-        const previewImg = document.getElementById('logoPreviewImg');
-        if (previewImg) {
-            previewImg.src = savedLogoUrl;
-            previewImg.style.display = 'block';
+    if (config) {
+        const videoUrl = config.hero_video_url || '';
+        const logoUrl = config.logo_url || '';
+        const platformImages = config.platform_images || {};
+        
+        const videoInput = document.getElementById('indexVideoUrl');
+        const logoInput = document.getElementById('logoUrl');
+        if (videoInput) videoInput.value = videoUrl;
+        if (logoInput) logoInput.value = logoUrl;
+        if (logoUrl) {
+            const previewImg = document.getElementById('logoPreviewImg');
+            if (previewImg) {
+                previewImg.src = logoUrl;
+                previewImg.style.display = 'block';
+            }
         }
+        
+        renderPlatformIconsGrid(platformImages);
+    } else {
+        // 如果没有配置，创建默认配置
+        await sb.from('website_config').insert([{
+            id: 1,
+            hero_video_url: '',
+            logo_url: '',
+            platform_images: {}
+        }]);
+        renderPlatformIconsGrid({});
     }
-    
-    renderPlatformIconsGrid(savedPlatformImages);
 }
 
 function renderPlatformIconsGrid(savedImages) {
@@ -2192,36 +2210,55 @@ function renderPlatformIconsGrid(savedImages) {
     });
 }
 
-function uploadPlatformIcon(platformName) {
+// 上传平台图标到 Supabase Storage
+async function uploadPlatformIcon(platformName) {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
         const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const savedImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
-                savedImages[platformName] = event.target.result;
-                localStorage.setItem('platformImages', JSON.stringify(savedImages));
-                renderPlatformIconsGrid(savedImages);
-                showToast(`${platformName} 图标已保存`, 'success');
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+        
+        showToast('上传中...', 'info');
+        
+        // 上传到 Supabase Storage
+        const fileName = `platforms/${platformName}_${Date.now()}.${file.name.split('.').pop()}`;
+        const { error: uploadError } = await sb.storage.from('website-assets').upload(fileName, file);
+        
+        if (uploadError) {
+            showToast('上传失败: ' + uploadError.message, 'error');
+            return;
         }
+        
+        const { data: urlData } = sb.storage.from('website-assets').getPublicUrl(fileName);
+        const imageUrl = urlData.publicUrl;
+        
+        // 保存到数据库
+        const { data: config } = await sb.from('website_config').select('platform_images').eq('id', 1).single();
+        const platformImages = config?.platform_images || {};
+        platformImages[platformName] = imageUrl;
+        
+        await sb.from('website_config').update({ platform_images: platformImages }).eq('id', 1);
+        
+        renderPlatformIconsGrid(platformImages);
+        showToast(`${platformName} 图标已保存`, 'success');
     };
     input.click();
 }
 
-function clearPlatformIcon(platformName) {
-    const savedImages = JSON.parse(localStorage.getItem('platformImages') || '{}');
-    delete savedImages[platformName];
-    localStorage.setItem('platformImages', JSON.stringify(savedImages));
-    renderPlatformIconsGrid(savedImages);
+// 清除平台图标
+async function clearPlatformIcon(platformName) {
+    const { data: config } = await sb.from('website_config').select('platform_images').eq('id', 1).single();
+    const platformImages = config?.platform_images || {};
+    delete platformImages[platformName];
+    
+    await sb.from('website_config').update({ platform_images: platformImages }).eq('id', 1);
+    
+    renderPlatformIconsGrid(platformImages);
     showToast(`${platformName} 图标已清除`, 'success');
 }
 
-// 上传首页视频 - 修复版
+// 上传首页视频到 Supabase Storage
 function setupVideoUpload() {
     const uploadBtn = document.getElementById('uploadIndexVideoBtn');
     if (!uploadBtn) return;
@@ -2229,37 +2266,54 @@ function setupVideoUpload() {
     const newBtn = uploadBtn.cloneNode(true);
     uploadBtn.parentNode.replaceChild(newBtn, uploadBtn);
     
-    newBtn.addEventListener('click', function(e) {
+    newBtn.addEventListener('click', async function(e) {
         e.preventDefault();
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'video/mp4,video/webm';
-        input.onchange = function(e2) {
+        input.onchange = async function(e2) {
             const file = e2.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const videoUrl = event.target.result;
-                    localStorage.setItem('heroVideoUrl', videoUrl);
-                    const videoInput = document.getElementById('indexVideoUrl');
-                    if (videoInput) videoInput.value = videoUrl;
-                    showToast('视频已保存', 'success');
-                    
-                    const previewDiv = document.getElementById('indexVideoPreview');
-                    if (previewDiv) {
-                        const video = previewDiv.querySelector('video');
-                        if (video) video.src = videoUrl;
-                        previewDiv.style.display = 'block';
-                    }
-                };
-                reader.readAsDataURL(file);
+            if (!file) return;
+            
+            // 检查文件大小（限制 50MB）
+            if (file.size > 50 * 1024 * 1024) {
+                showToast('视频文件不能超过 50MB', 'error');
+                return;
+            }
+            
+            showToast('上传中，请稍候...', 'info');
+            
+            // 上传到 Supabase Storage
+            const fileName = `hero-video/video_${Date.now()}.${file.name.split('.').pop()}`;
+            const { error: uploadError } = await sb.storage.from('website-assets').upload(fileName, file);
+            
+            if (uploadError) {
+                showToast('上传失败: ' + uploadError.message, 'error');
+                return;
+            }
+            
+            const { data: urlData } = sb.storage.from('website-assets').getPublicUrl(fileName);
+            const videoUrl = urlData.publicUrl;
+            
+            // 保存到数据库
+            await sb.from('website_config').update({ hero_video_url: videoUrl }).eq('id', 1);
+            
+            document.getElementById('indexVideoUrl').value = videoUrl;
+            showToast('视频已保存', 'success');
+            
+            // 预览
+            const previewDiv = document.getElementById('indexVideoPreview');
+            if (previewDiv) {
+                const video = previewDiv.querySelector('video');
+                if (video) video.src = videoUrl;
+                previewDiv.style.display = 'block';
             }
         };
         input.click();
     });
 }
 
-// 上传Logo
+// 上传Logo到 Supabase Storage
 function setupLogoUpload() {
     const uploadBtn = document.getElementById('uploadLogoBtn');
     if (!uploadBtn) return;
@@ -2267,29 +2321,37 @@ function setupLogoUpload() {
     const newBtn = uploadBtn.cloneNode(true);
     uploadBtn.parentNode.replaceChild(newBtn, uploadBtn);
     
-    newBtn.addEventListener('click', function(e) {
+    newBtn.addEventListener('click', async function(e) {
         e.preventDefault();
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/png,image/jpeg';
-        input.onchange = function(e2) {
+        input.onchange = async function(e2) {
             const file = e2.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const logoUrl = event.target.result;
-                    localStorage.setItem('logoImageUrl', logoUrl);
-                    const logoInput = document.getElementById('logoUrl');
-                    if (logoInput) logoInput.value = logoUrl;
-                    const previewImg = document.getElementById('logoPreviewImg');
-                    if (previewImg) {
-                        previewImg.src = logoUrl;
-                        previewImg.style.display = 'block';
-                    }
-                    showToast('Logo已保存', 'success');
-                };
-                reader.readAsDataURL(file);
+            if (!file) return;
+            
+            showToast('上传中...', 'info');
+            
+            const fileName = `logo/logo_${Date.now()}.${file.name.split('.').pop()}`;
+            const { error: uploadError } = await sb.storage.from('website-assets').upload(fileName, file);
+            
+            if (uploadError) {
+                showToast('上传失败: ' + uploadError.message, 'error');
+                return;
             }
+            
+            const { data: urlData } = sb.storage.from('website-assets').getPublicUrl(fileName);
+            const logoUrl = urlData.publicUrl;
+            
+            await sb.from('website_config').update({ logo_url: logoUrl }).eq('id', 1);
+            
+            document.getElementById('logoUrl').value = logoUrl;
+            const previewImg = document.getElementById('logoPreviewImg');
+            if (previewImg) {
+                previewImg.src = logoUrl;
+                previewImg.style.display = 'block';
+            }
+            showToast('Logo已保存', 'success');
         };
         input.click();
     });
@@ -2319,7 +2381,7 @@ function setupVideoPreview() {
     });
 }
 
-// 同步到首页
+// 同步到首页（实际数据已存数据库，刷新即生效）
 function setupSyncBtn() {
     const syncBtn = document.getElementById('syncIndexAssetsBtn');
     if (!syncBtn) return;
@@ -2329,7 +2391,7 @@ function setupSyncBtn() {
     
     newBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        showToast('配置已同步，刷新首页即可查看', 'success');
+        showToast('配置已保存，刷新首页即可查看', 'success');
     });
 }
 
