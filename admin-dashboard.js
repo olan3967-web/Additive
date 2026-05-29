@@ -4,7 +4,7 @@ let ringChart = null;
 let breatheInterval = null;
 let pulseInterval = null;
 let dashboardRefreshInterval = null;
-let dashboardRendered = false;  // 改为检查是否已渲染HTML
+let dashboardRendered = false;
 let cachedData = {
     stats: null,
     chart: null,
@@ -133,6 +133,7 @@ async function loadRingData() {
     try {
         const { data: users } = await sb.from('users').select('uid');
         if (!users || users.length === 0) return;
+        
         let completed30Orders = 0;
         const batchSize = 50;
         for (let i = 0; i < users.length; i += batchSize) {
@@ -144,7 +145,14 @@ async function loadRingData() {
         const rate = Math.round((completed30Orders / users.length) * 100);
         const percentEl = document.getElementById('ringPercent');
         if (percentEl) percentEl.innerText = rate + '%';
-        if (ringChart) ringChart.setOption({ series: [{ data: [{ value: rate }, { value: 100 - rate }] }] });
+        
+        // 更新环形图数据
+        if (ringChart) {
+            ringChart.setOption({ series: [{ data: [{ value: rate }, { value: 100 - rate }] }] });
+        } else {
+            // 如果图表不存在，尝试重新初始化
+            initRingChart();
+        }
     } catch (e) { console.error('加载环形图数据失败:', e); }
 }
 
@@ -247,31 +255,48 @@ function initTrendChart() {
     }, 200);
 }
 
+// 独立可靠的环形图初始化函数
 function initRingChart() {
     const dom = document.getElementById('ringChart');
-    if (!dom) return;
+    if (!dom) {
+        console.error('ringChart容器不存在');
+        return;
+    }
+    
+    // 先清空容器内容（防止残留）
+    dom.innerHTML = '';
+    
+    // 确保尺寸正确
+    dom.style.height = '220px';
+    dom.style.width = '100%';
+    
+    // 如果已有图表实例，先销毁
     if (ringChart) {
-        ringChart.dispose();
+        try {
+            ringChart.dispose();
+        } catch(e) {}
         ringChart = null;
     }
+    
+    // 创建新图表
     ringChart = echarts.init(dom);
     ringChart.setOption({
         tooltip: { show: false },
-        series: [{ type: 'pie', radius: ['55%', '75%'], center: ['50%', '50%'], data: [{ value: 0, name: '完成', itemStyle: { color: '#4a7cff', borderRadius: 8, shadowBlur: 15, shadowColor: '#4a7cff' } }, { value: 100, name: '剩余', itemStyle: { color: '#1a2a3a', borderRadius: 8 } }], label: { show: false }, startAngle: 90, animation: true }]
+        series: [{
+            type: 'pie',
+            radius: ['55%', '75%'],
+            center: ['50%', '50%'],
+            data: [
+                { value: 0, name: '完成', itemStyle: { color: '#4a7cff', borderRadius: 8 } },
+                { value: 100, name: '剩余', itemStyle: { color: '#1a2a3a', borderRadius: 8 } }
+            ],
+            label: { show: false },
+            startAngle: 90,
+            animation: true
+        }]
     });
-    if (breatheInterval) clearInterval(breatheInterval);
-    let breatheOpacity = 0.3, breatheDirection = 0.006, breatheScale = 1, scaleDirection = 0.002;
-    breatheInterval = setInterval(() => {
-        breatheOpacity += breatheDirection;
-        if (breatheOpacity >= 0.6) breatheDirection = -0.006;
-        if (breatheOpacity <= 0.2) breatheDirection = 0.006;
-        breatheScale += scaleDirection;
-        if (breatheScale >= 1.02) scaleDirection = -0.002;
-        if (breatheScale <= 0.98) scaleDirection = 0.002;
-        if (ringChart) {
-            ringChart.setOption({ series: [{ data: [{ itemStyle: { shadowBlur: 15 + (1 - breatheOpacity) * 20 } }], radius: [`${55 * breatheScale}%`, `${75 * breatheScale}%`] }] });
-        }
-    }, 150);
+    
+    console.log('环形图初始化成功');
 }
 
 function bindDateFilters() {
@@ -295,13 +320,13 @@ function subscribeToRealtime() {
         .subscribe();
 }
 
+// 主加载函数
 function loadDashboardPage(days = 1) {
     const container = document.getElementById('page_dashboard');
     if (!container) return;
     
-    // 关键修复：如果已经渲染过HTML，只刷新数据，不重新渲染
+    // 如果已经渲染过HTML，只刷新数据
     if (dashboardRendered) {
-        // 只刷新数据，图表保持存在
         refreshDashboard(currentDays, true);
         return;
     }
@@ -352,16 +377,15 @@ function loadDashboardPage(days = 1) {
         </div>
     `;
     
-    // 初始化图表
+    // 初始化图表 - 使用 setTimeout 确保 DOM 完全渲染
     setTimeout(() => {
         initTrendChart();
-        initRingChart();
+        initRingChart();  // 调用独立的环形图初始化函数
         bindDateFilters();
         refreshDashboard(days, true);
         subscribeToRealtime();
-    }, 150);
+    }, 200);
     
-    // 定时刷新（60秒）
     if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
     dashboardRefreshInterval = setInterval(() => refreshDashboard(currentDays, false), 60000);
 }
