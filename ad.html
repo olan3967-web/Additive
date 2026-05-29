@@ -9,18 +9,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="admin-common.css">
+    <style>
+        /* 确保琥珀色通知样式存在 */
+        @keyframes slideIn {
+            0% { transform: translateX(calc(100% + 20px)); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(calc(100% + 20px)); opacity: 0; }
+        }
+        @keyframes toastProgress {
+            0% { width: 100%; }
+            100% { width: 0%; }
+        }
+    </style>
 </head>
 <body>
-
-<div id="notificationCenter" class="notification-center">
-    <div class="notification-header">
-        <span style="font-weight: 600;">📢 通知中心</span>
-        <i class="fas fa-times" style="cursor:pointer" onclick="toggleNotification()"></i>
-    </div>
-    <div id="notificationList" class="notification-list">
-        <div style="padding: 20px; text-align: center; color: #6a7a9a;">暂无新通知</div>
-    </div>
-</div>
 
 <div class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
     <i class="fas fa-bars"></i>
@@ -47,10 +52,6 @@
     <div class="main">
         <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 24px;">
             <div class="top-bar-right">
-                <div class="notification-bell" id="notificationBell" onclick="toggleNotification()">
-                    <i class="far fa-bell"></i>
-                    <span id="notificationDot" class="notification-dot" style="display: none;"></span>
-                </div>
                 <div class="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center cursor-pointer">
                     <i class="fas fa-user text-white text-sm"></i>
                 </div>
@@ -114,13 +115,17 @@
 <script src="admin-signin.js"></script>
 <script src="admin-content.js"></script>
 
-    <script>
+<script>
+    // 导航点击事件
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', () => showPage(item.getAttribute('data-page')));
     });
-    document.getElementById('logoutBtn')?.addEventListener('click', () => { localStorage.removeItem('admin_logged_in'); window.location.href = 'admin-login.html'; });
+    document.getElementById('logoutBtn')?.addEventListener('click', () => { 
+        localStorage.removeItem('admin_logged_in'); 
+        window.location.href = 'admin-login.html'; 
+    });
     
-    // 只调用一次，不要重复
+    // 加载默认页面
     showPage('dashboard');
 </script>
 </body>
