@@ -1,8 +1,9 @@
-// admin-dashboard.js - 优化版（减少查询频率、缓存数据）
+// admin-dashboard.js - 完整优化版
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
 let pulseInterval = null;
+let dashboardRefreshInterval = null;
 let cachedData = {
     stats: null,
     chart: null,
@@ -11,10 +12,9 @@ let cachedData = {
     lastChartTime: 0,
     lastActivityTime: 0
 };
-const CACHE_DURATION = 30000; // 30秒缓存
-const DEBOUNCE_DELAY = 300;   // 防抖延迟
+const CACHE_DURATION = 30000;
+const DEBOUNCE_DELAY = 300;
 
-// 防抖函数
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -34,9 +34,12 @@ async function loadQuickCards() {
             sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
             sb.from('orders_pool').select('*', { count: 'exact', head: true })
         ]);
-        document.getElementById('kycPendingCount').innerText = kycRes.count || 0;
-        document.getElementById('withdrawalPendingCount').innerText = withdrawalRes.count || 0;
-        document.getElementById('orderPoolCount').innerText = poolRes.count || 0;
+        const kycEl = document.getElementById('kycPendingCount');
+        const withdrawalEl = document.getElementById('withdrawalPendingCount');
+        const poolEl = document.getElementById('orderPoolCount');
+        if (kycEl) kycEl.innerText = kycRes.count || 0;
+        if (withdrawalEl) withdrawalEl.innerText = withdrawalRes.count || 0;
+        if (poolEl) poolEl.innerText = poolRes.count || 0;
     } catch (e) { console.error('加载快捷卡片失败:', e); }
 }
 
@@ -46,18 +49,15 @@ async function loadStatsData(days, force = false) {
         applyStatsData(cachedData.stats);
         return;
     }
-    
     try {
         const [usersRes, depositsRes, withdrawalsRes] = await Promise.all([
             sb.from('users').select('created_at, balance'),
             sb.from('deposits').select('created_at, amount'),
             sb.from('withdrawals').select('request_date, amount, status')
         ]);
-        
         const users = usersRes.data || [];
         const deposits = depositsRes.data || [];
         const withdrawals = withdrawalsRes.data || [];
-        
         const nowDate = new Date();
         const startDate = new Date(); startDate.setDate(nowDate.getDate() - days);
         const startStr = startDate.toISOString().split('T')[0];
@@ -66,21 +66,14 @@ async function loadStatsData(days, force = false) {
         
         const newUsers = users.filter(u => u.created_at && u.created_at.split('T')[0] >= startStr).length;
         const prevNewUsers = users.filter(u => u.created_at && u.created_at.split('T')[0] >= lastPeriodStr && u.created_at.split('T')[0] < startStr).length;
-        
         const totalDeposit = deposits.reduce((s, d) => s + (d.amount || 0), 0);
         const periodDeposit = deposits.filter(d => d.created_at && d.created_at.split('T')[0] >= startStr).reduce((s, d) => s + (d.amount || 0), 0);
         const prevPeriodDeposit = deposits.filter(d => d.created_at && d.created_at.split('T')[0] >= lastPeriodStr && d.created_at.split('T')[0] < startStr).reduce((s, d) => s + (d.amount || 0), 0);
-        
         const totalWithdraw = withdrawals.filter(w => w.status === 'approved').reduce((s, w) => s + (w.amount || 0), 0);
         const periodWithdraw = withdrawals.filter(w => w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= startStr).reduce((s, w) => s + (w.amount || 0), 0);
         const prevPeriodWithdraw = withdrawals.filter(w => w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= lastPeriodStr && w.request_date.split('T')[0] < startStr).reduce((s, w) => s + (w.amount || 0), 0);
         
-        const statsData = {
-            newUsers, prevNewUsers, totalUsers: users.length,
-            totalDeposit, periodDeposit, prevPeriodDeposit,
-            totalWithdraw, periodWithdraw, prevPeriodWithdraw
-        };
-        
+        const statsData = { newUsers, prevNewUsers, totalUsers: users.length, totalDeposit, periodDeposit, prevPeriodDeposit, totalWithdraw, periodWithdraw, prevPeriodWithdraw };
         cachedData.stats = statsData;
         cachedData.lastStatsTime = now;
         applyStatsData(statsData);
@@ -88,44 +81,47 @@ async function loadStatsData(days, force = false) {
 }
 
 function applyStatsData(data) {
-    animateNumber(document.getElementById('newUsersCount'), data.newUsers, '', '');
-    document.getElementById('newUsersTrend').innerHTML = getTrendHtml(data.newUsers, data.prevNewUsers);
-    animateNumber(document.getElementById('totalUsersCount'), data.totalUsers, '', '');
-    animateNumber(document.getElementById('totalDepositCount'), data.totalDeposit, '€', '');
-    document.getElementById('totalDepositTrend').innerHTML = getTrendHtml(data.periodDeposit, data.prevPeriodDeposit);
-    animateNumber(document.getElementById('totalWithdrawCount'), data.totalWithdraw, '€', '');
-    document.getElementById('totalWithdrawTrend').innerHTML = getTrendHtml(data.periodWithdraw, data.prevPeriodWithdraw);
+    const newUsersEl = document.getElementById('newUsersCount');
+    const totalUsersEl = document.getElementById('totalUsersCount');
+    const totalDepositEl = document.getElementById('totalDepositCount');
+    const totalWithdrawEl = document.getElementById('totalWithdrawCount');
+    const newUsersTrendEl = document.getElementById('newUsersTrend');
+    const totalDepositTrendEl = document.getElementById('totalDepositTrend');
+    const totalWithdrawTrendEl = document.getElementById('totalWithdrawTrend');
+    
+    if (newUsersEl) animateNumber(newUsersEl, data.newUsers, '', '');
+    if (newUsersTrendEl) newUsersTrendEl.innerHTML = getTrendHtml(data.newUsers, data.prevNewUsers);
+    if (totalUsersEl) animateNumber(totalUsersEl, data.totalUsers, '', '');
+    if (totalDepositEl) animateNumber(totalDepositEl, data.totalDeposit, '€', '');
+    if (totalDepositTrendEl) totalDepositTrendEl.innerHTML = getTrendHtml(data.periodDeposit, data.prevPeriodDeposit);
+    if (totalWithdrawEl) animateNumber(totalWithdrawEl, data.totalWithdraw, '€', '');
+    if (totalWithdrawTrendEl) totalWithdrawTrendEl.innerHTML = getTrendHtml(data.periodWithdraw, data.prevPeriodWithdraw);
 }
 
 async function loadChartData(days, force = false) {
     const now = Date.now();
-    if (!force && cachedData.chart && (now - cachedData.lastChartTime) < CACHE_DURATION) {
-        if (trendChart) trendChart.setOption({ xAxis: { data: cachedData.chart.dates }, series: [{ data: cachedData.chart.depositData }, { data: cachedData.chart.withdrawData }] });
+    if (!force && cachedData.chart && (now - cachedData.lastChartTime) < CACHE_DURATION && trendChart) {
+        trendChart.setOption({ xAxis: { data: cachedData.chart.dates }, series: [{ data: cachedData.chart.depositData }, { data: cachedData.chart.withdrawData }] });
         return;
     }
-    
     try {
         const [depositsRes, withdrawalsRes] = await Promise.all([
             sb.from('deposits').select('created_at, amount'),
             sb.from('withdrawals').select('request_date, amount, status')
         ]);
-        
         const deposits = depositsRes.data || [];
         const withdrawals = withdrawalsRes.data || [];
         const dates = [], depositData = [], withdrawData = [];
         const today = new Date();
-        
         for (let i = days - 1; i >= 0; i--) {
             const d = new Date(); d.setDate(today.getDate() - i);
             const dateStr = d.toISOString().split('T')[0];
             dates.push(`${d.getMonth() + 1}/${d.getDate()}`);
-            
             const dayDeposit = deposits.filter(dep => dep.created_at && dep.created_at.split('T')[0] === dateStr).reduce((s, d) => s + (d.amount || 0), 0);
             const dayWithdraw = withdrawals.filter(w => w.status === 'approved' && w.request_date && w.request_date.split('T')[0] === dateStr).reduce((s, w) => s + (w.amount || 0), 0);
             depositData.push(dayDeposit);
             withdrawData.push(dayWithdraw);
         }
-        
         cachedData.chart = { dates, depositData, withdrawData };
         cachedData.lastChartTime = now;
         if (trendChart) trendChart.setOption({ xAxis: { data: dates }, series: [{ data: depositData }, { data: withdrawData }] });
@@ -136,21 +132,17 @@ async function loadRingData() {
     try {
         const { data: users } = await sb.from('users').select('uid');
         if (!users || users.length === 0) return;
-        
-        // 分批查询订单，避免一次性查询过多
         let completed30Orders = 0;
         const batchSize = 50;
         for (let i = 0; i < users.length; i += batchSize) {
             const batch = users.slice(i, i + batchSize);
-            const promises = batch.map(user => 
-                sb.from('order_history').select('id', { count: 'exact', head: true }).eq('uid', user.uid)
-            );
+            const promises = batch.map(user => sb.from('order_history').select('id', { count: 'exact', head: true }).eq('uid', user.uid));
             const results = await Promise.all(promises);
             completed30Orders += results.filter(r => (r.count || 0) >= 30).length;
         }
-        
         const rate = Math.round((completed30Orders / users.length) * 100);
-        document.getElementById('ringPercent').innerText = rate + '%';
+        const percentEl = document.getElementById('ringPercent');
+        if (percentEl) percentEl.innerText = rate + '%';
         if (ringChart) ringChart.setOption({ series: [{ data: [{ value: rate }, { value: 100 - rate }] }] });
     } catch (e) { console.error('加载环形图数据失败:', e); }
 }
@@ -161,20 +153,17 @@ async function loadActivityTimeline(force = false) {
         renderActivityList(cachedData.activity);
         return;
     }
-    
     try {
         const [kycRes, withdrawalRes, userRes] = await Promise.all([
             sb.from('kyc_verifications').select('*, users(username)').eq('status', 'pending').order('uploaded_at', { ascending: false }).limit(10),
             sb.from('withdrawals').select('*').order('request_date', { ascending: false }).limit(10),
             sb.from('users').select('*').order('created_at', { ascending: false }).limit(10)
         ]);
-        
         const activities = [];
         (kycRes.data || []).forEach(k => activities.push({ type: 'kyc', title: 'KYC申请', user: k.users?.username || k.uid, time: k.uploaded_at, icon: 'fas fa-id-card', color: '#ffb84d' }));
         (withdrawalRes.data || []).forEach(w => activities.push({ type: 'withdrawal', title: '提现申请', user: w.username, amount: `€${w.amount}`, time: w.request_date, icon: 'fas fa-money-bill-wave', color: '#4a7cff' }));
         (userRes.data || []).forEach(u => activities.push({ type: 'user', title: '新用户注册', user: u.username, time: u.created_at, icon: 'fas fa-user-plus', color: '#2ed15a' }));
         activities.sort((a, b) => new Date(b.time) - new Date(a.time));
-        
         cachedData.activity = activities;
         cachedData.lastActivityTime = now;
         renderActivityList(activities);
@@ -207,10 +196,13 @@ async function refreshDashboard(days = currentDays, force = false) {
     ]);
 }
 
-// 优化图表动画 - 降低频率
 function initTrendChart() {
     const dom = document.getElementById('trendChart');
-    if (!dom || trendChart) return;
+    if (!dom) return;
+    if (trendChart) {
+        trendChart.dispose();
+        trendChart = null;
+    }
     trendChart = echarts.init(dom);
     trendChart.setOption({
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: 'rgba(15,25,40,0.95)', borderColor: '#4a7cff', borderWidth: 1, textStyle: { color: '#fff' } },
@@ -222,9 +214,8 @@ function initTrendChart() {
             { name: '出金', type: 'line', data: [], smooth: true, symbol: 'none', lineStyle: { color: '#ff5a5a', width: 3, shadowBlur: 10, shadowColor: '#ff5a5a' }, areaStyle: { opacity: 0.25, color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#ff5a5a' }, { offset: 1, color: 'transparent' }]) } }
         ]
     });
-    // 降低脉冲动画频率（从100ms改为200ms）
-    let pulseOpacity = 0.3, pulseDirection = 0.006;
     if (pulseInterval) clearInterval(pulseInterval);
+    let pulseOpacity = 0.3, pulseDirection = 0.006;
     pulseInterval = setInterval(() => {
         pulseOpacity += pulseDirection;
         if (pulseOpacity >= 0.5) pulseDirection = -0.006;
@@ -242,15 +233,18 @@ function initTrendChart() {
 
 function initRingChart() {
     const dom = document.getElementById('ringChart');
-    if (!dom || ringChart) return;
+    if (!dom) return;
+    if (ringChart) {
+        ringChart.dispose();
+        ringChart = null;
+    }
     ringChart = echarts.init(dom);
     ringChart.setOption({
         tooltip: { show: false },
         series: [{ type: 'pie', radius: ['55%', '75%'], center: ['50%', '50%'], data: [{ value: 0, name: '完成', itemStyle: { color: '#4a7cff', borderRadius: 8, shadowBlur: 15, shadowColor: '#4a7cff' } }, { value: 100, name: '剩余', itemStyle: { color: '#1a2a3a', borderRadius: 8 } }], label: { show: false }, startAngle: 90, animation: true }]
     });
-    // 降低呼吸动画频率
-    let breatheOpacity = 0.3, breatheDirection = 0.006, breatheScale = 1, scaleDirection = 0.002;
     if (breatheInterval) clearInterval(breatheInterval);
+    let breatheOpacity = 0.3, breatheDirection = 0.006, breatheScale = 1, scaleDirection = 0.002;
     breatheInterval = setInterval(() => {
         breatheOpacity += breatheDirection;
         if (breatheOpacity >= 0.6) breatheDirection = -0.006;
@@ -271,25 +265,31 @@ function bindDateFilters() {
         currentDays = parseInt(btn.dataset.days);
         await refreshDashboard(currentDays, true);
     }, DEBOUNCE_DELAY);
-    
     document.querySelectorAll('.date-filter-btn').forEach(btn => {
-        btn.removeEventListener('click', btn._handler);
+        if (btn._handler) btn.removeEventListener('click', btn._handler);
         btn._handler = () => handleFilterChange(btn);
         btn.addEventListener('click', btn._handler);
     });
 }
 
 function subscribeToRealtime() {
-    // 使用更轻量级的订阅，只监听关键事件
     const channel = sb.channel('dashboard-realtime')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'kyc_verifications' }, () => refreshDashboard(currentDays, true))
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'withdrawals' }, () => refreshDashboard(currentDays, true))
         .subscribe();
 }
 
+// 页面加载函数
 function loadDashboardPage(days = 1) {
     const container = document.getElementById('page_dashboard');
     if (!container) return;
+    
+    // 如果已经有内容，只刷新数据，不重新渲染
+    if (container.innerHTML.trim() !== '' && trendChart && ringChart) {
+        refreshDashboard(currentDays, true);
+        return;
+    }
+    
     container.innerHTML = `
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 24px;">
             <button class="date-filter-btn active" data-days="1">今日</button>
@@ -318,7 +318,7 @@ function loadDashboardPage(days = 1) {
             <div class="card" style="padding: 20px; text-align: center;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <div style="font-size: 16px; font-weight: 600; color: #4a7cff;">📊 用户行为分析</div>
-                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #4a7cff; border-radius: 2px; margin-right: 6px;"></span>做单率</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #ffb84d; border-radius: 2px; margin-right: 6px;"></span>提款率</span></div>
+                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #4a7cff; border-radius: 2px; margin-right: 6px;"></span>做单率</span></div>
                 </div>
                 <div id="ringChart" style="height: 220px; width: 100%;"></div>
                 <div id="ringPercent" style="font-size: 24px; font-weight: 700; color: #fff; margin-top: 8px;">0%</div>
@@ -333,14 +333,22 @@ function loadDashboardPage(days = 1) {
             <div id="activityList" style="max-height: 300px; overflow-y: auto;"><div style="text-align: center; padding: 20px; color: #6a7a9a;">加载中...</div></div>
         </div>
     `;
-    initTrendChart();
-    initRingChart();
-    bindDateFilters();
-    refreshDashboard(days, true);
-    subscribeToRealtime();
-    // 降低自动刷新频率（从30秒改为60秒）
-    if (window.dashboardRefreshInterval) clearInterval(window.dashboardRefreshInterval);
-    window.dashboardRefreshInterval = setInterval(() => refreshDashboard(currentDays, false), 60000);
+    
+    setTimeout(() => {
+        initTrendChart();
+        initRingChart();
+        bindDateFilters();
+        refreshDashboard(days, true);
+        subscribeToRealtime();
+    }, 100);
+    
+    if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
+    dashboardRefreshInterval = setInterval(() => refreshDashboard(currentDays, false), 60000);
 }
+
+// 导出刷新函数供其他模块调用
+window.refreshDashboardData = function(days) {
+    refreshDashboard(days || currentDays, true);
+};
 
 window.loadDashboardPage = loadDashboardPage;

@@ -48,27 +48,37 @@ function getTrendHtml(current, previous) {
     return '<span>→ 0%</span>';
 }
 
+// 记录哪些页面已经加载过
+const loadedPages = {};
+
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const targetPage = document.getElementById('page_' + pageId);
     if (targetPage) targetPage.classList.add('active');
+    
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if (activeNav) activeNav.classList.add('active');
     
-    // 触发页面加载函数
-    if (pageId === 'dashboard' && window.loadDashboardPage) window.loadDashboardPage(currentDays);
-    if (pageId === 'users' && window.loadUsersPage) window.loadUsersPage();
-    if (pageId === 'kyc' && window.loadKycPage) window.loadKycPage();
-    if (pageId === 'trial' && window.loadTrialPage) window.loadTrialPage();
-    if (pageId === 'withdrawals' && window.loadWithdrawalsPage) window.loadWithdrawalsPage();
-    if (pageId === 'vip' && window.loadVipPage) window.loadVipPage();
-    if (pageId === 'setorders' && window.loadSetordersPage) window.loadSetordersPage();
-    if (pageId === 'orders' && window.loadOrdersPage) window.loadOrdersPage();
-    if (pageId === 'orderpool' && window.loadOrderPoolPage) window.loadOrderPoolPage();
-    if (pageId === 'animated' && window.loadAnimatedPage) window.loadAnimatedPage();
-    if (pageId === 'signin' && window.loadSigninPage) window.loadSigninPage();
-    if (pageId === 'content' && window.loadContentPage) window.loadContentPage();
+    // 只在页面未加载过时加载内容
+    if (!loadedPages[pageId]) {
+        loadedPages[pageId] = true;
+        if (pageId === 'dashboard' && window.loadDashboardPage) window.loadDashboardPage(currentDays);
+        else if (pageId === 'users' && window.loadUsersPage) window.loadUsersPage();
+        else if (pageId === 'kyc' && window.loadKycPage) window.loadKycPage();
+        else if (pageId === 'trial' && window.loadTrialPage) window.loadTrialPage();
+        else if (pageId === 'withdrawals' && window.loadWithdrawalsPage) window.loadWithdrawalsPage();
+        else if (pageId === 'vip' && window.loadVipPage) window.loadVipPage();
+        else if (pageId === 'setorders' && window.loadSetordersPage) window.loadSetordersPage();
+        else if (pageId === 'orders' && window.loadOrdersPage) window.loadOrdersPage();
+        else if (pageId === 'orderpool' && window.loadOrderPoolPage) window.loadOrderPoolPage();
+        else if (pageId === 'animated' && window.loadAnimatedPage) window.loadAnimatedPage();
+        else if (pageId === 'signin' && window.loadSigninPage) window.loadSigninPage();
+        else if (pageId === 'content' && window.loadContentPage) window.loadContentPage();
+    } else if (pageId === 'dashboard' && window.refreshDashboardData) {
+        // 如果已加载，只刷新数据
+        window.refreshDashboardData(currentDays);
+    }
 }
 
 // 登录检查
