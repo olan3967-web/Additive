@@ -23,6 +23,62 @@
             0% { width: 100%; }
             100% { width: 0%; }
         }
+        
+        /* Email Verification 表格样式 */
+        .email-request-item {
+            background: #0f172a;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .email-request-item .email-info {
+            flex: 2;
+        }
+        .email-request-item .email-address {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffb84d;
+        }
+        .email-request-item .request-time {
+            font-size: 11px;
+            color: #8a9abb;
+            margin-top: 4px;
+        }
+        .email-request-item .code-input {
+            width: 120px;
+            background: #1e2a3a;
+            border: 1px solid #4a7cff;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #fff;
+            text-align: center;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+        .email-request-item .set-code-btn {
+            background: #2f6b3a;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .email-request-item .set-code-btn:hover {
+            background: #3a8a4a;
+        }
+        .email-request-item .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+        .status-pending { background: rgba(255,184,77,0.15); color: #ffb84d; }
+        .status-verified { background: rgba(46,209,90,0.15); color: #2ed15a; }
     </style>
 </head>
 <body>
@@ -37,6 +93,7 @@
         <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i> 仪表板</div>
         <div class="nav-item" data-page="users"><i class="fas fa-users"></i> 用户管理</div>
         <div class="nav-item" data-page="kyc"><i class="fas fa-id-card"></i> KYC Verification</div>
+        <div class="nav-item" data-page="emailverify"><i class="fas fa-envelope"></i> Email Verification</div>
         <div class="nav-item" data-page="trial"><i class="fas fa-gift"></i> 体验金管理</div>
         <div class="nav-item" data-page="withdrawals"><i class="fas fa-money-bill-wave"></i> 提现审核</div>
         <div class="nav-item" data-page="vip"><i class="fas fa-crown"></i> VIP 配置</div>
@@ -62,6 +119,7 @@
         <div id="page_dashboard" class="page active"></div>
         <div id="page_users" class="page"></div>
         <div id="page_kyc" class="page"></div>
+        <div id="page_emailverify" class="page"></div>
         <div id="page_trial" class="page"></div>
         <div id="page_withdrawals" class="page"></div>
         <div id="page_vip" class="page"></div>
@@ -105,6 +163,7 @@
 <script src="admin-dashboard.js"></script>
 <script src="admin-users.js"></script>
 <script src="admin-kyc.js"></script>
+<script src="admin-emailverify.js"></script>
 <script src="admin-trial.js"></script>
 <script src="admin-withdrawals.js"></script>
 <script src="admin-vip.js"></script>

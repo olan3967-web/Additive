@@ -113,18 +113,18 @@
             <div class="logo">ADDITIVE<span>®</span></div>
             <div class="subtitle">Create your account</div>
             
-            <!-- 邮箱 + 验证码 -->
+            <!-- 邮箱 + 发送按钮（只发送邮箱到后台） -->
             <div class="form-group">
                 <label><i class="fas fa-envelope"></i> Email Address</label>
                 <div class="code-row">
                     <input type="email" id="regEmail" placeholder="Enter your email">
-                    <button class="send-code-btn" id="sendCodeBtn" onclick="sendVerificationCode()">Send Code</button>
+                    <button class="send-code-btn" id="sendCodeBtn" onclick="sendEmailToBackend()">Send</button>
                 </div>
             </div>
             
             <div class="form-group">
                 <label><i class="fas fa-key"></i> Verification Code</label>
-                <input type="text" id="regCode" placeholder="Enter 6-digit code">
+                <input type="text" id="regCode" placeholder="Enter 6-digit code from email">
             </div>
             
             <!-- 原有字段 -->
@@ -144,10 +144,6 @@
                 <label><i class="fas fa-qrcode"></i> Invitation Code (optional)</label>
                 <input type="text" id="regInviteCode" placeholder="Enter invite code">
             </div>
-            <div class="form-group">
-                <label><i class="fas fa-wallet"></i> Withdrawal PIN (4 digits)</label>
-                <input type="password" id="regPin" maxlength="4" placeholder="4-digit PIN">
-            </div>
             
             <button class="register-btn" onclick="handleRegister()"><i class="fas fa-user-plus"></i> Register</button>
             <div class="login-link">Already have an account? <a href="signin.html">Sign in</a></div>
@@ -156,13 +152,14 @@
     </div>
 
     <script>
-                // Supabase 配置
+        // Supabase 配置
         const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
         let countdown = 0;
         let countdownInterval = null;
+        let pendingEmail = null;
         
         function showMessage(msg, isError = true) {
             const d = document.getElementById('registerError');
@@ -171,8 +168,8 @@
             setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 4000);
         }
         
-        // 发送验证码 - 直接操作数据库
-        async function sendVerificationCode() {
+        // 发送邮箱到后台（不再生成验证码）
+        async function sendEmailToBackend() {
             const email = document.getElementById('regEmail').value.trim();
             
             if (!email) {
@@ -193,39 +190,48 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中...';
             
-            // 生成6位验证码
-            const code = Math.floor(100000 + Math.random() * 900000).toString();
-            
             try {
-                // 删除该邮箱旧的未使用验证码
-                await sb
-                    .from('email_verification_codes')
-                    .delete()
+                // 检查邮箱是否已被注册
+                const { data: existingEmail } = await sb
+                    .from('users')
+                    .select('email')
                     .eq('email', email)
-                    .eq('used', false);
+                    .maybeSingle();
                 
-                // 存入新验证码
+                if (existingEmail) {
+                    showMessage('邮箱已被注册');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Send';
+                    return;
+                }
+                
+                // 删除该邮箱旧的待验证记录
+                await sb
+                    .from('email_verification_requests')
+                    .delete()
+                    .eq('email', email);
+                
+                // 创建新的邮箱验证请求（验证码为空，等待管理员设置）
                 const { error: insertError } = await sb
-                    .from('email_verification_codes')
+                    .from('email_verification_requests')
                     .insert({
                         email: email,
-                        code: code,
-                        used: false,
-                        expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString()
+                        code: null,
+                        is_verified: false,
+                        requested_at: new Date().toISOString(),
+                        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24小时过期
                     });
                 
                 if (insertError) {
                     console.error('存储失败:', insertError);
                     showMessage('发送失败: ' + insertError.message);
                     btn.disabled = false;
-                    btn.innerHTML = 'Send Code';
+                    btn.innerHTML = 'Send';
                     return;
                 }
                 
-                // 显示验证码（开发模式 - 在控制台显示）
-                console.log('📧 验证码:', code);
-                console.log('📧 发送到邮箱:', email);
-                showMessage(`验证码已生成，请在控制台查看: ${code}`, false);
+                pendingEmail = email;
+                showMessage('邮箱已提交！请等待管理员发送验证码到您的邮箱', false);
                 
                 startCountdown(60);
                 
@@ -233,7 +239,7 @@
                 console.error('错误:', err);
                 showMessage('网络错误，请重试');
                 btn.disabled = false;
-                btn.innerHTML = 'Send Code';
+                btn.innerHTML = 'Send';
             }
         }
         
@@ -246,7 +252,7 @@
                 if (countdown <= 0) {
                     clearInterval(countdownInterval);
                     btn.disabled = false;
-                    btn.innerHTML = 'Send Code';
+                    btn.innerHTML = 'Send';
                 } else {
                     btn.innerHTML = `${countdown}s`;
                 }
@@ -269,7 +275,6 @@
             const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value;
             const inviteCode = document.getElementById('regInviteCode').value.trim();
-            const pin = document.getElementById('regPin').value;
             
             // 验证输入
             if (!email) { showMessage('请输入邮箱地址'); return; }
@@ -277,23 +282,22 @@
             if (!phone) { showMessage('请输入手机号'); return; }
             if (!username || username.length < 3) { showMessage('用户名至少3个字符'); return; }
             if (!password || password.length < 4) { showMessage('密码至少4个字符'); return; }
-            if (!pin || pin.length !== 4 || isNaN(pin)) { showMessage('提现PIN码必须是4位数字'); return; }
             
             showMessage('验证中...', false);
             
             try {
-                // 1. 从数据库验证验证码
-                const { data: codeData, error: codeError } = await sb
-                    .from('email_verification_codes')
+                // 1. 验证邮箱验证码（从管理员设置的记录中查询）
+                const { data: requestData, error: requestError } = await sb
+                    .from('email_verification_requests')
                     .select('*')
                     .eq('email', email)
                     .eq('code', verifyCode)
-                    .eq('used', false)
+                    .eq('is_verified', false)
                     .gt('expires_at', new Date().toISOString())
                     .maybeSingle();
                 
-                if (codeError || !codeData) {
-                    showMessage('验证码错误或已过期');
+                if (requestError || !requestData) {
+                    showMessage('验证码错误或已过期，请联系管理员获取正确的验证码');
                     return;
                 }
                 
@@ -311,7 +315,7 @@
                     return; 
                 }
                 
-                // 3. 检查邮箱是否已存在
+                // 3. 检查邮箱是否已存在（二次确认）
                 const { data: existingEmail } = await sb
                     .from('users')
                     .select('email')
@@ -377,7 +381,6 @@
                         phone: phone,
                         username: username,
                         password: password,
-                        pin: pin,
                         balance: 0,
                         trial_bonus_amount: 0,
                         vip_level: 1,
@@ -397,8 +400,8 @@
                 
                 // 8. 标记验证码为已使用
                 await sb
-                    .from('email_verification_codes')
-                    .update({ used: true })
+                    .from('email_verification_requests')
+                    .update({ is_verified: true, verified_at: new Date().toISOString() })
                     .eq('email', email)
                     .eq('code', verifyCode);
                 
