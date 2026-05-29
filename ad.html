@@ -3,261 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AURORA ADMIN | 极光黑管理后台</title>
+    <title>AURORA ADMIN | 极光黑智能后台</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #030712;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            color: #eef5ff;
-            min-height: 100vh;
-        }
-
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #4a7cff; border-radius: 10px; }
-
-        .app { display: flex; min-height: 100vh; }
-
-        /* 侧边栏 - 极光黑风格 */
-        .sidebar {
-            width: 280px;
-            background: #0a0f1a;
-            border-right: 1px solid #1a2a3a;
-            padding: 24px 20px;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 10;
-            transition: all 0.3s;
-        }
-
-        .main {
-            flex: 1;
-            margin-left: 280px;
-            padding: 28px 36px;
-        }
-
-        .logo {
-            font-size: 24px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #fff, #4a7cff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin-bottom: 32px;
-            padding-left: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .logo::before {
-            content: "⚡";
-            background: none;
-            -webkit-background-clip: unset;
-            color: #4a7cff;
-            font-size: 24px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 12px 18px;
-            margin: 6px 0;
-            border-radius: 12px;
-            color: #8a9abb;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
-        .nav-item i { width: 24px; font-size: 1.1rem; }
-        .nav-item:hover { background: rgba(74, 124, 255, 0.1); color: #4a7cff; transform: translateX(4px); }
-        .nav-item.active {
-            background: rgba(74, 124, 255, 0.12);
-            color: #4a7cff;
-            border-left: 3px solid #4a7cff;
-        }
-
-        .page { display: none; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* 玻璃卡片 */
-        .card {
-            background: rgba(15, 25, 40, 0.7);
-            backdrop-filter: blur(12px);
-            border-radius: 24px;
-            padding: 24px;
-            margin-bottom: 28px;
-            border: 1px solid rgba(74, 124, 255, 0.15);
-            transition: all 0.25s;
-        }
-        .card:hover { border-color: rgba(74, 124, 255, 0.4); transform: translateY(-2px); }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 22px;
-            margin-bottom: 32px;
-        }
-        .stat-card {
-            background: rgba(10, 18, 30, 0.7);
-            backdrop-filter: blur(8px);
-            border-radius: 20px;
-            padding: 22px 16px;
-            text-align: center;
-            border: 1px solid rgba(74, 124, 255, 0.15);
-            transition: all 0.3s;
-        }
-        .stat-card:hover { transform: translateY(-4px); border-color: #4a7cff; box-shadow: 0 0 20px rgba(74,124,255,0.1); }
-        .stat-card i { font-size: 34px; color: #4a7cff; margin-bottom: 12px; display: block; }
-        .stat-number { font-size: 34px; font-weight: 800; color: #ffdd99; margin-top: 8px; }
-
-        /* 表单元素 */
-        input, select, textarea {
-            background: #0f172a;
-            border: 1px solid #1e2a3a;
-            border-radius: 12px;
-            padding: 10px 18px;
-            color: #eef5ff;
-            font-size: 14px;
-            transition: all 0.2s;
-            outline: none;
-        }
-        input:focus, select:focus, textarea:focus {
-            border-color: #4a7cff;
-            box-shadow: 0 0 0 3px rgba(74, 124, 255, 0.2);
-            background: #0a1220;
-        }
-        select {
-            appearance: none;
-            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234a7cff' stroke-width='2'><polyline points='6 9 12 15 18 9'></polyline></svg>");
-            background-repeat: no-repeat;
-            background-position: right 16px center;
-            padding-right: 36px;
-        }
-
-        button {
-            background: linear-gradient(135deg, #4a7cff, #2a5adc);
-            border: none;
-            border-radius: 30px;
-            padding: 8px 20px;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        button:hover { transform: translateY(-2px); filter: brightness(1.05); box-shadow: 0 5px 15px rgba(74,124,255,0.3); }
-        button.danger { background: linear-gradient(95deg, #9b2f2f, #7a2020); }
-        button.success { background: linear-gradient(95deg, #2f6b3a, #1f552c); }
-        button.primary { background: linear-gradient(95deg, #4a7cff, #2a5adc); }
-
-        /* 表格 */
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th, .data-table td { padding: 14px 12px; text-align: left; border-bottom: 1px solid rgba(74,124,255,0.1); }
-        .data-table th { color: #4a7cff; font-weight: 600; background: rgba(74,124,255,0.05); }
-        .data-table tr:hover td { background: rgba(74,124,255,0.03); }
-
-        .table-container { overflow-x: auto; max-height: 500px; overflow-y: auto; border-radius: 20px; }
-
-        .modal-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 2000; visibility: hidden; opacity: 0; transition: 0.2s;
-        }
-        .modal-overlay.active { visibility: visible; opacity: 1; }
-        .modal-card {
-            background: linear-gradient(145deg, #0f172a, #0a0f1a);
-            border-radius: 28px; padding: 32px; width: 500px; max-width: 90%;
-            border: 1px solid rgba(74,124,255,0.3);
-        }
-        .modal-card h3 { margin-bottom: 24px; color: #4a7cff; }
-
-        .pagination { display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-wrap: wrap; align-items: center; }
-        .pagination button { padding: 6px 14px; min-width: 40px; background: #0f172a; border: 1px solid #1e2a3a; }
-        .pagination .current-page { background: #4a7cff; color: #0a0f1a; }
-
-        .search-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
-        .search-input { flex: 1; min-width: 200px; }
-
-        .badge { background: rgba(74,124,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 11px; }
-        .text-green { color: #2ed15a; }
-        .text-red { color: #ff5a5a; }
-        .text-gold { color: #ffdd99; }
-
-        .menu-badge {
-            background: #ff4444;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 10px;
-            font-weight: bold;
-            margin-left: auto;
-        }
-
-        @media (max-width: 1000px) {
-            .sidebar { width: 260px; transform: translateX(-100%); position: fixed; transition: 0.2s; z-index: 100; }
-            .sidebar.open { transform: translateX(0); }
-            .main { margin-left: 0; padding: 20px; }
-            .stats-grid { grid-template-columns: repeat(2,1fr); }
-        }
-
-        .menu-toggle {
-            display: none;
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 101;
-            background: #0f172a;
-            padding: 10px 14px;
-            border-radius: 12px;
-            cursor: pointer;
-            border: 1px solid #4a7cff;
-        }
-        @media (max-width: 1000px) {
-            .menu-toggle { display: block; }
-            .main { margin-left: 0; padding-top: 70px; }
-        }
-    </style>
-
-    <audio id="soundWithdrawal" preload="auto" style="display:none;">
-        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="soundKyc" preload="auto" style="display:none;">
-        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
-    </audio>
+    <link rel="stylesheet" href="admin-common.css">
 </head>
 <body>
+
+<div id="notificationCenter" class="notification-center">
+    <div class="notification-header">
+        <span style="font-weight: 600;">📢 通知中心</span>
+        <i class="fas fa-times" style="cursor:pointer" onclick="toggleNotification()"></i>
+    </div>
+    <div id="notificationList" class="notification-list">
+        <div style="padding: 20px; text-align: center; color: #6a7a9a;">暂无新通知</div>
+    </div>
+</div>
+
 <div class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
     <i class="fas fa-bars"></i>
 </div>
+
 <div class="app">
     <div class="sidebar" id="sidebar">
         <div class="logo">AURORA<span style="color:#4a7cff;">ADMIN</span></div>
         <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i> 仪表板</div>
         <div class="nav-item" data-page="users"><i class="fas fa-users"></i> 用户管理</div>
-        <div class="nav-item" data-page="kyc">
-            <i class="fas fa-id-card"></i> KYC Verification
-            <span id="kycBadge" class="menu-badge" style="display:none;">0</span>
-        </div>
+        <div class="nav-item" data-page="kyc"><i class="fas fa-id-card"></i> KYC Verification</div>
         <div class="nav-item" data-page="trial"><i class="fas fa-gift"></i> 体验金管理</div>
-        <div class="nav-item" data-page="withdrawals">
-            <i class="fas fa-money-bill-wave"></i> 提现审核 
-            <span id="withdrawalBadge" class="menu-badge" style="display:none;">0</span>
-        </div>
+        <div class="nav-item" data-page="withdrawals"><i class="fas fa-money-bill-wave"></i> 提现审核</div>
         <div class="nav-item" data-page="vip"><i class="fas fa-crown"></i> VIP 配置</div>
         <div class="nav-item" data-page="setorders"><i class="fas fa-cog"></i> 设置订单</div>
         <div class="nav-item" data-page="orders"><i class="fas fa-clock"></i> 订单记录</div>
@@ -265,692 +41,85 @@
         <div class="nav-item" data-page="animated"><i class="fas fa-play-circle"></i> 动画/视频</div>
         <div class="nav-item" data-page="signin"><i class="fas fa-calendar-check"></i> 签到奖励</div>
         <div class="nav-item" data-page="content"><i class="fas fa-file-alt"></i> 内容管理</div>
-        <div style="margin-top: 40px;"><button id="logoutBtn" class="danger" style="width:100%;"><i class="fas fa-sign-out-alt"></i> 退出登录</button></div>
+        <div style="margin-top: 40px;"><button id="logoutBtn" style="width:100%; background:#7a2020;"><i class="fas fa-sign-out-alt"></i> 退出登录</button></div>
     </div>
 
     <div class="main">
-        <!-- Dashboard -->
-        <div id="page_dashboard" class="page active">
-            <div class="stats-grid">
-                <div class="stat-card"><i class="fas fa-user-friends"></i><div>总用户数</div><div class="stat-number" id="statUsers">0</div></div>
-                <div class="stat-card"><i class="fas fa-coins"></i><div>总余额 (€)</div><div class="stat-number" id="statBalance">0</div></div>
-                <div class="stat-card"><i class="fas fa-clock"></i><div>待处理提现</div><div class="stat-number" id="statPending">0</div></div>
-                <div class="stat-card"><i class="fas fa-hotel"></i><div>订单池总量</div><div class="stat-number" id="statOrderPool">0</div></div>
-            </div>
-            <div class="card"><i class="fas fa-check-circle text-green"></i> ✅ 管理后台已连接 Supabase，所有功能正常。</div>
-        </div>
-
-        <!-- 用户管理 -->
-        <div id="page_users" class="page">
-            <div class="card">
-                <div class="search-bar">
-                    <input type="text" id="searchUserInput" class="search-input" placeholder="🔍 搜索 UID 或用户名...">
-                    <button id="searchUserBtn"><i class="fas fa-search"></i> 搜索</button>
-                    <button id="refreshUserBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
-                    <button id="addUserBtn" class="success"><i class="fas fa-user-plus"></i> 创建用户</button>
+        <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 24px;">
+            <div class="top-bar-right">
+                <div class="notification-bell" id="notificationBell" onclick="toggleNotification()">
+                    <i class="far fa-bell"></i>
+                    <span id="notificationDot" class="notification-dot" style="display: none;"></span>
                 </div>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead><tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>钱包地址</th><th>操作</th></tr></thead>
-                        <tbody id="usersTableBody"></tbody>
-                    </table>
+                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center cursor-pointer">
+                    <i class="fas fa-user text-white text-sm"></i>
                 </div>
             </div>
         </div>
 
-        <!-- KYC Verification 管理 -->
-        <div id="page_kyc" class="page">
-            <div class="card">
-                <div class="search-bar" style="justify-content: space-between;">
-                    <h3 style="margin:0;"><i class="fas fa-id-card"></i> KYC Verification Requests</h3>
-                    <button id="refreshKycBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
-                </div>
-                <div class="table-container" style="max-height: 600px; overflow-y: auto;">
-                    <table class="data-table" style="min-width: 800px;">
-                        <thead><tr><th>ID</th><th>UID</th><th>用户名</th><th>证件类型</th><th>图片</th><th>上传时间</th><th>状态</th><th>操作</th></tr></thead>
-                        <tbody id="kycTableBody"><tr><td colspan="8" style="text-align:center;">加载中... <i class="fas fa-spinner fa-spin"></i></td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- 体验金管理 -->
-        <div id="page_trial" class="page">
-            <div class="card">
-                <div class="search-bar">
-                    <input type="text" id="trialSearchUid" class="search-input" placeholder="🔍 搜索 UID">
-                    <button id="trialSearchBtn"><i class="fas fa-search"></i> 搜索</button>
-                    <button id="trialRefreshBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
-                </div>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead><tr><th>UID</th><th>用户名</th><th>当前体验金 (€)</th><th>调整金额 (€)</th><th>操作</th></tr></thead>
-                        <tbody id="trialTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- 提现审核 -->
-        <div id="page_withdrawals" class="page">
-            <div class="card">
-                <div class="search-bar" style="justify-content: space-between;">
-                    <h3 style="margin:0;"><i class="fas fa-spinner fa-pulse"></i> 待处理提现</h3>
-                    <button id="refreshWithdrawalsBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
-                </div>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead><tr><th>UID</th><th>用户名</th><th>金额</th><th>钱包地址</th><th>申请时间</th><th>操作</th></tr></thead>
-                        <tbody id="withdrawalsTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- VIP 配置 -->
-        <div id="page_vip" class="page">
-            <div class="card">
-                <h3><i class="fas fa-crown text-gold"></i> VIP 等级配置</h3>
-                <div id="vipSettingsDiv"></div>
-            </div>
-        </div>
-
-        <!-- 设置订单 -->
-        <div id="page_setorders" class="page">
-            <div class="card">
-                <div class="search-bar" style="justify-content: space-between;">
-                    <h3><i class="fas fa-cog"></i> 设置订单</h3>
-                    <button id="backToUserList" class="secondary"><i class="fas fa-arrow-left"></i> 返回用户列表</button>
-                </div>
-                <div id="setordersUserSearch">
-                    <div class="search-bar">
-                        <input type="text" id="setordersSearchUid" placeholder="🔍 输入 UID 或用户名" style="flex:1;">
-                        <button id="setordersSearchBtn" class="primary"><i class="fas fa-search"></i> 搜索用户</button>
-                    </div>
-                    <div id="setordersUserList" class="table-container" style="max-height: 300px;">
-                        <table class="data-table">
-                            <thead><tr><th>UID</th><th>用户名</th><th>操作</th></tr></thead>
-                            <tbody id="setordersUserTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-                <div id="setordersMain" style="display: none;">
-                    <div class="uid-header" style="background: rgba(74,124,255,0.1); padding: 10px 16px; border-radius: 12px; margin-bottom: 20px;">当前用户：<span id="selectedUidDisplay" style="color:#4a7cff;"></span> - <span id="selectedUsernameDisplay"></span></div>
-                    <div id="userTriggerOrdersList" style="margin-bottom: 20px;">
-                        <h4 style="margin-bottom: 12px; color: #4a7cff;"><i class="fas fa-list"></i> 已设置的订单</h4>
-                        <div id="triggerOrdersContainer" style="max-height: 300px; overflow-y: auto;"></div>
-                    </div>
-                    <div class="history-tabs" style="display: flex; gap: 8px; margin-bottom: 20px;">
-                        <button class="tab-btn active" data-setorder-tab="advanced" style="background:rgba(74,124,255,0.1); border:none; padding:8px 20px; border-radius:30px;">高级订单</button>
-                        <button class="tab-btn" data-setorder-tab="card" style="background:rgba(74,124,255,0.05); border:none; padding:8px 20px; border-radius:30px;">卡牌奖励</button>
-                        <button class="tab-btn" data-setorder-tab="cardorder" style="background:rgba(74,124,255,0.05); border:none; padding:8px 20px; border-radius:30px;">卡牌订单</button>
-                    </div>
-                    <div id="advancedPanel" class="setorders-container" style="display: flex; gap: 24px; flex-wrap: wrap;">
-                        <div class="setorders-left" style="flex:1; min-width:280px;">
-                            <div class="input-group" style="margin-bottom:16px;"><label>设置单数</label><input type="number" id="advancedOrderCount" value="1"></div>
-                            <div class="input-group" style="margin-bottom:16px;"><label>设置价格 (€)</label><input type="number" id="advancedTargetPrice" step="0.01"></div>
-                            <button id="advancedSearchOrderBtn" class="primary"><i class="fas fa-search"></i> 搜索订单</button>
-                        </div>
-                        <div class="setorders-right" style="flex:2;">
-                            <h4>匹配订单列表</h4>
-                            <div id="advancedOrdersList" style="max-height: 400px; overflow-y: auto;"></div>
-                            <div class="action-buttons" id="advancedActionBtns" style="display: none; margin-top:20px;">
-                                <button id="advancedConfirmBtn" class="success">确认触发</button>
-                                <button id="advancedCancelBtn" class="danger">取消</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="cardPanel" class="setorders-container" style="display: none; gap: 24px; flex-wrap: wrap;">
-                        <div class="setorders-left" style="flex:1;">
-                            <div class="input-group"><label>触发单数 (第几单触发)</label><input type="number" id="cardOrderCount" placeholder="例如: 23"></div>
-                            <div class="input-group"><label>奖励金额 (€)</label><input type="number" id="cardTargetPrice" step="0.01" placeholder="例如: 15"></div>
-                            <button id="addCardRewardBtn" class="success" style="width:100%;">确认添加卡牌奖励</button>
-                        </div>
-                        <div class="setorders-right" style="flex:2;">
-                            <h4>说明</h4>
-                            <div style="background:#0f172a; border-radius:12px; padding:15px; color:#aaa; font-size:13px;">
-                                <i class="fas fa-info-circle"></i> 用户做到指定单数时，会弹出卡牌弹窗，翻开任意卡牌获得设置的奖励金额
-                            </div>
-                        </div>
-                    </div>
-                    <div id="cardorderPanel" class="setorders-container" style="display: none; gap: 24px; flex-wrap: wrap;">
-                        <div class="setorders-left" style="flex:1;">
-                            <div class="input-group"><label>触发单数 (第几单触发)</label><input type="number" id="cardorderOrderCount" placeholder="例如: 23"></div>
-                            <div class="input-group"><label>订单价格 (€)</label><input type="number" id="cardorderTargetPrice" step="0.01" placeholder="例如: 100"></div>
-                            <button id="addCardOrderBtn" class="success" style="width:100%;">确认添加卡牌订单</button>
-                        </div>
-                        <div class="setorders-right" style="flex:2;">
-                            <h4>说明</h4>
-                            <div style="background:#0f172a; border-radius:12px; padding:15px; color:#aaa; font-size:13px;">
-                                <i class="fas fa-info-circle"></i> 用户做到指定单数时，会弹出卡牌弹窗，翻开任意卡牌获得该订单（15%佣金）
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 订单记录 -->
-        <div id="page_orders" class="page">
-            <div class="card">
-                <div class="search-bar" style="justify-content: space-between;">
-                    <h3 style="margin:0;"><i class="fas fa-history"></i> 用户订单历史</h3>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="searchOrderUid" placeholder="🔍 搜索 UID 或用户名" style="padding: 6px 12px; width: 200px;">
-                        <button id="searchOrderBtn" class="primary"><i class="fas fa-search"></i> 搜索</button>
-                        <button id="clearOrderSearchBtn"><i class="fas fa-times"></i> 清除</button>
-                        <button id="refreshOrdersListBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
-                    </div>
-                </div>
-                <div class="table-container" style="max-height: 300px;">
-                    <table class="data-table">
-                        <thead><tr><th>UID</th><th>用户名</th><th>操作</th></tr></thead>
-                        <tbody id="userListForOrders"></tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 20px;">
-                    <h4>订单记录详情</h4>
-                    <div class="table-container" style="max-height: 300px;">
-                        <table class="data-table">
-                            <thead><tr><th>订单号</th><th>酒店名</th><th>价格</th><th>佣金</th><th>日期</th></tr></thead>
-                            <tbody id="ordersDetailTableBody"><tr><td colspan="5" style="text-align:center;">点击上方查询查看详情</td></tr></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 订单池 -->
-        <div id="page_orderpool" class="page">
-            <div class="card">
-                <div class="search-bar">
-                    <input type="text" id="poolSearchInput" class="search-input" placeholder="🔍 搜索订单号或酒店名...">
-                    <button id="poolSearchBtn"><i class="fas fa-search"></i> 搜索</button>
-                    <button id="poolRefreshBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
-                    <button id="addOrderBtn" class="success"><i class="fas fa-plus"></i> 添加订单</button>
-                </div>
-                <div class="table-container" style="max-height: 550px;">
-                    <table class="data-table" style="min-width: 800px;">
-                        <thead><tr><th>ID</th><th>订单号</th><th>酒店名称</th><th>价格</th><th>图片</th><th>状态</th><th>操作</th></tr></thead>
-                        <tbody id="orderPoolTableBody"><tr><td colspan="7" class="loading">加载中... <i class="fas fa-spinner fa-spin"></i></td></tr></tbody>
-                    </table>
-                </div>
-                <div class="pagination" id="pagination"></div>
-            </div>
-        </div>
-
-        <!-- 动画/视频设置 -->
-        <div id="page_animated" class="page">
-            <div class="card">
-                <h3><i class="fas fa-video"></i> 动态视频设置</h3>
-                <div style="margin-bottom: 15px;">
-                    <label>视频 / GIF URL</label>
-                    <input type="text" id="videoUrl" placeholder="https://example.com/video.mp4 或 图片URL" style="width:100%;">
-                </div>
-                <div style="display: flex; gap: 12px;">
-                    <button id="saveVideoBtn" class="success"><i class="fas fa-save"></i> 保存视频</button>
-                    <button id="previewVideoBtn"><i class="fas fa-play"></i> 预览</button>
-                </div>
-                <div id="videoPreview" style="margin-top: 20px; background: #0a0f1a; border-radius: 12px; padding: 20px; text-align: center; min-height: 150px;">
-                    <p style="color: #aaa;">点击预览查看效果</p>
-                </div>
-            </div>
-            <div class="card">
-                <h3><i class="fas fa-hotel"></i> 精选酒店轮播图</h3>
-                <div class="search-bar" style="margin-bottom: 15px;">
-                    <input type="text" id="hotelNameInput" class="search-input" placeholder="酒店名称">
-                    <input type="text" id="hotelImageInput" class="search-input" placeholder="图片 URL (或点击上传)">
-                    <button id="uploadImageBtn" class="primary" onclick="document.getElementById('hotelImageFile').click()"><i class="fas fa-upload"></i> 上传图片</button>
-                    <input type="file" id="hotelImageFile" accept="image/*" style="display: none;">
-                    <button id="addHotelBtn" class="success"><i class="fas fa-plus"></i> 添加酒店</button>
-                </div>
-                <div id="hotelPreviewImg" style="display: none;"><img id="previewUploadImg" class="preview-img"></div>
-                <div id="hotelsListContainer" style="max-height: 400px; overflow-y: auto;"></div>
-                <button id="saveHotelsBtn" style="margin-top: 15px;"><i class="fas fa-save"></i> 保存所有酒店</button>
-            </div>
-            <div class="card">
-                <h3><i class="fas fa-box-open"></i> Dashboard Product Sample</h3>
-                <p style="color: #a0a8c0; font-size: 13px; margin-bottom: 16px;">管理 Dashboard 首页展示的产品卡片</p>
-                <div class="search-bar" style="margin-bottom: 15px;">
-                    <input type="text" id="productNameInput" class="search-input" placeholder="产品名称">
-                    <input type="text" id="productPriceInput" class="search-input" placeholder="价格 (USD)" style="width: 120px;">
-                    <input type="text" id="productImageInput" class="search-input" placeholder="图片 URL">
-                    <button id="uploadProductImageBtn" class="primary" onclick="document.getElementById('productImageFile').click()"><i class="fas fa-upload"></i> 上传图片</button>
-                    <input type="file" id="productImageFile" accept="image/*" style="display: none;">
-                </div>
-                <div class="search-bar" style="margin-bottom: 15px;">
-                    <input type="text" id="productVideoInput" class="search-input" placeholder="视频 URL (可选)">
-                    <select id="productStatusSelect" style="width: 120px;">
-                        <option value="active">显示</option>
-                        <option value="inactive">隐藏</option>
-                    </select>
-                    <button id="addProductBtn" class="success"><i class="fas fa-plus"></i> 添加产品</button>
-                    <button id="refreshProductsBtn" class="primary"><i class="fas fa-sync-alt"></i> 刷新列表</button>
-                </div>
-                <div id="productPreviewImg" style="display: none;"><img id="previewProductImg" class="preview-img"></div>
-                <div id="productsListContainer" style="max-height: 400px; overflow-y: auto;"></div>
-                <div style="margin-top: 15px; display: flex; gap: 12px; justify-content: flex-end;">
-                    <button id="saveProductsOrderBtn" class="primary"><i class="fas fa-save"></i> 保存排序</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 签到奖励 -->
-        <div id="page_signin" class="page">
-            <div class="card">
-                <h3><i class="fas fa-calendar-alt"></i> 每日签到奖励</h3>
-                <button id="addSigninDayBtn" class="success" style="margin-bottom: 20px;"><i class="fas fa-plus"></i> 添加签到日</button>
-                <div id="signinRewardsDiv"></div>
-            </div>
-        </div>
-
-        <!-- 内容管理 -->
-        <div id="page_content" class="page">
-            <div class="card">
-                <div class="search-bar" style="justify-content: space-between;">
-                    <h3><i class="fas fa-file-contract"></i> 法律内容管理</h3>
-                    <button id="addContentBtn" class="success"><i class="fas fa-plus"></i> 添加内容</button>
-                </div>
-                <div id="contentListContainer"></div>
-            </div>
-        </div>
+        <!-- 页面容器 -->
+        <div id="page_dashboard" class="page active"></div>
+        <div id="page_users" class="page"></div>
+        <div id="page_kyc" class="page"></div>
+        <div id="page_trial" class="page"></div>
+        <div id="page_withdrawals" class="page"></div>
+        <div id="page_vip" class="page"></div>
+        <div id="page_setorders" class="page"></div>
+        <div id="page_orders" class="page"></div>
+        <div id="page_orderpool" class="page"></div>
+        <div id="page_animated" class="page"></div>
+        <div id="page_signin" class="page"></div>
+        <div id="page_content" class="page"></div>
     </div>
 </div>
 
-<!-- Add User Modal -->
+<!-- 共用 Modal -->
 <div id="addUserModal" class="modal-overlay">
     <div class="modal-card">
         <h3><i class="fas fa-user-plus"></i> 创建新用户</h3>
-        <input type="text" id="newPhone" placeholder="手机号" style="width:100%; margin:10px 0; padding:12px;">
-        <input type="text" id="newUsername" placeholder="用户名" style="width:100%; margin:10px 0; padding:12px;">
-        <input type="password" id="newPassword" placeholder="密码" style="width:100%; margin:10px 0; padding:12px;">
-        <div style="display: flex; gap: 12px; margin-top: 20px;">
-            <button id="createUserBtn" class="success">创建</button>
-            <button id="closeUserModalBtn">取消</button>
-        </div>
+        <input type="text" id="newPhone" placeholder="手机号" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
+        <input type="text" id="newUsername" placeholder="用户名" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
+        <input type="password" id="newPassword" placeholder="密码" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
+        <div style="display: flex; gap: 12px; margin-top: 20px;"><button id="createUserBtn" class="success">创建</button><button id="closeUserModalBtn">取消</button></div>
     </div>
 </div>
 
-<!-- Order Pool Modal -->
 <div id="orderModal" class="modal-overlay">
     <div class="modal-card">
-        <h3 id="orderModalTitle"><i class="fas fa-plus"></i> 添加订单</h3>
-        <input type="text" id="orderCode" placeholder="订单号" style="width:100%; margin:10px 0; padding:12px;">
-        <input type="text" id="hotelName" placeholder="酒店名称" style="width:100%; margin:10px 0; padding:12px;">
-        <input type="number" id="price" placeholder="价格 (€)" step="0.01" style="width:100%; margin:10px 0; padding:12px;">
-        <input type="text" id="imageUrl" placeholder="图片 URL" style="width:100%; margin:10px 0; padding:12px;">
-        <select id="status" style="width:100%; margin:10px 0; padding:12px;">
+        <h3 id="orderModalTitle">添加订单</h3>
+        <input type="text" id="orderCode" placeholder="订单号" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
+        <input type="text" id="hotelName" placeholder="酒店名称" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
+        <input type="number" id="price" placeholder="价格 (€)" step="0.01" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
+        <input type="text" id="imageUrl" placeholder="图片 URL" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
+        <select id="status" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
             <option value="available">available</option>
             <option value="unavailable">unavailable</option>
         </select>
         <input type="hidden" id="editId" value="">
-        <div style="display: flex; gap: 12px; margin-top: 20px;">
-            <button id="saveOrderBtn" class="success">保存</button>
-            <button id="cancelOrderBtn">取消</button>
-        </div>
+        <div style="display: flex; gap: 12px; margin-top: 20px;"><button id="saveOrderBtn" class="success">保存</button><button id="cancelOrderBtn">取消</button></div>
     </div>
 </div>
 
-<!-- Reupload Modal -->
-<div id="reuploadModal" class="modal-overlay">
-    <div class="modal-card">
-        <h3><i class="fas fa-upload"></i> 重新上传图片</h3>
-        <input type="file" id="reuploadFile" accept="image/*" style="width:100%; margin:10px 0; padding:12px;">
-        <div id="reuploadPreview" style="margin-top:10px;"></div>
-        <div style="display: flex; gap: 12px; margin-top: 20px;">
-            <button id="confirmReuploadBtn" class="success">确认上传</button>
-            <button id="cancelReuploadBtn">取消</button>
-        </div>
-    </div>
-</div>
+<script src="admin-common.js"></script>
+<script src="admin-dashboard.js"></script>
+<script src="admin-users.js"></script>
+<script src="admin-kyc.js"></script>
+<script src="admin-trial.js"></script>
+<script src="admin-withdrawals.js"></script>
+<script src="admin-vip.js"></script>
+<script src="admin-setorders.js"></script>
+<script src="admin-orders.js"></script>
+<script src="admin-orderpool.js"></script>
+<script src="admin-animated.js"></script>
+<script src="admin-signin.js"></script>
+<script src="admin-content.js"></script>
 
 <script>
-    const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    
-    // 全局变量
-    let searchKeyword = '';
-    let poolSearchKeyword = '';
-    let allOrders = [];
-    let currentPage = 1;
-    const pageSize = 50;
-    let featuredHotels = [];
-    let trialSearchKeyword = '';
-    let currentQueryUid = null;
-    let systemContents = [];
-    let orderSearchKeyword = '';
-    let setordersSearchKeyword = '';
-    let selectedAdvancedOrdersList = [];
-    let currentSetUser = null;
-    let previousWithdrawalCount = -1;
-    let previousKycCount = -1;
-    let badgeInterval = null;
-    
-    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m); }
-    function showToast(msg, type) { alert(msg); }
-    
-    // 页面切换
-    function showPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById('page_' + pageId).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        document.querySelector(`.nav-item[data-page="${pageId}"]`).classList.add('active');
-        if(pageId === 'dashboard') loadDashboard();
-        if(pageId === 'users') loadUsers();
-        if(pageId === 'kyc') loadKycRequests();
-        if(pageId === 'trial') loadTrialUsers();
-        if(pageId === 'withdrawals') loadWithdrawals();
-        if(pageId === 'vip') loadVipSettings();
-        if(pageId === 'orders') loadUserListForOrders();
-        if(pageId === 'orderpool') loadAllOrdersFromDB();
-        if(pageId === 'animated') loadAnimatedSettings();
-        if(pageId === 'signin') loadSigninRewards();
-        if(pageId === 'content') loadContentList();
-        if(pageId === 'setorders') loadSetordersUserList();
-        if(window.innerWidth <= 1000) toggleSidebar();
-    }
-    
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', () => showPage(item.getAttribute('data-page')));
     });
-    
-    // Dashboard
-    async function loadDashboard() {
-        const { data: users } = await sb.from('users').select('*');
-        if(users) { document.getElementById('statUsers').innerText = users.length; document.getElementById('statBalance').innerText = '€' + users.reduce((s,u)=>s+(u.balance||0),0).toFixed(2); }
-        const { data: withdrawals } = await sb.from('withdrawals').select('*').eq('status', 'pending');
-        document.getElementById('statPending').innerText = withdrawals?.length || 0;
-        const { count } = await sb.from('orders_pool').select('*', { count: 'exact', head: true });
-        document.getElementById('statOrderPool').innerText = count || 0;
-    }
-    
-    // 用户管理
-    async function loadUsers() {
-        let query = sb.from('users').select('*').order('created_at', { ascending: false });
-        if(searchKeyword) query = query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
-        const { data: users } = await query;
-        const { data: allOrders } = await sb.from('order_history').select('*');
-        const { data: vipSettings } = await sb.from('vip_settings').select('*');
-        const vipLimitMap = {}; if(vipSettings) vipSettings.forEach(v => vipLimitMap[v.level] = v.orders_limit);
-        const tbody = document.getElementById('usersTableBody');
-        if(tbody && users) {
-            tbody.innerHTML = '';
-            for(let u of users) {
-                const userOrders = allOrders?.filter(o => o.uid === u.uid).length || 0;
-                const ordersLimit = vipLimitMap[u.vip_level] || 30;
-                const row = tbody.insertRow();
-                row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
-                row.insertCell(1).innerText = u.username;
-                row.insertCell(2).innerHTML = `<span class="badge">${u.invite_code || '-'}</span>`;
-                row.insertCell(3).innerText = u.invited_by_username || '-';
-                row.insertCell(4).innerHTML = `<span class="text-green">€${(u.balance||0).toFixed(2)}</span>`;
-                row.insertCell(5).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount||0).toFixed(2)}</span>`;
-                row.insertCell(6).innerHTML = `${userOrders}/${ordersLimit} <button class="reset-orders-btn" data-uid="${u.uid}" style="background:#7a5f2f; padding:2px 8px; font-size:10px; margin-left:8px;"><i class="fas fa-undo-alt"></i> 重置</button>`;
-                row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px;"><option value="1" ${u.vip_level==1?'selected':''}>Normal</option><option value="2" ${u.vip_level==2?'selected':''}>VIP</option><option value="3" ${u.vip_level==3?'selected':''}>SVIP</option></select>`;
-                row.insertCell(8).innerHTML = u.withdrawal_address ? u.withdrawal_address.substring(0, 12) + '...' : '-';
-                row.insertCell(9).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}" style="background:#2f6b3a; padding:4px 10px; font-size:11px;"><i class="fas fa-plus-circle"></i> 充值</button> <button class="cut-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;"><i class="fas fa-minus-circle"></i> 扣款</button> <button class="edit-user-btn" data-uid="${u.uid}" data-phone="${u.phone||''}" data-username="${u.username}" data-pin="${u.pin||''}" style="background:#2f6b3a; padding:4px 10px; font-size:11px;"><i class="fas fa-edit"></i> 修改</button> <button class="delete-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;"><i class="fas fa-trash"></i> 删除</button>`;
-            }
-            document.querySelectorAll('.vip-select').forEach(sel => sel.addEventListener('change', () => updateVip(sel.dataset.uid, sel.value)));
-            document.querySelectorAll('.deposit-btn').forEach(btn => btn.addEventListener('click', () => depositBalance(btn.dataset.uid)));
-            document.querySelectorAll('.cut-btn').forEach(btn => btn.addEventListener('click', () => cutBalance(btn.dataset.uid)));
-            document.querySelectorAll('.edit-user-btn').forEach(btn => btn.addEventListener('click', () => openEditUserModal(btn.dataset.uid, btn.dataset.phone, btn.dataset.username, btn.dataset.pin)));
-            document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => delUser(btn.dataset.uid)));
-            document.querySelectorAll('.reset-orders-btn').forEach(btn => btn.addEventListener('click', () => resetUserOrders(btn.dataset.uid)));
-        }
-    }
-    
-    async function resetUserOrders(uid) { if(confirm('重置订单？')) { await sb.from('order_history').delete().eq('uid', uid); showToast('订单已重置', 'success'); loadUsers(); } }
-    async function depositBalance(uid) { 
-        const amount = parseFloat(prompt('充值金额 (€)')) || 0; 
-        if(amount<=0) return; 
-        const {data:user}=await sb.from('users').select('balance, username').eq('uid',uid).single(); 
-        const newBalance=(user.balance||0)+amount; 
-        await sb.from('users').update({balance:newBalance}).eq('uid',uid); 
-        await sb.from('deposits').insert([{uid,username:user.username,amount:amount,type:'manual'}]); 
-        loadUsers(); loadDashboard(); 
-        showToast(`充值 €${amount} 成功`,'success'); 
-    }
-    async function cutBalance(uid){ 
-        const amount = parseFloat(prompt('扣款金额 (€)')); 
-        if(!amount||amount<=0) return; 
-        const {data:user}=await sb.from('users').select('balance').eq('uid',uid).single(); 
-        if((user.balance||0)<amount){ showToast('余额不足','error'); return; } 
-        await sb.from('users').update({balance:(user.balance||0)-amount}).eq('uid',uid); 
-        loadUsers(); loadDashboard(); 
-        showToast(`-€${amount}`,'success'); 
-    }
-    function openEditUserModal(uid, phone, username, pin) { alert('编辑用户功能开发中'); }
-    async function updateVip(uid,level){ await sb.from('users').update({vip_level:parseInt(level)}).eq('uid',uid); loadUsers(); }
-    async function delUser(uid){ if(confirm('永久删除用户？')){ await sb.from('users').delete().eq('uid',uid); await sb.from('order_history').delete().eq('uid',uid); await sb.from('deposits').delete().eq('uid',uid); await sb.from('withdrawals').delete().eq('uid',uid); loadUsers(); loadDashboard(); showToast('已删除','success'); } }
-    
-    document.getElementById('searchUserBtn')?.addEventListener('click',()=>{searchKeyword=document.getElementById('searchUserInput').value;loadUsers();});
-    document.getElementById('refreshUserBtn')?.addEventListener('click',()=>{document.getElementById('searchUserInput').value='';searchKeyword='';loadUsers();});
-    document.getElementById('addUserBtn')?.addEventListener('click',()=>document.getElementById('addUserModal').classList.add('active'));
-    document.getElementById('closeUserModalBtn')?.addEventListener('click',()=>document.getElementById('addUserModal').classList.remove('active'));
-    document.getElementById('createUserBtn')?.addEventListener('click',createUser);
-    
-    async function createUser(){ 
-        const phone=document.getElementById('newPhone').value.trim(); 
-        const username=document.getElementById('newUsername').value.trim(); 
-        const pwd=document.getElementById('newPassword').value; 
-        if(!phone||!username||!pwd){ showToast('请填写完整','error'); return; } 
-        const {data:exist}=await sb.from('users').select('username').eq('username',username).single(); 
-        if(exist){ showToast('用户名已存在','error'); return; } 
-        const {data:max}=await sb.from('users').select('uid').order('uid',{ascending:false}).limit(1); 
-        let newUid='100001'; if(max&&max.length) newUid=(parseInt(max[0].uid)+1).toString(); 
-        const inviteCode=Array(6).fill().map(()=>'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random()*36)]).join(''); 
-        const {error}=await sb.from('users').insert([{uid:newUid,phone,username,password:pwd,invite_code:inviteCode,balance:0,vip_level:1,trial_bonus_amount:0}]); 
-        if(error){ showToast(error.message,'error'); return; } 
-        loadUsers(); document.getElementById('addUserModal').classList.remove('active'); 
-        showToast(`用户 ${username} 创建成功`,'success'); 
-        document.getElementById('newPhone').value=''; document.getElementById('newUsername').value=''; document.getElementById('newPassword').value=''; 
-    }
-    
-    // KYC Verification (简化版，完整功能请在原ad.html中保留)
-    async function loadKycRequests() { 
-        const tbody = document.getElementById('kycTableBody');
-        if(tbody) tbody.innerHTML = '<tr><td colspan="8">KYC功能完整版请参考原文件</td></tr>';
-    }
-    document.getElementById('refreshKycBtn')?.addEventListener('click', loadKycRequests);
-    
-    // 体验金管理
-    async function loadTrialUsers() { 
-        let query = sb.from('users').select('uid, username, trial_bonus_amount').order('uid',{ascending:true}); 
-        if(trialSearchKeyword) query=query.ilike('uid',`%${trialSearchKeyword}%`); 
-        const {data:users}=await query; 
-        const tbody=document.getElementById('trialTableBody'); 
-        if(tbody && users){ 
-            tbody.innerHTML=''; 
-            for(let u of users){ 
-                const row=tbody.insertRow(); 
-                row.insertCell(0).innerHTML=`<span class="badge">${u.uid}</span>`; 
-                row.insertCell(1).innerText=u.username; 
-                row.insertCell(2).innerHTML=`<span class="text-gold">€${(u.trial_bonus_amount||0).toFixed(2)}</span>`; 
-                const amountInput=document.createElement('input'); 
-                amountInput.type='number'; amountInput.placeholder='金额'; amountInput.style.width='100px'; 
-                const addBtn=document.createElement('button'); addBtn.className='success'; addBtn.innerHTML='<i class="fas fa-plus"></i> 添加'; addBtn.style.marginRight='5px'; addBtn.onclick=()=>adjustTrialBonus(u.uid,parseFloat(amountInput.value),'add'); 
-                const cutBtn=document.createElement('button'); cutBtn.className='danger'; cutBtn.innerHTML='<i class="fas fa-minus"></i> 扣除'; cutBtn.onclick=()=>adjustTrialBonus(u.uid,parseFloat(amountInput.value),'cut'); 
-                row.insertCell(3).appendChild(amountInput); const actionCell = row.insertCell(4); actionCell.appendChild(addBtn); actionCell.appendChild(cutBtn);
-            } 
-        } 
-    }
-    async function adjustTrialBonus(uid, amount, action) { /* 实现类似原功能 */ }
-    document.getElementById('trialSearchBtn')?.addEventListener('click',()=>{trialSearchKeyword=document.getElementById('trialSearchUid').value;loadTrialUsers();});
-    document.getElementById('trialRefreshBtn')?.addEventListener('click',()=>{document.getElementById('trialSearchUid').value='';trialSearchKeyword='';loadTrialUsers();});
-    
-    // 提现审核
-    async function loadWithdrawals(){ 
-        const {data:wd}=await sb.from('withdrawals').select('*').eq('status','pending'); 
-        const tbody=document.getElementById('withdrawalsTableBody'); 
-        if(tbody){ 
-            tbody.innerHTML=''; 
-            for(let w of wd||[]){ 
-                const row=tbody.insertRow(); 
-                row.insertCell(0).innerHTML=`<span class="badge">${w.uid}</span>`; 
-                row.insertCell(1).innerText=w.username; 
-                row.insertCell(2).innerHTML=`<span class="text-gold">€${(w.amount||0).toFixed(2)}</span>`; 
-                row.insertCell(3).innerText=w.wallet_address||'-'; 
-                row.insertCell(4).innerText=new Date(w.request_date).toLocaleString(); 
-                row.insertCell(5).innerHTML=`<button class="approve-btn" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" class="success" style="background:#2f6b3a; margin-right:5px;">批准</button> <button class="reject-btn" data-id="${w.id}" class="danger" style="background:#7a2f2f;">拒绝</button>`; 
-            } 
-            document.querySelectorAll('.approve-btn').forEach(btn=>btn.addEventListener('click',()=>approveWd(btn.dataset.id,btn.dataset.uid,parseFloat(btn.dataset.amt)))); 
-            document.querySelectorAll('.reject-btn').forEach(btn=>btn.addEventListener('click',()=>rejectWd(btn.dataset.id))); 
-        } 
-    }
-    document.getElementById('refreshWithdrawalsBtn')?.addEventListener('click',()=>{loadWithdrawals();loadDashboard();});
-    async function approveWd(id,uid,amt){ if(confirm(`批准 €${amt} 提现？`)){ await sb.from('withdrawals').update({status:'approved'}).eq('id',id); loadWithdrawals(); loadDashboard(); showToast('已批准','success'); } }
-    async function rejectWd(id){ if(confirm('拒绝提现？金额将退回')){ const {data:w}=await sb.from('withdrawals').select('uid,amount').eq('id',id).single(); if(w){ const {data:user}=await sb.from('users').select('balance').eq('uid',w.uid).single(); await sb.from('users').update({balance:(user.balance||0)+w.amount}).eq('uid',w.uid); } await sb.from('withdrawals').update({status:'rejected'}).eq('id',id); loadWithdrawals(); loadDashboard(); showToast('已拒绝','success'); } }
-    
-    // VIP配置
-    async function loadVipSettings(){ 
-        const {data:vips}=await sb.from('vip_settings').select('*').order('level'); 
-        const div=document.getElementById('vipSettingsDiv'); 
-        if(div){ div.innerHTML=''; for(let v of vips||[]){ div.innerHTML+=`<div style="background:#0f172a; border-radius:20px; padding:20px; margin-bottom:20px;"><h3>${v.rank_name} <span class="badge">Lv.${v.level}</span></h3><div>每日订单上限: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:130px;"></div><div>佣金比率(%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:110px;"></div><div>需充值金额(€): <input type="number" id="deposit_${v.level}" value="${v.required_deposit||0}" step="0.01" style="width:130px;"></div><button class="save-vip" data-level="${v.level}" style="margin-top:10px">保存配置</button></div>`; } 
-            document.querySelectorAll('.save-vip').forEach(btn=>btn.addEventListener('click',()=>saveVip(btn.dataset.level))); 
-        } 
-    }
-    async function saveVip(level){ const limit=parseInt(document.getElementById(`limit_${level}`).value); const rate=parseFloat(document.getElementById(`rate_${level}`).value); const deposit=parseFloat(document.getElementById(`deposit_${level}`).value)||0; await sb.from('vip_settings').update({orders_limit:limit,commission_rate:rate,required_deposit:deposit}).eq('level',level); showToast('VIP参数已更新','success'); }
-    
-    // 订单记录
-    async function loadUserListForOrders() { 
-        let query = sb.from('users').select('uid, username').order('created_at', { ascending: false }); 
-        if(orderSearchKeyword) query=query.or(`uid.ilike.%${orderSearchKeyword}%,username.ilike.%${orderSearchKeyword}%`); 
-        const {data:users}=await query; 
-        const tbody=document.getElementById('userListForOrders'); 
-        if(tbody&&users){ tbody.innerHTML=''; for(let u of users){ const row=tbody.insertRow(); row.insertCell(0).innerHTML=`<span class="badge">${u.uid}</span>`; row.insertCell(1).innerText=u.username; row.insertCell(2).innerHTML=`<button class="query-orders-btn" data-uid="${u.uid}" data-name="${u.username}" style="background:#2f6b3a; padding:4px 12px; font-size:12px;"><i class="fas fa-search"></i> 查询订单记录</button>`; } 
-            document.querySelectorAll('.query-orders-btn').forEach(btn=>btn.addEventListener('click',()=>queryUserOrders(btn.dataset.uid,btn.dataset.name))); 
-        } 
-    }
-    async function queryUserOrders(uid,username){ 
-        currentQueryUid=uid; 
-        const {data:orders}=await sb.from('order_history').select('*').eq('uid',uid).order('date',{ascending:false}); 
-        const tbody=document.getElementById('ordersDetailTableBody'); 
-        if(tbody){ if(!orders||orders.length===0){ tbody.innerHTML=`<tr><td colspan="5">用户 ${username} 暂无订单记录</td></tr>`; return; } tbody.innerHTML=''; for(let o of orders){ const row=tbody.insertRow(); row.insertCell(0).innerText=o.order_code||'-'; row.insertCell(1).innerText=o.accommodation_name||'-'; row.insertCell(2).innerHTML=`<span class="text-gold">€${(o.price||0).toFixed(2)}</span>`; row.insertCell(3).innerHTML=`<span class="text-green">€${(o.commission||0).toFixed(2)}</span>`; row.insertCell(4).innerText=new Date(o.date).toLocaleString(); } } 
-    }
-    document.getElementById('searchOrderBtn')?.addEventListener('click',()=>{orderSearchKeyword=document.getElementById('searchOrderUid').value.trim();loadUserListForOrders();});
-    document.getElementById('clearOrderSearchBtn')?.addEventListener('click',()=>{document.getElementById('searchOrderUid').value='';orderSearchKeyword='';loadUserListForOrders();});
-    document.getElementById('refreshOrdersListBtn')?.addEventListener('click',()=>{loadUserListForOrders(); if(currentQueryUid) queryUserOrders(currentQueryUid,'');});
-    
-    // 设置订单页面
-    async function loadSetordersUserList() { 
-        let query = sb.from('users').select('uid, username').order('created_at', { ascending: false }); 
-        if(setordersSearchKeyword) query=query.or(`uid.ilike.%${setordersSearchKeyword}%,username.ilike.%${setordersSearchKeyword}%`); 
-        const {data:users}=await query; 
-        const tbody=document.getElementById('setordersUserTableBody'); 
-        if(tbody&&users){ tbody.innerHTML=''; for(let u of users){ const row=tbody.insertRow(); row.insertCell(0).innerHTML=`<span class="badge">${u.uid}</span>`; row.insertCell(1).innerText=u.username; row.insertCell(2).innerHTML=`<button class="setorder-select-btn" data-uid="${u.uid}" data-name="${u.username}" style="background:#4a7cff;"><i class="fas fa-cog"></i> 设置订单</button>`; } 
-            document.querySelectorAll('.setorder-select-btn').forEach(btn=>btn.addEventListener('click',()=>selectUserForSetOrder(btn.dataset.uid,btn.dataset.name))); 
-        } 
-    }
-    async function selectUserForSetOrder(uid, username) {
-        currentSetUser = { uid, username };
-        document.getElementById('selectedUidDisplay').innerText = uid;
-        document.getElementById('selectedUsernameDisplay').innerText = username;
-        document.getElementById('setordersUserSearch').style.display = 'none';
-        document.getElementById('setordersMain').style.display = 'block';
-        selectedAdvancedOrdersList = [];
-        document.getElementById('advancedOrdersList').innerHTML = '';
-        document.getElementById('advancedActionBtns').style.display = 'none';
-    }
-    document.getElementById('setordersSearchBtn')?.addEventListener('click',()=>{setordersSearchKeyword=document.getElementById('setordersSearchUid').value.trim();loadSetordersUserList();});
-    document.getElementById('backToUserList')?.addEventListener('click',()=>{document.getElementById('setordersUserSearch').style.display='block';document.getElementById('setordersMain').style.display='none';currentSetUser=null;});
-    document.querySelectorAll('[data-setorder-tab]').forEach(btn=>{btn.addEventListener('click',()=>{const tab=btn.dataset.setorderTab; document.getElementById('advancedPanel').style.display=tab==='advanced'?'flex':'none'; document.getElementById('cardPanel').style.display=tab==='card'?'flex':'none'; document.getElementById('cardorderPanel').style.display=tab==='cardorder'?'flex':'none';});});
-    document.getElementById('advancedSearchOrderBtn')?.addEventListener('click', async () => { const targetPrice = parseFloat(document.getElementById('advancedTargetPrice').value); if(isNaN(targetPrice)) { alert('请输入有效价格'); return; } const { data: matchedOrders } = await sb.from('orders_pool').select('*').eq('status', 'available').gte('price', targetPrice-100).lte('price', targetPrice+100); const container = document.getElementById('advancedOrdersList'); container.innerHTML = ''; selectedAdvancedOrdersList = []; if(!matchedOrders || matchedOrders.length === 0) { container.innerHTML = '<div style="text-align:center; padding:20px;">未找到匹配订单</div>'; return; } for(let order of matchedOrders) { const div = document.createElement('div'); div.className = 'order-item-card'; div.innerHTML = `<input type="checkbox" class="order-checkbox" data-id="${order.id}" data-price="${order.price}" data-code="${order.order_code||''}" data-name="${order.accommodation_name||''}" data-image="${order.image_url||''}"><div class="order-item-info"><div>${order.accommodation_name||'Hotel Task'}</div><div>€${order.price.toFixed(2)}</div></div>`; container.appendChild(div); const checkbox = div.querySelector('.order-checkbox'); checkbox.addEventListener('change', (e) => { const orderData = { id: order.id, price: order.price }; if(e.target.checked) selectedAdvancedOrdersList.push(orderData); else selectedAdvancedOrdersList = selectedAdvancedOrdersList.filter(o => o.id !== order.id); document.getElementById('advancedActionBtns').style.display = selectedAdvancedOrdersList.length > 0 ? 'flex' : 'none'; }); } });
-    document.getElementById('advancedConfirmBtn')?.addEventListener('click', async () => { if (!currentSetUser) { alert('请先选择用户'); return; } for (let order of selectedAdvancedOrdersList) { const { error } = await sb.from('user_trigger_orders').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_type: 'advanced', trigger_order_number: parseInt(document.getElementById('advancedOrderCount').value), target_price: parseFloat(document.getElementById('advancedTargetPrice').value), matched_order_id: order.id, matched_price: order.price, commission_rate: 5.0, commission_amount: order.price * 0.05, status: 'pending' }]); if(error) alert('创建失败'); else alert('设置成功'); } selectedAdvancedOrdersList = []; document.getElementById('advancedOrdersList').innerHTML = ''; document.getElementById('advancedActionBtns').style.display = 'none'; });
-    document.getElementById('advancedCancelBtn')?.addEventListener('click', () => { selectedAdvancedOrdersList = []; document.getElementById('advancedOrdersList').innerHTML = ''; document.getElementById('advancedActionBtns').style.display = 'none'; });
-    document.getElementById('addCardRewardBtn')?.addEventListener('click', async () => { if(!currentSetUser) { alert('请先选择用户'); return; } const orderCount = parseInt(document.getElementById('cardOrderCount').value); const rewardAmount = parseFloat(document.getElementById('cardTargetPrice').value); if(orderCount <= 0 || rewardAmount <= 0) { alert('请输入有效数值'); return; } await sb.from('user_trigger_orders').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_type: 'card_reward', trigger_order_number: orderCount, target_price: rewardAmount, status: 'pending' }]); alert('卡牌奖励设置成功'); });
-    document.getElementById('addCardOrderBtn')?.addEventListener('click', async () => { if(!currentSetUser) { alert('请先选择用户'); return; } const orderCount = parseInt(document.getElementById('cardorderOrderCount').value); const targetPrice = parseFloat(document.getElementById('cardorderTargetPrice').value); if(orderCount <= 0 || targetPrice <= 0) { alert('请输入有效数值'); return; } await sb.from('user_trigger_orders').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_type: 'card_order', trigger_order_number: orderCount, target_price: targetPrice, matched_price: targetPrice, commission_rate: 15.0, commission_amount: targetPrice * 0.15, status: 'pending' }]); alert('卡牌订单设置成功'); });
-    
-    // 订单池
-    async function loadAllOrdersFromDB() { 
-        const tbody=document.getElementById('orderPoolTableBody'); 
-        if(tbody) tbody.innerHTML='<tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-spin"></i> 正在加载...</td></tr>'; 
-        try{ let allData=[]; let from=0; const batchSize=1000; let hasMore=true; while(hasMore){ const {data,error}=await sb.from('orders_pool').select('*').order('id',{ascending:false}).range(from,from+batchSize-1); if(error) throw error; if(data&&data.length>0){ allData=allData.concat(data); from+=batchSize; } if(!data||data.length<batchSize) hasMore=false; } allOrders=allData; renderOrderPoolPage(); }catch(e){ console.error(e); if(tbody) tbody.innerHTML=`<tr><td colspan="7">错误: ${e.message}</td></tr>`; } 
-    }
-    function renderOrderPoolPage() { 
-        let filtered=allOrders; if(poolSearchKeyword){ const kw=poolSearchKeyword.toLowerCase(); filtered=allOrders.filter(o=>(o.order_code&&o.order_code.toLowerCase().includes(kw))||(o.accommodation_name&&o.accommodation_name.toLowerCase().includes(kw))); } 
-        const totalPages=Math.ceil(filtered.length/pageSize); const start=(currentPage-1)*pageSize; const pageOrders=filtered.slice(start,start+pageSize); const tbody=document.getElementById('orderPoolTableBody'); if(tbody){ tbody.innerHTML=''; if(pageOrders.length===0){ tbody.innerHTML='<tr><td colspan="7">暂无数据</td></tr>'; return; } for(let o of pageOrders){ const row=tbody.insertRow(); row.insertCell(0).innerText=o.id; row.insertCell(1).innerHTML=`<span class="badge">${o.order_code||'-'}</span>`; row.insertCell(2).innerText=o.accommodation_name||'-'; row.insertCell(3).innerHTML=`<span class="text-gold">€${(o.price||0).toFixed(2)}</span>`; row.insertCell(4).innerHTML=o.image_url?`<img src="${o.image_url}" style="width:60px; height:45px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="window.open('${o.image_url}','_blank')">`:'-'; row.insertCell(5).innerHTML=`<span class="${o.status==='available'?'text-green':'text-red'}">${o.status||'available'}</span>`; row.insertCell(6).innerHTML=`<button class="edit-order-btn" data-id="${o.id}" data-code="${o.order_code||''}" data-name="${o.accommodation_name||''}" data-price="${o.price||0}" data-image="${o.image_url||''}" data-status="${o.status||'available'}" class="success"><i class="fas fa-edit"></i> 编辑</button> <button class="delete-order-btn" data-id="${o.id}" class="danger"><i class="fas fa-trash"></i> 删除</button>`; } 
-            document.querySelectorAll('.edit-order-btn').forEach(btn=>btn.addEventListener('click',()=>openEditOrderModal(btn.dataset.id,btn.dataset.code,btn.dataset.name,btn.dataset.price,btn.dataset.image,btn.dataset.status))); 
-            document.querySelectorAll('.delete-order-btn').forEach(btn=>btn.addEventListener('click',()=>deleteOrder(btn.dataset.id))); 
-        } 
-        const paginationDiv=document.getElementById('pagination'); if(paginationDiv){ paginationDiv.innerHTML=''; if(totalPages>1){ if(currentPage>1){const prev=document.createElement('button');prev.innerHTML='上一页';prev.onclick=()=>{currentPage--;renderOrderPoolPage();};paginationDiv.appendChild(prev);} for(let i=Math.max(1,currentPage-2);i<=Math.min(totalPages,currentPage+2);i++){const btn=document.createElement('button');btn.innerText=i;if(i===currentPage)btn.classList.add('current-page');btn.onclick=()=>{currentPage=i;renderOrderPoolPage();};paginationDiv.appendChild(btn);} if(currentPage<totalPages){const next=document.createElement('button');next.innerHTML='下一页';next.onclick=()=>{currentPage++;renderOrderPoolPage();};paginationDiv.appendChild(next);} } } 
-    }
-    function openEditOrderModal(id,code,name,price,image,status){ document.getElementById('orderModalTitle').innerHTML='编辑订单'; document.getElementById('orderCode').value=code||''; document.getElementById('hotelName').value=name||''; document.getElementById('price').value=price||''; document.getElementById('imageUrl').value=image||''; document.getElementById('status').value=status||'available'; document.getElementById('editId').value=id; document.getElementById('orderModal').classList.add('active'); }
-    function openAddOrderModal(){ document.getElementById('orderModalTitle').innerHTML='添加订单'; document.getElementById('orderCode').value=''; document.getElementById('hotelName').value=''; document.getElementById('price').value=''; document.getElementById('imageUrl').value=''; document.getElementById('status').value='available'; document.getElementById('editId').value=''; document.getElementById('orderModal').classList.add('active'); }
-    async function saveOrder(){ const id=document.getElementById('editId').value; const orderCode=document.getElementById('orderCode').value.trim(); const hotelName=document.getElementById('hotelName').value.trim(); const price=parseFloat(document.getElementById('price').value); const imageUrl=document.getElementById('imageUrl').value.trim(); const status=document.getElementById('status').value; if(!orderCode||!hotelName||isNaN(price)||price<=0){ alert('请填写完整'); return; } try{ if(id){ await sb.from('orders_pool').update({order_code:orderCode,accommodation_name:hotelName,price:price,image_url:imageUrl,status:status}).eq('id',parseInt(id)); alert('订单已更新'); }else{ await sb.from('orders_pool').insert([{order_code:orderCode,accommodation_name:hotelName,price:price,image_url:imageUrl,status:status}]); alert('订单已添加'); } document.getElementById('orderModal').classList.remove('active'); loadAllOrdersFromDB(); loadDashboard(); }catch(e){ alert('保存失败'); } }
-    async function deleteOrder(id){ if(confirm('删除订单？')){ await sb.from('orders_pool').delete().eq('id',parseInt(id)); loadAllOrdersFromDB(); loadDashboard(); } }
-    document.getElementById('poolSearchBtn')?.addEventListener('click',()=>{poolSearchKeyword=document.getElementById('poolSearchInput').value;currentPage=1;renderOrderPoolPage();});
-    document.getElementById('poolRefreshBtn')?.addEventListener('click',()=>{document.getElementById('poolSearchInput').value='';poolSearchKeyword='';currentPage=1;loadAllOrdersFromDB();});
-    document.getElementById('addOrderBtn')?.addEventListener('click',openAddOrderModal);
-    document.getElementById('saveOrderBtn')?.addEventListener('click',saveOrder);
-    document.getElementById('cancelOrderBtn')?.addEventListener('click',()=>document.getElementById('orderModal').classList.remove('active'));
-    
-    // 动画/视频设置
-    async function loadAnimatedSettings(){ try{ const {data}=await sb.from('animated_settings').select('*').eq('id',1).single(); if(data){ document.getElementById('videoUrl').value=data.video_url||''; featuredHotels=data.featured_hotels||[]; }else{ await sb.from('animated_settings').insert([{id:1,video_url:'',featured_hotels:[]}]); featuredHotels=[]; } renderHotelsList(); }catch(e){ console.error(e); } }
-    function renderHotelsList(){ const container=document.getElementById('hotelsListContainer'); if(!container) return; if(featuredHotels.length===0){ container.innerHTML='<div style="text-align:center; padding:40px;">暂无精选酒店</div>'; return; } container.innerHTML=''; featuredHotels.forEach((hotel,index)=>{ const div=document.createElement('div'); div.className='hotel-item'; div.innerHTML=`<div><img src="${hotel.image||''}" style="width:100px; height:70px; object-fit:cover; border-radius:12px;"></div><div><input type="text" value="${escapeHtml(hotel.name||'')}" placeholder="酒店名称" class="hotel-name-edit" data-index="${index}"><input type="text" value="${escapeHtml(hotel.image||'')}" placeholder="图片 URL" class="hotel-image-edit" data-index="${index}"></div><div><button class="delete-hotel-btn" data-index="${index}" class="danger">删除</button></div>`; container.appendChild(div); }); 
-        document.querySelectorAll('.hotel-name-edit').forEach(input=>input.addEventListener('change',()=>{featuredHotels[parseInt(input.dataset.index)].name=input.value;})); 
-        document.querySelectorAll('.hotel-image-edit').forEach(input=>input.addEventListener('change',()=>{featuredHotels[parseInt(input.dataset.index)].image=input.value;})); 
-        document.querySelectorAll('.delete-hotel-btn').forEach(btn=>btn.addEventListener('click',()=>{featuredHotels.splice(parseInt(btn.dataset.index),1);renderHotelsList();})); 
-    }
-    async function saveVideo(){ const videoUrl=document.getElementById('videoUrl').value.trim(); await sb.from('animated_settings').update({video_url:videoUrl}).eq('id',1); alert('视频已保存'); }
-    function previewVideo(){ const videoUrl=document.getElementById('videoUrl').value.trim(); const previewDiv=document.getElementById('videoPreview'); if(videoUrl){ if(videoUrl.endsWith('.mp4')) previewDiv.innerHTML=`<video src="${videoUrl}" controls style="max-width:100%; border-radius:12px;"></video>`; else previewDiv.innerHTML=`<img src="${videoUrl}" style="max-width:100%; border-radius:12px;">`; }else{ previewDiv.innerHTML='<p>暂无视频</p>'; } }
-    document.getElementById('saveVideoBtn')?.addEventListener('click',saveVideo);
-    document.getElementById('previewVideoBtn')?.addEventListener('click',previewVideo);
-    document.getElementById('addHotelBtn')?.addEventListener('click',()=>{ const name=document.getElementById('hotelNameInput').value.trim(); const image=document.getElementById('hotelImageInput').value.trim(); if(!name) return; featuredHotels.push({name,image}); renderHotelsList(); document.getElementById('hotelNameInput').value=''; document.getElementById('hotelImageInput').value=''; });
-    document.getElementById('saveHotelsBtn')?.addEventListener('click',async()=>{ await sb.from('animated_settings').update({featured_hotels:featuredHotels}).eq('id',1); alert('已保存'); });
-    
-    // Dashboard产品管理
-    let dashboardProducts = [];
-    async function loadDashboardProducts() { const { data, error } = await sb.from('dashboard_products').select('*').order('sort_order', { ascending: true }); if (error) return; dashboardProducts = data || []; renderProductsList(); }
-    function renderProductsList() { /* 实现类似原功能 */ }
-    document.getElementById('addProductBtn')?.addEventListener('click', addProduct);
-    document.getElementById('refreshProductsBtn')?.addEventListener('click', loadDashboardProducts);
-    async function addProduct() { alert('添加产品功能'); }
-    
-    // 签到奖励
-    async function loadSigninRewards(){ const {data:rewards}=await sb.from('signin_rewards').select('*').order('day'); const div=document.getElementById('signinRewardsDiv'); if(div){ div.innerHTML=''; for(let r of rewards||[]){ div.innerHTML+=`<div style="background:#0f172a; border-radius:16px; padding:15px; margin-bottom:12px;">Day ${r.day}: <input type="number" id="reward_${r.day}" value="${r.amount}" style="width:120px;"> € <button class="saveReward" data-day="${r.day}" class="success">保存</button> <button class="deleteReward" data-day="${r.day}" class="danger">删除</button></div>`; } 
-        document.querySelectorAll('.saveReward').forEach(btn=>btn.addEventListener('click',()=>saveReward(btn.dataset.day))); 
-        document.querySelectorAll('.deleteReward').forEach(btn=>btn.addEventListener('click',()=>deleteSigninDay(btn.dataset.day))); 
-    } }
-    async function saveReward(day){ const amt=parseFloat(document.getElementById(`reward_${day}`).value); await sb.from('signin_rewards').update({amount:amt}).eq('day',day); alert(`Day ${day} 已更新`); }
-    async function deleteSigninDay(day){ if(confirm('删除？')){ await sb.from('signin_rewards').delete().eq('day',day); loadSigninRewards(); } }
-    document.getElementById('addSigninDayBtn')?.addEventListener('click',()=>{ const day=prompt('输入天数'); if(day){ const amt=prompt('输入金额'); if(amt) sb.from('signin_rewards').insert([{day:parseInt(day),amount:parseFloat(amt)}]).then(()=>loadSigninRewards()); } });
-    
-    // 内容管理
-    async function loadContentList(){ const {data:contents}=await sb.from('system_content').select('*').order('id'); systemContents=contents||[]; renderContentList(); }
-    function renderContentList(){ const container=document.getElementById('contentListContainer'); if(!container) return; if(systemContents.length===0){ container.innerHTML='<div style="text-align:center; padding:40px;">暂无内容</div>'; return; } container.innerHTML=''; systemContents.forEach(content=>{ const div=document.createElement('div'); div.className='content-item'; div.innerHTML=`<input type="text" value="${escapeHtml(content.title||'')}" data-id="${content.id}" placeholder="标题" class="content-title-input" style="width:100%; margin-bottom:10px;"><textarea rows="4" data-id="${content.id}" placeholder="内容" style="width:100%; margin-bottom:10px;">${escapeHtml(content.content||'')}</textarea><button class="save-content-btn" data-id="${content.id}" class="success">保存</button> <button class="delete-content-btn" data-id="${content.id}" class="danger">删除</button>`; container.appendChild(div); }); 
-        document.querySelectorAll('.save-content-btn').forEach(btn=>btn.addEventListener('click',()=>saveContentItem(btn.dataset.id))); 
-        document.querySelectorAll('.delete-content-btn').forEach(btn=>btn.addEventListener('click',()=>deleteContentItem(btn.dataset.id))); 
-    }
-    async function saveContentItem(id){ const title=document.querySelector(`.content-title-input[data-id="${id}"]`).value; const content=document.querySelector(`textarea[data-id="${id}"]`).value; await sb.from('system_content').update({title,content}).eq('id',id); alert('已保存'); loadContentList(); }
-    async function deleteContentItem(id){ if(confirm('删除？')){ await sb.from('system_content').delete().eq('id',id); loadContentList(); } }
-    document.getElementById('addContentBtn')?.addEventListener('click',()=>{ const title=prompt('标题'); if(title){ const content=prompt('内容'); if(content) sb.from('system_content').insert([{title,content}]).then(()=>loadContentList()); } });
-    
-    document.getElementById('logoutBtn')?.addEventListener('click',()=>{ localStorage.removeItem('admin_logged_in'); window.location.href='admin-login.html'; });
-    
-    if(localStorage.getItem('admin_logged_in')!=='true') window.location.href='admin-login.html';
-    
-    function playSound(type) { try { let audio; if (type === 'withdrawal') audio = document.getElementById('soundWithdrawal'); else if (type === 'kyc') audio = document.getElementById('soundKyc'); if (audio) { audio.currentTime = 0; audio.play(); } } catch(e) {} }
-    
-    async function updateMenuBadges() {
-        const { data: withdrawals } = await sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending');
-        const withdrawalCount = withdrawals?.length || 0;
-        const { data: kycList } = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending');
-        const kycCount = kycList?.length || 0;
-        const withdrawalBadge = document.getElementById('withdrawalBadge');
-        const kycBadge = document.getElementById('kycBadge');
-        if (withdrawalBadge) { if (withdrawalCount > 0) { withdrawalBadge.innerText = withdrawalCount; withdrawalBadge.style.display = 'inline-block'; if (withdrawalCount > previousWithdrawalCount && previousWithdrawalCount !== -1) playSound('withdrawal'); } else { withdrawalBadge.style.display = 'none'; } }
-        if (kycBadge) { if (kycCount > 0) { kycBadge.innerText = kycCount; kycBadge.style.display = 'inline-block'; if (kycCount > previousKycCount && previousKycCount !== -1) playSound('kyc'); } else { kycBadge.style.display = 'none'; } }
-        previousWithdrawalCount = withdrawalCount; previousKycCount = kycCount;
-    }
-    
-    function startBadgePolling() { if (badgeInterval) clearInterval(badgeInterval); updateMenuBadges(); badgeInterval = setInterval(updateMenuBadges, 10000); }
-    
-    startBadgePolling();
-    loadDashboard();
-    loadAnimatedSettings();
-    loadDashboardProducts();
+    document.getElementById('logoutBtn')?.addEventListener('click', () => { localStorage.removeItem('admin_logged_in'); window.location.href = 'admin-login.html'; });
+    showPage('dashboard');
 </script>
 </body>
 </html>
