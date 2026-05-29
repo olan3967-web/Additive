@@ -36,6 +36,36 @@
             outline: none;
         }
         .form-group input:focus { border-color: #C9B095; box-shadow: 0 0 0 3px rgba(201,176,149,0.15); }
+        
+        .code-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .code-row input {
+            flex: 2;
+        }
+        .send-code-btn {
+            flex: 1;
+            background: rgba(201, 176, 149, 0.15);
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            border-radius: 14px;
+            padding: 14px 12px;
+            color: #C9B095;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+        .send-code-btn:hover:not(:disabled) {
+            background: rgba(201, 176, 149, 0.25);
+        }
+        .send-code-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
         .register-btn {
             width: 100%;
             background: rgba(201, 176, 149, 0.15);
@@ -59,7 +89,6 @@
         .error-message { text-align: center; margin-top: 16px; font-size: 13px; min-height: 40px; }
         .success-message { text-align: center; margin-top: 16px; font-size: 13px; color: #4ade80; }
         
-        /* 波浪背景容器 */
         .waves-bg {
             position: fixed;
             top: 0;
@@ -77,18 +106,49 @@
     </style>
 </head>
 <body>
-    <!-- 波浪背景 Canvas -->
     <canvas id="wavesBg" class="waves-bg"></canvas>
 
     <div class="register-container">
         <div class="register-card">
             <div class="logo">ADDITIVE<span>®</span></div>
             <div class="subtitle">Create your account</div>
-            <div class="form-group"><label><i class="fas fa-phone"></i> Phone Number</label><input type="tel" id="regPhone" placeholder="Enter your phone number"></div>
-            <div class="form-group"><label><i class="fas fa-user"></i> Username</label><input type="text" id="regUsername" placeholder="Username (min 3 chars)"></div>
-            <div class="form-group"><label><i class="fas fa-lock"></i> Password</label><input type="password" id="regPassword" placeholder="Password (min 4 chars)"></div>
-            <div class="form-group"><label><i class="fas fa-qrcode"></i> Invitation Code (optional)</label><input type="text" id="regInviteCode" placeholder="Enter invite code"></div>
-            <div class="form-group"><label><i class="fas fa-wallet"></i> Withdrawal PIN (4 digits)</label><input type="password" id="regPin" maxlength="4" placeholder="4-digit PIN"></div>
+            
+            <!-- 邮箱 + 验证码 -->
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email Address</label>
+                <div class="code-row">
+                    <input type="email" id="regEmail" placeholder="Enter your email">
+                    <button class="send-code-btn" id="sendCodeBtn" onclick="sendVerificationCode()">Send Code</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-key"></i> Verification Code</label>
+                <input type="text" id="regCode" placeholder="Enter 6-digit code">
+            </div>
+            
+            <!-- 原有字段 -->
+            <div class="form-group">
+                <label><i class="fas fa-phone"></i> Phone Number</label>
+                <input type="tel" id="regPhone" placeholder="Enter your phone number">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Username</label>
+                <input type="text" id="regUsername" placeholder="Username (min 3 chars)">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password</label>
+                <input type="password" id="regPassword" placeholder="Password (min 4 chars)">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-qrcode"></i> Invitation Code (optional)</label>
+                <input type="text" id="regInviteCode" placeholder="Enter invite code">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-wallet"></i> Withdrawal PIN (4 digits)</label>
+                <input type="password" id="regPin" maxlength="4" placeholder="4-digit PIN">
+            </div>
+            
             <button class="register-btn" onclick="handleRegister()"><i class="fas fa-user-plus"></i> Register</button>
             <div class="login-link">Already have an account? <a href="signin.html">Sign in</a></div>
             <div id="registerError" class="error-message"></div>
@@ -100,8 +160,84 @@
         const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // 生成6位随机邀请码 (大写字母+数字)
+        
+        let countdown = 0;
+        let countdownInterval = null;
+        
+        function showMessage(msg, isError = true) {
+            const d = document.getElementById('registerError');
+            d.innerText = msg;
+            d.className = isError ? 'error-message' : 'success-message';
+            setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 4000);
+        }
+        
+        // 发送验证码
+        async function sendVerificationCode() {
+            const email = document.getElementById('regEmail').value.trim();
+            
+            if (!email) {
+                showMessage('Please enter email address');
+                return;
+            }
+            if (!email.includes('@') || !email.includes('.')) {
+                showMessage('Please enter a valid email address');
+                return;
+            }
+            
+            if (countdown > 0) {
+                showMessage(`Please wait ${countdown} seconds before resending`);
+                return;
+            }
+            
+            const btn = document.getElementById('sendCodeBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            
+            try {
+                // 调用 Edge Function 发送邮件
+                const { data, error } = await sb.functions.invoke('send-verification-code', {
+                    body: { email }
+                });
+                
+                if (error) {
+                    console.error('Edge Function error:', error);
+                    showMessage('Failed to send code: ' + (error.message || 'Please try again'));
+                    btn.disabled = false;
+                    btn.innerHTML = 'Send Code';
+                    return;
+                }
+                
+                if (data?.success) {
+                    showMessage('Verification code sent to your email!', false);
+                    startCountdown(60);
+                } else {
+                    showMessage(data?.error || 'Failed to send code');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Send Code';
+                }
+            } catch (err) {
+                console.error('Send code error:', err);
+                showMessage('Network error, please try again');
+                btn.disabled = false;
+                btn.innerHTML = 'Send Code';
+            }
+        }
+        
+        function startCountdown(seconds) {
+            countdown = seconds;
+            const btn = document.getElementById('sendCodeBtn');
+            countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    btn.disabled = false;
+                    btn.innerHTML = 'Send Code';
+                } else {
+                    btn.innerHTML = `${countdown}s`;
+                }
+            }, 1000);
+        }
+        
         function generateInviteCode() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let code = '';
@@ -111,14 +247,9 @@
             return code;
         }
         
-        function showMessage(msg, isError = true) {
-            const d = document.getElementById('registerError');
-            d.innerText = msg;
-            d.className = isError ? 'error-message' : 'success-message';
-            setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 4000);
-        }
-        
         async function handleRegister() {
+            const email = document.getElementById('regEmail').value.trim();
+            const verifyCode = document.getElementById('regCode').value.trim();
             const phone = document.getElementById('regPhone').value.trim();
             const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value;
@@ -126,16 +257,30 @@
             const pin = document.getElementById('regPin').value;
             
             // 验证输入
+            if (!email) { showMessage('Please enter email address'); return; }
+            if (!verifyCode || verifyCode.length !== 6) { showMessage('Please enter 6-digit verification code'); return; }
             if (!phone) { showMessage('Please enter phone number'); return; }
             if (!username || username.length < 3) { showMessage('Username must be at least 3 characters'); return; }
             if (!password || password.length < 4) { showMessage('Password must be at least 4 characters'); return; }
             if (!pin || pin.length !== 4 || isNaN(pin)) { showMessage('Withdrawal PIN must be 4 digits'); return; }
             
-            showMessage('Checking...', false);
+            showMessage('Verifying code...', false);
             
             try {
-                // 检查用户名是否已存在
-                const { data: existingUser, error: checkError } = await sb
+                // 1. 验证验证码
+                const { data: verifyData, error: verifyError } = await sb.functions.invoke('verify-verification-code', {
+                    body: { email, code: verifyCode }
+                });
+                
+                if (verifyError || !verifyData?.success) {
+                    showMessage(verifyData?.error || 'Invalid or expired verification code');
+                    return;
+                }
+                
+                showMessage('Creating account...', false);
+                
+                // 2. 检查用户名是否已存在
+                const { data: existingUser } = await sb
                     .from('users')
                     .select('username')
                     .eq('username', username)
@@ -146,8 +291,20 @@
                     return; 
                 }
                 
-                // 获取最大 UID
-                const { data: maxUidData, error: uidError } = await sb
+                // 3. 检查邮箱是否已存在
+                const { data: existingEmail } = await sb
+                    .from('users')
+                    .select('email')
+                    .eq('email', email)
+                    .maybeSingle();
+                
+                if (existingEmail) { 
+                    showMessage('Email already registered'); 
+                    return; 
+                }
+                
+                // 4. 获取最大 UID
+                const { data: maxUidData } = await sb
                     .from('users')
                     .select('uid')
                     .order('uid', { ascending: false })
@@ -158,12 +315,12 @@
                     newUid = (parseInt(maxUidData[0].uid) + 1).toString();
                 }
                 
-                // 处理邀请码 - 查找邀请人
+                // 5. 处理邀请码
                 let invitedBy = '';
                 let invitedByUsername = '';
                 
                 if (inviteCode) {
-                    const { data: inviter, error: inviterError } = await sb
+                    const { data: inviter } = await sb
                         .from('users')
                         .select('uid, username, balance')
                         .eq('invite_code', inviteCode)
@@ -173,39 +330,30 @@
                         invitedBy = inviter.uid;
                         invitedByUsername = inviter.username;
                         
-                        // 给邀请人奖励 €10
                         const newBalance = (inviter.balance || 0) + 10;
-                        const { error: updateError } = await sb
-                            .from('users')
-                            .update({ balance: newBalance })
-                            .eq('uid', inviter.uid);
-                        
-                        if (!updateError) {
-                            // 记录奖励充值
-                            await sb
-                                .from('deposits')
-                                .insert([{ 
-                                    uid: inviter.uid, 
-                                    username: inviter.username, 
-                                    amount: 10, 
-                                    type: 'referral_bonus',
-                                    created_at: new Date().toISOString()
-                                }]);
-                            showMessage('Invitation code accepted! +€10 for referrer', false);
-                        }
+                        await sb.from('users').update({ balance: newBalance }).eq('uid', inviter.uid);
+                        await sb.from('deposits').insert([{ 
+                            uid: inviter.uid, 
+                            username: inviter.username, 
+                            amount: 10, 
+                            type: 'referral_bonus',
+                            created_at: new Date().toISOString()
+                        }]);
+                        showMessage('Invitation code accepted! +€10 for referrer', false);
                     } else {
                         showMessage('Invitation code not found, continuing without it', false);
                     }
                 }
                 
-                // 生成新用户的邀请码
+                // 6. 生成新用户的邀请码
                 const newInviteCode = generateInviteCode();
                 
-                // 创建新用户
-                const { data: newUser, error: insertError } = await sb
+                // 7. 创建新用户（增加 email 字段）
+                const { error: insertError } = await sb
                     .from('users')
                     .insert([{
                         uid: newUid,
+                        email: email,
                         phone: phone,
                         username: username,
                         password: password,
@@ -219,9 +367,7 @@
                         total_orders: 0,
                         is_active: true,
                         created_at: new Date().toISOString()
-                    }])
-                    .select()
-                    .single();
+                    }]);
                 
                 if (insertError) {
                     console.error('Insert error:', insertError);
@@ -229,10 +375,16 @@
                     return;
                 }
                 
-                // 保存登录状态到 localStorage
+                // 8. 标记验证码为已使用
+                await sb.functions.invoke('mark-code-used', {
+                    body: { email, code: verifyCode }
+                });
+                
+                // 9. 保存登录状态
                 localStorage.setItem('currentUser', JSON.stringify({
                     uid: newUid,
                     username: username,
+                    email: email,
                     balance: 0,
                     trialBonusAmount: 0,
                     commissionRate: 0.51,
@@ -260,13 +412,12 @@
             } catch(e) {}
         }
         
-        // 回车提交
         document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') handleRegister();
         });
     </script>
 
-    <!-- 波浪效果脚本 -->
+    <!-- 波浪效果 -->
     <script>
     (function() {
         const canvas = document.getElementById('wavesBg');
