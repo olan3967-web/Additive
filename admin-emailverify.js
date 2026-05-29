@@ -32,7 +32,6 @@ async function loadEmailRequests() {
     container.innerHTML = '<div style="text-align:center; padding:40px;">加载中... <i class="fas fa-spinner fa-spin"></i></div>';
     
     try {
-        // 获取所有未验证的邮箱请求（包括已设置验证码但未验证的）
         const { data: requests, error } = await sb
             .from('email_verification_requests')
             .select('*')
@@ -51,30 +50,30 @@ async function loadEmailRequests() {
         for (let req of requests) {
             const requestDiv = document.createElement('div');
             requestDiv.className = 'email-request-item';
+            requestDiv.style.cssText = 'background:#0f172a; border-radius:16px; padding:15px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;';
             
             const requestTime = new Date(req.requested_at).toLocaleString();
             const expiresTime = new Date(req.expires_at).toLocaleString();
             const hasCode = req.code && req.code !== null;
             
             requestDiv.innerHTML = `
-                <div class="email-info">
-                    <div class="email-address"><i class="fas fa-envelope"></i> ${escapeHtml(req.email)}</div>
-                    <div class="request-time">请求时间: ${requestTime} | 过期时间: ${expiresTime}</div>
-                    ${hasCode ? `<div class="request-time" style="color: #2ed15a;">已设置验证码: ${req.code}</div>` : '<div class="request-time" style="color: #ffb84d;">等待设置验证码</div>'}
+                <div style="flex:2;">
+                    <div style="font-size:14px; font-weight:600; color:#ffb84d;"><i class="fas fa-envelope"></i> ${escapeHtml(req.email)}</div>
+                    <div style="font-size:11px; color:#8a9abb; margin-top:4px;">请求时间: ${requestTime} | 过期时间: ${expiresTime}</div>
+                    ${hasCode ? `<div style="font-size:11px; color:#2ed15a; margin-top:2px;">已设置验证码: ${req.code}</div>` : '<div style="font-size:11px; color:#ffb84d; margin-top:2px;">等待设置验证码</div>'}
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="text" id="code_${req.id}" class="code-input" placeholder="6位数字" maxlength="6" value="${req.code || ''}">
-                    <button class="set-code-btn" data-id="${req.id}" data-email="${req.email}">设置验证码</button>
+                    <input type="text" id="code_${req.id}" class="code-input" placeholder="6位数字" maxlength="6" value="${req.code || ''}" style="width:120px; background:#1e2a3a; border:1px solid #4a7cff; border-radius:8px; padding:8px 12px; color:#fff; text-align:center; font-size:16px; letter-spacing:2px;">
+                    <button class="set-code-btn" data-id="${req.id}" data-email="${req.email}" style="background:#2f6b3a; border:none; padding:8px 20px; border-radius:8px; color:#fff; cursor:pointer;">设置验证码</button>
                 </div>
                 <div>
-                    <span class="status-badge ${hasCode ? 'status-pending' : 'status-pending'}">${hasCode ? '⏳ 已设置待验证' : '📧 等待设置'}</span>
+                    <span style="padding:4px 12px; border-radius:20px; font-size:11px; ${hasCode ? 'background:rgba(255,184,77,0.15); color:#ffb84d;' : 'background:rgba(255,184,77,0.15); color:#ffb84d;'}">${hasCode ? '⏳ 待验证' : '📧 待设置'}</span>
                 </div>
             `;
             
             container.appendChild(requestDiv);
         }
         
-        // 绑定设置按钮事件
         document.querySelectorAll('.set-code-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.dataset.id;
@@ -92,21 +91,6 @@ async function loadEmailRequests() {
                     return;
                 }
                 
-                // 检查该邮箱是否已经有其他未验证的记录使用了相同的验证码（可选，防止重复）
-                const { data: existingCode } = await sb
-                    .from('email_verification_requests')
-                    .select('id')
-                    .eq('code', code)
-                    .eq('is_verified', false)
-                    .neq('id', parseInt(id))
-                    .maybeSingle();
-                
-                if (existingCode) {
-                    showToast('该验证码已被其他邮箱使用，请使用不同的验证码', 'error');
-                    return;
-                }
-                
-                // 更新验证码
                 const { error: updateError } = await sb
                     .from('email_verification_requests')
                     .update({ 
@@ -121,8 +105,6 @@ async function loadEmailRequests() {
                 }
                 
                 showToast(`已为 ${email} 设置验证码: ${code}，请手动发送给用户`, 'success');
-                
-                // 刷新列表
                 await loadEmailRequests();
             });
         });
@@ -133,5 +115,4 @@ async function loadEmailRequests() {
     }
 }
 
-// 导出函数供全局使用
 window.loadEmailVerifyPage = loadEmailVerifyPage;

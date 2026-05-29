@@ -192,11 +192,15 @@
             
             try {
                 // 检查邮箱是否已被注册
-                const { data: existingEmail } = await sb
+                const { data: existingEmail, error: checkError } = await sb
                     .from('users')
                     .select('email')
                     .eq('email', email)
                     .maybeSingle();
+                
+                if (checkError) {
+                    console.error('检查邮箱失败:', checkError);
+                }
                 
                 if (existingEmail) {
                     showMessage('邮箱已被注册');
@@ -205,22 +209,32 @@
                     return;
                 }
                 
-                // 删除该邮箱旧的待验证记录
-                await sb
+                // 删除该邮箱旧的待验证记录（只删除未验证的）
+                const { error: deleteError } = await sb
                     .from('email_verification_requests')
                     .delete()
-                    .eq('email', email);
+                    .eq('email', email)
+                    .eq('is_verified', false);
+                
+                if (deleteError) {
+                    console.error('删除旧记录失败:', deleteError);
+                }
+                
+                // 计算过期时间（24小时后）
+                const expiresAt = new Date();
+                expiresAt.setHours(expiresAt.getHours() + 24);
                 
                 // 创建新的邮箱验证请求（验证码为空，等待管理员设置）
-                const { error: insertError } = await sb
+                const { data: insertData, error: insertError } = await sb
                     .from('email_verification_requests')
                     .insert({
                         email: email,
                         code: null,
                         is_verified: false,
                         requested_at: new Date().toISOString(),
-                        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24小时过期
-                    });
+                        expires_at: expiresAt.toISOString()
+                    })
+                    .select();
                 
                 if (insertError) {
                     console.error('存储失败:', insertError);
@@ -230,6 +244,7 @@
                     return;
                 }
                 
+                console.log('邮箱提交成功:', insertData);
                 pendingEmail = email;
                 showMessage('邮箱已提交！请等待管理员发送验证码到您的邮箱', false);
                 
@@ -237,7 +252,7 @@
                 
             } catch (err) {
                 console.error('错误:', err);
-                showMessage('网络错误，请重试');
+                showMessage('网络错误，请重试: ' + err.message);
                 btn.disabled = false;
                 btn.innerHTML = 'Send';
             }
