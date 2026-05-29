@@ -1,4 +1,4 @@
-// admin-dashboard.js - 最终修复版
+// admin-dashboard.js - 修复版（实时显示待处理提现/KYC + 趋势线图）
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -41,6 +41,8 @@ async function loadQuickCards() {
         if (kycEl) kycEl.innerText = kycRes.count || 0;
         if (withdrawalEl) withdrawalEl.innerText = withdrawalRes.count || 0;
         if (poolEl) poolEl.innerText = poolRes.count || 0;
+        
+        console.log(`实时更新: KYC待审核=${kycRes.count || 0}, 提现待处理=${withdrawalRes.count || 0}`);
     } catch (e) { console.error('加载快捷卡片失败:', e); }
 }
 
@@ -125,7 +127,16 @@ async function loadChartData(days, force = false) {
         }
         cachedData.chart = { dates, depositData, withdrawData };
         cachedData.lastChartTime = now;
-        if (trendChart) trendChart.setOption({ xAxis: { data: dates }, series: [{ data: depositData }, { data: withdrawData }] });
+        if (trendChart) {
+            trendChart.setOption({ 
+                xAxis: { data: dates }, 
+                series: [
+                    { name: '入金', data: depositData },
+                    { name: '出金', data: withdrawData }
+                ]
+            });
+            console.log('趋势线图已更新:', { dates, depositData, withdrawData });
+        }
     } catch (e) { console.error('加载图表数据失败:', e); }
 }
 
@@ -146,12 +157,8 @@ async function loadRingData() {
         const percentEl = document.getElementById('ringPercent');
         if (percentEl) percentEl.innerText = rate + '%';
         
-        // 更新环形图数据
         if (ringChart) {
             ringChart.setOption({ series: [{ data: [{ value: rate }, { value: 100 - rate }] }] });
-        } else {
-            // 如果图表不存在，尝试重新初始化
-            initRingChart();
         }
     } catch (e) { console.error('加载环形图数据失败:', e); }
 }
@@ -222,22 +229,66 @@ async function refreshDashboard(days = currentDays, force = false) {
 
 function initTrendChart() {
     const dom = document.getElementById('trendChart');
-    if (!dom) return;
+    if (!dom) {
+        console.error('trendChart容器不存在');
+        return;
+    }
     if (trendChart) {
         trendChart.dispose();
         trendChart = null;
     }
     trendChart = echarts.init(dom);
     trendChart.setOption({
-        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, backgroundColor: 'rgba(15,25,40,0.95)', borderColor: '#4a7cff', borderWidth: 1, textStyle: { color: '#fff' } },
-        grid: { top: 40, left: 60, right: 40, bottom: 30, containLabel: true },
-        xAxis: { type: 'category', data: [], axisLabel: { color: '#8a9abb' }, axisLine: { lineStyle: { color: '#1a2a3a' } }, axisTick: { show: false } },
-        yAxis: { type: 'value', name: '金额 (€)', nameTextStyle: { color: '#8a9abb' }, axisLabel: { color: '#8a9abb' }, splitLine: { lineStyle: { color: '#1a2a3a', type: 'dashed' } } },
+        tooltip: { 
+            trigger: 'axis', 
+            axisPointer: { type: 'shadow' }, 
+            backgroundColor: 'rgba(15,25,40,0.95)', 
+            borderColor: '#4a7cff', 
+            borderWidth: 1, 
+            textStyle: { color: '#fff' } 
+        },
+        legend: { data: ['入金', '出金'], textStyle: { color: '#8a9abb' }, right: 10, top: 0 },
+        grid: { top: 50, left: 60, right: 40, bottom: 30, containLabel: true },
+        xAxis: { 
+            type: 'category', 
+            data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], 
+            axisLabel: { color: '#8a9abb' }, 
+            axisLine: { lineStyle: { color: '#1a2a3a' } }, 
+            axisTick: { show: false } 
+        },
+        yAxis: { 
+            type: 'value', 
+            name: '金额 (€)', 
+            nameTextStyle: { color: '#8a9abb' }, 
+            axisLabel: { color: '#8a9abb' }, 
+            splitLine: { lineStyle: { color: '#1a2a3a', type: 'dashed' } } 
+        },
         series: [
-            { name: '入金', type: 'line', data: [], smooth: true, symbol: 'none', lineStyle: { color: '#2ed15a', width: 3, shadowBlur: 10, shadowColor: '#2ed15a' }, areaStyle: { opacity: 0.25, color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#2ed15a' }, { offset: 1, color: 'transparent' }]) } },
-            { name: '出金', type: 'line', data: [], smooth: true, symbol: 'none', lineStyle: { color: '#ff5a5a', width: 3, shadowBlur: 10, shadowColor: '#ff5a5a' }, areaStyle: { opacity: 0.25, color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#ff5a5a' }, { offset: 1, color: 'transparent' }]) } }
+            { 
+                name: '入金', 
+                type: 'line', 
+                data: [0, 0, 0, 0, 0, 0, 0], 
+                smooth: true, 
+                symbol: 'circle', 
+                symbolSize: 6,
+                lineStyle: { color: '#2ed15a', width: 3, shadowBlur: 10, shadowColor: '#2ed15a' }, 
+                areaStyle: { opacity: 0.25, color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#2ed15a' }, { offset: 1, color: 'transparent' }]) } 
+            },
+            { 
+                name: '出金', 
+                type: 'line', 
+                data: [0, 0, 0, 0, 0, 0, 0], 
+                smooth: true, 
+                symbol: 'circle', 
+                symbolSize: 6,
+                lineStyle: { color: '#ff5a5a', width: 3, shadowBlur: 10, shadowColor: '#ff5a5a' }, 
+                areaStyle: { opacity: 0.25, color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#ff5a5a' }, { offset: 1, color: 'transparent' }]) } 
+            }
         ]
     });
+    
+    console.log('趋势线图初始化完成');
+    
     if (pulseInterval) clearInterval(pulseInterval);
     let pulseOpacity = 0.3, pulseDirection = 0.006;
     pulseInterval = setInterval(() => {
@@ -255,7 +306,6 @@ function initTrendChart() {
     }, 200);
 }
 
-// 独立可靠的环形图初始化函数
 function initRingChart() {
     const dom = document.getElementById('ringChart');
     if (!dom) {
@@ -263,14 +313,10 @@ function initRingChart() {
         return;
     }
     
-    // 先清空容器内容（防止残留）
     dom.innerHTML = '';
-    
-    // 确保尺寸正确
     dom.style.height = '220px';
     dom.style.width = '100%';
     
-    // 如果已有图表实例，先销毁
     if (ringChart) {
         try {
             ringChart.dispose();
@@ -278,7 +324,6 @@ function initRingChart() {
         ringChart = null;
     }
     
-    // 创建新图表
     ringChart = echarts.init(dom);
     ringChart.setOption({
         tooltip: { show: false },
@@ -314,18 +359,29 @@ function bindDateFilters() {
 }
 
 function subscribeToRealtime() {
+    // 监听提现和KYC的INSERT事件，实时刷新仪表板
     const channel = sb.channel('dashboard-realtime')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'kyc_verifications' }, () => refreshDashboard(currentDays, true))
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'withdrawals' }, () => refreshDashboard(currentDays, true))
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'kyc_verifications' }, () => {
+            console.log('检测到新KYC申请，刷新仪表板');
+            refreshDashboard(currentDays, true);
+        })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'withdrawals' }, () => {
+            console.log('检测到新提现申请，刷新仪表板');
+            refreshDashboard(currentDays, true);
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'withdrawals' }, () => {
+            console.log('提现状态更新，刷新仪表板');
+            refreshDashboard(currentDays, true);
+        })
         .subscribe();
+    
+    console.log('实时订阅已启动');
 }
 
-// 主加载函数
 function loadDashboardPage(days = 1) {
     const container = document.getElementById('page_dashboard');
     if (!container) return;
     
-    // 如果已经渲染过HTML，只刷新数据
     if (dashboardRendered) {
         refreshDashboard(currentDays, true);
         return;
@@ -377,17 +433,16 @@ function loadDashboardPage(days = 1) {
         </div>
     `;
     
-    // 初始化图表 - 使用 setTimeout 确保 DOM 完全渲染
     setTimeout(() => {
         initTrendChart();
-        initRingChart();  // 调用独立的环形图初始化函数
+        initRingChart();
         bindDateFilters();
         refreshDashboard(days, true);
         subscribeToRealtime();
     }, 200);
     
     if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
-    dashboardRefreshInterval = setInterval(() => refreshDashboard(currentDays, false), 60000);
+    dashboardRefreshInterval = setInterval(() => refreshDashboard(currentDays, false), 15000); // 改为15秒刷新一次，确保实时性
 }
 
 window.loadDashboardPage = loadDashboardPage;
