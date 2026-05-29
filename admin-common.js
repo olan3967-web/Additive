@@ -1,4 +1,4 @@
-// admin-common.js - 完整版（包含自定义弹窗和通知 + Email页面切换）
+// admin-common.js - 完整版（包含自定义弹窗和通知 + 所有页面实时刷新）
 const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -237,6 +237,179 @@ window.alert = function(message) {
     showToast(message, 'info');
 };
 
+// ========== 琥珀金风格通知（全局函数） ==========
+window.showAmberNotification = function(title, message, type) {
+    const existingNotification = document.querySelector('.notification-amber');
+    if (existingNotification) existingNotification.remove();
+    
+    let icon = 'fa-id-card';
+    let iconColor = '#ffb84d';
+    
+    if (type === 'withdrawal') {
+        icon = 'fa-money-bill-wave';
+    } else if (type === 'kyc') {
+        icon = 'fa-id-card';
+    } else if (type === 'email') {
+        icon = 'fa-envelope';
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = 'notification-amber';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        min-width: 340px;
+        max-width: 420px;
+        padding: 14px 18px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: rgba(30, 25, 15, 0.95);
+        backdrop-filter: blur(12px);
+        border-left: 4px solid #ffb84d;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
+        cursor: pointer;
+        animation: slideIn 0.4s ease forwards;
+        font-family: 'Inter', sans-serif;
+    `;
+    
+    notification.innerHTML = `
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,184,77,0.15); display: flex; align-items: center; justify-content: center;">
+            <i class="fas ${icon}" style="color: ${iconColor}; font-size: 22px;"></i>
+        </div>
+        <div style="flex: 1;">
+            <div style="font-weight: 700; font-size: 14px; color: #ffb84d; margin-bottom: 4px;">${title}</div>
+            <div style="font-size: 12px; color: #d4c8a0; opacity: 0.9;">${message}</div>
+            <div style="font-size: 10px; color: #8a7a5a; margin-top: 4px;">刚刚</div>
+        </div>
+        <div style="cursor: pointer; opacity: 0.5; padding: 4px;" class="notification-close">
+            <i class="fas fa-times" style="color: #d4c8a0;"></i>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    const closeBtn = notification.querySelector('.notification-close');
+    closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        notification.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => notification.remove(), 300);
+    };
+    
+    notification.onclick = (e) => {
+        if (e.target !== closeBtn && !closeBtn.contains(e.target)) {
+            notification.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => notification.remove(), 300);
+        }
+    };
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+};
+
+// ========== 全局实时订阅（监控所有表） ==========
+let realtimeChannel = null;
+
+function initGlobalRealtime() {
+    console.log('正在启动全局实时订阅...');
+    
+    if (realtimeChannel) {
+        sb.removeChannel(realtimeChannel);
+    }
+    
+    realtimeChannel = sb
+        .channel('global-realtime')
+        // 监听 KYC 新申请
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'kyc_verifications' },
+            (payload) => {
+                console.log('🔔 检测到新KYC申请:', payload.new);
+                // 刷新仪表板
+                if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
+                // 刷新KYC页面（如果当前在KYC页面）
+                if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) {
+                    window.loadKycPage();
+                }
+                // 显示琥珀通知
+                window.showAmberNotification(
+                    '📋 新KYC申请',
+                    `用户 ${payload.new.username || payload.new.uid} 提交了身份验证申请`,
+                    'kyc'
+                );
+            }
+        )
+        // 监听提现新申请
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'withdrawals' },
+            (payload) => {
+                console.log('🔔 检测到新提现申请:', payload.new);
+                if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
+                if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) {
+                    window.loadWithdrawalsPage();
+                }
+                window.showAmberNotification(
+                    '💰 新提现申请',
+                    `用户 ${payload.new.username} 申请提现 €${payload.new.amount}`,
+                    'withdrawal'
+                );
+            }
+        )
+        // 监听邮箱验证新请求
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
+            (payload) => {
+                console.log('🔔 检测到新邮箱验证请求:', payload.new);
+                if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
+                if (window.loadEmailVerifyPage && document.getElementById('page_emailverify')?.classList.contains('active')) {
+                    window.loadEmailVerifyPage();
+                }
+                window.showAmberNotification(
+                    '📧 新邮箱验证请求',
+                    `用户 ${payload.new.email} 请求邮箱验证，请设置验证码`,
+                    'email'
+                );
+            }
+        )
+        // 监听 KYC 状态更新（批准/拒绝）
+        .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'kyc_verifications' },
+            (payload) => {
+                console.log('🔔 KYC状态更新:', payload.new);
+                if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) {
+                    window.loadKycPage();
+                }
+            }
+        )
+        // 监听提现状态更新
+        .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'withdrawals' },
+            (payload) => {
+                console.log('🔔 提现状态更新:', payload.new);
+                if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) {
+                    window.loadWithdrawalsPage();
+                }
+            }
+        )
+        .subscribe((status) => {
+            console.log('全局实时订阅状态:', status);
+            if (status === 'SUBSCRIBED') {
+                console.log('✅ 全局实时订阅已成功连接！');
+            }
+        });
+}
+
 // ========== 页面切换函数 ==========
 const loadedPages = {};
 
@@ -249,21 +422,15 @@ function showPage(pageId) {
     const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if (activeNav) activeNav.classList.add('active');
     
-    // emailverify 页面每次都重新加载，不缓存
-    if (pageId === 'emailverify' && window.loadEmailVerifyPage) {
-        window.loadEmailVerifyPage();
-        return;
-    }
-    
-    if (loadedPages[pageId]) return;
-    loadedPages[pageId] = true;
-    
+    // 每次切换页面都重新加载，确保数据最新
     if (pageId === 'dashboard' && window.loadDashboardPage) {
         window.loadDashboardPage(currentDays);
     } else if (pageId === 'users' && window.loadUsersPage) {
         window.loadUsersPage();
     } else if (pageId === 'kyc' && window.loadKycPage) {
         window.loadKycPage();
+    } else if (pageId === 'emailverify' && window.loadEmailVerifyPage) {
+        window.loadEmailVerifyPage();
     } else if (pageId === 'trial' && window.loadTrialPage) {
         window.loadTrialPage();
     } else if (pageId === 'withdrawals' && window.loadWithdrawalsPage) {
@@ -284,6 +451,9 @@ function showPage(pageId) {
         window.loadContentPage();
     }
 }
+
+// 启动全局实时订阅
+initGlobalRealtime();
 
 // 登录检查
 if (localStorage.getItem('admin_logged_in') !== 'true') window.location.href = 'admin-login.html';
