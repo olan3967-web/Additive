@@ -1,4 +1,4 @@
-// admin-dashboard.js - 完整版（实时订阅 + 通知）
+// admin-dashboard.js - 完整版（琥珀金通知 + 实时订阅）
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -358,48 +358,91 @@ function bindDateFilters() {
     });
 }
 
-// 显示通知
-function showNotification(title, message, type) {
-    const notificationList = document.getElementById('notificationList');
-    const notificationDot = document.getElementById('notificationDot');
+// ========== 琥珀金风格通知 ==========
+function showAmberNotification(title, message, type) {
+    const existingNotification = document.querySelector('.notification-amber');
+    if (existingNotification) existingNotification.remove();
     
-    if (notificationList) {
-        if (notificationList.innerHTML.includes('暂无新通知') || notificationList.innerHTML.trim() === '') {
-            notificationList.innerHTML = '';
+    const notification = document.createElement('div');
+    notification.className = 'notification-amber';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        min-width: 340px;
+        max-width: 420px;
+        padding: 14px 18px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: rgba(30, 25, 15, 0.95);
+        backdrop-filter: blur(12px);
+        border-left: 4px solid #ffb84d;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
+        cursor: pointer;
+        animation: slideIn 0.4s ease forwards;
+        font-family: 'Inter', sans-serif;
+    `;
+    
+    const icon = type === 'withdrawal' ? 'fa-money-bill-wave' : 'fa-id-card';
+    
+    notification.innerHTML = `
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,184,77,0.15); display: flex; align-items: center; justify-content: center;">
+            <i class="fas ${icon}" style="color: #ffb84d; font-size: 22px;"></i>
+        </div>
+        <div style="flex: 1;">
+            <div style="font-weight: 700; font-size: 14px; color: #ffb84d; margin-bottom: 4px;">${title}</div>
+            <div style="font-size: 12px; color: #d4c8a0; opacity: 0.9;">${message}</div>
+            <div style="font-size: 10px; color: #8a7a5a; margin-top: 4px;">刚刚</div>
+        </div>
+        <div style="cursor: pointer; opacity: 0.5; padding: 4px;" class="notification-close">
+            <i class="fas fa-times" style="color: #d4c8a0;"></i>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    if (!document.querySelector('#notification-style')) {
+        const style = document.createElement('style');
+        style.id = 'notification-style';
+        style.textContent = `
+            @keyframes slideIn {
+                0% { transform: translateX(calc(100% + 20px)); opacity: 0; }
+                100% { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                0% { transform: translateX(0); opacity: 1; }
+                100% { transform: translateX(calc(100% + 20px)); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    const closeBtn = notification.querySelector('.notification-close');
+    closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        notification.style.animation = 'slideOut 0.3s ease forwards';
+        setTimeout(() => notification.remove(), 300);
+    };
+    
+    notification.onclick = (e) => {
+        if (e.target !== closeBtn && !closeBtn.contains(e.target)) {
+            notification.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => notification.remove(), 300);
         }
-        notificationList.insertAdjacentHTML('afterbegin', `
-            <div class="notification-item unread" onclick="this.classList.remove('unread')">
-                <div style="font-weight: 600; color: ${type === 'withdrawal' ? '#4a7cff' : '#ffb84d'}">${title}</div>
-                <div style="font-size: 12px; color: #8a9abb; margin-top: 4px;">${message}</div>
-                <div style="font-size: 10px; color: #6a7a9a; margin-top: 6px;">刚刚</div>
-            </div>
-        `);
-    }
+    };
     
-    if (notificationDot) notificationDot.style.display = 'block';
-    
-    if (typeof showToast === 'function') {
-        showToast(message, type === 'withdrawal' ? 'info' : 'warning');
-    } else {
-        console.log('通知:', title, message);
-    }
-    
-    // 播放提示音
-    try {
-        const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
-        audio.volume = 0.3;
-        audio.play().catch(e => console.log('音频播放失败:', e));
-    } catch(e) {}
-    
-    // 浏览器通知
-    if (Notification.permission === 'granted') {
-        new Notification(title, { body: message });
-    } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission();
-    }
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
 }
 
-// 实时订阅
+// ========== 实时订阅 ==========
 function subscribeToRealtime() {
     console.log('正在启动实时订阅...');
     
@@ -415,7 +458,7 @@ function subscribeToRealtime() {
             (payload) => {
                 console.log('🔔 检测到新提现申请:', payload.new);
                 refreshDashboard(currentDays, true);
-                showNotification(
+                showAmberNotification(
                     '💰 新提现申请',
                     `用户 ${payload.new.username} 申请提现 €${payload.new.amount}`,
                     'withdrawal'
@@ -428,7 +471,7 @@ function subscribeToRealtime() {
             (payload) => {
                 console.log('🔔 检测到新KYC申请:', payload.new);
                 refreshDashboard(currentDays, true);
-                showNotification(
+                showAmberNotification(
                     '📋 新KYC申请',
                     `用户 ${payload.new.username || payload.new.uid} 提交了验证申请`,
                     'kyc'
