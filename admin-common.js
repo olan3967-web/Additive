@@ -8,9 +8,6 @@ let currentDays = 1;
 function toggleSidebar() { document.getElementById('sidebar')?.classList.toggle('open'); }
 window.toggleSidebar = toggleSidebar;
 
-function toggleNotification() { document.getElementById('notificationCenter')?.classList.toggle('open'); }
-window.toggleNotification = toggleNotification;
-
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m); }
 
 function formatTime(dateStr) {
@@ -341,6 +338,12 @@ function showPage(pageId) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if (activeNav) activeNav.classList.add('active');
+    
+    // 每次都重新加载 emailverify 页面，不缓存
+    if (pageId === 'emailverify' && window.loadEmailVerifyPage) {
+        window.loadEmailVerifyPage();
+        return;
+    }
     
     if (loadedPages[pageId]) return;
     loadedPages[pageId] = true;
