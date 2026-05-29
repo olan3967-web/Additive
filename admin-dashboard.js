@@ -1,10 +1,10 @@
-// admin-dashboard.js - 完整修复版（无关联查询错误）
+// admin-dashboard.js - 最终修复版
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
 let pulseInterval = null;
 let dashboardRefreshInterval = null;
-let dashboardLoaded = false;
+let dashboardRendered = false;  // 改为检查是否已渲染HTML
 let cachedData = {
     stats: null,
     chart: null,
@@ -155,7 +155,6 @@ async function loadActivityTimeline(force = false) {
         return;
     }
     try {
-        // 分开查询，不使用关联（避免400错误）
         const [kycRes, withdrawalRes, userRes] = await Promise.all([
             sb.from('kyc_verifications').select('*').eq('status', 'pending').order('uploaded_at', { ascending: false }).limit(10),
             sb.from('withdrawals').select('*').order('request_date', { ascending: false }).limit(10),
@@ -166,7 +165,6 @@ async function loadActivityTimeline(force = false) {
         const withdrawalList = withdrawalRes.data || [];
         const userList = userRes.data || [];
         
-        // 获取KYC对应的用户名
         const kycWithNames = [];
         for (const k of kycList) {
             const { data: user } = await sb.from('users').select('username').eq('uid', k.uid).single();
@@ -301,20 +299,14 @@ function loadDashboardPage(days = 1) {
     const container = document.getElementById('page_dashboard');
     if (!container) return;
     
-    if (dashboardLoaded) {
-        if (trendChart && ringChart) {
-            refreshDashboard(currentDays, true);
-        } else {
-            setTimeout(() => {
-                initTrendChart();
-                initRingChart();
-                refreshDashboard(currentDays, true);
-            }, 100);
-        }
+    // 关键修复：如果已经渲染过HTML，只刷新数据，不重新渲染
+    if (dashboardRendered) {
+        // 只刷新数据，图表保持存在
+        refreshDashboard(currentDays, true);
         return;
     }
     
-    dashboardLoaded = true;
+    dashboardRendered = true;
     
     container.innerHTML = `
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 24px;">
@@ -360,14 +352,16 @@ function loadDashboardPage(days = 1) {
         </div>
     `;
     
+    // 初始化图表
     setTimeout(() => {
         initTrendChart();
         initRingChart();
         bindDateFilters();
         refreshDashboard(days, true);
         subscribeToRealtime();
-    }, 100);
+    }, 150);
     
+    // 定时刷新（60秒）
     if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
     dashboardRefreshInterval = setInterval(() => refreshDashboard(currentDays, false), 60000);
 }
