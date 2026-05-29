@@ -1,4 +1,4 @@
-// admin-animated.js - 动画/视频设置页面
+// admin-animated.js - 动画/视频设置页面（使用自定义弹窗）
 let featuredHotels = [];
 let uploadedImageUrl = '';
 let dashboardProducts = [];
@@ -9,61 +9,28 @@ async function loadAnimatedPage() {
     container.innerHTML = `
         <div class="card">
             <h3><i class="fas fa-video"></i> 动态视频设置</h3>
-            <div style="margin-bottom: 15px;">
-                <label>视频 / GIF URL</label>
-                <input type="text" id="videoUrl" placeholder="https://example.com/video.mp4 或 图片URL" class="search-input" style="width:100%;">
-            </div>
-            <div style="display: flex; gap: 12px;">
-                <button id="saveVideoBtn" class="success"><i class="fas fa-save"></i> 保存视频</button>
-                <button id="previewVideoBtn" class="btn-primary"><i class="fas fa-play"></i> 预览</button>
-            </div>
-            <div id="videoPreview" style="margin-top: 20px; background: #0a0f1a; border-radius: 12px; padding: 20px; text-align: center; min-height: 150px;">
-                <p style="color: #aaa;">点击预览查看效果</p>
-            </div>
+            <div><label>视频 / GIF URL</label><input type="text" id="videoUrl" placeholder="https://example.com/video.mp4" class="search-input" style="width:100%;"></div>
+            <div style="display: flex; gap: 12px; margin-top: 12px;"><button id="saveVideoBtn" class="success">保存视频</button><button id="previewVideoBtn" class="btn-primary">预览</button></div>
+            <div id="videoPreview" style="margin-top: 20px; background:#0a0f1a; border-radius:12px; padding:20px; text-align:center; min-height:150px;"><p style="color:#aaa;">点击预览查看效果</p></div>
         </div>
         <div class="card">
             <h3><i class="fas fa-hotel"></i> 精选酒店轮播图</h3>
-            <div class="search-bar" style="margin-bottom: 15px;">
-                <input type="text" id="hotelNameInput" class="search-input" placeholder="酒店名称">
-                <input type="text" id="hotelImageInput" class="search-input" placeholder="图片 URL (或点击上传)">
-                <button id="uploadImageBtn" class="btn-primary" onclick="document.getElementById('hotelImageFile').click()"><i class="fas fa-upload"></i> 上传图片</button>
-                <input type="file" id="hotelImageFile" accept="image/*" style="display: none;">
-                <button id="addHotelBtn" class="success"><i class="fas fa-plus"></i> 添加酒店</button>
-            </div>
-            <div id="hotelPreviewImg" style="display: none;"><img id="previewUploadImg" style="max-width:200px; max-height:120px; border-radius:12px;"></div>
-            <div id="hotelsListContainer" style="max-height: 400px; overflow-y: auto;"></div>
-            <button id="saveHotelsBtn" class="btn-primary" style="margin-top: 15px;"><i class="fas fa-save"></i> 保存所有酒店</button>
+            <div class="search-bar"><input type="text" id="hotelNameInput" class="search-input" placeholder="酒店名称"><input type="text" id="hotelImageInput" class="search-input" placeholder="图片 URL"><button id="uploadImageBtn" class="btn-primary">上传图片</button><input type="file" id="hotelImageFile" accept="image/*" style="display:none;"><button id="addHotelBtn" class="success">添加酒店</button></div>
+            <div id="hotelPreviewImg" style="display:none;"><img id="previewUploadImg" style="max-width:200px; border-radius:12px;"></div>
+            <div id="hotelsListContainer" style="max-height:400px; overflow-y:auto;"></div>
+            <button id="saveHotelsBtn" class="btn-primary" style="margin-top:15px;">保存所有酒店</button>
         </div>
         <div class="card">
             <h3><i class="fas fa-box-open"></i> Dashboard Product Sample</h3>
-            <p style="color: #a0a8c0; font-size: 13px; margin-bottom: 16px;">管理 Dashboard 首页展示的产品卡片</p>
-            <div class="search-bar" style="margin-bottom: 15px;">
-                <input type="text" id="productNameInput" class="search-input" placeholder="产品名称">
-                <input type="text" id="productPriceInput" class="search-input" placeholder="价格 (USD)" style="width: 120px;">
-                <input type="text" id="productImageInput" class="search-input" placeholder="图片 URL">
-                <button id="uploadProductImageBtn" class="btn-primary" onclick="document.getElementById('productImageFile').click()"><i class="fas fa-upload"></i> 上传图片</button>
-                <input type="file" id="productImageFile" accept="image/*" style="display: none;">
-            </div>
-            <div class="search-bar" style="margin-bottom: 15px;">
-                <input type="text" id="productVideoInput" class="search-input" placeholder="视频 URL (可选)">
-                <select id="productStatusSelect" style="width: 120px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;">
-                    <option value="active">显示</option>
-                    <option value="inactive">隐藏</option>
-                </select>
-                <button id="addProductBtn" class="success"><i class="fas fa-plus"></i> 添加产品</button>
-                <button id="refreshProductsBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新列表</button>
-            </div>
-            <div id="productPreviewImg" style="display: none; margin-bottom: 15px;"><img id="previewProductImg" style="max-width:200px; max-height:120px; border-radius:12px;"></div>
-            <div id="productsListContainer" style="max-height: 400px; overflow-y: auto;"></div>
-            <div style="margin-top: 15px; display: flex; gap: 12px; justify-content: flex-end;">
-                <button id="saveProductsOrderBtn" class="btn-primary"><i class="fas fa-save"></i> 保存排序</button>
-            </div>
+            <div class="search-bar"><input type="text" id="productNameInput" class="search-input" placeholder="产品名称"><input type="text" id="productPriceInput" class="search-input" placeholder="价格 (USD)" style="width:120px;"><input type="text" id="productImageInput" class="search-input" placeholder="图片 URL"><button id="uploadProductImageBtn" class="btn-primary">上传图片</button><input type="file" id="productImageFile" accept="image/*" style="display:none;"></div>
+            <div class="search-bar"><input type="text" id="productVideoInput" class="search-input" placeholder="视频 URL"><select id="productStatusSelect" style="width:120px;"><option value="active">显示</option><option value="inactive">隐藏</option></select><button id="addProductBtn" class="success">添加产品</button><button id="refreshProductsBtn" class="btn-primary">刷新列表</button></div>
+            <div id="productPreviewImg" style="display:none;"><img id="previewProductImg" style="max-width:200px; border-radius:12px;"></div>
+            <div id="productsListContainer" style="max-height:400px; overflow-y:auto;"></div>
+            <button id="saveProductsOrderBtn" class="btn-primary">保存排序</button>
         </div>
     `;
-    
     await loadAnimatedSettings();
     await loadDashboardProducts();
-    
     document.getElementById('saveVideoBtn')?.addEventListener('click', saveVideo);
     document.getElementById('previewVideoBtn')?.addEventListener('click', previewVideo);
     document.getElementById('addHotelBtn')?.addEventListener('click', addHotel);
@@ -72,41 +39,50 @@ async function loadAnimatedPage() {
     document.getElementById('refreshProductsBtn')?.addEventListener('click', loadDashboardProducts);
     document.getElementById('saveProductsOrderBtn')?.addEventListener('click', saveProductsOrder);
     document.getElementById('uploadProductImageBtn')?.addEventListener('click', () => document.getElementById('productImageFile').click());
-    
-    document.getElementById('hotelImageFile')?.addEventListener('change', async function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            document.getElementById('previewUploadImg').src = event.target.result;
-            document.getElementById('hotelPreviewImg').style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-        const fileName = `hotels/${Date.now()}_${file.name}`;
-        const { error } = await sb.storage.from('hotel-images').upload(fileName, file);
-        if (error) { alert('上传失败: ' + error.message); return; }
-        const { data: urlData } = sb.storage.from('hotel-images').getPublicUrl(fileName);
-        uploadedImageUrl = urlData.publicUrl;
-        document.getElementById('hotelImageInput').value = uploadedImageUrl;
-        alert('图片上传成功！');
-    });
-    
-    document.getElementById('productImageFile')?.addEventListener('change', async function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            document.getElementById('previewProductImg').src = event.target.result;
-            document.getElementById('productPreviewImg').style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-        const fileName = `products/${Date.now()}_${file.name}`;
-        const { error } = await sb.storage.from('product-images').upload(fileName, file);
-        if (error) { alert('上传失败: ' + error.message); return; }
-        const { data: urlData } = sb.storage.from('product-images').getPublicUrl(fileName);
-        document.getElementById('productImageInput').value = urlData.publicUrl;
-        alert('图片上传成功！');
-    });
+    document.getElementById('uploadImageBtn')?.addEventListener('click', () => document.getElementById('hotelImageFile').click());
+    document.getElementById('hotelImageFile')?.addEventListener('change', uploadHotelImage);
+    document.getElementById('productImageFile')?.addEventListener('change', uploadProductImage);
+}
+
+async function uploadHotelImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        document.getElementById('previewUploadImg').src = event.target.result;
+        document.getElementById('hotelPreviewImg').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    const fileName = `hotels/${Date.now()}_${file.name}`;
+    const { error } = await sb.storage.from('hotel-images').upload(fileName, file);
+    if (error) {
+        showToast('上传失败: ' + error.message, 'error');
+        return;
+    }
+    const { data: urlData } = sb.storage.from('hotel-images').getPublicUrl(fileName);
+    uploadedImageUrl = urlData.publicUrl;
+    document.getElementById('hotelImageInput').value = uploadedImageUrl;
+    showToast('图片上传成功！', 'success');
+}
+
+async function uploadProductImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        document.getElementById('previewProductImg').src = event.target.result;
+        document.getElementById('productPreviewImg').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    const fileName = `products/${Date.now()}_${file.name}`;
+    const { error } = await sb.storage.from('product-images').upload(fileName, file);
+    if (error) {
+        showToast('上传失败: ' + error.message, 'error');
+        return;
+    }
+    const { data: urlData } = sb.storage.from('product-images').getPublicUrl(fileName);
+    document.getElementById('productImageInput').value = urlData.publicUrl;
+    showToast('图片上传成功！', 'success');
 }
 
 async function loadAnimatedSettings() {
@@ -134,12 +110,10 @@ function renderHotelsList() {
     featuredHotels.forEach((hotel, index) => {
         const div = document.createElement('div');
         div.className = 'hotel-item';
-        div.innerHTML = `
-            <div><img src="${hotel.image || ''}" style="width:100px; height:70px; object-fit:cover; border-radius:12px;" onerror="this.src='https://placehold.co/100x70/0f172a/4a7cff?text=No+Image'"></div>
-            <div><input type="text" class="hotel-name-edit" data-index="${index}" value="${escapeHtml(hotel.name || '')}" placeholder="酒店名称" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff; width:200px;"></div>
-            <div><input type="text" class="hotel-image-edit" data-index="${index}" value="${escapeHtml(hotel.image || '')}" placeholder="图片 URL" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff; width:300px;"></div>
-            <div><button class="delete-hotel-btn" data-index="${index}" style="background:#7a2f2f; padding:6px 12px; border-radius:8px;">删除</button></div>
-        `;
+        div.innerHTML = `<div><img src="${hotel.image || ''}" style="width:100px;height:70px;object-fit:cover;border-radius:12px;" onerror="this.src='https://placehold.co/100x70/0f172a/4a7cff?text=No+Image'"></div>
+                        <div><input type="text" class="hotel-name-edit" data-index="${index}" value="${escapeHtml(hotel.name || '')}" placeholder="酒店名称" style="background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;width:200px;"></div>
+                        <div><input type="text" class="hotel-image-edit" data-index="${index}" value="${escapeHtml(hotel.image || '')}" placeholder="图片 URL" style="background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;width:300px;"></div>
+                        <div><button class="delete-hotel-btn" data-index="${index}" style="background:#7a2f2f;padding:6px 12px;border-radius:8px;">删除</button></div>`;
         container.appendChild(div);
     });
     document.querySelectorAll('.hotel-name-edit').forEach(input => input.addEventListener('change', () => { featuredHotels[parseInt(input.dataset.index)].name = input.value; }));
@@ -150,7 +124,7 @@ function renderHotelsList() {
 async function saveVideo() {
     const videoUrl = document.getElementById('videoUrl').value.trim();
     await sb.from('animated_settings').update({ video_url: videoUrl }).eq('id', 1);
-    alert('视频已保存');
+    showToast('视频已保存', 'success');
 }
 
 function previewVideo() {
@@ -158,9 +132,9 @@ function previewVideo() {
     const previewDiv = document.getElementById('videoPreview');
     if (videoUrl) {
         if (videoUrl.endsWith('.mp4') || videoUrl.includes('.mp4')) {
-            previewDiv.innerHTML = `<video src="${videoUrl}" controls style="max-width:100%; max-height:250px; border-radius:12px;"></video>`;
+            previewDiv.innerHTML = `<video src="${videoUrl}" controls style="max-width:100%; border-radius:12px;"></video>`;
         } else {
-            previewDiv.innerHTML = `<img src="${videoUrl}" style="max-width:100%; max-height:250px; border-radius:12px;" onerror="this.parentElement.innerHTML='<p style=\\'color:#ff8888;\\'>无法加载图片/视频</p>'">`;
+            previewDiv.innerHTML = `<img src="${videoUrl}" style="max-width:100%; border-radius:12px;" onerror="this.parentElement.innerHTML='<p>无法加载图片</p>'">`;
         }
     } else {
         previewDiv.innerHTML = '<p style="color:#aaa;">暂无视频/图片</p>';
@@ -170,7 +144,10 @@ function previewVideo() {
 async function addHotel() {
     const name = document.getElementById('hotelNameInput').value.trim();
     const image = document.getElementById('hotelImageInput').value.trim() || uploadedImageUrl || '';
-    if (!name) { alert('请输入酒店名称'); return; }
+    if (!name) {
+        showToast('请输入酒店名称', 'error');
+        return;
+    }
     featuredHotels.push({ name: name, image: image });
     renderHotelsList();
     document.getElementById('hotelNameInput').value = '';
@@ -181,7 +158,7 @@ async function addHotel() {
 
 async function saveHotels() {
     await sb.from('animated_settings').update({ featured_hotels: featuredHotels }).eq('id', 1);
-    alert('精选酒店已保存');
+    showToast('精选酒店已保存', 'success');
 }
 
 async function loadDashboardProducts() {
@@ -195,23 +172,21 @@ function renderProductsList() {
     const container = document.getElementById('productsListContainer');
     if (!container) return;
     if (dashboardProducts.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无产品，点击"添加产品"开始</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无产品</div>';
         return;
     }
     container.innerHTML = '';
-    dashboardProducts.forEach((product, index) => {
+    dashboardProducts.forEach((product) => {
         const div = document.createElement('div');
         div.className = 'hotel-item';
         div.setAttribute('data-id', product.id);
-        div.innerHTML = `
-            <div><img src="${product.image_url || ''}" style="width:80px; height:60px; object-fit:cover; border-radius:12px;" onerror="this.src='https://placehold.co/80x60/0f172a/4a7cff?text=No+Image'"></div>
-            <div><input type="text" class="product-name-edit" data-id="${product.id}" value="${escapeHtml(product.name || '')}" placeholder="产品名称" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff; width:200px;"></div>
-            <div><input type="number" step="0.01" class="product-price-edit" data-id="${product.id}" value="${product.price || 0}" placeholder="价格" style="width:100px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;"></div>
-            <div><input type="text" class="product-image-edit" data-id="${product.id}" value="${escapeHtml(product.image_url || '')}" placeholder="图片 URL" style="width:200px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;"></div>
-            <div><input type="text" class="product-video-edit" data-id="${product.id}" value="${escapeHtml(product.video_url || '')}" placeholder="视频 URL" style="width:200px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;"></div>
-            <div><select class="product-status-edit" data-id="${product.id}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;"><option value="active" ${product.status === 'active' ? 'selected' : ''}>显示</option><option value="inactive" ${product.status === 'inactive' ? 'selected' : ''}>隐藏</option></select></div>
-            <div><button class="delete-product-btn" data-id="${product.id}" style="background:#7a2f2f; padding:6px 12px; border-radius:8px;">删除</button></div>
-        `;
+        div.innerHTML = `<div><img src="${product.image_url || ''}" style="width:80px;height:60px;object-fit:cover;border-radius:12px;"></div>
+                        <div><input type="text" class="product-name-edit" data-id="${product.id}" value="${escapeHtml(product.name || '')}" placeholder="产品名称" style="background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;width:200px;"></div>
+                        <div><input type="number" step="0.01" class="product-price-edit" data-id="${product.id}" value="${product.price || 0}" placeholder="价格" style="width:100px;background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"></div>
+                        <div><input type="text" class="product-image-edit" data-id="${product.id}" value="${escapeHtml(product.image_url || '')}" placeholder="图片 URL" style="width:200px;background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"></div>
+                        <div><input type="text" class="product-video-edit" data-id="${product.id}" value="${escapeHtml(product.video_url || '')}" placeholder="视频 URL" style="width:200px;background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"></div>
+                        <div><select class="product-status-edit" data-id="${product.id}" style="background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"><option value="active" ${product.status === 'active' ? 'selected' : ''}>显示</option><option value="inactive" ${product.status === 'inactive' ? 'selected' : ''}>隐藏</option></select></div>
+                        <div><button class="delete-product-btn" data-id="${product.id}" style="background:#7a2f2f;padding:6px 12px;border-radius:8px;">删除</button></div>`;
         container.appendChild(div);
     });
     document.querySelectorAll('.product-name-edit').forEach(input => input.addEventListener('change', () => updateProductField(input.dataset.id, 'name', input.value)));
@@ -228,10 +203,11 @@ async function updateProductField(id, field, value) {
 }
 
 async function deleteProduct(id) {
-    if (confirm('确定删除此产品吗？')) {
+    showConfirm('确认删除', '确定删除此产品吗？', async () => {
         await sb.from('dashboard_products').delete().eq('id', parseInt(id));
         loadDashboardProducts();
-    }
+        showToast('已删除', 'success');
+    });
 }
 
 async function addProduct() {
@@ -240,11 +216,17 @@ async function addProduct() {
     const image_url = document.getElementById('productImageInput').value.trim();
     const video_url = document.getElementById('productVideoInput').value.trim();
     const status = document.getElementById('productStatusSelect').value;
-    if (!name) { alert('请输入产品名称'); return; }
-    if (!image_url) { alert('请填写图片URL或上传图片'); return; }
+    if (!name) {
+        showToast('请输入产品名称', 'error');
+        return;
+    }
+    if (!image_url) {
+        showToast('请填写图片URL或上传图片', 'error');
+        return;
+    }
     const sort_order = dashboardProducts.length;
     await sb.from('dashboard_products').insert([{ name, price, image_url, video_url: video_url || null, status, sort_order }]);
-    alert('添加成功');
+    showToast('添加成功', 'success');
     document.getElementById('productNameInput').value = '';
     document.getElementById('productPriceInput').value = '';
     document.getElementById('productImageInput').value = '';
@@ -259,7 +241,7 @@ async function saveProductsOrder() {
         const id = items[i].getAttribute('data-id');
         if (id) await sb.from('dashboard_products').update({ sort_order: i }).eq('id', parseInt(id));
     }
-    alert('排序已保存');
+    showToast('排序已保存', 'success');
     loadDashboardProducts();
 }
 

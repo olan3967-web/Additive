@@ -1,4 +1,4 @@
-// admin-trial.js - 体验金管理页面
+// admin-trial.js - 体验金管理页面（使用自定义弹窗）
 let trialSearchKeyword = '';
 
 async function loadTrialPage() {
@@ -15,7 +15,7 @@ async function loadTrialPage() {
                 <table class="data-table">
                     <thead><tr><th>UID</th><th>用户名</th><th>当前体验金 (€)</th><th>调整金额 (€)</th><th>操作</th></tr></thead>
                     <tbody id="trialTableBody"></tbody>
-                </table>
+                <tr>
             </div>
         </div>
     `;
@@ -67,18 +67,24 @@ async function loadTrialUsers() {
 }
 
 async function adjustTrialBonus(uid, amount, action) {
-    if (isNaN(amount) || amount <= 0) { alert('请输入有效金额'); return; }
+    if (isNaN(amount) || amount <= 0) {
+        showToast('请输入有效金额', 'error');
+        return;
+    }
     const { data: user } = await sb.from('users').select('trial_bonus_amount, username').eq('uid', uid).single();
     let currentAmount = user.trial_bonus_amount || 0;
     let newAmount;
     if (action === 'add') {
         newAmount = currentAmount + amount;
         await sb.from('deposits').insert([{ uid: uid, username: user.username, amount: amount, type: 'trial_bonus' }]);
-        alert(`成功添加 €${amount} 体验金`);
+        showToast(`成功添加 €${amount} 体验金`, 'success');
     } else {
-        if (currentAmount < amount) { alert('体验金不足'); return; }
+        if (currentAmount < amount) {
+            showToast('体验金不足', 'error');
+            return;
+        }
         newAmount = currentAmount - amount;
-        alert(`成功扣除 €${amount} 体验金`);
+        showToast(`成功扣除 €${amount} 体验金`, 'success');
     }
     await sb.from('users').update({ trial_bonus_amount: newAmount }).eq('uid', uid);
     loadTrialUsers();

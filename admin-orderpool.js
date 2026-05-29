@@ -1,4 +1,4 @@
-// admin-orderpool.js - 订单池页面
+// admin-orderpool.js - 订单池页面（使用自定义弹窗）
 let poolSearchKeyword = '';
 let allOrders = [];
 let currentPage = 1;
@@ -105,12 +105,12 @@ function renderOrderPoolPage() {
             }
         }));
         document.querySelectorAll('.delete-order').forEach(btn => btn.addEventListener('click', async () => {
-            if (confirm('删除订单？')) {
+            showConfirm('确认删除', '删除此订单？', async () => {
                 await sb.from('orders_pool').delete().eq('id', parseInt(btn.dataset.id));
                 loadAllOrdersFromDB();
                 if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-                alert('已删除');
-            }
+                showToast('已删除', 'success');
+            });
         }));
     }
     const paginationDiv = document.getElementById('pagination');
@@ -147,19 +147,24 @@ async function saveOrder() {
     const price = parseFloat(document.getElementById('price').value);
     const imageUrl = document.getElementById('imageUrl').value.trim();
     const status = document.getElementById('status').value;
-    if (!orderCode || !hotelName || isNaN(price) || price <= 0) { alert('请填写完整'); return; }
+    if (!orderCode || !hotelName || isNaN(price) || price <= 0) {
+        showToast('请填写完整的订单信息', 'error');
+        return;
+    }
     try {
         if (id) {
             await sb.from('orders_pool').update({ order_code: orderCode, accommodation_name: hotelName, price: price, image_url: imageUrl, status: status }).eq('id', parseInt(id));
-            alert('订单已更新');
+            showToast('订单已更新', 'success');
         } else {
             await sb.from('orders_pool').insert([{ order_code: orderCode, accommodation_name: hotelName, price: price, image_url: imageUrl, status: status }]);
-            alert('订单已添加');
+            showToast('订单已添加', 'success');
         }
         document.getElementById('orderModal').classList.remove('active');
         loadAllOrdersFromDB();
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-    } catch (e) { alert('保存失败'); }
+    } catch (e) {
+        showToast('保存失败: ' + e.message, 'error');
+    }
 }
 
 window.loadOrderPoolPage = loadOrderPoolPage;

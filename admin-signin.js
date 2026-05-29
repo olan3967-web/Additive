@@ -1,4 +1,4 @@
-// admin-signin.js - 签到奖励页面
+// admin-signin.js - 签到奖励页面（使用自定义弹窗）
 async function loadSigninPage() {
     const container = document.getElementById('page_signin');
     if (!container) return;
@@ -33,25 +33,32 @@ async function loadSigninRewards() {
 async function saveReward(day) {
     const amt = parseFloat(document.getElementById(`reward_${day}`).value);
     await sb.from('signin_rewards').update({ amount: amt }).eq('day', day);
-    alert(`Day ${day} 奖励金额已更新`);
+    showToast(`Day ${day} 奖励金额已更新`, 'success');
     loadSigninRewards();
 }
 
 async function deleteSigninDay(day) {
-    if (confirm(`确定删除 Day ${day} 的奖励设置吗？`)) {
+    showConfirm('确认删除', `确定删除 Day ${day} 的奖励设置吗？`, async () => {
         await sb.from('signin_rewards').delete().eq('day', day);
+        showToast('已删除', 'success');
         loadSigninRewards();
-    }
+    });
 }
 
 async function addSigninDay() {
-    const newDay = prompt('请输入新的签到日数 (例如: 7)');
-    if (!newDay || isNaN(newDay)) return;
-    const amount = prompt(`请输入 Day ${newDay} 的奖励金额 (€)`);
-    if (!amount || isNaN(amount)) return;
-    await sb.from('signin_rewards').insert([{ day: parseInt(newDay), amount: parseFloat(amount) }]);
-    alert('添加成功');
-    loadSigninRewards();
+    showPrompt('添加签到日', '请输入新的签到日数 (例如: 7)', async (newDay) => {
+        if (!newDay || isNaN(newDay)) return;
+        showPrompt('设置奖励金额', `请输入 Day ${newDay} 的奖励金额 (€)`, async (amount) => {
+            if (!amount || isNaN(amount)) return;
+            const { error } = await sb.from('signin_rewards').insert([{ day: parseInt(newDay), amount: parseFloat(amount) }]);
+            if (error) {
+                showToast('添加失败: ' + error.message, 'error');
+            } else {
+                showToast('添加成功', 'success');
+                loadSigninRewards();
+            }
+        });
+    });
 }
 
 window.loadSigninPage = loadSigninPage;

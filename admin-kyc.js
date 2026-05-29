@@ -1,4 +1,4 @@
-// admin-kyc.js - 修复版
+// admin-kyc.js - 完整版（使用自定义弹窗）
 let activeTab = 'pending';
 
 async function loadKycPage() {
@@ -56,6 +56,15 @@ function switchTab(tab) {
     document.getElementById('kycVerifiedContainer').style.display = tab === 'verified' ? 'block' : 'none';
 }
 
+async function getUsername(uid) {
+    try {
+        const { data } = await sb.from('users').select('username').eq('uid', uid).single();
+        return data?.username || uid;
+    } catch (e) {
+        return uid;
+    }
+}
+
 async function loadKycPending() {
     const container = document.getElementById('kycPendingContainer');
     if (!container) return;
@@ -68,6 +77,13 @@ async function loadKycPending() {
         return;
     }
     
+    const userMap = {};
+    for (const item of kycList) {
+        if (!userMap[item.uid]) {
+            userMap[item.uid] = await getUsername(item.uid);
+        }
+    }
+    
     const userGroups = {};
     for (const item of kycList) {
         if (!userGroups[item.uid]) userGroups[item.uid] = [];
@@ -76,7 +92,7 @@ async function loadKycPending() {
     
     container.innerHTML = '';
     for (const [uid, items] of Object.entries(userGroups)) {
-        const username = items[0]?.username || uid;
+        const username = userMap[uid] || uid;
         const nationalIdFront = items.find(i => i.document_type === 'national_id_front');
         const nationalIdBack = items.find(i => i.document_type === 'national_id_back');
         const otherDocs = items.filter(i => i.document_type !== 'national_id_front' && i.document_type !== 'national_id_back');
@@ -88,20 +104,10 @@ async function loadKycPending() {
         if (nationalIdFront || nationalIdBack) {
             imagesHtml += `<div class="kyc-images">`;
             if (nationalIdFront) {
-                imagesHtml += `
-                    <div class="kyc-image-box">
-                        <img src="${nationalIdFront.image_url}" onclick="window.open('${nationalIdFront.image_url}','_blank')">
-                        <div class="kyc-image-label">身份证正面</div>
-                    </div>
-                `;
+                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdFront.image_url}" onclick="window.open('${nationalIdFront.image_url}','_blank')"><div class="kyc-image-label">身份证正面</div></div>`;
             }
             if (nationalIdBack) {
-                imagesHtml += `
-                    <div class="kyc-image-box">
-                        <img src="${nationalIdBack.image_url}" onclick="window.open('${nationalIdBack.image_url}','_blank')">
-                        <div class="kyc-image-label">身份证背面</div>
-                    </div>
-                `;
+                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdBack.image_url}" onclick="window.open('${nationalIdBack.image_url}','_blank')"><div class="kyc-image-label">身份证背面</div></div>`;
             }
             imagesHtml += `</div>`;
         }
@@ -136,14 +142,14 @@ async function loadKycPending() {
         loadKycPending();
         loadKycVerified();
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        alert(`用户 ${uid} 的KYC已批准`);
+        showToast(`用户 ${uid} 的KYC已批准`, 'success');
     }));
     
     document.querySelectorAll('.reject-kyc').forEach(btn => btn.addEventListener('click', async () => {
         const uid = btn.dataset.uid;
         await sb.from('kyc_verifications').update({ status: 'rejected' }).eq('uid', uid);
         loadKycPending();
-        alert(`已拒绝用户 ${uid} 的KYC申请`);
+        showToast(`已拒绝用户 ${uid} 的KYC申请`, 'info');
     }));
 }
 
@@ -159,6 +165,13 @@ async function loadKycVerified() {
         return;
     }
     
+    const userMap = {};
+    for (const item of kycList) {
+        if (!userMap[item.uid]) {
+            userMap[item.uid] = await getUsername(item.uid);
+        }
+    }
+    
     const userGroups = {};
     for (const item of kycList) {
         if (!userGroups[item.uid]) userGroups[item.uid] = [];
@@ -167,7 +180,7 @@ async function loadKycVerified() {
     
     container.innerHTML = '';
     for (const [uid, items] of Object.entries(userGroups)) {
-        const username = items[0]?.username || uid;
+        const username = userMap[uid] || uid;
         const nationalIdFront = items.find(i => i.document_type === 'national_id_front');
         const nationalIdBack = items.find(i => i.document_type === 'national_id_back');
         const otherDocs = items.filter(i => i.document_type !== 'national_id_front' && i.document_type !== 'national_id_back');
@@ -179,20 +192,10 @@ async function loadKycVerified() {
         if (nationalIdFront || nationalIdBack) {
             imagesHtml += `<div class="kyc-images">`;
             if (nationalIdFront) {
-                imagesHtml += `
-                    <div class="kyc-image-box">
-                        <img src="${nationalIdFront.image_url}" onclick="window.open('${nationalIdFront.image_url}','_blank')">
-                        <div class="kyc-image-label">身份证正面</div>
-                    </div>
-                `;
+                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdFront.image_url}" onclick="window.open('${nationalIdFront.image_url}','_blank')"><div class="kyc-image-label">身份证正面</div></div>`;
             }
             if (nationalIdBack) {
-                imagesHtml += `
-                    <div class="kyc-image-box">
-                        <img src="${nationalIdBack.image_url}" onclick="window.open('${nationalIdBack.image_url}','_blank')">
-                        <div class="kyc-image-label">身份证背面</div>
-                    </div>
-                `;
+                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdBack.image_url}" onclick="window.open('${nationalIdBack.image_url}','_blank')"><div class="kyc-image-label">身份证背面</div></div>`;
             }
             imagesHtml += `</div>`;
         }
@@ -218,14 +221,14 @@ async function loadKycVerified() {
     
     document.querySelectorAll('.delete-kyc').forEach(btn => btn.addEventListener('click', async () => {
         const uid = btn.dataset.uid;
-        if (confirm(`确定删除用户 ${uid} 的所有KYC记录吗？此操作不可恢复。`)) {
+        showConfirm('确认删除', `确定删除用户 ${uid} 的所有KYC记录吗？此操作不可恢复。`, async () => {
             await sb.from('kyc_verifications').delete().eq('uid', uid);
             await sb.from('user_kyc_status').upsert({ uid: uid, is_verified: false });
             loadKycVerified();
             loadKycPending();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-            alert(`已删除用户 ${uid} 的KYC记录`);
-        }
+            showToast(`已删除用户 ${uid} 的KYC记录`, 'success');
+        });
     }));
 }
 

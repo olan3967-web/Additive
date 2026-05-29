@@ -1,4 +1,4 @@
-// admin-vip.js - VIP配置页面
+// admin-vip.js - VIP配置页面（使用自定义弹窗）
 async function loadVipPage() {
     const container = document.getElementById('page_vip');
     if (!container) return;
@@ -34,7 +34,7 @@ async function saveVip(level) {
     const rate = parseFloat(document.getElementById(`rate_${level}`).value);
     const deposit = parseFloat(document.getElementById(`deposit_${level}`).value) || 0;
     await sb.from('vip_settings').update({ orders_limit: limit, commission_rate: rate, required_deposit: deposit }).eq('level', level);
-    alert('VIP参数已更新');
+    showToast('VIP参数已更新', 'success');
     loadVipSettings();
 }
 

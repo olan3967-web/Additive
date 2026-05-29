@@ -1,4 +1,4 @@
-// admin-setorders.js - 设置订单页面
+// admin-setorders.js - 设置订单页面（使用自定义弹窗）
 let setordersSearchKeyword = '';
 let selectedAdvancedOrdersList = [];
 let currentSetUser = null;
@@ -18,10 +18,7 @@ async function loadSetordersPage() {
                     <button id="setordersSearchBtn" class="btn-primary"><i class="fas fa-search"></i> 搜索用户</button>
                 </div>
                 <div id="setordersUserList" class="table-container" style="max-height: 300px;">
-                    <table class="data-table">
-                        <thead><tr><th>UID</th><th>用户名</th><th>操作</th></tr></thead>
-                        <tbody id="setordersUserTableBody"></tbody>
-                    </table>
+                    <table class="data-table"><thead><tr><th>UID</th><th>用户名</th><th>操作</th></tr></thead><tbody id="setordersUserTableBody"></tbody></table>
                 </div>
             </div>
             <div id="setordersMain" style="display: none;">
@@ -31,79 +28,32 @@ async function loadSetordersPage() {
                     <div id="triggerOrdersContainer" style="max-height: 300px; overflow-y: auto;"></div>
                 </div>
                 <div class="history-tabs" style="display: flex; gap: 8px; margin-bottom: 20px;">
-                    <button class="tab-btn active" data-setorder-tab="advanced" style="background:rgba(74,124,255,0.1); border:none; padding:8px 20px; border-radius:30px;">高级订单</button>
-                    <button class="tab-btn" data-setorder-tab="card" style="background:rgba(74,124,255,0.05); border:none; padding:8px 20px; border-radius:30px;">卡牌奖励</button>
-                    <button class="tab-btn" data-setorder-tab="cardorder" style="background:rgba(74,124,255,0.05); border:none; padding:8px 20px; border-radius:30px;">卡牌订单</button>
+                    <button class="tab-btn active" data-setorder-tab="advanced">高级订单</button>
+                    <button class="tab-btn" data-setorder-tab="card">卡牌奖励</button>
+                    <button class="tab-btn" data-setorder-tab="cardorder">卡牌订单</button>
                 </div>
-                <div id="advancedPanel" class="setorders-container" style="display: flex; gap: 24px; flex-wrap: wrap;">
-                    <div class="setorders-left" style="flex:1; min-width:280px;">
-                        <div class="input-group" style="margin-bottom:16px;"><label>设置单数</label><input type="number" id="advancedOrderCount" value="1" class="search-input"></div>
-                        <div class="input-group" style="margin-bottom:16px;"><label>设置价格 (€)</label><input type="number" id="advancedTargetPrice" step="0.01" class="search-input"></div>
-                        <button id="advancedSearchOrderBtn" class="btn-primary"><i class="fas fa-search"></i> 搜索订单</button>
-                    </div>
-                    <div class="setorders-right" style="flex:2;">
-                        <h4>匹配订单列表</h4>
-                        <div id="advancedOrdersList" style="max-height: 400px; overflow-y: auto;"></div>
-                        <div class="action-buttons" id="advancedActionBtns" style="display: none; margin-top:20px;">
-                            <button id="advancedConfirmBtn" class="success">确认触发</button>
-                            <button id="advancedCancelBtn" class="danger">取消</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="cardPanel" class="setorders-container" style="display: none; gap: 24px; flex-wrap: wrap;">
-                    <div class="setorders-left" style="flex:1;">
-                        <div class="input-group"><label>触发单数 (第几单触发)</label><input type="number" id="cardOrderCount" placeholder="例如: 23" class="search-input"></div>
-                        <div class="input-group"><label>奖励金额 (€)</label><input type="number" id="cardTargetPrice" step="0.01" placeholder="例如: 15" class="search-input"></div>
-                        <button id="addCardRewardBtn" class="success" style="width:100%;">确认添加卡牌奖励</button>
-                    </div>
-                    <div class="setorders-right" style="flex:2;">
-                        <h4>说明</h4>
-                        <div style="background:#0f172a; border-radius:12px; padding:15px; color:#aaa; font-size:13px;">
-                            <i class="fas fa-info-circle"></i> 用户做到指定单数时，会弹出卡牌弹窗，翻开任意卡牌获得设置的奖励金额
-                        </div>
-                    </div>
-                </div>
-                <div id="cardorderPanel" class="setorders-container" style="display: none; gap: 24px; flex-wrap: wrap;">
-                    <div class="setorders-left" style="flex:1;">
-                        <div class="input-group"><label>触发单数 (第几单触发)</label><input type="number" id="cardorderOrderCount" placeholder="例如: 23" class="search-input"></div>
-                        <div class="input-group"><label>订单价格 (€)</label><input type="number" id="cardorderTargetPrice" step="0.01" placeholder="例如: 100" class="search-input"></div>
-                        <button id="addCardOrderBtn" class="success" style="width:100%;">确认添加卡牌订单</button>
-                    </div>
-                    <div class="setorders-right" style="flex:2;">
-                        <h4>说明</h4>
-                        <div style="background:#0f172a; border-radius:12px; padding:15px; color:#aaa; font-size:13px;">
-                            <i class="fas fa-info-circle"></i> 用户做到指定单数时，会弹出卡牌弹窗，翻开任意卡牌获得该订单（15%佣金）
-                        </div>
-                    </div>
-                </div>
+                <div id="advancedPanel"><div class="setorders-left"><input type="number" id="advancedOrderCount" value="1"><input type="number" id="advancedTargetPrice" step="0.01"><button id="advancedSearchOrderBtn" class="btn-primary">搜索订单</button></div><div id="advancedOrdersList"></div><div id="advancedActionBtns" style="display:none;"><button id="advancedConfirmBtn" class="success">确认触发</button><button id="advancedCancelBtn" class="danger">取消</button></div></div>
+                <div id="cardPanel" style="display:none;"><div><input type="number" id="cardOrderCount" placeholder="触发单数"><input type="number" id="cardTargetPrice" step="0.01" placeholder="奖励金额"><button id="addCardRewardBtn" class="success">确认添加卡牌奖励</button></div></div>
+                <div id="cardorderPanel" style="display:none;"><div><input type="number" id="cardorderOrderCount" placeholder="触发单数"><input type="number" id="cardorderTargetPrice" step="0.01" placeholder="订单价格"><button id="addCardOrderBtn" class="success">确认添加卡牌订单</button></div></div>
             </div>
         </div>
     `;
     await loadSetordersUserList();
-    
     document.getElementById('setordersSearchBtn')?.addEventListener('click', () => { setordersSearchKeyword = document.getElementById('setordersSearchUid').value.trim(); loadSetordersUserList(); });
-    document.getElementById('backToUserList')?.addEventListener('click', () => {
-        document.getElementById('setordersUserSearch').style.display = 'block';
-        document.getElementById('setordersMain').style.display = 'none';
-        currentSetUser = null;
-    });
+    document.getElementById('backToUserList')?.addEventListener('click', () => { document.getElementById('setordersUserSearch').style.display = 'block'; document.getElementById('setordersMain').style.display = 'none'; currentSetUser = null; });
     document.querySelectorAll('[data-setorder-tab]').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('[data-setorder-tab]').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             const tab = btn.dataset.setorderTab;
             document.getElementById('advancedPanel').style.display = tab === 'advanced' ? 'flex' : 'none';
-            document.getElementById('cardPanel').style.display = tab === 'card' ? 'flex' : 'none';
-            document.getElementById('cardorderPanel').style.display = tab === 'cardorder' ? 'flex' : 'none';
+            document.getElementById('cardPanel').style.display = tab === 'card' ? 'block' : 'none';
+            document.getElementById('cardorderPanel').style.display = tab === 'cardorder' ? 'block' : 'none';
         });
     });
     document.getElementById('advancedSearchOrderBtn')?.addEventListener('click', advancedSearchOrder);
     document.getElementById('advancedConfirmBtn')?.addEventListener('click', confirmAdvancedOrder);
-    document.getElementById('advancedCancelBtn')?.addEventListener('click', () => {
-        selectedAdvancedOrdersList = [];
-        document.getElementById('advancedOrdersList').innerHTML = '';
-        document.getElementById('advancedActionBtns').style.display = 'none';
-    });
+    document.getElementById('advancedCancelBtn')?.addEventListener('click', () => { selectedAdvancedOrdersList = []; document.getElementById('advancedOrdersList').innerHTML = ''; document.getElementById('advancedActionBtns').style.display = 'none'; });
     document.getElementById('addCardRewardBtn')?.addEventListener('click', addCardReward);
     document.getElementById('addCardOrderBtn')?.addEventListener('click', addCardOrder);
 }
@@ -131,14 +81,6 @@ async function selectUserForSetOrder(uid, username) {
     document.getElementById('selectedUsernameDisplay').innerText = username;
     document.getElementById('setordersUserSearch').style.display = 'none';
     document.getElementById('setordersMain').style.display = 'block';
-    selectedAdvancedOrdersList = [];
-    document.getElementById('advancedOrdersList').innerHTML = '';
-    document.getElementById('advancedActionBtns').style.display = 'none';
-    document.getElementById('advancedTargetPrice').value = '';
-    document.getElementById('cardOrderCount').value = '';
-    document.getElementById('cardTargetPrice').value = '';
-    document.getElementById('cardorderOrderCount').value = '';
-    document.getElementById('cardorderTargetPrice').value = '';
     await loadUserTriggerOrders(uid);
 }
 
@@ -168,21 +110,24 @@ async function loadUserTriggerOrders(uid) {
             extraInfo = `订单价格: €${parseFloat(order.target_price || 0).toFixed(2)} | 佣金: 15%`;
         }
         const statusText = order.status === 'deducted' ? '已扣款，等待充值' : '等待触发';
-        orderDiv.innerHTML = `<div style="display: flex; justify-content: space-between; align-items: center;"><div><strong style="color:#4a7cff;">${orderTypeText}</strong> <span class="badge">第 ${order.trigger_order_number} 单触发</span> <span style="background:#ffaa33; padding:2px 8px; border-radius:12px; font-size:10px;">${statusText}</span><div style="font-size: 12px; margin-top: 5px;">${extraInfo}</div><div style="font-size: 11px; color: #aaa;">创建时间: ${new Date(order.created_at).toLocaleString()}</div></div><button class="delete-trigger-btn" data-id="${order.id}" style="background:#7a2f2f; padding:5px 12px; font-size:12px; border-radius:8px;"><i class="fas fa-trash"></i> 删除</button></div>`;
+        orderDiv.innerHTML = `<div style="display: flex; justify-content: space-between;"><div><strong style="color:#4a7cff;">${orderTypeText}</strong> <span class="badge">第 ${order.trigger_order_number} 单触发</span> <span style="background:#ffaa33; padding:2px 8px; border-radius:12px; font-size:10px;">${statusText}</span><div style="font-size: 12px; margin-top: 5px;">${extraInfo}</div><div style="font-size: 11px; color: #aaa;">创建时间: ${new Date(order.created_at).toLocaleString()}</div></div><button class="delete-trigger-btn" data-id="${order.id}" style="background:#7a2f2f; padding:5px 12px; border-radius:8px;"><i class="fas fa-trash"></i> 删除</button></div>`;
         container.appendChild(orderDiv);
     }
     document.querySelectorAll('.delete-trigger-btn').forEach(btn => btn.addEventListener('click', async () => {
-        if (confirm('删除这个触发订单？')) {
+        showConfirm('确认删除', '删除这个触发订单？', async () => {
             await sb.from('user_trigger_orders').delete().eq('id', parseInt(btn.dataset.id));
             loadUserTriggerOrders(currentSetUser.uid);
-            alert('删除成功');
-        }
+            showToast('删除成功', 'success');
+        });
     }));
 }
 
 async function advancedSearchOrder() {
     const targetPrice = parseFloat(document.getElementById('advancedTargetPrice').value);
-    if (isNaN(targetPrice)) { alert('请输入有效价格'); return; }
+    if (isNaN(targetPrice)) {
+        showToast('请输入有效价格', 'error');
+        return;
+    }
     const priceNum = Math.floor(targetPrice);
     const digitCount = priceNum.toString().length;
     let minPrice = priceNum, maxPrice;
@@ -194,7 +139,10 @@ async function advancedSearchOrder() {
     const container = document.getElementById('advancedOrdersList');
     container.innerHTML = '';
     selectedAdvancedOrdersList = [];
-    if (!matchedOrders || matchedOrders.length === 0) { container.innerHTML = '<div style="text-align:center; padding:20px;">未找到匹配订单</div>'; return; }
+    if (!matchedOrders || matchedOrders.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px;">未找到匹配订单</div>';
+        return;
+    }
     for (let order of matchedOrders) {
         const div = document.createElement('div');
         div.className = 'order-item-card';
@@ -212,15 +160,21 @@ async function advancedSearchOrder() {
 }
 
 async function confirmAdvancedOrder() {
-    if (!currentSetUser) { alert('请先选择用户'); return; }
+    if (!currentSetUser) {
+        showToast('请先选择用户', 'error');
+        return;
+    }
     const orderCount = parseInt(document.getElementById('advancedOrderCount').value) || 1;
-    if (selectedAdvancedOrdersList.length === 0) { alert('请至少选择一个订单'); return; }
+    if (selectedAdvancedOrdersList.length === 0) {
+        showToast('请至少选择一个订单', 'error');
+        return;
+    }
     for (let order of selectedAdvancedOrdersList) {
         const matchedPrice = order.price;
         const commissionAmount = matchedPrice * 0.05;
         await sb.from('user_trigger_orders').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_type: 'advanced', trigger_order_number: orderCount, target_price: parseFloat(document.getElementById('advancedTargetPrice').value), matched_order_id: order.id, matched_price: matchedPrice, commission_rate: 5.0, commission_amount: commissionAmount, status: 'pending' }]);
     }
-    alert(`成功为 ${currentSetUser.username} 设置高级订单`);
+    showToast(`成功为 ${currentSetUser.username} 设置高级订单`, 'success');
     selectedAdvancedOrdersList = [];
     document.getElementById('advancedOrdersList').innerHTML = '';
     document.getElementById('advancedActionBtns').style.display = 'none';
@@ -228,25 +182,37 @@ async function confirmAdvancedOrder() {
 }
 
 async function addCardReward() {
-    if (!currentSetUser) { alert('请先选择用户'); return; }
+    if (!currentSetUser) {
+        showToast('请先选择用户', 'error');
+        return;
+    }
     const orderCount = parseInt(document.getElementById('cardOrderCount').value) || 0;
     const rewardAmount = parseFloat(document.getElementById('cardTargetPrice').value) || 0;
-    if (orderCount <= 0 || rewardAmount <= 0) { alert('请输入有效数值'); return; }
+    if (orderCount <= 0 || rewardAmount <= 0) {
+        showToast('请输入有效数值', 'error');
+        return;
+    }
     await sb.from('user_trigger_orders').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_type: 'card_reward', trigger_order_number: orderCount, target_price: rewardAmount, status: 'pending' }]);
-    alert(`卡牌奖励设置成功：第${orderCount}单触发 €${rewardAmount}`);
+    showToast(`卡牌奖励设置成功：第${orderCount}单触发 €${rewardAmount}`, 'success');
     await loadUserTriggerOrders(currentSetUser.uid);
     document.getElementById('cardOrderCount').value = '';
     document.getElementById('cardTargetPrice').value = '';
 }
 
 async function addCardOrder() {
-    if (!currentSetUser) { alert('请先选择用户'); return; }
+    if (!currentSetUser) {
+        showToast('请先选择用户', 'error');
+        return;
+    }
     const orderCount = parseInt(document.getElementById('cardorderOrderCount').value) || 0;
     const targetPrice = parseFloat(document.getElementById('cardorderTargetPrice').value) || 0;
-    if (orderCount <= 0 || targetPrice <= 0) { alert('请输入有效数值'); return; }
+    if (orderCount <= 0 || targetPrice <= 0) {
+        showToast('请输入有效数值', 'error');
+        return;
+    }
     const commissionAmount = targetPrice * 0.15;
     await sb.from('user_trigger_orders').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_type: 'card_order', trigger_order_number: orderCount, target_price: targetPrice, matched_price: targetPrice, commission_rate: 15.0, commission_amount: commissionAmount, status: 'pending' }]);
-    alert(`卡牌订单设置成功：第${orderCount}单触发 €${targetPrice} (15%佣金)`);
+    showToast(`卡牌订单设置成功：第${orderCount}单触发 €${targetPrice} (15%佣金)`, 'success');
     await loadUserTriggerOrders(currentSetUser.uid);
     document.getElementById('cardorderOrderCount').value = '';
     document.getElementById('cardorderTargetPrice').value = '';

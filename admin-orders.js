@@ -1,4 +1,4 @@
-// admin-orders.js - 订单记录页面
+// admin-orders.js - 订单记录页面（使用自定义弹窗）
 let orderSearchKeyword = '';
 let currentQueryUid = null;
 
@@ -27,7 +27,7 @@ async function loadOrdersPage() {
                 <div class="table-container" style="max-height: 300px;">
                     <table class="data-table">
                         <thead><tr><th>订单号</th><th>酒店名</th><th>价格</th><th>佣金</th><th>日期</th></tr></thead>
-                        <tbody id="ordersDetailTableBody"><tr><td colspan="5" style="text-align:center;">点击查询查看详情</td></tr></tbody>
+                        <tbody id="ordersDetailTableBody"><tr><td colspan="5" style="text-align:center;">点击查询查看详情</td></tr>
                     </table>
                 </div>
             </div>
@@ -62,7 +62,7 @@ async function queryUserOrders(uid, username) {
     const tbody = document.getElementById('ordersDetailTableBody');
     if (tbody) {
         if (!orders || orders.length === 0) {
-            tbody.innerHTML = `</tr><td colspan="5" style="text-align:center;">用户 ${username} 暂无订单记录</td></tr>`;
+            tbody.innerHTML = `<td><td colspan="5" style="text-align:center;">用户 ${username} 暂无订单记录</td></tr>`;
             return;
         }
         tbody.innerHTML = '';

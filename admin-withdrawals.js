@@ -1,4 +1,4 @@
-// admin-withdrawals.js - 提现审核页面
+// admin-withdrawals.js - 完整版（使用自定义弹窗）
 async function loadWithdrawalsPage() {
     const container = document.getElementById('page_withdrawals');
     if (!container) return;
@@ -35,18 +35,22 @@ async function loadWithdrawals() {
             row.insertCell(5).innerHTML = `<button class="approve-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;">批准</button><button class="reject-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;">拒绝</button>`;
         }
         document.querySelectorAll('.approve-withdraw').forEach(btn => btn.addEventListener('click', async () => {
-            await sb.from('withdrawals').update({ status: 'approved' }).eq('id', parseInt(btn.dataset.id));
-            loadWithdrawals();
-            if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-            alert('已批准');
+            showConfirm('批准提现', `批准 €${parseFloat(btn.dataset.amt)} 提现？`, async () => {
+                await sb.from('withdrawals').update({ status: 'approved' }).eq('id', parseInt(btn.dataset.id));
+                loadWithdrawals();
+                if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+                showToast('已批准', 'success');
+            });
         }));
         document.querySelectorAll('.reject-withdraw').forEach(btn => btn.addEventListener('click', async () => {
-            const { data: user } = await sb.from('users').select('balance').eq('uid', btn.dataset.uid).single();
-            await sb.from('users').update({ balance: (user.balance || 0) + parseFloat(btn.dataset.amt) }).eq('uid', btn.dataset.uid);
-            await sb.from('withdrawals').update({ status: 'rejected' }).eq('id', parseInt(btn.dataset.id));
-            loadWithdrawals();
-            if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-            alert('已拒绝，金额已退回');
+            showConfirm('拒绝提现', '拒绝该提现？金额将退回用户账户', async () => {
+                const { data: user } = await sb.from('users').select('balance').eq('uid', btn.dataset.uid).single();
+                await sb.from('users').update({ balance: (user.balance || 0) + parseFloat(btn.dataset.amt) }).eq('uid', btn.dataset.uid);
+                await sb.from('withdrawals').update({ status: 'rejected' }).eq('id', parseInt(btn.dataset.id));
+                loadWithdrawals();
+                if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+                showToast('已拒绝，金额已退回', 'success');
+            });
         }));
     }
 }
