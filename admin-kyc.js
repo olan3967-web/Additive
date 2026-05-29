@@ -1,5 +1,5 @@
-// admin-kyc.js - KYC审核页面（优化版）
-let activeTab = 'pending'; // 'pending' 或 'verified'
+// admin-kyc.js - 修复版
+let activeTab = 'pending';
 
 async function loadKycPage() {
     const container = document.getElementById('page_kyc');
@@ -19,7 +19,6 @@ async function loadKycPage() {
         </div>
     `;
     
-    // 添加标签页样式
     const style = document.createElement('style');
     style.textContent = `
         .tab-kyc-btn { background: rgba(74,124,255,0.1); border: 1px solid rgba(74,124,255,0.2); border-radius: 30px; padding: 6px 16px; color: #8a9abb; cursor: pointer; transition: all 0.2s; }
@@ -41,7 +40,6 @@ async function loadKycPage() {
     `;
     document.head.appendChild(style);
     
-    // 标签页切换
     document.getElementById('tabPending')?.addEventListener('click', () => switchTab('pending'));
     document.getElementById('tabVerified')?.addEventListener('click', () => switchTab('verified'));
     document.getElementById('refreshKycBtn')?.addEventListener('click', () => { loadKycPending(); loadKycVerified(); });
@@ -63,7 +61,6 @@ async function loadKycPending() {
     if (!container) return;
     container.innerHTML = '<div style="text-align:center; padding:40px;">加载中... <i class="fas fa-spinner fa-spin"></i></div>';
     
-    // 获取所有待审核的KYC记录，按用户分组
     const { data: kycList } = await sb.from('kyc_verifications').select('*').in('status', ['pending', 'rejected']).order('uploaded_at', { ascending: false });
     
     if (!kycList || kycList.length === 0) {
@@ -71,7 +68,6 @@ async function loadKycPending() {
         return;
     }
     
-    // 按用户分组
     const userGroups = {};
     for (const item of kycList) {
         if (!userGroups[item.uid]) userGroups[item.uid] = [];
@@ -88,7 +84,6 @@ async function loadKycPending() {
         const card = document.createElement('div');
         card.className = 'kyc-card';
         
-        // 构建图片HTML
         let imagesHtml = '';
         if (nationalIdFront || nationalIdBack) {
             imagesHtml += `<div class="kyc-images">`;
@@ -111,13 +106,11 @@ async function loadKycPending() {
             imagesHtml += `</div>`;
         }
         
-        // 其他证件
         for (const doc of otherDocs) {
             let docName = doc.document_type === 'passport' ? '护照' : doc.document_type === 'resident_permit' ? '居留证' : doc.document_type;
             imagesHtml += `<div class="kyc-images"><div class="kyc-image-box"><img src="${doc.image_url}" onclick="window.open('${doc.image_url}','_blank')"><div class="kyc-image-label">${docName}</div></div></div>`;
         }
         
-        // 状态显示
         const hasPending = items.some(i => i.status === 'pending');
         const statusHtml = hasPending ? '<span class="kyc-status status-pending">⏳ 待审核</span>' : '<span class="kyc-status status-rejected">❌ 已拒绝</span>';
         
@@ -129,14 +122,13 @@ async function loadKycPending() {
             ${imagesHtml}
             <div class="kyc-time">提交时间: ${new Date(items[0].uploaded_at).toLocaleString()}</div>
             <div style="margin-top: 16px;">
-                <button class="btn-sm success approve-kyc" data-uid="${uid}" data-type="national_id" style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;">✓ 批准</button>
+                <button class="btn-sm success approve-kyc" data-uid="${uid}" style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;">✓ 批准</button>
                 <button class="btn-sm danger reject-kyc" data-uid="${uid}" style="background:#7a2f2f; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;">✗ 拒绝</button>
             </div>
         `;
         container.appendChild(card);
     }
     
-    // 绑定批准/拒绝事件
     document.querySelectorAll('.approve-kyc').forEach(btn => btn.addEventListener('click', async () => {
         const uid = btn.dataset.uid;
         await sb.from('kyc_verifications').update({ status: 'approved' }).eq('uid', uid);
@@ -160,7 +152,6 @@ async function loadKycVerified() {
     if (!container) return;
     container.innerHTML = '<div style="text-align:center; padding:40px;">加载中... <i class="fas fa-spinner fa-spin"></i></div>';
     
-    // 获取所有已审核通过的KYC记录
     const { data: kycList } = await sb.from('kyc_verifications').select('*').eq('status', 'approved').order('uploaded_at', { ascending: false });
     
     if (!kycList || kycList.length === 0) {
@@ -168,7 +159,6 @@ async function loadKycVerified() {
         return;
     }
     
-    // 按用户分组
     const userGroups = {};
     for (const item of kycList) {
         if (!userGroups[item.uid]) userGroups[item.uid] = [];
@@ -185,7 +175,6 @@ async function loadKycVerified() {
         const card = document.createElement('div');
         card.className = 'kyc-card';
         
-        // 构建图片HTML
         let imagesHtml = '';
         if (nationalIdFront || nationalIdBack) {
             imagesHtml += `<div class="kyc-images">`;
@@ -208,7 +197,6 @@ async function loadKycVerified() {
             imagesHtml += `</div>`;
         }
         
-        // 其他证件
         for (const doc of otherDocs) {
             let docName = doc.document_type === 'passport' ? '护照' : doc.document_type === 'resident_permit' ? '居留证' : doc.document_type;
             imagesHtml += `<div class="kyc-images"><div class="kyc-image-box"><img src="${doc.image_url}" onclick="window.open('${doc.image_url}','_blank')"><div class="kyc-image-label">${docName}</div></div></div>`;
@@ -228,7 +216,6 @@ async function loadKycVerified() {
         container.appendChild(card);
     }
     
-    // 绑定删除事件
     document.querySelectorAll('.delete-kyc').forEach(btn => btn.addEventListener('click', async () => {
         const uid = btn.dataset.uid;
         if (confirm(`确定删除用户 ${uid} 的所有KYC记录吗？此操作不可恢复。`)) {
