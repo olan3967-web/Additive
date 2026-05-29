@@ -1,4 +1,4 @@
-// admin-common.js - 完整版（包含自定义弹窗和通知）
+// admin-common.js - 完整版（包含自定义弹窗和通知 + Email页面切换）
 const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -231,96 +231,6 @@ function showPrompt(title, placeholder, callback) {
     });
 }
 
-// ========== 琥珀金风格顶部通知 ==========
-function showNotification(title, message, type) {
-    const existingNotification = document.querySelector('.notification-amber');
-    if (existingNotification) existingNotification.remove();
-    
-    const notification = document.createElement('div');
-    notification.className = 'notification-amber';
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 10000;
-        min-width: 340px;
-        max-width: 420px;
-        padding: 14px 18px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        background: rgba(30, 25, 15, 0.95);
-        backdrop-filter: blur(12px);
-        border-left: 4px solid #ffb84d;
-        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
-        cursor: pointer;
-        animation: slideIn 0.4s ease forwards;
-        font-family: 'Inter', sans-serif;
-    `;
-    
-    const icon = type === 'withdrawal' ? 'fa-money-bill-wave' : 'fa-id-card';
-    const iconColor = '#ffb84d';
-    
-    notification.innerHTML = `
-        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,184,77,0.15); display: flex; align-items: center; justify-content: center;">
-            <i class="fas ${icon}" style="color: ${iconColor}; font-size: 22px;"></i>
-        </div>
-        <div style="flex: 1;">
-            <div style="font-weight: 700; font-size: 14px; color: #ffb84d; margin-bottom: 4px;">${title}</div>
-            <div style="font-size: 12px; color: #d4c8a0; opacity: 0.9;">${message}</div>
-            <div style="font-size: 10px; color: #8a7a5a; margin-top: 4px;">刚刚</div>
-        </div>
-        <div style="cursor: pointer; opacity: 0.5; padding: 4px;" class="notification-close">
-            <i class="fas fa-times" style="color: #d4c8a0;"></i>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // 添加动画样式
-    if (!document.querySelector('#notification-style')) {
-        const style = document.createElement('style');
-        style.id = 'notification-style';
-        style.textContent = `
-            @keyframes slideIn {
-                0% { transform: translateX(calc(100% + 20px)); opacity: 0; }
-                100% { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOut {
-                0% { transform: translateX(0); opacity: 1; }
-                100% { transform: translateX(calc(100% + 20px)); opacity: 0; }
-            }
-            @keyframes toastProgress {
-                0% { width: 100%; }
-                100% { width: 0%; }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.onclick = (e) => {
-        e.stopPropagation();
-        notification.style.animation = 'slideOut 0.3s ease forwards';
-        setTimeout(() => notification.remove(), 300);
-    };
-    
-    notification.onclick = (e) => {
-        if (e.target !== closeBtn && !closeBtn.contains(e.target)) {
-            notification.style.animation = 'slideOut 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
-        }
-    };
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.animation = 'slideOut 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
-        }
-    }, 5000);
-}
-
 // 替换原生 alert
 window.originalAlert = window.alert;
 window.alert = function(message) {
@@ -339,7 +249,7 @@ function showPage(pageId) {
     const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if (activeNav) activeNav.classList.add('active');
     
-    // 每次都重新加载 emailverify 页面，不缓存
+    // emailverify 页面每次都重新加载，不缓存
     if (pageId === 'emailverify' && window.loadEmailVerifyPage) {
         window.loadEmailVerifyPage();
         return;
@@ -377,3 +287,23 @@ function showPage(pageId) {
 
 // 登录检查
 if (localStorage.getItem('admin_logged_in') !== 'true') window.location.href = 'admin-login.html';
+
+// 添加样式
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        0% { transform: translateX(calc(100% + 20px)); opacity: 0; }
+        100% { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        0% { transform: translateX(0); opacity: 1; }
+        100% { transform: translateX(calc(100% + 20px)); opacity: 0; }
+    }
+    @keyframes toastProgress {
+        0% { width: 100%; }
+        100% { width: 0%; }
+    }
+    .trend-up { color: #2ed15a; }
+    .trend-down { color: #ff5a5a; }
+`;
+document.head.appendChild(style);

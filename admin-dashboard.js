@@ -1,4 +1,4 @@
-// admin-dashboard.js - 完整版（琥珀金通知 + 实时订阅）
+// admin-dashboard.js - 完整版（琥珀金通知 + 实时订阅 + Email待发送统计）
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -30,19 +30,24 @@ function debounce(func, wait) {
 
 async function loadQuickCards() {
     try {
-        const [kycRes, withdrawalRes, poolRes] = await Promise.all([
+        const [kycRes, withdrawalRes, poolRes, emailRes] = await Promise.all([
             sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
             sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-            sb.from('orders_pool').select('*', { count: 'exact', head: true })
+            sb.from('orders_pool').select('*', { count: 'exact', head: true }),
+            sb.from('email_verification_requests').select('id', { count: 'exact', head: true }).eq('is_verified', false).is('code', null)
         ]);
+        
         const kycEl = document.getElementById('kycPendingCount');
         const withdrawalEl = document.getElementById('withdrawalPendingCount');
         const poolEl = document.getElementById('orderPoolCount');
+        const emailEl = document.getElementById('emailPendingCount');
+        
         if (kycEl) kycEl.innerText = kycRes.count || 0;
         if (withdrawalEl) withdrawalEl.innerText = withdrawalRes.count || 0;
         if (poolEl) poolEl.innerText = poolRes.count || 0;
+        if (emailEl) emailEl.innerText = emailRes.count || 0;
         
-        console.log(`实时更新: KYC待审核=${kycRes.count || 0}, 提现待处理=${withdrawalRes.count || 0}`);
+        console.log(`实时更新: KYC待审核=${kycRes.count || 0}, 提现待处理=${withdrawalRes.count || 0}, 待发送Email=${emailRes.count || 0}`);
     } catch (e) { console.error('加载快捷卡片失败:', e); }
 }
 
@@ -170,15 +175,17 @@ async function loadActivityTimeline(force = false) {
         return;
     }
     try {
-        const [kycRes, withdrawalRes, userRes] = await Promise.all([
+        const [kycRes, withdrawalRes, userRes, emailRes] = await Promise.all([
             sb.from('kyc_verifications').select('*').eq('status', 'pending').order('uploaded_at', { ascending: false }).limit(10),
             sb.from('withdrawals').select('*').order('request_date', { ascending: false }).limit(10),
-            sb.from('users').select('*').order('created_at', { ascending: false }).limit(10)
+            sb.from('users').select('*').order('created_at', { ascending: false }).limit(10),
+            sb.from('email_verification_requests').select('*').eq('is_verified', false).is('code', null).order('requested_at', { ascending: false }).limit(10)
         ]);
         
         const kycList = kycRes.data || [];
         const withdrawalList = withdrawalRes.data || [];
         const userList = userRes.data || [];
+        const emailList = emailRes.data || [];
         
         const kycWithNames = [];
         for (const k of kycList) {
@@ -193,6 +200,8 @@ async function loadActivityTimeline(force = false) {
         kycWithNames.forEach(k => activities.push({ type: 'kyc', title: 'KYC申请', user: k.username, time: k.uploaded_at, icon: 'fas fa-id-card', color: '#ffb84d' }));
         withdrawalList.forEach(w => activities.push({ type: 'withdrawal', title: '提现申请', user: w.username, amount: `€${w.amount}`, time: w.request_date, icon: 'fas fa-money-bill-wave', color: '#4a7cff' }));
         userList.forEach(u => activities.push({ type: 'user', title: '新用户注册', user: u.username, time: u.created_at, icon: 'fas fa-user-plus', color: '#2ed15a' }));
+        emailList.forEach(e => activities.push({ type: 'email', title: '邮箱验证请求', user: e.email, time: e.requested_at, icon: 'fas fa-envelope', color: '#ffb84d' }));
+        
         activities.sort((a, b) => new Date(b.time) - new Date(a.time));
         
         cachedData.activity = activities;
@@ -363,6 +372,17 @@ function showAmberNotification(title, message, type) {
     const existingNotification = document.querySelector('.notification-amber');
     if (existingNotification) existingNotification.remove();
     
+    let icon = 'fa-id-card';
+    let iconColor = '#ffb84d';
+    
+    if (type === 'withdrawal') {
+        icon = 'fa-money-bill-wave';
+    } else if (type === 'kyc') {
+        icon = 'fa-id-card';
+    } else if (type === 'email') {
+        icon = 'fa-envelope';
+    }
+    
     const notification = document.createElement('div');
     notification.className = 'notification-amber';
     notification.style.cssText = `
@@ -386,11 +406,9 @@ function showAmberNotification(title, message, type) {
         font-family: 'Inter', sans-serif;
     `;
     
-    const icon = type === 'withdrawal' ? 'fa-money-bill-wave' : 'fa-id-card';
-    
     notification.innerHTML = `
         <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,184,77,0.15); display: flex; align-items: center; justify-content: center;">
-            <i class="fas ${icon}" style="color: #ffb84d; font-size: 22px;"></i>
+            <i class="fas ${icon}" style="color: ${iconColor}; font-size: 22px;"></i>
         </div>
         <div style="flex: 1;">
             <div style="font-weight: 700; font-size: 14px; color: #ffb84d; margin-bottom: 4px;">${title}</div>
@@ -478,6 +496,19 @@ function subscribeToRealtime() {
                 );
             }
         )
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
+            (payload) => {
+                console.log('🔔 检测到新邮箱验证请求:', payload.new);
+                refreshDashboard(currentDays, true);
+                showAmberNotification(
+                    '📧 新邮箱验证请求',
+                    `用户 ${payload.new.email} 请求邮箱验证，请设置验证码`,
+                    'email'
+                );
+            }
+        )
         .subscribe((status) => {
             console.log('实时订阅状态:', status);
             if (status === 'SUBSCRIBED') {
@@ -504,9 +535,26 @@ function loadDashboardPage(days = 1) {
             <button class="date-filter-btn" data-days="30">30天</button>
         </div>
         <div class="quick-actions-grid">
-            <div class="quick-card" onclick="showPage('kyc')"><i class="fas fa-id-card"></i><div class="count" id="kycPendingCount">0</div><div class="label">待审核KYC</div></div>
-            <div class="quick-card" onclick="showPage('withdrawals')"><i class="fas fa-money-bill-wave"></i><div class="count" id="withdrawalPendingCount">0</div><div class="label">待处理提现</div></div>
-            <div class="quick-card" onclick="showPage('orderpool')"><i class="fas fa-hotel"></i><div class="count" id="orderPoolCount">0</div><div class="label">订单池总数</div></div>
+            <div class="quick-card" onclick="showPage('kyc')">
+                <i class="fas fa-id-card"></i>
+                <div class="count" id="kycPendingCount">0</div>
+                <div class="label">待审核KYC</div>
+            </div>
+            <div class="quick-card" onclick="showPage('withdrawals')">
+                <i class="fas fa-money-bill-wave"></i>
+                <div class="count" id="withdrawalPendingCount">0</div>
+                <div class="label">待处理提现</div>
+            </div>
+            <div class="quick-card" onclick="showPage('emailverify')">
+                <i class="fas fa-envelope"></i>
+                <div class="count" id="emailPendingCount">0</div>
+                <div class="label">待发送Email验证</div>
+            </div>
+            <div class="quick-card" onclick="showPage('orderpool')">
+                <i class="fas fa-hotel"></i>
+                <div class="count" id="orderPoolCount">0</div>
+                <div class="label">订单池总数</div>
+            </div>
         </div>
         <div class="stats-grid">
             <div class="stat-card"><i class="fas fa-user-plus"></i><div class="stat-number" id="newUsersCount">0</div><div class="stat-label">今日新增用户</div><div class="stat-trend" id="newUsersTrend"></div></div>
