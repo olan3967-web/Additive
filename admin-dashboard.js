@@ -1,10 +1,10 @@
-// admin-dashboard.js - 完整修复版
+// admin-dashboard.js - 完整修复版（无关联查询错误）
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
 let pulseInterval = null;
 let dashboardRefreshInterval = null;
-let dashboardLoaded = false;  // 防止重复加载
+let dashboardLoaded = false;
 let cachedData = {
     stats: null,
     chart: null,
@@ -155,16 +155,33 @@ async function loadActivityTimeline(force = false) {
         return;
     }
     try {
+        // 分开查询，不使用关联（避免400错误）
         const [kycRes, withdrawalRes, userRes] = await Promise.all([
-            sb.from('kyc_verifications').select('*, users(username)').eq('status', 'pending').order('uploaded_at', { ascending: false }).limit(10),
+            sb.from('kyc_verifications').select('*').eq('status', 'pending').order('uploaded_at', { ascending: false }).limit(10),
             sb.from('withdrawals').select('*').order('request_date', { ascending: false }).limit(10),
             sb.from('users').select('*').order('created_at', { ascending: false }).limit(10)
         ]);
+        
+        const kycList = kycRes.data || [];
+        const withdrawalList = withdrawalRes.data || [];
+        const userList = userRes.data || [];
+        
+        // 获取KYC对应的用户名
+        const kycWithNames = [];
+        for (const k of kycList) {
+            const { data: user } = await sb.from('users').select('username').eq('uid', k.uid).single();
+            kycWithNames.push({
+                ...k,
+                username: user?.username || k.uid
+            });
+        }
+        
         const activities = [];
-        (kycRes.data || []).forEach(k => activities.push({ type: 'kyc', title: 'KYC申请', user: k.users?.username || k.uid, time: k.uploaded_at, icon: 'fas fa-id-card', color: '#ffb84d' }));
-        (withdrawalRes.data || []).forEach(w => activities.push({ type: 'withdrawal', title: '提现申请', user: w.username, amount: `€${w.amount}`, time: w.request_date, icon: 'fas fa-money-bill-wave', color: '#4a7cff' }));
-        (userRes.data || []).forEach(u => activities.push({ type: 'user', title: '新用户注册', user: u.username, time: u.created_at, icon: 'fas fa-user-plus', color: '#2ed15a' }));
+        kycWithNames.forEach(k => activities.push({ type: 'kyc', title: 'KYC申请', user: k.username, time: k.uploaded_at, icon: 'fas fa-id-card', color: '#ffb84d' }));
+        withdrawalList.forEach(w => activities.push({ type: 'withdrawal', title: '提现申请', user: w.username, amount: `€${w.amount}`, time: w.request_date, icon: 'fas fa-money-bill-wave', color: '#4a7cff' }));
+        userList.forEach(u => activities.push({ type: 'user', title: '新用户注册', user: u.username, time: u.created_at, icon: 'fas fa-user-plus', color: '#2ed15a' }));
         activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+        
         cachedData.activity = activities;
         cachedData.lastActivityTime = now;
         renderActivityList(activities);
@@ -280,18 +297,14 @@ function subscribeToRealtime() {
         .subscribe();
 }
 
-// 主加载函数 - 关键修复点
 function loadDashboardPage(days = 1) {
     const container = document.getElementById('page_dashboard');
     if (!container) return;
     
-    // 如果已经加载过，只刷新数据，不重新渲染HTML
     if (dashboardLoaded) {
-        // 如果图表存在，只刷新数据
         if (trendChart && ringChart) {
             refreshDashboard(currentDays, true);
         } else {
-            // 图表不存在，重新初始化
             setTimeout(() => {
                 initTrendChart();
                 initRingChart();
@@ -303,7 +316,6 @@ function loadDashboardPage(days = 1) {
     
     dashboardLoaded = true;
     
-    // 首次加载，渲染完整HTML
     container.innerHTML = `
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 24px;">
             <button class="date-filter-btn active" data-days="1">今日</button>
@@ -348,7 +360,6 @@ function loadDashboardPage(days = 1) {
         </div>
     `;
     
-    // 延迟初始化图表，确保DOM已渲染
     setTimeout(() => {
         initTrendChart();
         initRingChart();
@@ -357,12 +368,10 @@ function loadDashboardPage(days = 1) {
         subscribeToRealtime();
     }, 100);
     
-    // 定时刷新（60秒）
     if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
     dashboardRefreshInterval = setInterval(() => refreshDashboard(currentDays, false), 60000);
 }
 
-// 导出函数
 window.loadDashboardPage = loadDashboardPage;
 window.refreshDashboardData = function(days) {
     refreshDashboard(days || currentDays, true);
