@@ -48,36 +48,50 @@ function getTrendHtml(current, previous) {
     return '<span>→ 0%</span>';
 }
 
-// 记录哪些页面已经加载过
+// admin-common.js - 替换 showPage 函数
 const loadedPages = {};
 
 function showPage(pageId) {
+    // 隐藏所有页面
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const targetPage = document.getElementById('page_' + pageId);
     if (targetPage) targetPage.classList.add('active');
     
+    // 更新导航高亮
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if (activeNav) activeNav.classList.add('active');
     
-    // 只在页面未加载过时加载内容
-    if (!loadedPages[pageId]) {
-        loadedPages[pageId] = true;
-        if (pageId === 'dashboard' && window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        else if (pageId === 'users' && window.loadUsersPage) window.loadUsersPage();
-        else if (pageId === 'kyc' && window.loadKycPage) window.loadKycPage();
-        else if (pageId === 'trial' && window.loadTrialPage) window.loadTrialPage();
-        else if (pageId === 'withdrawals' && window.loadWithdrawalsPage) window.loadWithdrawalsPage();
-        else if (pageId === 'vip' && window.loadVipPage) window.loadVipPage();
-        else if (pageId === 'setorders' && window.loadSetordersPage) window.loadSetordersPage();
-        else if (pageId === 'orders' && window.loadOrdersPage) window.loadOrdersPage();
-        else if (pageId === 'orderpool' && window.loadOrderPoolPage) window.loadOrderPoolPage();
-        else if (pageId === 'animated' && window.loadAnimatedPage) window.loadAnimatedPage();
-        else if (pageId === 'signin' && window.loadSigninPage) window.loadSigninPage();
-        else if (pageId === 'content' && window.loadContentPage) window.loadContentPage();
-    } else if (pageId === 'dashboard' && window.refreshDashboardData) {
-        // 如果已加载，只刷新数据
-        window.refreshDashboardData(currentDays);
+    // 如果已经加载过，不再重新加载（避免图表重复初始化）
+    if (loadedPages[pageId]) return;
+    
+    loadedPages[pageId] = true;
+    
+    // 加载页面内容
+    if (pageId === 'dashboard' && window.loadDashboardPage) {
+        window.loadDashboardPage(currentDays);
+    } else if (pageId === 'users' && window.loadUsersPage) {
+        window.loadUsersPage();
+    } else if (pageId === 'kyc' && window.loadKycPage) {
+        window.loadKycPage();
+    } else if (pageId === 'trial' && window.loadTrialPage) {
+        window.loadTrialPage();
+    } else if (pageId === 'withdrawals' && window.loadWithdrawalsPage) {
+        window.loadWithdrawalsPage();
+    } else if (pageId === 'vip' && window.loadVipPage) {
+        window.loadVipPage();
+    } else if (pageId === 'setorders' && window.loadSetordersPage) {
+        window.loadSetordersPage();
+    } else if (pageId === 'orders' && window.loadOrdersPage) {
+        window.loadOrdersPage();
+    } else if (pageId === 'orderpool' && window.loadOrderPoolPage) {
+        window.loadOrderPoolPage();
+    } else if (pageId === 'animated' && window.loadAnimatedPage) {
+        window.loadAnimatedPage();
+    } else if (pageId === 'signin' && window.loadSigninPage) {
+        window.loadSigninPage();
+    } else if (pageId === 'content' && window.loadContentPage) {
+        window.loadContentPage();
     }
 }
 

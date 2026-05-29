@@ -1,9 +1,10 @@
-// admin-dashboard.js - 完整优化版
+// admin-dashboard.js - 完整修复版
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
 let pulseInterval = null;
 let dashboardRefreshInterval = null;
+let dashboardLoaded = false;  // 防止重复加载
 let cachedData = {
     stats: null,
     chart: null,
@@ -279,17 +280,30 @@ function subscribeToRealtime() {
         .subscribe();
 }
 
-// 页面加载函数
+// 主加载函数 - 关键修复点
 function loadDashboardPage(days = 1) {
     const container = document.getElementById('page_dashboard');
     if (!container) return;
     
-    // 如果已经有内容，只刷新数据，不重新渲染
-    if (container.innerHTML.trim() !== '' && trendChart && ringChart) {
-        refreshDashboard(currentDays, true);
+    // 如果已经加载过，只刷新数据，不重新渲染HTML
+    if (dashboardLoaded) {
+        // 如果图表存在，只刷新数据
+        if (trendChart && ringChart) {
+            refreshDashboard(currentDays, true);
+        } else {
+            // 图表不存在，重新初始化
+            setTimeout(() => {
+                initTrendChart();
+                initRingChart();
+                refreshDashboard(currentDays, true);
+            }, 100);
+        }
         return;
     }
     
+    dashboardLoaded = true;
+    
+    // 首次加载，渲染完整HTML
     container.innerHTML = `
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 24px;">
             <button class="date-filter-btn active" data-days="1">今日</button>
@@ -334,6 +348,7 @@ function loadDashboardPage(days = 1) {
         </div>
     `;
     
+    // 延迟初始化图表，确保DOM已渲染
     setTimeout(() => {
         initTrendChart();
         initRingChart();
@@ -342,13 +357,13 @@ function loadDashboardPage(days = 1) {
         subscribeToRealtime();
     }, 100);
     
+    // 定时刷新（60秒）
     if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
     dashboardRefreshInterval = setInterval(() => refreshDashboard(currentDays, false), 60000);
 }
 
-// 导出刷新函数供其他模块调用
+// 导出函数
+window.loadDashboardPage = loadDashboardPage;
 window.refreshDashboardData = function(days) {
     refreshDashboard(days || currentDays, true);
 };
-
-window.loadDashboardPage = loadDashboardPage;

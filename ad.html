@@ -114,11 +114,13 @@
 <script src="admin-signin.js"></script>
 <script src="admin-content.js"></script>
 
-<script>
+    <script>
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', () => showPage(item.getAttribute('data-page')));
     });
     document.getElementById('logoutBtn')?.addEventListener('click', () => { localStorage.removeItem('admin_logged_in'); window.location.href = 'admin-login.html'; });
+    
+    // 只调用一次，不要重复
     showPage('dashboard');
 </script>
 </body>
