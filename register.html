@@ -156,7 +156,7 @@
     </div>
 
     <script>
-        // Supabase 配置
+                // Supabase 配置
         const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -171,53 +171,67 @@
             setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 4000);
         }
         
-        // 发送验证码
+        // 发送验证码 - 直接操作数据库
         async function sendVerificationCode() {
             const email = document.getElementById('regEmail').value.trim();
             
             if (!email) {
-                showMessage('Please enter email address');
+                showMessage('请输入邮箱地址');
                 return;
             }
             if (!email.includes('@') || !email.includes('.')) {
-                showMessage('Please enter a valid email address');
+                showMessage('请输入有效的邮箱地址');
                 return;
             }
             
             if (countdown > 0) {
-                showMessage(`Please wait ${countdown} seconds before resending`);
+                showMessage(`请等待 ${countdown} 秒后再试`);
                 return;
             }
             
             const btn = document.getElementById('sendCodeBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中...';
+            
+            // 生成6位验证码
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
             
             try {
-                // 调用 Edge Function 发送邮件
-                const { data, error } = await sb.functions.invoke('send-verification-code', {
-                    body: { email }
-                });
+                // 删除该邮箱旧的未使用验证码
+                await sb
+                    .from('email_verification_codes')
+                    .delete()
+                    .eq('email', email)
+                    .eq('used', false);
                 
-                if (error) {
-                    console.error('Edge Function error:', error);
-                    showMessage('Failed to send code: ' + (error.message || 'Please try again'));
+                // 存入新验证码
+                const { error: insertError } = await sb
+                    .from('email_verification_codes')
+                    .insert({
+                        email: email,
+                        code: code,
+                        used: false,
+                        expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString()
+                    });
+                
+                if (insertError) {
+                    console.error('存储失败:', insertError);
+                    showMessage('发送失败: ' + insertError.message);
                     btn.disabled = false;
                     btn.innerHTML = 'Send Code';
                     return;
                 }
                 
-                if (data?.success) {
-                    showMessage('Verification code sent to your email!', false);
-                    startCountdown(60);
-                } else {
-                    showMessage(data?.error || 'Failed to send code');
-                    btn.disabled = false;
-                    btn.innerHTML = 'Send Code';
-                }
+                // 显示验证码（开发模式 - 在控制台显示）
+                console.log('📧 验证码:', code);
+                console.log('📧 发送到邮箱:', email);
+                showMessage(`验证码已生成，请在控制台查看: ${code}`, false);
+                
+                startCountdown(60);
+                
             } catch (err) {
-                console.error('Send code error:', err);
-                showMessage('Network error, please try again');
+                console.error('错误:', err);
+                showMessage('网络错误，请重试');
                 btn.disabled = false;
                 btn.innerHTML = 'Send Code';
             }
@@ -226,6 +240,7 @@
         function startCountdown(seconds) {
             countdown = seconds;
             const btn = document.getElementById('sendCodeBtn');
+            if (countdownInterval) clearInterval(countdownInterval);
             countdownInterval = setInterval(() => {
                 countdown--;
                 if (countdown <= 0) {
@@ -257,27 +272,32 @@
             const pin = document.getElementById('regPin').value;
             
             // 验证输入
-            if (!email) { showMessage('Please enter email address'); return; }
-            if (!verifyCode || verifyCode.length !== 6) { showMessage('Please enter 6-digit verification code'); return; }
-            if (!phone) { showMessage('Please enter phone number'); return; }
-            if (!username || username.length < 3) { showMessage('Username must be at least 3 characters'); return; }
-            if (!password || password.length < 4) { showMessage('Password must be at least 4 characters'); return; }
-            if (!pin || pin.length !== 4 || isNaN(pin)) { showMessage('Withdrawal PIN must be 4 digits'); return; }
+            if (!email) { showMessage('请输入邮箱地址'); return; }
+            if (!verifyCode || verifyCode.length !== 6) { showMessage('请输入6位验证码'); return; }
+            if (!phone) { showMessage('请输入手机号'); return; }
+            if (!username || username.length < 3) { showMessage('用户名至少3个字符'); return; }
+            if (!password || password.length < 4) { showMessage('密码至少4个字符'); return; }
+            if (!pin || pin.length !== 4 || isNaN(pin)) { showMessage('提现PIN码必须是4位数字'); return; }
             
-            showMessage('Verifying code...', false);
+            showMessage('验证中...', false);
             
             try {
-                // 1. 验证验证码
-                const { data: verifyData, error: verifyError } = await sb.functions.invoke('verify-verification-code', {
-                    body: { email, code: verifyCode }
-                });
+                // 1. 从数据库验证验证码
+                const { data: codeData, error: codeError } = await sb
+                    .from('email_verification_codes')
+                    .select('*')
+                    .eq('email', email)
+                    .eq('code', verifyCode)
+                    .eq('used', false)
+                    .gt('expires_at', new Date().toISOString())
+                    .maybeSingle();
                 
-                if (verifyError || !verifyData?.success) {
-                    showMessage(verifyData?.error || 'Invalid or expired verification code');
+                if (codeError || !codeData) {
+                    showMessage('验证码错误或已过期');
                     return;
                 }
                 
-                showMessage('Creating account...', false);
+                showMessage('创建账号中...', false);
                 
                 // 2. 检查用户名是否已存在
                 const { data: existingUser } = await sb
@@ -287,7 +307,7 @@
                     .maybeSingle();
                 
                 if (existingUser) { 
-                    showMessage('Username already exists'); 
+                    showMessage('用户名已存在'); 
                     return; 
                 }
                 
@@ -299,7 +319,7 @@
                     .maybeSingle();
                 
                 if (existingEmail) { 
-                    showMessage('Email already registered'); 
+                    showMessage('邮箱已被注册'); 
                     return; 
                 }
                 
@@ -339,16 +359,16 @@
                             type: 'referral_bonus',
                             created_at: new Date().toISOString()
                         }]);
-                        showMessage('Invitation code accepted! +€10 for referrer', false);
+                        showMessage('邀请码有效！推荐人获得 €10', false);
                     } else {
-                        showMessage('Invitation code not found, continuing without it', false);
+                        showMessage('邀请码无效，继续注册', false);
                     }
                 }
                 
                 // 6. 生成新用户的邀请码
                 const newInviteCode = generateInviteCode();
                 
-                // 7. 创建新用户（增加 email 字段）
+                // 7. 创建新用户
                 const { error: insertError } = await sb
                     .from('users')
                     .insert([{
@@ -371,14 +391,16 @@
                 
                 if (insertError) {
                     console.error('Insert error:', insertError);
-                    showMessage('Registration failed: ' + insertError.message);
+                    showMessage('注册失败: ' + insertError.message);
                     return;
                 }
                 
                 // 8. 标记验证码为已使用
-                await sb.functions.invoke('mark-code-used', {
-                    body: { email, code: verifyCode }
-                });
+                await sb
+                    .from('email_verification_codes')
+                    .update({ used: true })
+                    .eq('email', email)
+                    .eq('code', verifyCode);
                 
                 // 9. 保存登录状态
                 localStorage.setItem('currentUser', JSON.stringify({
@@ -394,12 +416,12 @@
                     loginTime: Date.now()
                 }));
                 
-                showMessage('Registration successful! Redirecting...', false);
+                showMessage('注册成功！正在跳转...', false);
                 setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
                 
             } catch (err) {
                 console.error('Registration error:', err);
-                showMessage('Error: ' + err.message);
+                showMessage('错误: ' + err.message);
             }
         }
         
