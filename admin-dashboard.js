@@ -1,4 +1,4 @@
-// admin-dashboard.js - 修复版（实时显示待处理提现/KYC + 趋势线图）
+// admin-dashboard.js - 完整版（实时订阅 + 通知）
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -358,24 +358,89 @@ function bindDateFilters() {
     });
 }
 
-function subscribeToRealtime() {
-    // 监听提现和KYC的INSERT事件，实时刷新仪表板
-    const channel = sb.channel('dashboard-realtime')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'kyc_verifications' }, () => {
-            console.log('检测到新KYC申请，刷新仪表板');
-            refreshDashboard(currentDays, true);
-        })
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'withdrawals' }, () => {
-            console.log('检测到新提现申请，刷新仪表板');
-            refreshDashboard(currentDays, true);
-        })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'withdrawals' }, () => {
-            console.log('提现状态更新，刷新仪表板');
-            refreshDashboard(currentDays, true);
-        })
-        .subscribe();
+// 显示通知
+function showNotification(title, message, type) {
+    const notificationList = document.getElementById('notificationList');
+    const notificationDot = document.getElementById('notificationDot');
     
-    console.log('实时订阅已启动');
+    if (notificationList) {
+        if (notificationList.innerHTML.includes('暂无新通知') || notificationList.innerHTML.trim() === '') {
+            notificationList.innerHTML = '';
+        }
+        notificationList.insertAdjacentHTML('afterbegin', `
+            <div class="notification-item unread" onclick="this.classList.remove('unread')">
+                <div style="font-weight: 600; color: ${type === 'withdrawal' ? '#4a7cff' : '#ffb84d'}">${title}</div>
+                <div style="font-size: 12px; color: #8a9abb; margin-top: 4px;">${message}</div>
+                <div style="font-size: 10px; color: #6a7a9a; margin-top: 6px;">刚刚</div>
+            </div>
+        `);
+    }
+    
+    if (notificationDot) notificationDot.style.display = 'block';
+    
+    if (typeof showToast === 'function') {
+        showToast(message, type === 'withdrawal' ? 'info' : 'warning');
+    } else {
+        console.log('通知:', title, message);
+    }
+    
+    // 播放提示音
+    try {
+        const audio = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
+        audio.volume = 0.3;
+        audio.play().catch(e => console.log('音频播放失败:', e));
+    } catch(e) {}
+    
+    // 浏览器通知
+    if (Notification.permission === 'granted') {
+        new Notification(title, { body: message });
+    } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+}
+
+// 实时订阅
+function subscribeToRealtime() {
+    console.log('正在启动实时订阅...');
+    
+    if (window.realtimeChannel) {
+        sb.removeChannel(window.realtimeChannel);
+    }
+    
+    window.realtimeChannel = sb
+        .channel('schema-db-changes')
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'withdrawals' },
+            (payload) => {
+                console.log('🔔 检测到新提现申请:', payload.new);
+                refreshDashboard(currentDays, true);
+                showNotification(
+                    '💰 新提现申请',
+                    `用户 ${payload.new.username} 申请提现 €${payload.new.amount}`,
+                    'withdrawal'
+                );
+            }
+        )
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'kyc_verifications' },
+            (payload) => {
+                console.log('🔔 检测到新KYC申请:', payload.new);
+                refreshDashboard(currentDays, true);
+                showNotification(
+                    '📋 新KYC申请',
+                    `用户 ${payload.new.username || payload.new.uid} 提交了验证申请`,
+                    'kyc'
+                );
+            }
+        )
+        .subscribe((status) => {
+            console.log('实时订阅状态:', status);
+            if (status === 'SUBSCRIBED') {
+                console.log('✅ 实时订阅已成功连接！');
+            }
+        });
 }
 
 function loadDashboardPage(days = 1) {
@@ -442,7 +507,7 @@ function loadDashboardPage(days = 1) {
     }, 200);
     
     if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
-    dashboardRefreshInterval = setInterval(() => refreshDashboard(currentDays, false), 15000); // 改为15秒刷新一次，确保实时性
+    dashboardRefreshInterval = setInterval(() => refreshDashboard(currentDays, false), 15000);
 }
 
 window.loadDashboardPage = loadDashboardPage;
