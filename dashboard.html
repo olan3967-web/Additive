@@ -22,7 +22,6 @@
             justify-content: center;
         }
 
-        /* 手机容器 */
         .phone {
             width: 390px;
             min-height: 100vh;
@@ -31,31 +30,60 @@
             position: relative;
         }
 
-        /* 页面头部 */
+        /* 霓虹边框深色卡片 - 淡光透出效果 */
         .profile-header {
-            background: white;
+            background: #0f0f23;
             padding: 24px 20px;
-            border-bottom: 1px solid #eef2f7;
+            margin: 0;
+            border-bottom: 2px solid #ff7a00;
+            box-shadow: 0 0 20px rgba(255, 122, 0, 0.3);
+            border-radius: 0 0 28px 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 0%, rgba(255, 122, 0, 0.15), transparent 70%);
+            pointer-events: none;
+        }
+
+        .profile-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255, 122, 0, 0.08) 0%, transparent 50%);
+            pointer-events: none;
         }
 
         .profile-row {
             display: flex;
             align-items: center;
             gap: 16px;
+            position: relative;
+            z-index: 1;
         }
 
         .avatar {
             width: 70px;
             height: 70px;
             border-radius: 24px;
-            background: linear-gradient(135deg, #fff7ed, #ffe7cc);
+            background: #ff7a00;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 32px;
             font-weight: 700;
-            color: #ff7a00;
-            box-shadow: 0 8px 24px rgba(255, 122, 0, 0.12);
+            color: white;
+            box-shadow: 0 0 20px rgba(255, 122, 0, 0.4);
         }
 
         .profile-info {
@@ -65,7 +93,7 @@
         .username {
             font-size: 22px;
             font-weight: 700;
-            color: #1f2937;
+            color: #ffb347;
             margin-bottom: 6px;
         }
 
@@ -77,20 +105,30 @@
         }
 
         .badge {
-            background: #fff3e8;
-            color: #ff7a00;
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 999px;
             font-size: 11px;
             font-weight: 600;
         }
 
-        .user-uid {
-            font-size: 12px;
-            color: #94a3b8;
+        .badge-normal {
+            background: rgba(255, 122, 0, 0.2);
+            color: #ffb347;
+            border: 1px solid rgba(255, 122, 0, 0.3);
         }
 
-        /* 统计卡片 */
+        .badge-kyc {
+            background: rgba(0, 255, 255, 0.12);
+            color: #00e5ff;
+            border: 1px solid rgba(0, 255, 255, 0.25);
+        }
+
+        .user-uid {
+            font-size: 12px;
+            color: #7e8aa8;
+        }
+
+        /* 统计卡片 - 带粒子漂浮效果 */
         .stats-card {
             background: white;
             margin: 16px;
@@ -98,21 +136,87 @@
             border-radius: 20px;
             border: 1px solid #eef2f7;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
         }
 
         .stat-label {
             font-size: 13px;
             color: #6b7280;
             margin-bottom: 8px;
+            position: relative;
+            z-index: 2;
         }
 
         .stat-value {
             font-size: 28px;
             font-weight: 800;
             color: #1f2937;
+            position: relative;
+            z-index: 2;
         }
 
-        /* ========== 余额卡片 - 橙到珊瑚 + 流光扫过 ========== */
+        /* 双卡片行卡片 - 带粒子漂浮效果 */
+        .half-card {
+            flex: 1;
+            background: white;
+            border: 1px solid #eef2f7;
+            border-radius: 20px;
+            padding: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .half-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .half-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .half-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #fff7ed, #ffe7cc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #ff7a00;
+        }
+
+        .half-card-title {
+            font-size: 18px;
+            font-weight: 700;
+            position: relative;
+            z-index: 2;
+        }
+
+        .view-link {
+            color: #ff7a00;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .double-card-row {
+            display: flex;
+            gap: 16px;
+            margin: 16px;
+        }
+
+        /* 余额卡片 */
         .wallet-card {
             background: linear-gradient(135deg, #ff7a00, #ff6b6b);
             margin: 16px;
@@ -123,7 +227,6 @@
             overflow: hidden;
         }
 
-        /* 流光扫过效果 */
         .wallet-card::after {
             content: '';
             position: absolute;
@@ -145,20 +248,25 @@
             font-size: 14px;
             font-weight: 500;
             opacity: 0.9;
+            position: relative;
+            z-index: 2;
         }
 
         .wallet-balance {
             font-size: 34px;
             font-weight: 800;
             margin: 12px 0 16px;
+            position: relative;
+            z-index: 2;
         }
 
         .wallet-actions {
             display: flex;
             gap: 12px;
+            position: relative;
+            z-index: 2;
         }
 
-        /* Top Up 按钮 - 橙色边框 + 白色字体 */
         .btn-topup {
             flex: 1;
             background: transparent;
@@ -170,14 +278,8 @@
             font-weight: 700;
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.2s;
         }
 
-        .btn-topup:hover {
-            background: rgba(255,255,255,0.15);
-        }
-
-        /* Withdraw 按钮 - 白色背景橙色字体 */
         .btn-withdraw {
             flex: 1;
             background: white;
@@ -189,68 +291,9 @@
             cursor: pointer;
             border: none;
             font-size: 14px;
-            transition: all 0.2s;
         }
 
-        .btn-withdraw:hover {
-            background: #fef3e8;
-        }
-
-        /* 双卡片行 */
-        .double-card-row {
-            display: flex;
-            gap: 16px;
-            margin: 16px;
-        }
-
-        .half-card {
-            flex: 1;
-            background: white;
-            border: 1px solid #eef2f7;
-            border-radius: 20px;
-            padding: 18px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .half-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-        }
-
-        .half-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .half-card-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #fff7ed, #ffe7cc);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            color: #ff7a00;
-        }
-
-        .half-card-title {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .view-link {
-            color: #ff7a00;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        /* ========== 大卡片 - 粒子漂浮效果 ========== */
+        /* 大卡片 - 粒子漂浮效果 */
         .glass-card {
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(12px);
@@ -262,7 +305,6 @@
             border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
-        /* 顶部橙色条 - 发光效果 */
         .glass-card::before {
             content: '';
             position: absolute;
@@ -289,7 +331,7 @@
             pointer-events: none;
             opacity: 0;
             animation: floatParticle 4s infinite ease-out;
-            z-index: 5;
+            z-index: 1;
         }
 
         @keyframes floatParticle {
@@ -337,7 +379,6 @@
             cursor: pointer;
         }
 
-        /* 图标 - 橙色渐变底 + 白色图标 */
         .grid-icon {
             width: 52px;
             height: 52px;
@@ -376,7 +417,9 @@
         .bottom-nav {
             position: fixed;
             bottom: 0;
-            width: 390px;
+            left: 0;
+            right: 0;
+            width: 100%;
             background: rgba(255, 255, 255, 0.96);
             backdrop-filter: blur(20px);
             border-top: 1px solid #eef2f7;
@@ -409,40 +452,34 @@
             .phone {
                 width: 100%;
             }
-            .bottom-nav {
-                width: 100%;
-                max-width: 390px;
-                left: 50%;
-                transform: translateX(-50%);
-            }
         }
     </style>
 </head>
 <body>
 <div class="phone">
 
-    <!-- 页面头部 -->
+    <!-- 霓虹边框深色卡片 -->
     <div class="profile-header">
         <div class="profile-row">
             <div class="avatar" id="avatarInitial">O</div>
             <div class="profile-info">
                 <div class="username" id="displayUsername">Loading...</div>
                 <div class="user-badges">
-                    <span class="badge" id="vipBadge">Normal</span>
-                    <span class="badge" id="kycBadge">KYC Pending</span>
+                    <span class="badge badge-normal" id="vipBadge">Normal</span>
+                    <span class="badge badge-kyc" id="kycBadge">KYC Pending</span>
                 </div>
                 <div class="user-uid">UID: <span id="displayUid">---</span></div>
             </div>
         </div>
     </div>
 
-    <!-- 赚取的总佣金 -->
-    <div class="stats-card">
+    <!-- 赚取的总佣金 - 带粒子漂浮 -->
+    <div class="stats-card" id="particleStatsCard">
         <div class="stat-label">Total Commissions Earned</div>
         <div class="stat-value" id="totalCommissions">€0.00</div>
     </div>
 
-    <!-- Account Balance 卡片 - 橙到珊瑚 + 流光扫过 -->
+    <!-- Account Balance 卡片 -->
     <div class="wallet-card">
         <div class="wallet-title">Account Balance</div>
         <div class="wallet-balance" id="displayBalance">€0.00</div>
@@ -452,9 +489,9 @@
         </div>
     </div>
 
-    <!-- My Sales 和 Sourcing 双卡片 -->
+    <!-- My Sales 和 Sourcing 双卡片 - 都带粒子漂浮 -->
     <div class="double-card-row">
-        <div class="half-card" onclick="location.href='history.html?tab=balance'">
+        <div class="half-card" id="particleSalesCard" onclick="location.href='history.html?tab=balance'">
             <div class="half-card-header">
                 <div class="half-card-icon"><i class="fa-solid fa-chart-line"></i></div>
                 <span class="view-link">View →</span>
@@ -462,7 +499,7 @@
             <div class="half-card-title">My Sales</div>
             <div style="font-size: 12px; color: #6b7280; margin-top: 6px;" id="salesAmount">€0.00 earned</div>
         </div>
-        <div class="half-card" onclick="location.href='start.html'">
+        <div class="half-card" id="particleSourcingCard" onclick="location.href='start.html'">
             <div class="half-card-header">
                 <div class="half-card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
                 <span class="view-link">View →</span>
@@ -472,7 +509,7 @@
         </div>
     </div>
 
-    <!-- 大卡片 1 - Quick Actions（粒子漂浮效果） -->
+    <!-- 大卡片 1 - Quick Actions -->
     <div class="glass-card" id="particleCard1">
         <div class="card-inner">
             <div class="section-title">
@@ -516,7 +553,7 @@
         </div>
     </div>
 
-    <!-- 大卡片 2 - Support & History（粒子漂浮效果） -->
+    <!-- 大卡片 2 - Support & History -->
     <div class="glass-card" id="particleCard2">
         <div class="card-inner">
             <div class="section-title">
@@ -573,56 +610,38 @@
 </div>
 
 <script>
-    // Supabase 配置
     const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ========== 粒子漂浮效果 ==========
     let particleIntervals = [];
 
-    function createParticle(card) {
+    function createParticle(container) {
         const particle = document.createElement('div');
         particle.className = 'particle';
-        
-        const size = 3 + Math.random() * 10;
+        const size = 3 + Math.random() * 8;
         const left = Math.random() * 100;
         const duration = 2.5 + Math.random() * 2;
         const delay = Math.random() * 3;
-        
         particle.style.width = size + 'px';
         particle.style.height = size + 'px';
         particle.style.left = left + '%';
         particle.style.bottom = '0px';
         particle.style.animationDuration = duration + 's';
         particle.style.animationDelay = delay + 's';
-        
-        card.appendChild(particle);
-        
+        container.appendChild(particle);
         setTimeout(() => {
             if (particle.parentNode) particle.remove();
         }, duration * 1000);
     }
 
-    function startParticleEffect(cardId) {
-        const card = document.getElementById(cardId);
-        if (!card) return;
-        
-        const interval = setInterval(() => {
-            createParticle(card);
-        }, 250);
-        
+    function startParticleEffect(elementId) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        const interval = setInterval(() => createParticle(element), 300);
         particleIntervals.push(interval);
     }
 
-    function stopAllParticleEffects() {
-        particleIntervals.forEach(interval => clearInterval(interval));
-        particleIntervals = [];
-        const particles = document.querySelectorAll('.particle');
-        particles.forEach(p => p.remove());
-    }
-
-    // ========== 辅助函数 ==========
     function getCurrentUser() {
         const userStr = localStorage.getItem('currentUser');
         if (!userStr) return null;
@@ -660,7 +679,6 @@
         return data?.is_verified || false;
     }
 
-    // ========== 加载页面数据 ==========
     async function loadProfile() {
         const user = checkLogin();
         if (!user) return;
@@ -689,12 +707,12 @@
         const kycBadge = document.getElementById('kycBadge');
         if (isKycVerified) {
             kycBadge.innerText = 'KYC Verified';
-            kycBadge.style.background = '#e8f5e9';
-            kycBadge.style.color = '#2e7d32';
+            kycBadge.style.background = 'rgba(0, 255, 255, 0.12)';
+            kycBadge.style.color = '#00e5ff';
         } else {
             kycBadge.innerText = 'KYC Pending';
-            kycBadge.style.background = '#fff3e0';
-            kycBadge.style.color = '#ff7a00';
+            kycBadge.style.background = 'rgba(255, 122, 0, 0.2)';
+            kycBadge.style.color = '#ffb347';
         }
 
         const { data: orders } = await sb
@@ -726,35 +744,36 @@
     }
 
     function setupBottomNav() {
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const page = item.dataset.page;
-            if (page === 'dashboard') {
-                window.location.href = 'start.html';  // Dashboard 页面
-            } else if (page === 'products') {
-                window.location.href = 'start.html';
-            } else if (page === 'orders') {
-                window.location.href = 'history.html';
-            } else if (page === 'profile') {
-                // 当前页面，不做跳转
-            }
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.dataset.page;
+                if (page === 'dashboard') {
+                    window.location.href = 'start.html';
+                } else if (page === 'products') {
+                    window.location.href = 'start.html';
+                } else if (page === 'orders') {
+                    window.location.href = 'history.html';
+                } else if (page === 'profile') {
+                    // 当前页面
+                }
+            });
         });
-    });
-}
+    }
 
-    // 绑定事件
     document.getElementById('topUpBtn').addEventListener('click', topUp);
     document.getElementById('withdrawBtn').addEventListener('click', () => {
         window.location.href = 'withdrawal.html';
     });
 
-    // 初始化
     loadProfile();
     setupBottomNav();
 
-    // 启动粒子漂浮效果（两个大卡片）
+    // 启动所有粒子漂浮效果
     setTimeout(() => {
+        startParticleEffect('particleStatsCard');
+        startParticleEffect('particleSalesCard');
+        startParticleEffect('particleSourcingCard');
         startParticleEffect('particleCard1');
         startParticleEffect('particleCard2');
     }, 500);
