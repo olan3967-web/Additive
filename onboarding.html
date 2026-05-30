@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Let's Get Started - ADDITIVE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 全屏容器 */
+        .onboarding-container {
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+        }
+
+        /* 内容区域 */
+        .content-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+        }
+
+        /* 进度包装器 */
+        .progress-wrapper {
+            width: 100%;
+            text-align: left;
+        }
+
+        /* 状态文字 - 使用 flex 行内布局，确保在同一行 */
+        .status-text {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 48px;
+            letter-spacing: -0.5px;
+            line-height: 1.3;
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .status-label {
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .status-dots {
+            display: inline-block;
+            width: 50px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* 圆点容器 */
+        .dots-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 48px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        /* 圆点样式 */
+        .dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #e8e8e8;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        /* 波纹圆点激活状态 */
+        .dot.active {
+            background: #f97316;
+        }
+
+        .dot.active::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: #f97316;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            animation: ripple 0.5s ease-out;
+            opacity: 0;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 0.6;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2.5);
+                opacity: 0;
+            }
+        }
+
+        /* 进度条区域 - 缓慢消失 */
+        .progress-section {
+            transition: all 0.8s ease;
+            overflow: hidden;
+        }
+
+        .progress-section.fade-out {
+            opacity: 0;
+            transform: translateY(-20px);
+            height: 0;
+            margin: 0;
+        }
+
+        /* 恭喜消息 - 从下往上移动 */
+        .congrats-message {
+            margin-top: 0;
+            font-size: 18px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            color: #1a1a2e;
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px 24px;
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+
+        .congrats-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .congrats-message i {
+            color: #f97316;
+            margin-right: 12px;
+            font-size: 22px;
+        }
+
+        .congrats-message .main-text {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1a1a2e;
+        }
+
+        .congrats-message .sub-text {
+            font-size: 14px;
+            font-weight: 400;
+            color: #666;
+        }
+
+        /* 头部 */
+        .header {
+            padding: 20px 24px 0;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .header p {
+            font-size: 13px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        /* 手机适配 */
+        @media (max-width: 480px) {
+            .status-text {
+                font-size: 26px;
+            }
+            .status-dots {
+                width: 45px;
+            }
+        }
+
+        /* ========== 引导页面样式 ========== */
+        .step-container {
+            width: 100%;
+        }
+
+        .step-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+        }
+
+        .step-subtitle {
+            font-size: 15px;
+            color: #6b7280;
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .option-btn {
+            padding: 12px 24px;
+            border-radius: 40px;
+            border: 1.5px solid #e5e7eb;
+            background: white;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            border-color: #f97316;
+            background: #fff7ed;
+        }
+
+        .option-btn.selected {
+            background: #f97316;
+            border-color: #f97316;
+            color: white;
+        }
+
+        .option-btn.selected::before {
+            content: "✓ ";
+        }
+
+        .store-input {
+            width: 100%;
+            height: 56px;
+            border-radius: 16px;
+            border: 1.5px solid #e5e7eb;
+            padding: 0 20px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.2s;
+            margin-bottom: 32px;
+        }
+
+        .store-input:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        }
+
+        .list-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 32px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            border-radius: 14px;
+            border: 1.5px solid #e5e7eb;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .list-item:hover {
+            border-color: #f97316;
+            background: #fff7ed;
+        }
+
+        .list-item.selected {
+            border-color: #f97316;
+            background: #fff7ed;
+        }
+
+        .checkbox {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .list-item.selected .checkbox {
+            background: #f97316;
+            border-color: #f97316;
+        }
+
+        .checkbox i {
+            font-size: 12px;
+            color: white;
+        }
+
+        .item-label {
+            font-size: 15px;
+            font-weight: 500;
+            color: #374151;
+            flex: 1;
+        }
+
+        .continue-btn {
+            width: 100%;
+            height: 56px;
+            background: #f97316;
+            border: none;
+            border-radius: 28px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 20px;
+        }
+
+        .continue-btn:hover {
+            background: #ea580c;
+            transform: scale(1.01);
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #f97316;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #fff7ed;
+        }
+
+        .skip-btn {
+            background: none;
+            border: none;
+            color: #f97316;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+
+        .skip-btn:hover {
+            background: #fff7ed;
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 40px;
+            padding: 0 24px;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .step-circle.active {
+            background: #f97316;
+            color: white;
+        }
+
+        .step-circle.completed {
+            background: #f97316;
+            color: white;
+        }
+
+        .step-circle.inactive {
+            background: #e5e7eb;
+            color: #9ca3af;
+        }
+
+        .progress-line {
+            width: 40px;
+            height: 3px;
+            background: #e5e7eb;
+            border-radius: 2px;
+        }
+
+        .progress-line.completed {
+            background: #f97316;
+        }
+    </style>
+</head>
+<body>
+    <div class="onboarding-container" id="app">
+        <!-- 引导步骤页面 -->
+        <div id="stepsContainer" style="display: flex; flex-direction: column; min-height: 100vh;">
+            <div style="padding: 20px 24px 0; display: flex; justify-content: space-between; align-items: center;">
+                <button class="back-btn" id="backBtn" style="visibility: hidden;">←</button>
+                <button class="skip-btn" id="skipBtn">Skip</button>
+            </div>
+            
+            <div class="progress-container" id="progressContainer"></div>
+            
+            <div class="content-area" id="stepContent">
+                <!-- 动态内容 -->
+            </div>
+            
+            <div style="padding: 20px 24px 40px;">
+                <button class="continue-btn" id="continueBtn">Continue</button>
+            </div>
+        </div>
+
+        <!-- 动画完成页面（初始隐藏） -->
+        <div id="animationContainer" style="display: none; flex-direction: column; min-height: 100vh;">
+            <div class="header">
+                <h1>✨ 正在设置您的账户</h1>
+                <p>请稍候，我们正在为您准备一切</p>
+            </div>
+
+            <div class="content-area" id="animationContentArea">
+                <div class="progress-wrapper" id="progressWrapper">
+                    <div class="status-text" id="statusText">
+                        <span class="status-label">Setting Up Your Account</span>
+                        <span class="status-dots" id="statusDots"></span>
+                    </div>
+                    
+                    <div class="progress-section" id="progressSection">
+                        <div class="dots-container" id="dotsContainer"></div>
+                    </div>
+                    
+                    <div class="congrats-message" id="congratsMessage">
+                        <div class="main-text">
+                            <i class="fas fa-check-circle"></i> Congratulations!
+                        </div>
+                        <div class="sub-text">Log in and choose your product now</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 引导流程数据
+        const steps = [
+            {
+                title: "Your Goal",
+                subtitle: "What can we help you do?",
+                type: "options",
+                field: "goals",
+                options: [
+                    "Sell online",
+                    "Sell in-store",
+                    "Dropshipping",
+                    "Sell digital products",
+                    "Move existing store"
+                ]
+            },
+            {
+                title: "Your Store Name",
+                subtitle: "What should we call your store?",
+                type: "input",
+                field: "storeName",
+                placeholder: "Enter store name"
+            },
+            {
+                title: "Product Category",
+                subtitle: "Select one or more categories",
+                type: "list",
+                field: "categories",
+                options: [
+                    "Electronics",
+                    "Fashion",
+                    "Home & Kitchen",
+                    "Beauty & Personal Care",
+                    "Sports & Outdoors",
+                    "Toys & Games",
+                    "Automotive",
+                    "Pet Supplies"
+                ]
+            },
+            {
+                title: "Choose Product",
+                subtitle: "Select products you want to sell",
+                type: "list",
+                field: "products",
+                options: [
+                    "Best Sellers",
+                    "Trending Products",
+                    "New Arrivals",
+                    "Eco-friendly Products",
+                    "High Profit Items",
+                    "Niche Products",
+                    "Seasonal Products",
+                    "Customizable Products"
+                ]
+            }
+        ];
+
+        let currentStep = 0;
+        let formData = {
+            goals: [],
+            storeName: "",
+            categories: [],
+            products: []
+        };
+
+        // DOM 元素
+        const stepsContainer = document.getElementById('stepsContainer');
+        const animationContainer = document.getElementById('animationContainer');
+        const progressContainer = document.getElementById('progressContainer');
+        const stepContent = document.getElementById('stepContent');
+        const continueBtn = document.getElementById('continueBtn');
+        const backBtn = document.getElementById('backBtn');
+        const skipBtn = document.getElementById('skipBtn');
+
+        // 动画相关变量
+        let animationRunning = false;
+        let currentDotIndex = 0;
+        let dotInterval = null;
+        let dotProgressInterval = null;
+        let totalDots = 12;
+
+        // 获取存储的引导完成状态
+        const hasCompletedOnboarding = localStorage.getItem('onboarding_completed');
+
+        if (hasCompletedOnboarding === 'true') {
+            const redirectUrl = sessionStorage.getItem('onboarding_redirect') || 'register.html';
+            sessionStorage.removeItem('onboarding_redirect');
+            window.location.href = redirectUrl;
+        }
+
+        // 渲染进度条
+        function renderProgress() {
+            progressContainer.innerHTML = '';
+            for (let i = 0; i < steps.length; i++) {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'progress-step';
+                
+                const circle = document.createElement('div');
+                circle.className = `step-circle ${i < currentStep ? 'completed' : (i === currentStep ? 'active' : 'inactive')}`;
+                circle.textContent = (i + 1).toString();
+                
+                stepDiv.appendChild(circle);
+                
+                if (i < steps.length - 1) {
+                    const line = document.createElement('div');
+                    line.className = `progress-line ${i < currentStep ? 'completed' : ''}`;
+                    stepDiv.appendChild(line);
+                }
+                
+                progressContainer.appendChild(stepDiv);
+            }
+        }
+
+        // 渲染当前步骤内容
+        function renderStepContent() {
+            const step = steps[currentStep];
+            
+            let html = `
+                <div class="step-container">
+                    <h1 class="step-title">${step.title}</h1>
+                    <p class="step-subtitle">${step.subtitle}</p>
+            `;
+
+            if (step.type === 'options') {
+                html += `<div class="options-grid" id="optionsGrid"></div>`;
+                stepContent.innerHTML = html;
+                
+                const grid = document.getElementById('optionsGrid');
+                step.options.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = `option-btn ${formData[step.field].includes(option) ? 'selected' : ''}`;
+                    btn.textContent = option;
+                    btn.onclick = () => toggleSelection(step.field, option);
+                    grid.appendChild(btn);
+                });
+            } 
+            else if (step.type === 'input') {
+                html += `
+                    <input 
+                        type="text" 
+                        class="store-input" 
+                        id="storeInput"
+                        placeholder="${step.placeholder}" 
+                        value="${escapeHtml(formData[step.field])}"
+                    >
+                `;
+                stepContent.innerHTML = html;
+                
+                const input = document.getElementById('storeInput');
+                input.addEventListener('input', (e) => {
+                    formData[step.field] = e.target.value;
+                });
+            } 
+            else if (step.type === 'list') {
+                html += `<div class="list-items" id="listItems"></div>`;
+                stepContent.innerHTML = html;
+                
+                const listContainer = document.getElementById('listItems');
+                step.options.forEach(option => {
+                    const isSelected = formData[step.field].includes(option);
+                    const item = document.createElement('div');
+                    item.className = `list-item ${isSelected ? 'selected' : ''}`;
+                    item.onclick = () => toggleSelection(step.field, option);
+                    item.innerHTML = `
+                        <div class="checkbox">
+                            ${isSelected ? '<i class="fas fa-check"></i>' : ''}
+                        </div>
+                        <span class="item-label">${escapeHtml(option)}</span>
+                    `;
+                    listContainer.appendChild(item);
+                });
+            }
+
+            backBtn.style.visibility = currentStep > 0 ? 'visible' : 'hidden';
+            continueBtn.textContent = currentStep === steps.length - 1 ? 'Complete Setup →' : 'Continue';
+        }
+
+        function toggleSelection(field, value) {
+            const current = formData[field];
+            if (current.includes(value)) {
+                formData[field] = current.filter(v => v !== value);
+            } else {
+                formData[field] = [...current, value];
+            }
+            renderStepContent();
+        }
+
+        function validateStep() {
+            const step = steps[currentStep];
+            if (step.type === 'options') {
+                return formData[step.field].length > 0;
+            } else if (step.type === 'input') {
+                return formData[step.field].trim().length > 0;
+            } else if (step.type === 'list') {
+                return formData[step.field].length > 0;
+            }
+            return true;
+        }
+
+        // ========== 波纹圆点动画 ==========
+        function createDots() {
+            const dotsContainer = document.getElementById('dotsContainer');
+            if (!dotsContainer) return;
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < totalDots; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dotsContainer.appendChild(dot);
+            }
+        }
+
+        function resetAnimation() {
+            if (dotInterval) clearInterval(dotInterval);
+            if (dotProgressInterval) clearInterval(dotProgressInterval);
+            
+            animationRunning = false;
+            currentDotIndex = 0;
+            
+            const dots = document.querySelectorAll('#dotsContainer .dot');
+            dots.forEach(dot => {
+                dot.classList.remove('active');
+                dot.style.background = '#e8e8e8';
+            });
+            
+            const progressSection = document.getElementById('progressSection');
+            const congratsMessage = document.getElementById('congratsMessage');
+            const statusDotsSpan = document.getElementById('statusDots');
+            
+            if (progressSection) {
+                progressSection.classList.remove('fade-out');
+                progressSection.style.opacity = '';
+                progressSection.style.transform = '';
+                progressSection.style.height = '';
+                progressSection.style.margin = '';
+            }
+            
+            if (congratsMessage) {
+                congratsMessage.classList.remove('show');
+            }
+            
+            if (statusDotsSpan) {
+                statusDotsSpan.textContent = '';
+            }
+        }
+
+        function startAnimationAndRedirect() {
+            if (animationRunning) {
+                resetAnimation();
+                setTimeout(() => startAnimationAndRedirect(), 100);
+                return;
+            }
+            
+            animationRunning = true;
+            currentDotIndex = 0;
+            
+            const congratsMessage = document.getElementById('congratsMessage');
+            const progressSection = document.getElementById('progressSection');
+            const statusDotsSpan = document.getElementById('statusDots');
+            
+            if (congratsMessage) congratsMessage.classList.remove('show');
+            if (progressSection) {
+                progressSection.classList.remove('fade-out');
+                progressSection.style.opacity = '1';
+                progressSection.style.transform = 'none';
+                progressSection.style.height = 'auto';
+            }
+            
+            const dots = document.querySelectorAll('#dotsContainer .dot');
+            dots.forEach(dot => {
+                dot.classList.remove('active');
+                dot.style.background = '#e8e8e8';
+            });
+            
+            // 动态句号动画
+            let dotAnimCount = 0;
+            dotInterval = setInterval(() => {
+                if (statusDotsSpan) {
+                    dotAnimCount = (dotAnimCount + 1) % 4;
+                    statusDotsSpan.textContent = '.'.repeat(dotAnimCount);
+                }
+            }, 400);
+            
+            // 逐个点亮圆点
+            dotProgressInterval = setInterval(() => {
+                if (currentDotIndex < dots.length) {
+                    const dot = dots[currentDotIndex];
+                    dot.classList.add('active');
+                    dot.style.background = '#f97316';
+                    currentDotIndex++;
+                } else {
+                    clearInterval(dotProgressInterval);
+                    clearInterval(dotInterval);
+                    
+                    if (statusDotsSpan) {
+                        statusDotsSpan.textContent = '...';
+                    }
+                    
+                    setTimeout(() => {
+                        const progressSectionEl = document.getElementById('progressSection');
+                        if (progressSectionEl) progressSectionEl.classList.add('fade-out');
+                    }, 300);
+                    
+                    setTimeout(() => {
+                        const congratsMessageEl = document.getElementById('congratsMessage');
+                        if (congratsMessageEl) congratsMessageEl.classList.add('show');
+                    }, 800);
+                    
+                    setTimeout(() => {
+                        // 保存引导完成状态
+                        localStorage.setItem('onboarding_completed', 'true');
+                        localStorage.setItem('onboarding_data', JSON.stringify(formData));
+                        
+                        // 获取目标页面并跳转
+                        const redirectUrl = sessionStorage.getItem('onboarding_redirect') || 'register.html';
+                        sessionStorage.removeItem('onboarding_redirect');
+                        window.location.href = redirectUrl;
+                    }, 2800);
+                }
+            }, 180);
+        }
+
+        // 显示动画页面
+        function showAnimationPage() {
+            stepsContainer.style.display = 'none';
+            animationContainer.style.display = 'flex';
+            createDots();
+            setTimeout(() => {
+                startAnimationAndRedirect();
+            }, 100);
+        }
+
+        // 下一步
+        function nextStep() {
+            if (currentStep < steps.length) {
+                if (!validateStep()) {
+                    alert('Please complete this step before continuing');
+                    return;
+                }
+                
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    renderProgress();
+                    renderStepContent();
+                } else {
+                    // 完成所有步骤，显示动画页面
+                    showAnimationPage();
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                renderProgress();
+                renderStepContent();
+            }
+        }
+
+        function skipOnboarding() {
+            if (confirm('Skip the onboarding process? You can complete it later in settings.')) {
+                localStorage.setItem('onboarding_completed', 'true');
+                localStorage.setItem('onboarding_skipped', 'true');
+                const redirectUrl = sessionStorage.getItem('onboarding_redirect') || 'register.html';
+                sessionStorage.removeItem('onboarding_redirect');
+                window.location.href = redirectUrl;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        function init() {
+            renderProgress();
+            renderStepContent();
+            
+            continueBtn.onclick = nextStep;
+            backBtn.onclick = prevStep;
+            skipBtn.onclick = skipOnboarding;
+        }
+
+        init();
+    </script>
+</body>
+</html>

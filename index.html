@@ -42,26 +42,22 @@
         /* ========== 三层叠加渐变 ========== */
         .gradient-wrapper {
             background: 
-                /* 第四层：底部白色渐变 */
                 linear-gradient(180deg, 
                     transparent 85%,
                     rgba(255,255,255,0.3) 92%,
                     rgba(255,255,255,0.7) 96%,
                     #ffffff 100%
                 ),
-                /* 第三层：最顶层，增加更多黑色 */
                 linear-gradient(180deg, 
                     #000000 30%, 
                     #000000 30%, 
                     transparent 100%
                 ),
-                /* 第二层：补充黑色 */
                 linear-gradient(180deg, 
                     #000000 0%, 
                     #000000 20%, 
                     transparent 50%
                 ),
-                /* 第一层：基础褐色渐变 */
                 linear-gradient(180deg, 
                     #000000 0%,
                     #1a0a05 25%,
@@ -78,7 +74,6 @@
             overflow: hidden;
         }
         
-        /* 视频背景 */
         .hero-video-background {
             position: absolute;
             top: 0;
@@ -90,7 +85,6 @@
             opacity: 0.75;
         }
         
-        /* 视频底部黑色遮罩 */
         .video-mask {
             position: absolute;
             bottom: 0;
@@ -158,6 +152,7 @@
             transition: 0.2s;
             text-shadow: 0 1px 2px rgba(0,0,0,0.2);
             font-family: 'Times New Roman', Times, serif;
+            cursor: pointer;
         }
         .nav-links a:hover {
             color: #FF7A2E;
@@ -198,7 +193,6 @@
         .hero-content h1 .orange-text {
             color: #FF7A2E;
         }
-        /* Dropshipping 橙色 + 渐变下划线 */
         .orange-word {
             color: #FF7A2E;
             position: relative;
@@ -260,8 +254,6 @@
             flex-wrap: wrap;
             gap: 24px;
             background: transparent;
-            border-top: none;
-            border-bottom: none;
         }
         .trusted-item {
             font-size: 16px;
@@ -639,82 +631,28 @@
             font-family: 'Times New Roman', Times, serif;
         }
 
-        /* ========== 手机版左对齐 ========== */
         @media (max-width: 768px) {
-            .hero-content h1 {
-                text-align: left;
-            }
-            .hero-content {
-                text-align: left;
-                padding-left: 0;
-                padding-right: 0;
-            }
-            .hero-content .sub-headline {
-                text-align: left;
-            }
-            .hero-content p {
-                text-align: left;
-            }
-            .container {
-                padding: 0 20px;
-            }
-            .hero-content h1 {
-                font-size: 32px;
-            }
-            .hero-content .sub-headline {
-                font-size: 18px;
-            }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .feature-grid {
-                grid-template-columns: 1fr;
-                gap: 40px;
-            }
-            .testimonial-item {
-                width: 280px;
-            }
-            .agents-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
-            }
-            .agents-header h2 {
-                font-size: 26px;
-            }
-            .platform-img-wrapper {
-                width: 140px;
-                height: 86px;
-            }
-            .hero-content {
-                padding: 50px 0 40px;
-            }
+            .hero-content h1 { text-align: left; font-size: 32px; }
+            .hero-content { text-align: left; padding: 50px 0 40px; }
+            .hero-content .sub-headline { text-align: left; font-size: 18px; }
+            .hero-content p { text-align: left; }
+            .container { padding: 0 20px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .feature-grid { grid-template-columns: 1fr; gap: 40px; }
+            .testimonial-item { width: 280px; }
+            .agents-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+            .agents-header h2 { font-size: 26px; }
+            .platform-img-wrapper { width: 140px; height: 86px; }
         }
         @media (max-width: 600px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            .hero-content h1 {
-                font-size: 28px;
-            }
-            .hero-content {
-                padding: 40px 0 30px;
-            }
-            .cta-section {
-                padding: 32px 24px;
-            }
-            .section-title {
-                font-size: 24px;
-            }
-            .agents-grid {
-                grid-template-columns: 1fr;
-            }
-            .platforms-grid {
-                gap: 16px;
-            }
-            .platform-img-wrapper {
-                width: 120px;
-                height: 74px;
-            }
+            .stats-grid { grid-template-columns: 1fr; }
+            .hero-content h1 { font-size: 28px; }
+            .hero-content { padding: 40px 0 30px; }
+            .cta-section { padding: 32px 24px; }
+            .section-title { font-size: 24px; }
+            .agents-grid { grid-template-columns: 1fr; }
+            .platforms-grid { gap: 16px; }
+            .platform-img-wrapper { width: 120px; height: 74px; }
         }
     </style>
 </head>
@@ -736,7 +674,7 @@
                                 <a href="#">Fulfillment</a>
                                 <a href="#">Pricing</a>
                                 <a href="#">Resources</a>
-                                <a href="register.html" class="btn-outline">Sign Up</a>
+                                <a href="javascript:void(0)" class="btn-outline" onclick="redirectToOnboarding('register.html')">Sign Up</a>
                                 <a href="signin.html" class="btn-outline">Sign In</a>
                             </div>
                         </div>
@@ -749,7 +687,7 @@
                         </h1>
                         <div class="sub-headline">From Global Suppliers to Seamless Automation – Your Gateway to Hassle-Free Success Starts Here!</div>
                         <p>Connect your store, source trending products, and ship orders from 20+ warehouses worldwide. Start your dropshipping business today.</p>
-                        <button class="btn-primary" onclick="location.href='register.html'">Get Started <i class="fas fa-arrow-right"></i></button>
+                        <button class="btn-primary" onclick="redirectToOnboarding('register.html')">Get Started <i class="fas fa-arrow-right"></i></button>
                     </div>
 
                     <div class="trusted-row">
@@ -810,7 +748,6 @@
             </div>
         </div>
 
-        <!-- agents-section 在渐变内部 -->
         <div class="agents-section">
             <div class="agents-header">
                 <h2>Get the Best Sourcing Agent Services</h2>
@@ -819,14 +756,13 @@
             <div class="agents-grid" id="agentsGrid"></div>
         </div>
 
-    </div>  <!-- gradient-wrapper 结束 -->
+    </div>
 
-    <!-- CTA 和 Footer 在渐变外面 -->
     <div class="container">
         <div class="cta-section">
             <h2>Ready to scale your dropshipping business?</h2>
             <p>Join 50,000+ merchants who trust us for sourcing, fulfillment, and growth.</p>
-            <button class="btn-primary" onclick="location.href='register.html'">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
+            <button class="btn-primary" onclick="redirectToOnboarding('register.html')">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
         </div>
     </div>
 
@@ -849,6 +785,15 @@
         const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ========== 引导页面跳转函数 ==========
+        // Sign Up, Get Started, Start Sourcing Now 都跳转到 onboarding
+        function redirectToOnboarding(targetUrl) {
+            // 保存目标页面到 sessionStorage
+            sessionStorage.setItem('onboarding_redirect', targetUrl);
+            // 跳转到引导页面
+            window.location.href = 'onboarding.html';
+        }
 
         const platforms = [
             { name: "Shopify", icon: "fab fa-shopify" },
@@ -957,7 +902,7 @@
                         <div><i class="fas fa-chart-line"></i> ${agent.successRate}</div>
                         <div><i class="fas fa-language"></i> ${agent.languages}</div>
                     </div>
-                    <button class="btn-outline-small">Contact Agent →</button>
+                    <button class="btn-outline-small" onclick="redirectToOnboarding('register.html')">Contact Agent →</button>
                 `;
                 agentsGrid.appendChild(card);
             });
