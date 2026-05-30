@@ -476,7 +476,7 @@ function subscribeToRealtime() {
             (payload) => {
                 console.log('🔔 检测到新提现申请:', payload.new);
                 refreshDashboard(currentDays, true);
-                showAmberNotification(
+                window.showAmberNotification(
                     '💰 新提现申请',
                     `用户 ${payload.new.username} 申请提现 €${payload.new.amount}`,
                     'withdrawal'
@@ -489,7 +489,7 @@ function subscribeToRealtime() {
             (payload) => {
                 console.log('🔔 检测到新KYC申请:', payload.new);
                 refreshDashboard(currentDays, true);
-                showAmberNotification(
+                window.showAmberNotification(
                     '📋 新KYC申请',
                     `用户 ${payload.new.username || payload.new.uid} 提交了验证申请`,
                     'kyc'
@@ -502,7 +502,7 @@ function subscribeToRealtime() {
             (payload) => {
                 console.log('🔔 检测到新邮箱验证请求:', payload.new);
                 refreshDashboard(currentDays, true);
-                showAmberNotification(
+                window.showAmberNotification(
                     '📧 新邮箱验证请求',
                     `用户 ${payload.new.email} 请求邮箱验证，请设置验证码`,
                     'email'

@@ -237,12 +237,16 @@ window.alert = function(message) {
     showToast(message, 'info');
 };
 
-// ========== 琥珀金风格通知（全局函数） ==========
+// ========== 琥珀金风格通知（增强版 - 确保一定显示） ==========
 window.showAmberNotification = function(title, message, type) {
+    console.log('🔔 显示琥珀通知:', { title, message, type });
+    
+    // 移除已存在的通知
     const existingNotification = document.querySelector('.notification-amber');
     if (existingNotification) existingNotification.remove();
     
-    let icon = 'fa-id-card';
+    // 确定图标和颜色
+    let icon = 'fa-info-circle';
     let iconColor = '#ffb84d';
     
     if (type === 'withdrawal') {
@@ -253,66 +257,135 @@ window.showAmberNotification = function(title, message, type) {
         icon = 'fa-envelope';
     }
     
+    // 创建通知元素
     const notification = document.createElement('div');
     notification.className = 'notification-amber';
+    notification.setAttribute('data-type', type);
+    
+    // 确保通知在最上层
     notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 10000;
-        min-width: 340px;
-        max-width: 420px;
-        padding: 14px 18px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        background: rgba(30, 25, 15, 0.95);
-        backdrop-filter: blur(12px);
-        border-left: 4px solid #ffb84d;
-        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
-        cursor: pointer;
-        animation: slideIn 0.4s ease forwards;
-        font-family: 'Inter', sans-serif;
+        position: fixed !important;
+        top: 20px !important;
+        right: 20px !important;
+        z-index: 100000 !important;
+        min-width: 320px !important;
+        max-width: 420px !important;
+        padding: 16px 20px !important;
+        border-radius: 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 14px !important;
+        background: rgba(30, 25, 15, 0.98) !important;
+        backdrop-filter: blur(16px) !important;
+        border-left: 4px solid ${iconColor} !important;
+        box-shadow: 0 10px 30px -5px rgba(0,0,0,0.5) !important;
+        cursor: pointer !important;
+        font-family: 'Inter', sans-serif !important;
+        animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards !important;
+        pointer-events: auto !important;
     `;
     
     notification.innerHTML = `
-        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,184,77,0.15); display: flex; align-items: center; justify-content: center;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,184,77,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
             <i class="fas ${icon}" style="color: ${iconColor}; font-size: 22px;"></i>
         </div>
-        <div style="flex: 1;">
-            <div style="font-weight: 700; font-size: 14px; color: #ffb84d; margin-bottom: 4px;">${title}</div>
-            <div style="font-size: 12px; color: #d4c8a0; opacity: 0.9;">${message}</div>
-            <div style="font-size: 10px; color: #8a7a5a; margin-top: 4px;">刚刚</div>
+        <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 700; font-size: 15px; color: #ffb84d; margin-bottom: 6px;">${escapeHtml(title)}</div>
+            <div style="font-size: 12px; color: #d4c8a0; opacity: 0.95; line-height: 1.4;">${escapeHtml(message)}</div>
+            <div style="font-size: 10px; color: #8a7a5a; margin-top: 6px;">刚刚收到</div>
         </div>
-        <div style="cursor: pointer; opacity: 0.5; padding: 4px;" class="notification-close">
-            <i class="fas fa-times" style="color: #d4c8a0;"></i>
+        <div style="cursor: pointer; opacity: 0.6; padding: 6px; flex-shrink: 0;" class="notification-close">
+            <i class="fas fa-times" style="color: #d4c8a0; font-size: 14px;"></i>
         </div>
+        <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: ${iconColor}; width: 100%; border-radius: 0 0 16px 16px; animation: toastProgress 4s linear forwards;"></div>
     `;
     
     document.body.appendChild(notification);
     
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.onclick = (e) => {
-        e.stopPropagation();
-        notification.style.animation = 'slideOut 0.3s ease forwards';
-        setTimeout(() => notification.remove(), 300);
-    };
+    // 确保动画样式存在
+    ensureAnimationStyles();
     
+    // 关闭按钮事件
+    const closeBtn = notification.querySelector('.notification-close');
+    if (closeBtn) {
+        closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            closeNotification(notification);
+        };
+    }
+    
+    // 点击通知关闭
     notification.onclick = (e) => {
-        if (e.target !== closeBtn && !closeBtn.contains(e.target)) {
-            notification.style.animation = 'slideOut 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
+        if (e.target !== closeBtn && !closeBtn?.contains(e.target)) {
+            closeNotification(notification);
         }
     };
     
+    // 5秒后自动关闭
     setTimeout(() => {
         if (notification.parentNode) {
-            notification.style.animation = 'slideOut 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
+            closeNotification(notification);
         }
     }, 5000);
+    
+    // 播放提示音（可选 - 需要用户交互后才能播放）
+    try {
+        const audio = new Audio('data:audio/wav;base64,U3RlYWx0aCBub3RpZmljYXRpb24gc291bmQ=');
+        audio.volume = 0.3;
+        audio.play().catch(e => console.log('音频播放失败:', e));
+    } catch(e) {}
 };
+
+// 关闭通知的辅助函数
+function closeNotification(notification) {
+    if (!notification) return;
+    notification.style.animation = 'slideOutRight 0.3s ease forwards';
+    setTimeout(() => {
+        if (notification.parentNode) notification.remove();
+    }, 300);
+}
+
+// 确保动画样式存在
+function ensureAnimationStyles() {
+    if (document.getElementById('notification-animation-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'notification-animation-styles';
+    style.textContent = `
+        @keyframes slideInRight {
+            0% {
+                transform: translateX(calc(100% + 20px));
+                opacity: 0;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOutRight {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(calc(100% + 20px));
+                opacity: 0;
+            }
+        }
+        @keyframes toastProgress {
+            0% { width: 100%; }
+            100% { width: 0%; }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// 页面加载时确保样式存在
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensureAnimationStyles);
+} else {
+    ensureAnimationStyles();
+}
 
 // ========== 全局实时订阅（监控所有表） ==========
 let realtimeChannel = null;
