@@ -67,10 +67,12 @@
         /* 视频卡片 - 全宽无缝隙 */
         .video-card {
             width: 100%;
-            margin: 16px 0;
+            margin: 0;
+            padding: 0;
             position: relative;
-            background: #000;
+            background: #f5f7fb;
             overflow: hidden;
+            line-height: 0;
         }
 
         .video-card video {
@@ -86,6 +88,7 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
             padding: 0 20px;
+            margin-top: 20px;
             margin-bottom: 20px;
         }
 
@@ -249,7 +252,7 @@
         </div>
     </div>
 
-    <!-- 视频卡片 - 全宽无缝隙，与余额卡片尺寸一致 -->
+    <!-- 视频卡片 - 全宽无缝隙 -->
     <div class="video-card" id="videoContainer">
         <video id="heroVideo" autoplay loop muted playsinline style="width:100%; height:auto; display:block;">
             <source src="" type="video/mp4">
@@ -374,7 +377,10 @@
                     video.src = data.video_url;
                     video.load();
                     video.play().catch(e => console.log('视频自动播放被阻止:', e));
+                    console.log('视频加载成功:', data.video_url);
                 }
+            } else {
+                console.log('没有找到视频URL');
             }
         } catch (e) {
             console.error('加载视频失败:', e);
@@ -386,10 +392,8 @@
         const user = checkLogin();
         if (!user) return;
 
-        // 显示用户名
         document.getElementById('displayUsername').innerText = user.username || 'User';
 
-        // 获取用户订单数据来计算统计
         const { data: orders } = await sb
             .from('order_history')
             .select('commission, price')
@@ -399,10 +403,7 @@
         const totalCommission = orders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
         const totalSales = orders?.reduce((sum, o) => sum + (o.price || 0), 0) || 0;
         
-        // ROI 模拟计算（实际可根据成本计算）
         const roi = totalSales > 0 ? ((totalCommission / totalSales) * 100).toFixed(1) : 0;
-        
-        // 利润 = 佣金 - 成本估算（简化：佣金 * 0.7）
         const profit = (totalCommission * 0.7).toFixed(0);
 
         document.getElementById('totalSales').innerHTML = '€' + totalSales.toLocaleString();
@@ -484,7 +485,7 @@
             item.addEventListener('click', () => {
                 const page = item.dataset.page;
                 if (page === 'dashboard') {
-                    // 当前页面
+                    window.location.href = 'start.html';
                 } else if (page === 'products') {
                     window.location.href = 'start.html';
                 } else if (page === 'orders') {

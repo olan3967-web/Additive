@@ -726,22 +726,22 @@
     }
 
     function setupBottomNav() {
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const page = item.dataset.page;
-                if (page === 'dashboard') {
-                    window.location.href = 'dashboard.html';
-                } else if (page === 'products') {
-                    window.location.href = 'start.html';
-                } else if (page === 'orders') {
-                    window.location.href = 'history.html';
-                } else if (page === 'profile') {
-                    // 当前页面
-                }
-            });
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const page = item.dataset.page;
+            if (page === 'dashboard') {
+                window.location.href = 'start.html';  // Dashboard 页面
+            } else if (page === 'products') {
+                window.location.href = 'start.html';
+            } else if (page === 'orders') {
+                window.location.href = 'history.html';
+            } else if (page === 'profile') {
+                // 当前页面，不做跳转
+            }
         });
-    }
+    });
+}
 
     // 绑定事件
     document.getElementById('topUpBtn').addEventListener('click', topUp);
