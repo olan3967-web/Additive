@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ADDITIVE - Sign In</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -18,7 +24,8 @@
             position: relative;
             overflow-x: hidden;
         }
-        /* 波浪背景容器 */
+
+        /* 波浪背景 - 橙色 */
         .waves-bg {
             position: fixed;
             top: 0;
@@ -28,136 +35,233 @@
             z-index: 0;
             pointer-events: none;
         }
+
         .login-container {
             width: 100%;
             padding: 20px;
             position: relative;
             z-index: 1;
         }
+
         .login-card {
-            background: rgba(20, 30, 55, 0.85);
-            backdrop-filter: blur(20px);
-            border-radius: 32px;
-            padding: 48px 40px;
-            max-width: 450px;
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 32px 28px;
+            max-width: 400px;
             margin: 0 auto;
-            border: 1px solid rgba(201, 176, 149, 0.25);
-            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.5);
+            border: 1px solid #f0f0f0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
         }
-        .logo { font-size: 34px; font-weight: 800; text-align: center; margin-bottom: 8px; color: #ffffff; }
-        .logo span { color: #C9B095; }
-        .subtitle { text-align: center; color: #a0a8c0; margin-bottom: 36px; font-size: 14px; }
-        .form-group { margin-bottom: 22px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #a0a8c0; font-size: 13px; }
-        .form-group label i { margin-right: 8px; color: #C9B095; }
+
+        /* Logo 样式 */
+        .login-logo {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .login-logo img {
+            height: 48px;
+            width: auto;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 28px;
+            font-size: 13px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #555;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .form-group label i {
+            margin-right: 6px;
+            color: #f97316;
+            font-size: 12px;
+        }
+
         .form-group input {
             width: 100%;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid #2a3560;
-            border-radius: 14px;
-            padding: 14px 18px;
-            color: white;
+            background: #f8f9fa;
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: #1a1a2e;
             font-size: 14px;
             outline: none;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
         }
-        .form-group input:focus { border-color: #C9B095; box-shadow: 0 0 0 3px rgba(201,176,149,0.15); }
+
+        .form-group input:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
         .login-btn {
             width: 100%;
-            background: linear-gradient(135deg, #C9B095, #b8944a);
+            background: #f97316;
             border: none;
-            padding: 14px;
+            padding: 12px;
             border-radius: 40px;
-            color: #0A122B;
+            color: white;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            margin-top: 28px;
+            gap: 8px;
+            margin-top: 20px;
             transition: 0.2s;
+            font-family: 'Inter', sans-serif;
         }
-        .login-btn:hover { transform: scale(1.02); opacity: 0.9; }
-        .register-link { text-align: center; margin-top: 28px; padding-top: 20px; border-top: 1px solid rgba(201,176,149,0.15); font-size: 13px; color: #a0a8c0; }
-        .register-link a { color: #C9B095; text-decoration: none; }
-        .error-message { text-align: center; margin-top: 18px; font-size: 13px; min-height: 40px; }
+
+        .login-btn:hover {
+            background: #ea580c;
+            transform: scale(1.01);
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .register-link a {
+            color: #f97316;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 12px;
+            min-height: 36px;
+        }
+
+        /* 手机适配 */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 24px 20px;
+            }
+            .login-logo img {
+                height: 40px;
+            }
+            .form-group input {
+                padding: 10px 12px;
+            }
+            .login-btn {
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- 波浪背景 Canvas -->
     <canvas id="wavesBg" class="waves-bg"></canvas>
 
     <div class="login-container">
         <div class="login-card">
-            <div class="logo">ADDITIVE<span>®</span></div>
+            <!-- Logo 放在注册框上方 -->
+            <div class="login-logo">
+                <img src="https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png" alt="Logo" id="logoImg">
+            </div>
             <div class="subtitle">Sign in to your account</div>
-            <div class="form-group"><label><i class="fas fa-user"></i> Username</label><input type="text" id="loginUsername" placeholder="Enter your username"></div>
-            <div class="form-group"><label><i class="fas fa-lock"></i> Password</label><input type="password" id="loginPassword" placeholder="Enter your password"></div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Username</label>
+                <input type="text" id="loginUsername" placeholder="Enter your username">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password">
+            </div>
+            
             <button class="login-btn" onclick="handleSignIn()"><i class="fas fa-sign-in-alt"></i> Sign In</button>
-            <div id="loginError" class="error-message"></div>
             <div class="register-link">Don't have an account? <a href="register.html">Register now <i class="fas fa-arrow-right"></i></a></div>
+            <div id="loginError" class="error-message"></div>
         </div>
     </div>
 
     <script>
-        (function() {
-            const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-            const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-            const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Supabase 配置
+        const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // 处理登录
+        async function handleSignIn() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
             
-            window.handleSignIn = async function() {
-                const username = document.getElementById('loginUsername').value.trim();
-                const password = document.getElementById('loginPassword').value;
-                const errorDiv = document.getElementById('loginError');
+            if (!username || !password) {
+                errorDiv.innerHTML = '<span style="color: #ff5a5a;">Please enter username and password</span>';
+                return;
+            }
+            
+            errorDiv.innerHTML = '<span style="color: #f97316;">Checking...</span>';
+            
+            try {
+                const { data: users, error } = await sb
+                    .from('users')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password', password);
                 
-                if (!username || !password) {
-                    errorDiv.innerHTML = '<span style="color: #ff8080;">Please enter username and password</span>';
+                if (error) {
+                    errorDiv.innerHTML = '<span style="color: #ff5a5a;">Error: ' + error.message + '</span>';
                     return;
                 }
                 
-                errorDiv.innerHTML = '<span style="color: #C9B095;">Checking...</span>';
-                
-                try {
-                    const { data: users, error } = await _supabase
-                        .from('users')
-                        .select('*')
-                        .eq('username', username)
-                        .eq('password', password);
-                    
-                    if (error) {
-                        errorDiv.innerHTML = '<span style="color: #ff8080;">Error: ' + error.message + '</span>';
-                        return;
-                    }
-                    
-                    if (!users || users.length === 0) {
-                        errorDiv.innerHTML = '<span style="color: #ff8080;">Invalid username or password</span>';
-                        return;
-                    }
-                    
-                    const user = users[0];
-                    
-                    localStorage.setItem('currentUser', JSON.stringify({
-                        uid: user.uid,
-                        username: user.username,
-                        balance: user.balance || 0,
-                        trialBonusAmount: user.trial_bonus_amount || 0,
-                        commissionRate: user.commission_rate || 5,
-                        vipLevel: user.vip_level || 1,
-                        inviteCode: user.invite_code,
-                        pin: user.pin,
-                        isLoggedIn: true,
-                        loginTime: Date.now()
-                    }));
-                    
-                    errorDiv.innerHTML = '<span style="color: #4ade80;">Login successful! Redirecting...</span>';
-                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
-                } catch(err) {
-                    errorDiv.innerHTML = '<span style="color: #ff8080;">Error: ' + err.message + '</span>';
+                if (!users || users.length === 0) {
+                    errorDiv.innerHTML = '<span style="color: #ff5a5a;">Invalid username or password</span>';
+                    return;
                 }
-            };
-        })();
+                
+                const user = users[0];
+                
+                localStorage.setItem('currentUser', JSON.stringify({
+                    uid: user.uid,
+                    username: user.username,
+                    balance: user.balance || 0,
+                    trialBonusAmount: user.trial_bonus_amount || 0,
+                    commissionRate: user.commission_rate || 5,
+                    vipLevel: user.vip_level || 1,
+                    inviteCode: user.invite_code,
+                    pin: user.pin,
+                    isLoggedIn: true,
+                    loginTime: Date.now()
+                }));
+                
+                errorDiv.innerHTML = '<span style="color: #2ed15a;">Login successful! Redirecting...</span>';
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+            } catch(err) {
+                errorDiv.innerHTML = '<span style="color: #ff5a5a;">Error: ' + err.message + '</span>';
+            }
+        }
         
+        // 检查是否已登录
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
             try {
@@ -166,10 +270,13 @@
             } catch(e) {}
         }
         
-        document.addEventListener('keypress', e => { if (e.key === 'Enter') window.handleSignIn(); });
+        // 回车登录
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleSignIn();
+        });
     </script>
 
-    <!-- 波浪效果脚本 -->
+    <!-- 波浪效果 - 橙色 -->
     <script>
     (function() {
         const canvas = document.getElementById('wavesBg');
@@ -187,17 +294,17 @@
         
         function animate() {
             time += 0.02;
-            ctx.fillStyle = '#0a0f2a';
+            ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, width, height);
             
             for(let i = 0; i < 3; i++) {
                 ctx.beginPath();
                 for(let x = 0; x <= width; x += 10) {
-                    const y = height * (0.4 + i * 0.2) + Math.sin(x * 0.01 + time * (1 + i * 0.5)) * 30 + Math.cos(x * 0.02 + time) * 15;
+                    const y = height * (0.4 + i * 0.2) + Math.sin(x * 0.01 + time * (1 + i * 0.5)) * 25 + Math.cos(x * 0.02 + time) * 12;
                     if(x === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
                 }
-                ctx.strokeStyle = `rgba(201, 176, 149, ${0.15 - i * 0.03})`;
+                ctx.strokeStyle = `rgba(249, 115, 22, ${0.15 - i * 0.04})`;
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
