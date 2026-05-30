@@ -31,7 +31,7 @@
         }
 
         .products-header {
-            padding: 20px 12px 10px;
+            padding: 20px 16px 10px;
         }
 
         .header-title {
@@ -44,37 +44,95 @@
         .header-sub {
             font-size: 13px;
             color: #6b7280;
+            margin-bottom: 16px;
         }
 
-        .categories-bar {
-            padding: 0 12px 16px;
+        /* 双下拉框行 */
+        .filter-row {
             display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            scrollbar-width: none;
+            gap: 12px;
+            padding: 0 16px;
+            margin-bottom: 20px;
         }
 
-        .categories-bar::-webkit-scrollbar {
-            display: none;
+        .select-container {
+            flex: 1;
+            position: relative;
         }
 
-        .category-chip {
-            padding: 6px 14px;
-            border-radius: 30px;
-            background: white;
-            border: 1px solid #eef2f7;
-            font-size: 12px;
+        .select-trigger {
+            width: 100%;
+            background: #1a1a2e;
+            border: 1px solid #33334e;
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-size: 13px;
             font-weight: 500;
-            color: #6b7280;
+            color: white;
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: all 0.2s;
-            white-space: nowrap;
         }
 
-        .category-chip.active {
-            background: #ff7a00;
+        .select-trigger:hover {
             border-color: #ff7a00;
-            color: white;
+        }
+
+        .trigger-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .trigger-icon {
+            color: #ff7a00;
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .select-trigger.open .trigger-icon {
+            transform: rotate(180deg);
+        }
+
+        .select-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            border: 1px solid #33334e;
+            border-radius: 14px;
+            overflow: hidden;
+            z-index: 100;
+            max-height: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: max-height 0.35s ease-out, opacity 0.25s ease, visibility 0.25s;
+        }
+
+        .select-dropdown.open {
+            max-height: 280px;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .select-option {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #cbd5e1;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .select-option:hover {
+            background: rgba(255, 122, 0, 0.15);
+            color: #ff7a00;
+        }
+
+        .select-option.selected {
+            color: #ff7a00;
+            background: rgba(255, 122, 0, 0.08);
         }
 
         .products-grid {
@@ -203,6 +261,50 @@
             color: white;
         }
 
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        .loading-spinner {
+            text-align: center;
+        }
+
+        .loading-spinner i {
+            font-size: 40px;
+            color: #ff7a00;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .load-more-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .load-more-btn {
+            background: white;
+            border: 1px solid #eef2f7;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #ff7a00;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .load-more-btn:hover {
+            background: #ff7a00;
+            color: white;
+        }
+
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -236,9 +338,9 @@
             font-weight: 600;
         }
 
-        .loading-state, .empty-state {
+        .empty-state {
             text-align: center;
-            padding: 40px 20px;
+            padding: 60px 20px;
             color: #94a3b8;
         }
 
@@ -255,17 +357,48 @@
         <div class="header-sub">Discover premium items</div>
     </div>
 
-    <div class="categories-bar" id="categoriesBar">
-        <div class="category-chip active" data-category="all">All</div>
-        <div class="category-chip" data-category="trending">Trending</div>
-        <div class="category-chip" data-category="best">Best Sellers</div>
-        <div class="category-chip" data-category="new">New Arrivals</div>
-        <div class="category-chip" data-category="eco">Eco-Friendly</div>
-        <div class="category-chip" data-category="high">High Profit</div>
+    <!-- 双下拉框行 -->
+    <div class="filter-row">
+        <div class="select-container" id="itemsContainer">
+            <div class="select-trigger" id="itemsTrigger">
+                <span class="trigger-text" id="itemsText">All Items</span>
+                <i class="fas fa-chevron-down trigger-icon"></i>
+            </div>
+            <div class="select-dropdown" id="itemsDropdown">
+                <div class="select-option selected" data-value="all" data-label="All Items">All Items</div>
+                <div class="select-option" data-value="trending" data-label="Trending">Trending</div>
+                <div class="select-option" data-value="new" data-label="New Arrivals">New Arrivals</div>
+                <div class="select-option" data-value="eco" data-label="Eco-Friendly">Eco-Friendly</div>
+                <div class="select-option" data-value="high" data-label="High Profit">High Profit</div>
+            </div>
+        </div>
+
+        <div class="select-container" id="sortContainer">
+            <div class="select-trigger" id="sortTrigger">
+                <span class="trigger-text" id="sortText">Sort By</span>
+                <i class="fas fa-chevron-down trigger-icon"></i>
+            </div>
+            <div class="select-dropdown" id="sortDropdown">
+                <div class="select-option selected" data-value="default" data-label="Sort By">Sort By</div>
+                <div class="select-option" data-value="price_desc" data-label="Price High To Low">Price High To Low</div>
+                <div class="select-option" data-value="price_asc" data-label="Price Low To High">Price Low To High</div>
+                <div class="select-option" data-value="margin_desc" data-label="High Margin">High Margin</div>
+                <div class="select-option" data-value="margin_asc" data-label="Low Margin">Low Margin</div>
+            </div>
+        </div>
     </div>
 
     <div class="products-grid" id="productsGrid">
-        <div class="loading-state">Loading products...</div>
+        <div class="loading-container">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner"></i>
+                <div style="margin-top: 10px; font-size: 13px; color: #6b7280;">Loading products...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+        <button class="load-more-btn" id="loadMoreBtn">Load More</button>
     </div>
 
     <div class="bottom-nav">
@@ -283,15 +416,19 @@
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let allProducts = [];
+    let filteredProducts = [];
     let currentCategory = 'all';
+    let currentSort = 'default';
+    let displayCount = 10;
+    let isLoading = false;
 
-    const categories = {
-        all: { filter: () => true },
-        trending: { filter: (p) => p.is_trending || p.price > 70 },
-        best: { filter: (p) => p.is_best_seller || (p.price > 80 && p.price < 200) },
-        new: { filter: (p) => p.is_new_arrival || (p.id > 50) },
-        eco: { filter: (p) => p.is_eco || p.price < 40 },
-        high: { filter: (p) => p.margin_rate > 30 || p.price > 120 }
+    // 下拉框数据映射
+    const categoryMap = {
+        all: { filter: () => true, label: 'All Items' },
+        trending: { filter: (p) => p.is_trending || p.price > 70, label: 'Trending' },
+        new: { filter: (p) => p.is_new_arrival || (p.id > 50), label: 'New Arrivals' },
+        eco: { filter: (p) => p.is_eco || p.price < 40, label: 'Eco-Friendly' },
+        high: { filter: (p) => p.margin_rate > 30 || p.price > 120, label: 'High Profit' }
     };
 
     function getRandomMargin(price) {
@@ -311,20 +448,46 @@
         return tags.slice(0, 2);
     }
 
+    function sortProducts(products, sortType) {
+        const sorted = [...products];
+        switch (sortType) {
+            case 'price_asc':
+                return sorted.sort((a, b) => a.price - b.price);
+            case 'price_desc':
+                return sorted.sort((a, b) => b.price - a.price);
+            case 'margin_desc':
+                return sorted.sort((a, b) => (b.margin_percent || getRandomMargin(b.price).percent) - (a.margin_percent || getRandomMargin(a.price).percent));
+            case 'margin_asc':
+                return sorted.sort((a, b) => (a.margin_percent || getRandomMargin(a.price).percent) - (b.margin_percent || getRandomMargin(b.price).percent));
+            default:
+                return sorted;
+        }
+    }
+
+    function applyFilterAndSort() {
+        const filterFn = categoryMap[currentCategory]?.filter || (() => true);
+        let filtered = allProducts.filter(filterFn);
+        filtered = sortProducts(filtered, currentSort);
+        filteredProducts = filtered;
+        displayCount = 10;
+        renderProducts();
+    }
+
     function renderProducts() {
         const grid = document.getElementById('productsGrid');
         if (!grid) return;
 
-        const filterFn = categories[currentCategory]?.filter || (() => true);
-        const filtered = allProducts.filter(filterFn);
+        const toShow = filteredProducts.slice(0, displayCount);
+        const hasMore = filteredProducts.length > displayCount;
+        document.getElementById('loadMoreContainer').style.display = hasMore ? 'block' : 'none';
 
-        if (filtered.length === 0) {
+        if (toShow.length === 0 && filteredProducts.length === 0) {
             grid.innerHTML = '<div class="empty-state">No products found</div>';
             return;
         }
 
         let html = '';
-        filtered.forEach((product, index) => {
+        toShow.forEach((product, index) => {
             const margin = getRandomMargin(product.price);
             const tags = getProductTags(product, margin.percent);
             const isRightColumn = (index % 2 === 1);
@@ -383,6 +546,13 @@
         });
     }
 
+    function loadMore() {
+        if (displayCount < filteredProducts.length) {
+            displayCount = Math.min(displayCount + 10, filteredProducts.length);
+            renderProducts();
+        }
+    }
+
     async function addToCart(productId, price) {
         const user = getCurrentUser();
         if (!user) {
@@ -419,7 +589,14 @@
 
     async function loadProducts() {
         const grid = document.getElementById('productsGrid');
-        grid.innerHTML = '<div class="loading-state">Loading products...</div>';
+        grid.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner"></i>
+                    <div style="margin-top: 10px; font-size: 13px; color: #6b7280;">Loading products...</div>
+                </div>
+            </div>
+        `;
 
         try {
             const { data, error } = await sb
@@ -443,25 +620,71 @@
                     { id: 7, accommodation_name: 'Eco Lodge', price: 79, image_url: '', is_eco: true },
                     { id: 8, accommodation_name: 'Sunset Resort', price: 359, image_url: '' },
                     { id: 9, accommodation_name: 'Grand Hotel', price: 520, image_url: '', is_exclusive: true },
-                    { id: 10, accommodation_name: 'Urban Stay', price: 129, image_url: '' }
+                    { id: 10, accommodation_name: 'Urban Stay', price: 129, image_url: '' },
+                    { id: 11, accommodation_name: 'Coastal Inn', price: 85, image_url: '' },
+                    { id: 12, accommodation_name: 'Mountain Lodge', price: 210, image_url: '' },
+                    { id: 13, accommodation_name: 'City Lights Hotel', price: 175, image_url: '' },
+                    { id: 14, accommodation_name: 'Bay View Resort', price: 380, image_url: '' },
+                    { id: 15, accommodation_name: 'Garden Suites', price: 145, image_url: '' }
                 ];
             }
 
-            renderProducts();
+            applyFilterAndSort();
         } catch (e) {
             console.error('加载失败:', e);
             grid.innerHTML = '<div class="empty-state">Failed to load products</div>';
         }
     }
 
-    function setupCategories() {
-        const chips = document.querySelectorAll('.category-chip');
-        chips.forEach(chip => {
-            chip.addEventListener('click', () => {
-                chips.forEach(c => c.classList.remove('active'));
-                chip.classList.add('active');
-                currentCategory = chip.dataset.category;
-                renderProducts();
+    // ========== 下拉框初始化 ==========
+    function closeAllDropdowns(exceptId) {
+        const containers = ['itemsContainer', 'sortContainer'];
+        containers.forEach(id => {
+            if (id !== exceptId) {
+                const container = document.getElementById(id);
+                const trigger = container.querySelector('.select-trigger');
+                const dropdown = container.querySelector('.select-dropdown');
+                trigger.classList.remove('open');
+                dropdown.classList.remove('open');
+            }
+        });
+    }
+
+    function initSelect(containerId, textSpanId, isCategory = false) {
+        const container = document.getElementById(containerId);
+        const trigger = container.querySelector('.select-trigger');
+        const dropdown = container.querySelector('.select-dropdown');
+        const textSpan = document.getElementById(textSpanId);
+        
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = trigger.classList.contains('open');
+            closeAllDropdowns(containerId);
+            if (!isOpen) {
+                trigger.classList.add('open');
+                dropdown.classList.add('open');
+            }
+        });
+        
+        const options = dropdown.querySelectorAll('.select-option');
+        options.forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const value = opt.dataset.value;
+                const label = opt.dataset.label;
+                textSpan.textContent = label;
+                trigger.classList.remove('open');
+                dropdown.classList.remove('open');
+                
+                options.forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+                
+                if (isCategory) {
+                    currentCategory = value;
+                } else {
+                    currentSort = value;
+                }
+                applyFilterAndSort();
             });
         });
     }
@@ -489,9 +712,13 @@
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
-    loadProducts();
-    setupCategories();
+    document.getElementById('loadMoreBtn')?.addEventListener('click', loadMore);
+    document.addEventListener('click', () => closeAllDropdowns(null));
+
+    initSelect('itemsContainer', 'itemsText', true);
+    initSelect('sortContainer', 'sortText', false);
     setupBottomNav();
+    loadProducts();
 </script>
 </body>
 </html>
