@@ -1,4 +1,4 @@
-// admin-dashboard.js - 完整版（琥珀金通知 + 实时订阅 + Email待发送统计）
+// admin-dashboard.js - 完整版（琥珀金通知 + 实时订阅 + Email待发送统计 + 实时活动）
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -168,6 +168,7 @@ async function loadRingData() {
     } catch (e) { console.error('加载环形图数据失败:', e); }
 }
 
+// ========== 实时活动加载函数 ==========
 async function loadActivityTimeline(force = false) {
     const now = Date.now();
     if (!force && cachedData.activity && (now - cachedData.lastActivityTime) < CACHE_DURATION) {
@@ -175,11 +176,13 @@ async function loadActivityTimeline(force = false) {
         return;
     }
     try {
+        console.log('🔄 加载实时活动...');
+        
         const [kycRes, withdrawalRes, userRes, emailRes] = await Promise.all([
-            sb.from('kyc_verifications').select('*').eq('status', 'pending').order('uploaded_at', { ascending: false }).limit(10),
-            sb.from('withdrawals').select('*').order('request_date', { ascending: false }).limit(10),
-            sb.from('users').select('*').order('created_at', { ascending: false }).limit(10),
-            sb.from('email_verification_requests').select('*').eq('is_verified', false).is('code', null).order('requested_at', { ascending: false }).limit(10)
+            sb.from('kyc_verifications').select('*').order('uploaded_at', { ascending: false }).limit(30),
+            sb.from('withdrawals').select('*').order('request_date', { ascending: false }).limit(30),
+            sb.from('users').select('*').order('created_at', { ascending: false }).limit(30),
+            sb.from('email_verification_requests').select('*').order('requested_at', { ascending: false }).limit(30)
         ]);
         
         const kycList = kycRes.data || [];
@@ -187,44 +190,135 @@ async function loadActivityTimeline(force = false) {
         const userList = userRes.data || [];
         const emailList = emailRes.data || [];
         
-        const kycWithNames = [];
+        console.log(`📊 数据统计: KYC=${kycList.length}, 提现=${withdrawalList.length}, 用户=${userList.length}, 邮箱=${emailList.length}`);
+        
+        const activities = [];
+        
+        // 添加KYC活动
         for (const k of kycList) {
-            const { data: user } = await sb.from('users').select('username').eq('uid', k.uid).single();
-            kycWithNames.push({
-                ...k,
-                username: user?.username || k.uid
+            let username = k.username || k.uid;
+            if (!k.username || k.username === k.uid) {
+                const { data: user } = await sb.from('users').select('username').eq('uid', k.uid).maybeSingle();
+                if (user) username = user.username;
+            }
+            
+            let statusText = '';
+            if (k.status === 'pending') statusText = '待审核';
+            else if (k.status === 'approved') statusText = '已通过';
+            else if (k.status === 'rejected') statusText = '已拒绝';
+            
+            activities.push({
+                type: 'kyc',
+                title: `📋 KYC申请 ${statusText}`,
+                user: username,
+                time: k.uploaded_at || k.created_at,
+                icon: 'fas fa-id-card',
+                color: '#ffb84d'
             });
         }
         
-        const activities = [];
-        kycWithNames.forEach(k => activities.push({ type: 'kyc', title: 'KYC申请', user: k.username, time: k.uploaded_at, icon: 'fas fa-id-card', color: '#ffb84d' }));
-        withdrawalList.forEach(w => activities.push({ type: 'withdrawal', title: '提现申请', user: w.username, amount: `€${w.amount}`, time: w.request_date, icon: 'fas fa-money-bill-wave', color: '#4a7cff' }));
-        userList.forEach(u => activities.push({ type: 'user', title: '新用户注册', user: u.username, time: u.created_at, icon: 'fas fa-user-plus', color: '#2ed15a' }));
-        emailList.forEach(e => activities.push({ type: 'email', title: '邮箱验证请求', user: e.email, time: e.requested_at, icon: 'fas fa-envelope', color: '#ffb84d' }));
+        // 添加提现活动
+        for (const w of withdrawalList) {
+            let statusText = '';
+            if (w.status === 'pending') statusText = '待审核';
+            else if (w.status === 'approved') statusText = '已批准';
+            else if (w.status === 'rejected') statusText = '已拒绝';
+            
+            activities.push({
+                type: 'withdrawal',
+                title: `💰 提现申请 ${statusText}`,
+                user: w.username,
+                amount: `€${(w.amount || 0).toFixed(2)}`,
+                time: w.request_date,
+                icon: 'fas fa-money-bill-wave',
+                color: '#4a7cff'
+            });
+        }
         
+        // 添加新用户注册活动
+        for (const u of userList) {
+            activities.push({
+                type: 'user',
+                title: '👤 新用户注册',
+                user: u.username,
+                time: u.created_at,
+                icon: 'fas fa-user-plus',
+                color: '#2ed15a'
+            });
+        }
+        
+        // 添加邮箱验证请求活动
+        for (const e of emailList) {
+            let statusText = '';
+            if (e.code && !e.is_verified) statusText = '待验证';
+            else if (e.is_verified) statusText = '已验证';
+            else statusText = '待设置验证码';
+            
+            activities.push({
+                type: 'email',
+                title: `📧 邮箱验证请求 ${statusText}`,
+                user: e.email,
+                time: e.requested_at,
+                icon: 'fas fa-envelope',
+                color: '#ffb84d'
+            });
+        }
+        
+        // 按时间倒序排序
         activities.sort((a, b) => new Date(b.time) - new Date(a.time));
         
-        cachedData.activity = activities;
+        console.log(`📋 生成活动列表: ${activities.length} 条`);
+        
+        cachedData.activity = activities.slice(0, 30);
         cachedData.lastActivityTime = now;
-        renderActivityList(activities);
-    } catch (e) { console.error('加载活动时间线失败:', e); }
+        renderActivityList(activities.slice(0, 15));
+        
+    } catch (e) {
+        console.error('加载活动时间线失败:', e);
+    }
 }
 
 function renderActivityList(activities) {
     const activityList = document.getElementById('activityList');
     if (!activityList) return;
-    if (activities.length === 0) {
+    
+    if (!activities || activities.length === 0) {
         activityList.innerHTML = '<div style="text-align: center; padding: 20px; color: #6a7a9a;">暂无活动</div>';
         return;
     }
-    activityList.innerHTML = activities.slice(0, 15).map(a => `
-        <div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(74,124,255,0.1);">
-            <div style="width: 36px; height: 36px; border-radius: 10px; background: ${a.color}20; display: flex; align-items: center; justify-content: center;"><i class="${a.icon}" style="color: ${a.color};"></i></div>
-            <div style="flex: 1;"><div style="font-size: 14px; font-weight: 500;">${a.title}</div><div style="font-size: 12px; color: #8a9abb;">${a.user} ${a.amount || ''}</div></div>
-            <div style="font-size: 11px; color: #6a7a9a;">${formatTime(a.time)}</div>
-        </div>
-    `).join('');
+    
+    activityList.innerHTML = activities.map(a => {
+        let amountHtml = '';
+        if (a.amount) {
+            amountHtml = `<div style="font-size: 11px; color: #2ed15a;">${a.amount}</div>`;
+        }
+        
+        return `
+            <div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(74,124,255,0.1); cursor: pointer;" onclick="handleActivityClick('${a.type}')">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: ${a.color}20; display: flex; align-items: center; justify-content: center;">
+                    <i class="${a.icon}" style="color: ${a.color};"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 13px; font-weight: 500;">${escapeHtml(a.title)}</div>
+                    <div style="font-size: 11px; color: #8a9abb;">${escapeHtml(a.user)}</div>
+                    ${amountHtml}
+                </div>
+                <div style="font-size: 10px; color: #6a7a9a;">${formatTime(a.time)}</div>
+            </div>
+        `;
+    }).join('');
 }
+
+// 点击活动跳转
+window.handleActivityClick = function(type) {
+    if (type === 'kyc') {
+        showPage('kyc');
+    } else if (type === 'withdrawal') {
+        showPage('withdrawals');
+    } else if (type === 'email') {
+        showPage('emailverify');
+    }
+};
 
 async function refreshDashboard(days = currentDays, force = false) {
     await Promise.all([
@@ -367,156 +461,6 @@ function bindDateFilters() {
     });
 }
 
-// ========== 琥珀金风格通知 ==========
-function showAmberNotification(title, message, type) {
-    const existingNotification = document.querySelector('.notification-amber');
-    if (existingNotification) existingNotification.remove();
-    
-    let icon = 'fa-id-card';
-    let iconColor = '#ffb84d';
-    
-    if (type === 'withdrawal') {
-        icon = 'fa-money-bill-wave';
-    } else if (type === 'kyc') {
-        icon = 'fa-id-card';
-    } else if (type === 'email') {
-        icon = 'fa-envelope';
-    }
-    
-    const notification = document.createElement('div');
-    notification.className = 'notification-amber';
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 10000;
-        min-width: 340px;
-        max-width: 420px;
-        padding: 14px 18px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        background: rgba(30, 25, 15, 0.95);
-        backdrop-filter: blur(12px);
-        border-left: 4px solid #ffb84d;
-        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
-        cursor: pointer;
-        animation: slideIn 0.4s ease forwards;
-        font-family: 'Inter', sans-serif;
-    `;
-    
-    notification.innerHTML = `
-        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,184,77,0.15); display: flex; align-items: center; justify-content: center;">
-            <i class="fas ${icon}" style="color: ${iconColor}; font-size: 22px;"></i>
-        </div>
-        <div style="flex: 1;">
-            <div style="font-weight: 700; font-size: 14px; color: #ffb84d; margin-bottom: 4px;">${title}</div>
-            <div style="font-size: 12px; color: #d4c8a0; opacity: 0.9;">${message}</div>
-            <div style="font-size: 10px; color: #8a7a5a; margin-top: 4px;">刚刚</div>
-        </div>
-        <div style="cursor: pointer; opacity: 0.5; padding: 4px;" class="notification-close">
-            <i class="fas fa-times" style="color: #d4c8a0;"></i>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    if (!document.querySelector('#notification-style')) {
-        const style = document.createElement('style');
-        style.id = 'notification-style';
-        style.textContent = `
-            @keyframes slideIn {
-                0% { transform: translateX(calc(100% + 20px)); opacity: 0; }
-                100% { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOut {
-                0% { transform: translateX(0); opacity: 1; }
-                100% { transform: translateX(calc(100% + 20px)); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.onclick = (e) => {
-        e.stopPropagation();
-        notification.style.animation = 'slideOut 0.3s ease forwards';
-        setTimeout(() => notification.remove(), 300);
-    };
-    
-    notification.onclick = (e) => {
-        if (e.target !== closeBtn && !closeBtn.contains(e.target)) {
-            notification.style.animation = 'slideOut 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
-        }
-    };
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.animation = 'slideOut 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
-        }
-    }, 5000);
-}
-
-// ========== 实时订阅 ==========
-function subscribeToRealtime() {
-    console.log('正在启动实时订阅...');
-    
-    if (window.realtimeChannel) {
-        sb.removeChannel(window.realtimeChannel);
-    }
-    
-    window.realtimeChannel = sb
-        .channel('schema-db-changes')
-        .on(
-            'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'withdrawals' },
-            (payload) => {
-                console.log('🔔 检测到新提现申请:', payload.new);
-                refreshDashboard(currentDays, true);
-                window.showAmberNotification(
-                    '💰 新提现申请',
-                    `用户 ${payload.new.username} 申请提现 €${payload.new.amount}`,
-                    'withdrawal'
-                );
-            }
-        )
-        .on(
-            'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'kyc_verifications' },
-            (payload) => {
-                console.log('🔔 检测到新KYC申请:', payload.new);
-                refreshDashboard(currentDays, true);
-                window.showAmberNotification(
-                    '📋 新KYC申请',
-                    `用户 ${payload.new.username || payload.new.uid} 提交了验证申请`,
-                    'kyc'
-                );
-            }
-        )
-        .on(
-            'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
-            (payload) => {
-                console.log('🔔 检测到新邮箱验证请求:', payload.new);
-                refreshDashboard(currentDays, true);
-                window.showAmberNotification(
-                    '📧 新邮箱验证请求',
-                    `用户 ${payload.new.email} 请求邮箱验证，请设置验证码`,
-                    'email'
-                );
-            }
-        )
-        .subscribe((status) => {
-            console.log('实时订阅状态:', status);
-            if (status === 'SUBSCRIBED') {
-                console.log('✅ 实时订阅已成功连接！');
-            }
-        });
-}
-
 function loadDashboardPage(days = 1) {
     const container = document.getElementById('page_dashboard');
     if (!container) return;
@@ -585,7 +529,9 @@ function loadDashboardPage(days = 1) {
                 <div style="font-size: 16px; font-weight: 600; color: #4a7cff;"><i class="fas fa-history"></i> 实时活动</div>
                 <div style="font-size: 11px; color: #2ed15a;"><i class="fas fa-circle" style="font-size: 8px;"></i> 实时更新</div>
             </div>
-            <div id="activityList" style="max-height: 300px; overflow-y: auto;"><div style="text-align: center; padding: 20px; color: #6a7a9a;">加载中...</div></div>
+            <div id="activityList" style="max-height: 350px; overflow-y: auto;">
+                <div style="text-align: center; padding: 20px; color: #6a7a9a;">加载中...</div>
+            </div>
         </div>
     `;
     
@@ -594,7 +540,6 @@ function loadDashboardPage(days = 1) {
         initRingChart();
         bindDateFilters();
         refreshDashboard(days, true);
-        subscribeToRealtime();
     }, 200);
     
     if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
