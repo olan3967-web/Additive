@@ -481,22 +481,22 @@
 
     // ========== 底部导航 ==========
     function setupBottomNav() {
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const page = item.dataset.page;
-                if (page === 'dashboard') {
-                    window.location.href = 'start.html';
-                } else if (page === 'products') {
-                    window.location.href = 'start.html';
-                } else if (page === 'orders') {
-                    window.location.href = 'history.html';
-                } else if (page === 'profile') {
-                    window.location.href = 'dashboard.html';
-                }
-            });
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const page = item.dataset.page;
+            if (page === 'dashboard') {
+                window.location.href = 'start.html';
+            } else if (page === 'products') {
+                window.location.href = 'products.html';
+            } else if (page === 'orders') {
+                window.location.href = 'history.html';
+            } else if (page === 'profile') {
+                window.location.href = 'dashboard.html';
+            }
         });
-    }
+    });
+}
 
     // ========== 初始化 ==========
     async function init() {
