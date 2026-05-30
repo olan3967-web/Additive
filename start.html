@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Dashboard - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -23,16 +23,17 @@
             justify-content: center;
         }
 
-        /* 手机容器 */
+        /* 手机容器 - 无左右padding */
         .phone {
             width: 390px;
             min-height: 100vh;
             background: #f5f7fb;
+            padding: 0;
             padding-bottom: 80px;
             position: relative;
         }
 
-        /* 页面头部 */
+        /* 页面头部 - 有左右边距 */
         .dashboard-header {
             padding: 20px 20px 0;
         }
@@ -65,24 +66,27 @@
         }
 
         /* 视频卡片 - 全宽无缝隙 */
-        .video-card {
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            position: relative;
-            background: #f5f7fb;
-            overflow: hidden;
-            line-height: 0;
-        }
+.video-card {
+    width: calc(100% + 40px);
+    margin-left: -20px;
+    margin-right: -20px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    position: relative;
+    background: #f5f7fb;
+    overflow: hidden;
+    line-height: 0;
+}
 
-        .video-card video {
-            width: 100%;
-            height: auto;
-            display: block;
-            object-fit: cover;
-        }
+.video-card video {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
 
-        /* 统计卡片网格 */
+        /* 统计卡片网格 - 有左右边距 */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -123,7 +127,7 @@
             font-size: 11px;
         }
 
-        /* 图表卡片 */
+        /* 图表卡片 - 有左右边距 */
         .chart-card {
             background: white;
             border-radius: 24px;
@@ -154,7 +158,7 @@
             height: 140px;
         }
 
-        /* 热门产品卡片 */
+        /* 热门产品卡片 - 有左右边距 */
         .products-card {
             background: white;
             border-radius: 24px;
@@ -191,22 +195,20 @@
             color: #ff7a00;
         }
 
-        /* 底部导航栏 */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-width: 390px;
-    margin: 0 auto;
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid #eef2f7;
-    display: flex;
-    padding: 10px 0 14px;
-    z-index: 100;
-}
+        /* 底部导航栏 - 全宽无缝隙 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid #eef2f7;
+            display: flex;
+            padding: 10px 0 14px;
+            z-index: 100;
+        }
 
         .nav-item {
             flex: 1;
@@ -228,38 +230,12 @@
             font-weight: 600;
         }
 
+        /* 手机适配 */
         @media (max-width: 390px) {
             .phone {
                 width: 100%;
             }
-            .bottom-nav {
-                width: 100%;
-                max-width: 390px;
-                left: 50%;
-                transform: translateX(-50%);
-            }
         }
-
-/* 视频卡片 - 全宽无缝隙 */
-.video-card {
-    width: calc(100% + 40px);  /* 加宽以抵消左右 padding */
-    margin-left: -20px;        /* 向左偏移20px */
-    margin-right: -20px;       /* 向右偏移20px */
-    margin-top: 0;
-    margin-bottom: 0;
-    padding: 0;
-    position: relative;
-    background: #f5f7fb;
-    overflow: hidden;
-    line-height: 0;
-}
-
-.video-card video {
-    width: 100%;
-    height: auto;
-    display: block;
-    object-fit: cover;
-}
     </style>
 </head>
 <body>
@@ -279,7 +255,7 @@
 
     <!-- 视频卡片 - 全宽无缝隙 -->
     <div class="video-card" id="videoContainer">
-        <video id="heroVideo" autoplay loop muted playsinline style="width:100%; height:auto; display:block;">
+        <video id="heroVideo" autoplay loop muted playsinline>
             <source src="" type="video/mp4">
         </video>
     </div>
@@ -334,7 +310,7 @@
         </div>
     </div>
 
-    <!-- 底部固定菜单栏 -->
+    <!-- 底部固定菜单栏 - 全宽无缝隙 -->
     <div class="bottom-nav">
         <div class="nav-item active" data-page="dashboard">
             <i class="fa-solid fa-house"></i>
