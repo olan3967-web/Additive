@@ -237,15 +237,13 @@ window.alert = function(message) {
     showToast(message, 'info');
 };
 
-// ========== 琥珀金风格通知（增强版 - 确保一定显示） ==========
+// ========== 琥珀金风格通知（增强版） ==========
 window.showAmberNotification = function(title, message, type) {
     console.log('🔔 显示琥珀通知:', { title, message, type });
     
-    // 移除已存在的通知
     const existingNotification = document.querySelector('.notification-amber');
     if (existingNotification) existingNotification.remove();
     
-    // 确定图标和颜色
     let icon = 'fa-info-circle';
     let iconColor = '#ffb84d';
     
@@ -257,12 +255,9 @@ window.showAmberNotification = function(title, message, type) {
         icon = 'fa-envelope';
     }
     
-    // 创建通知元素
     const notification = document.createElement('div');
     notification.className = 'notification-amber';
-    notification.setAttribute('data-type', type);
     
-    // 确保通知在最上层
     notification.style.cssText = `
         position: fixed !important;
         top: 20px !important;
@@ -302,48 +297,29 @@ window.showAmberNotification = function(title, message, type) {
     
     document.body.appendChild(notification);
     
-    // 确保动画样式存在
-    ensureAnimationStyles();
-    
-    // 关闭按钮事件
     const closeBtn = notification.querySelector('.notification-close');
     if (closeBtn) {
         closeBtn.onclick = (e) => {
             e.stopPropagation();
-            closeNotification(notification);
+            notification.style.animation = 'slideOutRight 0.3s ease forwards';
+            setTimeout(() => notification.remove(), 300);
         };
     }
     
-    // 点击通知关闭
     notification.onclick = (e) => {
         if (e.target !== closeBtn && !closeBtn?.contains(e.target)) {
-            closeNotification(notification);
+            notification.style.animation = 'slideOutRight 0.3s ease forwards';
+            setTimeout(() => notification.remove(), 300);
         }
     };
     
-    // 5秒后自动关闭
     setTimeout(() => {
         if (notification.parentNode) {
-            closeNotification(notification);
+            notification.style.animation = 'slideOutRight 0.3s ease forwards';
+            setTimeout(() => notification.remove(), 300);
         }
     }, 5000);
-    
-    // 播放提示音（可选 - 需要用户交互后才能播放）
-    try {
-        const audio = new Audio('data:audio/wav;base64,U3RlYWx0aCBub3RpZmljYXRpb24gc291bmQ=');
-        audio.volume = 0.3;
-        audio.play().catch(e => console.log('音频播放失败:', e));
-    } catch(e) {}
 };
-
-// 关闭通知的辅助函数
-function closeNotification(notification) {
-    if (!notification) return;
-    notification.style.animation = 'slideOutRight 0.3s ease forwards';
-    setTimeout(() => {
-        if (notification.parentNode) notification.remove();
-    }, 300);
-}
 
 // 确保动画样式存在
 function ensureAnimationStyles() {
@@ -353,24 +329,12 @@ function ensureAnimationStyles() {
     style.id = 'notification-animation-styles';
     style.textContent = `
         @keyframes slideInRight {
-            0% {
-                transform: translateX(calc(100% + 20px));
-                opacity: 0;
-            }
-            100% {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            0% { transform: translateX(calc(100% + 20px)); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
         }
         @keyframes slideOutRight {
-            0% {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            100% {
-                transform: translateX(calc(100% + 20px));
-                opacity: 0;
-            }
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(calc(100% + 20px)); opacity: 0; }
         }
         @keyframes toastProgress {
             0% { width: 100%; }
@@ -380,7 +344,6 @@ function ensureAnimationStyles() {
     document.head.appendChild(style);
 }
 
-// 页面加载时确保样式存在
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', ensureAnimationStyles);
 } else {
@@ -391,7 +354,7 @@ if (document.readyState === 'loading') {
 let realtimeChannel = null;
 
 function initGlobalRealtime() {
-    console.log('正在启动全局实时订阅...');
+    console.log('🚀 正在启动全局实时订阅...');
     
     if (realtimeChannel) {
         sb.removeChannel(realtimeChannel);
@@ -405,18 +368,7 @@ function initGlobalRealtime() {
             { event: 'INSERT', schema: 'public', table: 'kyc_verifications' },
             (payload) => {
                 console.log('🔔 检测到新KYC申请:', payload.new);
-                // 刷新仪表板
-                if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
-                // 刷新KYC页面（如果当前在KYC页面）
-                if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) {
-                    window.loadKycPage();
-                }
-                // 显示琥珀通知
-                window.showAmberNotification(
-                    '📋 新KYC申请',
-                    `用户 ${payload.new.username || payload.new.uid} 提交了身份验证申请`,
-                    'kyc'
-                );
+                handleNewKyc(payload.new);
             }
         )
         // 监听提现新申请
@@ -425,15 +377,7 @@ function initGlobalRealtime() {
             { event: 'INSERT', schema: 'public', table: 'withdrawals' },
             (payload) => {
                 console.log('🔔 检测到新提现申请:', payload.new);
-                if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
-                if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) {
-                    window.loadWithdrawalsPage();
-                }
-                window.showAmberNotification(
-                    '💰 新提现申请',
-                    `用户 ${payload.new.username} 申请提现 €${payload.new.amount}`,
-                    'withdrawal'
-                );
+                handleNewWithdrawal(payload.new);
             }
         )
         // 监听邮箱验证新请求
@@ -442,51 +386,105 @@ function initGlobalRealtime() {
             { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
             (payload) => {
                 console.log('🔔 检测到新邮箱验证请求:', payload.new);
-                if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
-                if (window.loadEmailVerifyPage && document.getElementById('page_emailverify')?.classList.contains('active')) {
-                    window.loadEmailVerifyPage();
-                }
-                window.showAmberNotification(
-                    '📧 新邮箱验证请求',
-                    `用户 ${payload.new.email} 请求邮箱验证，请设置验证码`,
-                    'email'
-                );
-            }
-        )
-        // 监听 KYC 状态更新（批准/拒绝）
-        .on(
-            'postgres_changes',
-            { event: 'UPDATE', schema: 'public', table: 'kyc_verifications' },
-            (payload) => {
-                console.log('🔔 KYC状态更新:', payload.new);
-                if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) {
-                    window.loadKycPage();
-                }
-            }
-        )
-        // 监听提现状态更新
-        .on(
-            'postgres_changes',
-            { event: 'UPDATE', schema: 'public', table: 'withdrawals' },
-            (payload) => {
-                console.log('🔔 提现状态更新:', payload.new);
-                if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) {
-                    window.loadWithdrawalsPage();
-                }
+                console.log('📧 邮箱:', payload.new.email);
+                handleNewEmailRequest(payload.new);
             }
         )
         .subscribe((status) => {
-            console.log('全局实时订阅状态:', status);
+            console.log('📡 全局实时订阅状态:', status);
             if (status === 'SUBSCRIBED') {
                 console.log('✅ 全局实时订阅已成功连接！');
+                console.log('✅ 正在监听: kyc_verifications, withdrawals, email_verification_requests');
+            } else if (status === 'CHANNEL_ERROR') {
+                console.error('❌ 实时订阅连接失败，5秒后重试...');
+                setTimeout(() => initGlobalRealtime(), 5000);
             }
         });
 }
+
+// 处理新KYC申请
+function handleNewKyc(data) {
+    console.log('📋 处理新KYC申请:', data);
+    
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    
+    if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) {
+        console.log('刷新KYC页面');
+        window.loadKycPage();
+    }
+    
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '📋 新KYC申请',
+            `用户 ${data.username || data.uid} 提交了身份验证申请`,
+            'kyc'
+        );
+    }
+}
+
+// 处理新提现申请
+function handleNewWithdrawal(data) {
+    console.log('💰 处理新提现申请:', data);
+    
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    
+    if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) {
+        console.log('刷新提现页面');
+        window.loadWithdrawalsPage();
+    }
+    
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '💰 新提现申请',
+            `用户 ${data.username} 申请提现 €${data.amount}`,
+            'withdrawal'
+        );
+    }
+}
+
+// 处理新邮箱验证请求
+function handleNewEmailRequest(data) {
+    console.log('📧 处理新邮箱验证请求:', data.email);
+    
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    
+    const emailPage = document.getElementById('page_emailverify');
+    if (emailPage && emailPage.classList.contains('active')) {
+        console.log('当前在Email页面，自动刷新列表');
+        if (window.loadEmailVerifyPage) {
+            window.loadEmailVerifyPage();
+        }
+    }
+    
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '📧 新邮箱验证请求',
+            `用户 ${data.email} 请求邮箱验证，请设置验证码`,
+            'email'
+        );
+    } else {
+        console.log('琥珀通知函数不存在，使用 alert 代替');
+        alert(`新邮箱验证请求: ${data.email}`);
+    }
+}
+
+// 启动全局实时订阅
+setTimeout(() => {
+    initGlobalRealtime();
+}, 1000);
 
 // ========== 页面切换函数 ==========
 const loadedPages = {};
 
 function showPage(pageId) {
+    console.log('切换页面:', pageId);
+    
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const targetPage = document.getElementById('page_' + pageId);
     if (targetPage) targetPage.classList.add('active');
@@ -497,16 +495,21 @@ function showPage(pageId) {
     
     // 每次切换页面都重新加载，确保数据最新
     if (pageId === 'dashboard' && window.loadDashboardPage) {
+        console.log('加载仪表板');
         window.loadDashboardPage(currentDays);
     } else if (pageId === 'users' && window.loadUsersPage) {
+        console.log('加载用户管理');
         window.loadUsersPage();
     } else if (pageId === 'kyc' && window.loadKycPage) {
+        console.log('加载KYC页面');
         window.loadKycPage();
     } else if (pageId === 'emailverify' && window.loadEmailVerifyPage) {
+        console.log('加载Email验证页面');
         window.loadEmailVerifyPage();
     } else if (pageId === 'trial' && window.loadTrialPage) {
         window.loadTrialPage();
     } else if (pageId === 'withdrawals' && window.loadWithdrawalsPage) {
+        console.log('加载提现页面');
         window.loadWithdrawalsPage();
     } else if (pageId === 'vip' && window.loadVipPage) {
         window.loadVipPage();
@@ -525,28 +528,9 @@ function showPage(pageId) {
     }
 }
 
-// 启动全局实时订阅
-initGlobalRealtime();
-
 // 登录检查
-if (localStorage.getItem('admin_logged_in') !== 'true') window.location.href = 'admin-login.html';
+if (localStorage.getItem('admin_logged_in') !== 'true') {
+    window.location.href = 'admin-login.html';
+}
 
-// 添加样式
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        0% { transform: translateX(calc(100% + 20px)); opacity: 0; }
-        100% { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes slideOut {
-        0% { transform: translateX(0); opacity: 1; }
-        100% { transform: translateX(calc(100% + 20px)); opacity: 0; }
-    }
-    @keyframes toastProgress {
-        0% { width: 100%; }
-        100% { width: 0%; }
-    }
-    .trend-up { color: #2ed15a; }
-    .trend-down { color: #ff5a5a; }
-`;
-document.head.appendChild(style);
+console.log('✅ admin-common.js 加载完成');
