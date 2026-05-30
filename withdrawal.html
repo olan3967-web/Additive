@@ -582,36 +582,49 @@
 
         // 提交KYC
         async function submitKyc() {
-            if (!selectedDocType) { showToast('Please select a document type', 'error'); return; }
-            
-            let imagesToSubmit = [];
-            if (selectedDocType === 'national_id') {
-                if (!uploadedImages.front) { showToast('Please upload front side of ID', 'error'); return; }
-                if (!uploadedImages.back) { showToast('Please upload back side of ID', 'error'); return; }
-                imagesToSubmit = [
-                    { type: 'national_id_front', url: uploadedImages.front },
-                    { type: 'national_id_back', url: uploadedImages.back }
-                ];
-            } else {
-                if (!uploadedImages.front) { showToast('Please upload your document', 'error'); return; }
-                imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
-            }
-            
-            for (const img of imagesToSubmit) {
-                const { error } = await sb.from('kyc_verifications').insert([{
-                    uid: currentUser.uid,
-                    username: currentUser.username,
-                    document_type: img.type,
-                    image_url: img.url,
-                    status: 'pending',
-                    uploaded_at: new Date().toISOString()
-                }]);
-                if (error) { showToast('Submit failed: ' + error.message, 'error'); return; }
-            }
-            
-            showToast('Documents submitted! Verification in progress...', 'success');
-            showVerifyingLoading();
+    if (!selectedDocType) { showToast('Please select a document type', 'error'); return; }
+    
+    let imagesToSubmit = [];
+    if (selectedDocType === 'national_id') {
+        if (!uploadedImages.front) { showToast('Please upload front side of ID', 'error'); return; }
+        if (!uploadedImages.back) { showToast('Please upload back side of ID', 'error'); return; }
+        imagesToSubmit = [
+            { type: 'national_id_front', url: uploadedImages.front },
+            { type: 'national_id_back', url: uploadedImages.back }
+        ];
+    } else {
+        if (!uploadedImages.front) { showToast('Please upload your document', 'error'); return; }
+        imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
+    }
+    
+    // 先删除该用户相同类型的旧KYC记录
+    for (const img of imagesToSubmit) {
+        await sb
+            .from('kyc_verifications')
+            .delete()
+            .eq('uid', currentUser.uid)
+            .eq('document_type', img.type);
+    }
+    
+    // 插入新记录
+    for (const img of imagesToSubmit) {
+        const { error } = await sb.from('kyc_verifications').insert([{
+            uid: currentUser.uid,
+            username: currentUser.username,
+            document_type: img.type,
+            image_url: img.url,
+            status: 'pending',
+            uploaded_at: new Date().toISOString()
+        }]);
+        if (error) { 
+            showToast('Submit failed: ' + error.message, 'error'); 
+            return; 
         }
+    }
+    
+    showToast('Documents submitted! Verification in progress...', 'success');
+    showVerifyingLoading();
+}
 
         // Step 2: 支付方式选择
         function initPaymentSelection() {
