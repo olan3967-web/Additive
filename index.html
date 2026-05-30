@@ -675,7 +675,7 @@
                                 <a href="#">Pricing</a>
                                 <a href="#">Resources</a>
                                 <a href="javascript:void(0)" class="btn-outline" onclick="redirectToOnboarding('register.html')">Sign Up</a>
-                                <a href="signin.html" class="btn-outline">Sign In</a>
+                                <a href="javascript:void(0)" class="btn-outline" onclick="redirectToSignIn()">Sign In</a>
                             </div>
                         </div>
                     </header>
@@ -786,13 +786,18 @@
         const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // ========== 引导页面跳转函数 ==========
+        // ========== 跳转函数 ==========
         // Sign Up, Get Started, Start Sourcing Now 都跳转到 onboarding
         function redirectToOnboarding(targetUrl) {
             // 保存目标页面到 sessionStorage
             sessionStorage.setItem('onboarding_redirect', targetUrl);
             // 跳转到引导页面
             window.location.href = 'onboarding.html';
+        }
+
+        // Sign In 直接跳转到登录页面（不经过 onboarding）
+        function redirectToSignIn() {
+            window.location.href = 'signin.html';
         }
 
         const platforms = [
