@@ -420,9 +420,55 @@
     let currentCategory = 'all';
     let currentSort = 'default';
     let displayCount = 10;
-    let isLoading = false;
 
-    // 下拉框数据映射
+    // ========== 根据价格区间计算 Margin ==========
+    function getMarginByPrice(price) {
+        let minPercent = 0;
+        let maxPercent = 0;
+        
+        if (price >= 1 && price <= 100) {
+            minPercent = 4.5;
+            maxPercent = 5.0;
+        } else if (price >= 101 && price <= 500) {
+            minPercent = 5.1;
+            maxPercent = 10.0;
+        } else if (price >= 501 && price <= 1000) {
+            minPercent = 10.1;
+            maxPercent = 15.0;
+        } else if (price >= 1001 && price <= 3000) {
+            minPercent = 15.1;
+            maxPercent = 20.0;
+        } else if (price >= 3001 && price <= 5000) {
+            minPercent = 20.1;
+            maxPercent = 25.0;
+        } else if (price > 5000) {
+            minPercent = 25.1;
+            maxPercent = 30.0;
+        } else {
+            minPercent = 4.5;
+            maxPercent = 5.0;
+        }
+        
+        const percent = minPercent + Math.random() * (maxPercent - minPercent);
+        const finalPercent = Math.round(percent * 10) / 10;
+        const profit = (price * finalPercent / 100).toFixed(0);
+        
+        return { percent: finalPercent, profit: parseFloat(profit) };
+    }
+
+    // ========== 获取产品标签 ==========
+    function getProductTags(product, marginPercent) {
+        const tags = [];
+        if (product.price > 90) tags.push({ type: 'trending', label: 'Trending' });
+        if (product.price < 40) tags.push({ type: 'eco', label: 'Eco-Friendly' });
+        if (product.price > 60 && product.price < 160) tags.push({ type: 'best', label: 'Best Seller' });
+        if (marginPercent > 18) tags.push({ type: 'high', label: 'High Profit' });
+        if (product.id > 50) tags.push({ type: 'new', label: 'New Arrival' });
+        if (product.price > 250) tags.push({ type: 'exclusive', label: 'Exclusive' });
+        return tags.slice(0, 2);
+    }
+
+    // ========== 分类和排序映射 ==========
     const categoryMap = {
         all: { filter: () => true, label: 'All Items' },
         trending: { filter: (p) => p.is_trending || p.price > 70, label: 'Trending' },
@@ -430,23 +476,6 @@
         eco: { filter: (p) => p.is_eco || p.price < 40, label: 'Eco-Friendly' },
         high: { filter: (p) => p.margin_rate > 30 || p.price > 120, label: 'High Profit' }
     };
-
-    function getRandomMargin(price) {
-        const percent = Math.floor(Math.random() * 40) + 15;
-        const profit = (price * percent / 100).toFixed(0);
-        return { percent, profit: parseFloat(profit) };
-    }
-
-    function getProductTags(product, marginPercent) {
-        const tags = [];
-        if (product.price > 90) tags.push({ type: 'trending', label: 'Trending' });
-        if (product.price < 40) tags.push({ type: 'eco', label: 'Eco-Friendly' });
-        if (product.price > 60 && product.price < 160) tags.push({ type: 'best', label: 'Best Seller' });
-        if (marginPercent > 38) tags.push({ type: 'high', label: 'High Profit' });
-        if (product.id > 50) tags.push({ type: 'new', label: 'New Arrival' });
-        if (product.price > 250) tags.push({ type: 'exclusive', label: 'Exclusive' });
-        return tags.slice(0, 2);
-    }
 
     function sortProducts(products, sortType) {
         const sorted = [...products];
@@ -456,9 +485,9 @@
             case 'price_desc':
                 return sorted.sort((a, b) => b.price - a.price);
             case 'margin_desc':
-                return sorted.sort((a, b) => (b.margin_percent || getRandomMargin(b.price).percent) - (a.margin_percent || getRandomMargin(a.price).percent));
+                return sorted.sort((a, b) => getMarginByPrice(b.price).percent - getMarginByPrice(a.price).percent);
             case 'margin_asc':
-                return sorted.sort((a, b) => (a.margin_percent || getRandomMargin(a.price).percent) - (b.margin_percent || getRandomMargin(b.price).percent));
+                return sorted.sort((a, b) => getMarginByPrice(a.price).percent - getMarginByPrice(b.price).percent);
             default:
                 return sorted;
         }
@@ -488,7 +517,7 @@
 
         let html = '';
         toShow.forEach((product, index) => {
-            const margin = getRandomMargin(product.price);
+            const margin = getMarginByPrice(product.price);
             const tags = getProductTags(product, margin.percent);
             const isRightColumn = (index % 2 === 1);
             
@@ -506,7 +535,7 @@
             html += `
                 <div class="product-card ${isRightColumn ? 'product-card-right' : ''}" data-id="${product.id}">
                     <img class="product-image" src="${product.image_url || ''}" 
-                         onerror="this.src='https://placehold.co/200x130/f0f2f5/94a3b8?text=Product'">
+                         onerror="this.src='https://placehold.co/400x280/f0f2f5/94a3b8?text=Product'">
                     <div class="product-info">
                         <div class="product-name">${escapeHtml(product.accommodation_name || 'Premium Task')}</div>
                         <div class="product-price">€${product.price.toFixed(2)}</div>
@@ -582,9 +611,7 @@
     function getCurrentUser() {
         const userStr = localStorage.getItem('currentUser');
         if (!userStr) return null;
-        try {
-            return JSON.parse(userStr);
-        } catch(e) { return null; }
+        try { return JSON.parse(userStr); } catch(e) { return null; }
     }
 
     async function loadProducts() {
@@ -619,13 +646,7 @@
                     { id: 6, accommodation_name: 'Business Suite', price: 249, image_url: '', is_trending: true },
                     { id: 7, accommodation_name: 'Eco Lodge', price: 79, image_url: '', is_eco: true },
                     { id: 8, accommodation_name: 'Sunset Resort', price: 359, image_url: '' },
-                    { id: 9, accommodation_name: 'Grand Hotel', price: 520, image_url: '', is_exclusive: true },
-                    { id: 10, accommodation_name: 'Urban Stay', price: 129, image_url: '' },
-                    { id: 11, accommodation_name: 'Coastal Inn', price: 85, image_url: '' },
-                    { id: 12, accommodation_name: 'Mountain Lodge', price: 210, image_url: '' },
-                    { id: 13, accommodation_name: 'City Lights Hotel', price: 175, image_url: '' },
-                    { id: 14, accommodation_name: 'Bay View Resort', price: 380, image_url: '' },
-                    { id: 15, accommodation_name: 'Garden Suites', price: 145, image_url: '' }
+                    { id: 9, accommodation_name: 'Grand Hotel', price: 520, image_url: '', is_exclusive: true }
                 ];
             }
 
