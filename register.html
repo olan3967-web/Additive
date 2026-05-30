@@ -4,91 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ADDITIVE - Register</title>
-    <link rel="stylesheet" href="common.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .register-container { width: 100%; padding: 20px; position: relative; z-index: 1; }
-        .register-card {
-            background: rgba(20, 30, 55, 0.85);
-            backdrop-filter: blur(20px);
-            border-radius: 32px;
-            padding: 42px 40px;
-            max-width: 480px;
-            margin: 0 auto;
-            border: 1px solid rgba(201, 176, 149, 0.25);
-            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.5);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .logo { font-size: 34px; font-weight: 800; text-align: center; margin-bottom: 8px; color: #ffffff; }
-        .logo span { color: #C9B095; }
-        .subtitle { text-align: center; color: #a0a8c0; margin-bottom: 32px; font-size: 14px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #a0a8c0; font-size: 13px; }
-        .form-group label i { margin-right: 8px; color: #C9B095; }
-        .form-group input {
-            width: 100%;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid #2a3560;
-            border-radius: 14px;
-            padding: 14px 18px;
-            color: white;
-            font-size: 14px;
-            outline: none;
-        }
-        .form-group input:focus { border-color: #C9B095; box-shadow: 0 0 0 3px rgba(201,176,149,0.15); }
-        
-        .code-row {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        .code-row input {
-            flex: 2;
-        }
-        .send-code-btn {
-            flex: 1;
-            background: rgba(201, 176, 149, 0.15);
-            border: 1px solid rgba(201, 176, 149, 0.3);
-            border-radius: 14px;
-            padding: 14px 12px;
-            color: #C9B095;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: 0.2s;
-        }
-        .send-code-btn:hover:not(:disabled) {
-            background: rgba(201, 176, 149, 0.25);
-        }
-        .send-code-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .register-btn {
-            width: 100%;
-            background: rgba(201, 176, 149, 0.15);
-            border: 1px solid rgba(201, 176, 149, 0.3);
-            padding: 14px;
-            border-radius: 40px;
-            color: #C9B095;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            margin-top: 24px;
-            transition: 0.2s;
+            position: relative;
+            overflow-x: hidden;
         }
-        .register-btn:hover { transform: scale(1.02); background: rgba(201,176,149,0.25); color: #ffd700; }
-        .login-link { text-align: center; margin-top: 24px; font-size: 13px; color: #a0a8c0; }
-        .login-link a { color: #C9B095; text-decoration: none; }
-        .error-message { text-align: center; margin-top: 16px; font-size: 13px; min-height: 40px; }
-        .success-message { text-align: center; margin-top: 16px; font-size: 13px; color: #4ade80; }
-        
+
+        /* 波浪背景 - 深橙色 */
         .waves-bg {
             position: fixed;
             top: 0;
@@ -98,22 +35,244 @@
             z-index: 0;
             pointer-events: none;
         }
-        body {
+
+        /* 顶部导航栏 */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 24px;
+            z-index: 100;
+            background: transparent;
+        }
+
+        .logo-link {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .logo-img {
+            height: 32px;
+            width: auto;
+            display: block;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a2e;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .logo-text span {
+            color: #f97316;
+        }
+
+        .register-container {
+            width: 100%;
+            padding: 20px;
             position: relative;
-            overflow-x: hidden;
-            background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
+            z-index: 1;
+            margin-top: 40px;
+        }
+
+        .register-card {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 28px 28px 32px;
+            max-width: 400px;
+            margin: 0 auto;
+            border: 1px solid #f0f0f0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 24px;
+            font-size: 13px;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .form-group label i {
+            margin-right: 6px;
+            color: #f97316;
+            font-size: 12px;
+        }
+
+        .form-group input {
+            width: 100%;
+            background: #f8f9fa;
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: #1a1a2e;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
+        .code-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .code-row input {
+            flex: 2;
+        }
+
+        .send-code-btn {
+            flex: 1;
+            background: #f97316;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 12px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .send-code-btn:hover:not(:disabled) {
+            background: #ea580c;
+        }
+
+        .send-code-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .register-btn {
+            width: 100%;
+            background: #f97316;
+            border: none;
+            padding: 12px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 20px;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .register-btn:hover {
+            background: #ea580c;
+            transform: scale(1.01);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .login-link a {
+            color: #f97316;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            text-align: center;
+            margin-top: 14px;
+            font-size: 12px;
+            min-height: 36px;
+        }
+
+        .success-message {
+            text-align: center;
+            margin-top: 14px;
+            font-size: 12px;
+            color: #2ed15a;
+        }
+
+        /* 手机适配 */
+        @media (max-width: 480px) {
+            .top-nav {
+                padding: 12px 20px;
+            }
+            .logo-img {
+                height: 28px;
+            }
+            .logo-text {
+                font-size: 18px;
+            }
+            .register-card {
+                padding: 22px 20px 28px;
+            }
+            .subtitle {
+                margin-bottom: 20px;
+                font-size: 12px;
+            }
+            .form-group input {
+                padding: 8px 12px;
+            }
+            .send-code-btn {
+                padding: 8px 10px;
+                font-size: 11px;
+            }
+            .register-btn {
+                padding: 10px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
     <canvas id="wavesBg" class="waves-bg"></canvas>
 
+    <!-- 顶部 Logo - 左上方 -->
+    <div class="top-nav">
+        <a href="index.html" class="logo-link" id="logoLink">
+            <!-- 默认文字 logo，JS 会尝试替换为图片 -->
+            <span class="logo-text">CJD<span> | ADDITIVE</span></span>
+        </a>
+    </div>
+
     <div class="register-container">
         <div class="register-card">
-            <div class="logo">ADDITIVE<span>®</span></div>
             <div class="subtitle">Create your account</div>
             
-            <!-- 原有字段：手机号 -->
+            <!-- 手机号 -->
             <div class="form-group">
                 <label><i class="fas fa-phone"></i> Phone Number</label>
                 <input type="tel" id="regPhone" placeholder="Enter your phone number">
@@ -137,7 +296,7 @@
                 <input type="text" id="regInviteCode" placeholder="Enter invite code">
             </div>
             
-            <!-- 邮箱 + 验证码（移到这里） -->
+            <!-- 邮箱 + 验证码 -->
             <div class="form-group">
                 <label><i class="fas fa-envelope"></i> Email Address</label>
                 <div class="code-row">
@@ -172,6 +331,28 @@
             d.innerText = msg;
             d.className = isError ? 'error-message' : 'success-message';
             setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 4000);
+        }
+        
+        // 加载 Logo - 使用您指定的图片URL
+        async function loadLogo() {
+            const logoUrl = 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png';
+            const logoLink = document.getElementById('logoLink');
+            if (logoLink) {
+                // 创建一个图片元素并尝试加载
+                const img = document.createElement('img');
+                img.src = logoUrl;
+                img.alt = 'Logo';
+                img.className = 'logo-img';
+                img.onload = () => {
+                    // 加载成功，替换为图片
+                    logoLink.innerHTML = '';
+                    logoLink.appendChild(img);
+                };
+                img.onerror = () => {
+                    // 加载失败，保留原有的文字Logo
+                    console.log('图片Logo加载失败，使用文字Logo');
+                };
+            }
         }
         
         // 发送邮箱到后台
@@ -461,9 +642,12 @@
         document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') handleRegister();
         });
+        
+        // 加载 logo（使用您指定的URL）
+        loadLogo();
     </script>
 
-    <!-- 波浪效果 -->
+    <!-- 波浪效果 - 深橙色 -->
     <script>
     (function() {
         const canvas = document.getElementById('wavesBg');
@@ -481,18 +665,19 @@
         
         function animate() {
             time += 0.02;
-            ctx.fillStyle = '#0a0f2a';
+            ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, width, height);
             
             for(let i = 0; i < 3; i++) {
                 ctx.beginPath();
                 for(let x = 0; x <= width; x += 10) {
-                    const y = height * (0.4 + i * 0.2) + Math.sin(x * 0.01 + time * (1 + i * 0.5)) * 30 + Math.cos(x * 0.02 + time) * 15;
+                    const y = height * (0.4 + i * 0.2) + Math.sin(x * 0.01 + time * (1 + i * 0.5)) * 25 + Math.cos(x * 0.02 + time) * 12;
                     if(x === 0) ctx.moveTo(x, y);
                     else ctx.lineTo(x, y);
                 }
-                ctx.strokeStyle = `rgba(201, 176, 149, ${0.15 - i * 0.03})`;
-                ctx.lineWidth = 2;
+                // 加深波浪颜色
+                ctx.strokeStyle = `rgba(249, 115, 22, ${0.25 - i * 0.06})`;
+                ctx.lineWidth = 2.5;
                 ctx.stroke();
             }
             
