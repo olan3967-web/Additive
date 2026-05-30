@@ -47,7 +47,6 @@
             margin-bottom: 16px;
         }
 
-        /* 双下拉框行 */
         .filter-row {
             display: flex;
             gap: 12px;
@@ -217,6 +216,7 @@
         .tag-new { background: #e8f0fe; color: #1a56db; border: 1px solid #b3d4ff; }
         .tag-high { background: #fee8e8; color: #c62828; border: 1px solid #ffcdd2; }
         .tag-exclusive { background: #1a1a2e; color: #ff9f43; border: 1px solid #ff7a00; }
+        .tag-limited { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; }
 
         .product-margin {
             font-size: 10px;
@@ -357,7 +357,6 @@
         <div class="header-sub">Discover premium items</div>
     </div>
 
-    <!-- 双下拉框行 -->
     <div class="filter-row">
         <div class="select-container" id="itemsContainer">
             <div class="select-trigger" id="itemsTrigger">
@@ -456,25 +455,63 @@
         return { percent: finalPercent, profit: parseFloat(profit) };
     }
 
-    // ========== 获取产品标签 ==========
+    // ========== 动态生成标签（每个产品不同） ==========
     function getProductTags(product, marginPercent) {
         const tags = [];
-        if (product.price > 90) tags.push({ type: 'trending', label: 'Trending' });
-        if (product.price < 40) tags.push({ type: 'eco', label: 'Eco-Friendly' });
-        if (product.price > 60 && product.price < 160) tags.push({ type: 'best', label: 'Best Seller' });
-        if (marginPercent > 18) tags.push({ type: 'high', label: 'High Profit' });
-        if (product.id > 50) tags.push({ type: 'new', label: 'New Arrival' });
-        if (product.price > 250) tags.push({ type: 'exclusive', label: 'Exclusive' });
-        return tags.slice(0, 2);
+        const price = product.price;
+        const random = Math.random();
+        
+        // 价格标签（根据价格范围）
+        if (price >= 300) {
+            tags.push({ type: 'premium', label: 'Premium', class: 'tag-exclusive' });
+        } else if (price >= 150 && price < 300) {
+            tags.push({ type: 'mid', label: 'Popular', class: 'tag-best' });
+        } else if (price < 50) {
+            tags.push({ type: 'budget', label: 'Budget', class: 'tag-eco' });
+        }
+        
+        // 根据 Margin 高低判断
+        if (marginPercent >= 18) {
+            tags.push({ type: 'high_margin', label: 'High Profit', class: 'tag-high' });
+        } else if (marginPercent <= 7) {
+            tags.push({ type: 'low_margin', label: 'Standard', class: 'tag-eco' });
+        }
+        
+        // 随机标签（让产品更多样化）
+        if (random < 0.25 && !tags.some(t => t.label === 'Trending')) {
+            tags.push({ type: 'trending', label: 'Trending', class: 'tag-trending' });
+        }
+        
+        if (random > 0.75 && !tags.some(t => t.label === 'Limited')) {
+            tags.push({ type: 'limited', label: 'Limited', class: 'tag-limited' });
+        }
+        
+        if (price > 800 && !tags.some(t => t.label === 'Luxury')) {
+            tags.push({ type: 'luxury', label: 'Luxury', class: 'tag-exclusive' });
+        }
+        
+        // 限制最多 2 个标签，至少保留 1 个
+        if (tags.length === 0) {
+            if (price >= 100) {
+                tags.push({ type: 'standard', label: 'Standard', class: 'tag-best' });
+            } else {
+                tags.push({ type: 'value', label: 'Value', class: 'tag-eco' });
+            }
+        }
+        
+        // 返回最多 2 个标签，并映射 CSS 类
+        return tags.slice(0, 2).map(tag => ({
+            label: tag.label,
+            class: tag.class
+        }));
     }
 
-    // ========== 分类和排序映射 ==========
     const categoryMap = {
         all: { filter: () => true, label: 'All Items' },
-        trending: { filter: (p) => p.is_trending || p.price > 70, label: 'Trending' },
-        new: { filter: (p) => p.is_new_arrival || (p.id > 50), label: 'New Arrivals' },
-        eco: { filter: (p) => p.is_eco || p.price < 40, label: 'Eco-Friendly' },
-        high: { filter: (p) => p.margin_rate > 30 || p.price > 120, label: 'High Profit' }
+        trending: { filter: (p) => p.price > 70, label: 'Trending' },
+        new: { filter: (p) => p.id > 50, label: 'New Arrivals' },
+        eco: { filter: (p) => p.price < 40, label: 'Eco-Friendly' },
+        high: { filter: (p) => p.price > 120, label: 'High Profit' }
     };
 
     function sortProducts(products, sortType) {
@@ -521,16 +558,9 @@
             const tags = getProductTags(product, margin.percent);
             const isRightColumn = (index % 2 === 1);
             
-            const tagsHtml = tags.map(tag => {
-                let tagClass = '';
-                if (tag.type === 'trending') tagClass = 'tag-trending';
-                else if (tag.type === 'best') tagClass = 'tag-best';
-                else if (tag.type === 'eco') tagClass = 'tag-eco';
-                else if (tag.type === 'new') tagClass = 'tag-new';
-                else if (tag.type === 'high') tagClass = 'tag-high';
-                else if (tag.type === 'exclusive') tagClass = 'tag-exclusive';
-                return `<span class="tag ${tagClass}">${tag.label}</span>`;
-            }).join('');
+            const tagsHtml = tags.map(tag => 
+                `<span class="tag ${tag.class}">${tag.label}</span>`
+            ).join('');
 
             html += `
                 <div class="product-card ${isRightColumn ? 'product-card-right' : ''}" data-id="${product.id}">
@@ -638,15 +668,16 @@
             
             if (allProducts.length === 0) {
                 allProducts = [
-                    { id: 1, accommodation_name: 'Luxury Beach Resort', price: 299, image_url: '', is_trending: true },
-                    { id: 2, accommodation_name: 'Mountain View Hotel', price: 189, image_url: '', is_best_seller: true },
+                    { id: 1, accommodation_name: 'Luxury Beach Resort', price: 299, image_url: '' },
+                    { id: 2, accommodation_name: 'Mountain View Hotel', price: 189, image_url: '' },
                     { id: 3, accommodation_name: 'City Central Inn', price: 99, image_url: '' },
-                    { id: 4, accommodation_name: 'Seaside Villa', price: 449, image_url: '', is_trending: true },
-                    { id: 5, accommodation_name: 'Cozy Boutique', price: 159, image_url: '', is_best_seller: true },
-                    { id: 6, accommodation_name: 'Business Suite', price: 249, image_url: '', is_trending: true },
-                    { id: 7, accommodation_name: 'Eco Lodge', price: 79, image_url: '', is_eco: true },
+                    { id: 4, accommodation_name: 'Seaside Villa', price: 449, image_url: '' },
+                    { id: 5, accommodation_name: 'Cozy Boutique', price: 159, image_url: '' },
+                    { id: 6, accommodation_name: 'Business Suite', price: 249, image_url: '' },
+                    { id: 7, accommodation_name: 'Eco Lodge', price: 79, image_url: '' },
                     { id: 8, accommodation_name: 'Sunset Resort', price: 359, image_url: '' },
-                    { id: 9, accommodation_name: 'Grand Hotel', price: 520, image_url: '', is_exclusive: true }
+                    { id: 9, accommodation_name: 'Grand Hotel', price: 520, image_url: '' },
+                    { id: 10, accommodation_name: 'Urban Stay', price: 129, image_url: '' }
                 ];
             }
 
@@ -657,7 +688,6 @@
         }
     }
 
-    // ========== 下拉框初始化 ==========
     function closeAllDropdowns(exceptId) {
         const containers = ['itemsContainer', 'sortContainer'];
         containers.forEach(id => {
