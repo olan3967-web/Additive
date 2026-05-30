@@ -390,23 +390,6 @@
             color: #666;
         }
 
-        .animation-header {
-            padding: 20px 24px 0;
-            text-align: center;
-        }
-
-        .animation-header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a1a2e;
-        }
-
-        .animation-header p {
-            font-size: 13px;
-            color: #888;
-            margin-top: 4px;
-        }
-
         @media (max-width: 480px) {
             .status-text {
                 font-size: 26px;
@@ -439,13 +422,8 @@
             </div>
         </div>
 
-        <!-- 动画完成页面（初始隐藏） -->
+        <!-- 动画完成页面（初始隐藏）- 已删除头部文字 -->
         <div id="animationContainer" style="display: none; flex-direction: column; min-height: 100vh;">
-            <div class="animation-header">
-                <h1>✨ 正在设置您的账户</h1>
-                <p>请稍候，我们正在为您准备一切</p>
-            </div>
-
             <div class="content-area" id="animationContentArea">
                 <div class="progress-wrapper" id="progressWrapper">
                     <div class="status-text" id="statusText">
@@ -548,8 +526,7 @@
         let dotProgressInterval = null;
         let totalDots = 12;
 
-        // ========== 不再检查 onboarding_completed，每次都会显示 onboarding ==========
-        // 清除任何可能残留的标记（可选，确保不影响）
+        // 清除任何可能残留的标记
         localStorage.removeItem('onboarding_completed');
 
         // 渲染进度条
@@ -770,8 +747,6 @@
                     }, 800);
                     
                     setTimeout(() => {
-                        // 不保存完成标记，直接跳转
-                        // 这样用户每次点击 Sign Up 都会重新看到 onboarding
                         const redirectUrl = sessionStorage.getItem('onboarding_redirect') || 'register.html';
                         sessionStorage.removeItem('onboarding_redirect');
                         window.location.href = redirectUrl;
@@ -803,7 +778,6 @@
                     renderProgress();
                     renderStepContent();
                 } else {
-                    // 完成所有步骤，显示动画页面
                     showAnimationPage();
                 }
             }
