@@ -548,14 +548,9 @@
         let dotProgressInterval = null;
         let totalDots = 12;
 
-        // 检查是否已经完成过完整的 onboarding
-        const hasCompletedOnboarding = localStorage.getItem('onboarding_completed');
-
-        if (hasCompletedOnboarding === 'true') {
-            const redirectUrl = sessionStorage.getItem('onboarding_redirect') || 'register.html';
-            sessionStorage.removeItem('onboarding_redirect');
-            window.location.href = redirectUrl;
-        }
+        // ========== 不再检查 onboarding_completed，每次都会显示 onboarding ==========
+        // 清除任何可能残留的标记（可选，确保不影响）
+        localStorage.removeItem('onboarding_completed');
 
         // 渲染进度条
         function renderProgress() {
@@ -775,10 +770,8 @@
                     }, 800);
                     
                     setTimeout(() => {
-                        // 只有完整完成所有步骤和动画后才保存完成状态
-                        localStorage.setItem('onboarding_completed', 'true');
-                        localStorage.setItem('onboarding_data', JSON.stringify(formData));
-                        
+                        // 不保存完成标记，直接跳转
+                        // 这样用户每次点击 Sign Up 都会重新看到 onboarding
                         const redirectUrl = sessionStorage.getItem('onboarding_redirect') || 'register.html';
                         sessionStorage.removeItem('onboarding_redirect');
                         window.location.href = redirectUrl;
