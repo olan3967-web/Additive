@@ -1,4 +1,5 @@
-// admin-animated.js - 动画/视频设置页面（使用自定义弹窗）
+// admin-animated.js - 动画/视频设置页面（添加视频上传功能）
+
 let featuredHotels = [];
 let uploadedImageUrl = '';
 let dashboardProducts = [];
@@ -10,29 +11,63 @@ async function loadAnimatedPage() {
         <div class="card">
             <h3><i class="fas fa-video"></i> 动态视频设置</h3>
             <div><label>视频 / GIF URL</label><input type="text" id="videoUrl" placeholder="https://example.com/video.mp4" class="search-input" style="width:100%;"></div>
-            <div style="display: flex; gap: 12px; margin-top: 12px;"><button id="saveVideoBtn" class="success">保存视频</button><button id="previewVideoBtn" class="btn-primary">预览</button></div>
-            <div id="videoPreview" style="margin-top: 20px; background:#0a0f1a; border-radius:12px; padding:20px; text-align:center; min-height:150px;"><p style="color:#aaa;">点击预览查看效果</p></div>
+            <div style="display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
+                <button id="uploadVideoBtn" class="btn-primary"><i class="fas fa-upload"></i> 上传视频</button>
+                <button id="saveVideoBtn" class="success">保存视频</button>
+                <button id="previewVideoBtn" class="btn-primary">预览</button>
+            </div>
+            <input type="file" id="videoFileInput" accept="video/*" style="display:none;">
+            <div id="uploadProgress" style="display:none; margin-top: 10px;">
+                <div style="background:#1e2a3a; border-radius:10px; overflow:hidden; height:6px;">
+                    <div id="progressBar" style="width:0%; height:100%; background:#4a7cff; transition:width 0.3s;"></div>
+                </div>
+                <div style="font-size:12px; color:#8a9abb; margin-top:5px;">上传中... <span id="progressPercent">0</span>%</div>
+            </div>
+            <div id="videoPreview" style="margin-top: 20px; background:#0a0f1a; border-radius:12px; padding:20px; text-align:center; min-height:150px;">
+                <p style="color:#aaa;">点击预览查看效果</p>
+            </div>
         </div>
         <div class="card">
             <h3><i class="fas fa-hotel"></i> 精选酒店轮播图</h3>
-            <div class="search-bar"><input type="text" id="hotelNameInput" class="search-input" placeholder="酒店名称"><input type="text" id="hotelImageInput" class="search-input" placeholder="图片 URL"><button id="uploadImageBtn" class="btn-primary">上传图片</button><input type="file" id="hotelImageFile" accept="image/*" style="display:none;"><button id="addHotelBtn" class="success">添加酒店</button></div>
+            <div class="search-bar">
+                <input type="text" id="hotelNameInput" class="search-input" placeholder="酒店名称">
+                <input type="text" id="hotelImageInput" class="search-input" placeholder="图片 URL">
+                <button id="uploadImageBtn" class="btn-primary">上传图片</button>
+                <input type="file" id="hotelImageFile" accept="image/*" style="display:none;">
+                <button id="addHotelBtn" class="success">添加酒店</button>
+            </div>
             <div id="hotelPreviewImg" style="display:none;"><img id="previewUploadImg" style="max-width:200px; border-radius:12px;"></div>
             <div id="hotelsListContainer" style="max-height:400px; overflow-y:auto;"></div>
             <button id="saveHotelsBtn" class="btn-primary" style="margin-top:15px;">保存所有酒店</button>
         </div>
         <div class="card">
             <h3><i class="fas fa-box-open"></i> Dashboard Product Sample</h3>
-            <div class="search-bar"><input type="text" id="productNameInput" class="search-input" placeholder="产品名称"><input type="text" id="productPriceInput" class="search-input" placeholder="价格 (USD)" style="width:120px;"><input type="text" id="productImageInput" class="search-input" placeholder="图片 URL"><button id="uploadProductImageBtn" class="btn-primary">上传图片</button><input type="file" id="productImageFile" accept="image/*" style="display:none;"></div>
-            <div class="search-bar"><input type="text" id="productVideoInput" class="search-input" placeholder="视频 URL"><select id="productStatusSelect" style="width:120px;"><option value="active">显示</option><option value="inactive">隐藏</option></select><button id="addProductBtn" class="success">添加产品</button><button id="refreshProductsBtn" class="btn-primary">刷新列表</button></div>
+            <div class="search-bar">
+                <input type="text" id="productNameInput" class="search-input" placeholder="产品名称">
+                <input type="text" id="productPriceInput" class="search-input" placeholder="价格 (USD)" style="width:120px;">
+                <input type="text" id="productImageInput" class="search-input" placeholder="图片 URL">
+                <button id="uploadProductImageBtn" class="btn-primary">上传图片</button>
+                <input type="file" id="productImageFile" accept="image/*" style="display:none;">
+            </div>
+            <div class="search-bar">
+                <input type="text" id="productVideoInput" class="search-input" placeholder="视频 URL">
+                <select id="productStatusSelect" style="width:120px;"><option value="active">显示</option><option value="inactive">隐藏</option></select>
+                <button id="addProductBtn" class="success">添加产品</button>
+                <button id="refreshProductsBtn" class="btn-primary">刷新列表</button>
+            </div>
             <div id="productPreviewImg" style="display:none;"><img id="previewProductImg" style="max-width:200px; border-radius:12px;"></div>
             <div id="productsListContainer" style="max-height:400px; overflow-y:auto;"></div>
             <button id="saveProductsOrderBtn" class="btn-primary">保存排序</button>
         </div>
     `;
+    
     await loadAnimatedSettings();
     await loadDashboardProducts();
+    
     document.getElementById('saveVideoBtn')?.addEventListener('click', saveVideo);
     document.getElementById('previewVideoBtn')?.addEventListener('click', previewVideo);
+    document.getElementById('uploadVideoBtn')?.addEventListener('click', () => document.getElementById('videoFileInput').click());
+    document.getElementById('videoFileInput')?.addEventListener('change', uploadVideo);
     document.getElementById('addHotelBtn')?.addEventListener('click', addHotel);
     document.getElementById('saveHotelsBtn')?.addEventListener('click', saveHotels);
     document.getElementById('addProductBtn')?.addEventListener('click', addProduct);
@@ -42,6 +77,80 @@ async function loadAnimatedPage() {
     document.getElementById('uploadImageBtn')?.addEventListener('click', () => document.getElementById('hotelImageFile').click());
     document.getElementById('hotelImageFile')?.addEventListener('change', uploadHotelImage);
     document.getElementById('productImageFile')?.addEventListener('change', uploadProductImage);
+}
+
+// 上传视频到 Supabase Storage
+async function uploadVideo(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // 检查文件类型
+    if (!file.type.startsWith('video/')) {
+        showToast('请选择视频文件', 'error');
+        return;
+    }
+    
+    // 检查文件大小（限制 100MB）
+    if (file.size > 100 * 1024 * 1024) {
+        showToast('视频文件不能超过 100MB', 'error');
+        return;
+    }
+    
+    const progressDiv = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercent = document.getElementById('progressPercent');
+    
+    progressDiv.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressPercent.innerText = '0';
+    
+    // 生成唯一文件名
+    const fileExt = file.name.split('.').pop();
+    const fileName = `videos/${Date.now()}.${fileExt}`;
+    
+    try {
+        // 上传到 Supabase Storage
+        const { data, error } = await sb.storage
+            .from('animated-videos')
+            .upload(fileName, file, {
+                cacheControl: '3600',
+                upsert: true,
+                onUploadProgress: (progress) => {
+                    const percent = Math.round((progress.loaded / progress.total) * 100);
+                    progressBar.style.width = percent + '%';
+                    progressPercent.innerText = percent;
+                }
+            });
+        
+        if (error) throw error;
+        
+        // 获取公共 URL
+        const { data: urlData } = sb.storage
+            .from('animated-videos')
+            .getPublicUrl(fileName);
+        
+        const videoUrl = urlData.publicUrl;
+        
+        // 自动填入视频 URL 输入框
+        document.getElementById('videoUrl').value = videoUrl;
+        
+        progressBar.style.width = '100%';
+        progressPercent.innerText = '100';
+        
+        setTimeout(() => {
+            progressDiv.style.display = 'none';
+        }, 1000);
+        
+        showToast('视频上传成功！', 'success');
+        
+        // 自动预览
+        previewVideo();
+        
+    } catch (err) {
+        console.error('上传失败:', err);
+        showToast('上传失败: ' + err.message, 'error');
+        progressDiv.style.display = 'none';
+    }
 }
 
 async function uploadHotelImage(e) {
@@ -131,8 +240,8 @@ function previewVideo() {
     const videoUrl = document.getElementById('videoUrl').value.trim();
     const previewDiv = document.getElementById('videoPreview');
     if (videoUrl) {
-        if (videoUrl.endsWith('.mp4') || videoUrl.includes('.mp4')) {
-            previewDiv.innerHTML = `<video src="${videoUrl}" controls style="max-width:100%; border-radius:12px;"></video>`;
+        if (videoUrl.endsWith('.mp4') || videoUrl.includes('.mp4') || videoUrl.includes('video')) {
+            previewDiv.innerHTML = `<video src="${videoUrl}" controls autoplay loop muted style="max-width:100%; border-radius:12px;"></video>`;
         } else {
             previewDiv.innerHTML = `<img src="${videoUrl}" style="max-width:100%; border-radius:12px;" onerror="this.parentElement.innerHTML='<p>无法加载图片</p>'">`;
         }
