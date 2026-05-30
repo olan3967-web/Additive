@@ -235,6 +235,27 @@
                 transform: translateX(-50%);
             }
         }
+
+/* 视频卡片 - 全宽无缝隙 */
+.video-card {
+    width: calc(100% + 40px);  /* 加宽以抵消左右 padding */
+    margin-left: -20px;        /* 向左偏移20px */
+    margin-right: -20px;       /* 向右偏移20px */
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0;
+    position: relative;
+    background: #f5f7fb;
+    overflow: hidden;
+    line-height: 0;
+}
+
+.video-card video {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
     </style>
 </head>
 <body>
