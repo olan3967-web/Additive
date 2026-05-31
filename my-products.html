@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>My Products - ADDITIVE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="toast.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="toast.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fb;
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+        }
+
+        .phone {
+            width: 390px;
+            min-height: 100vh;
+            background: #f5f7fb;
+            padding-bottom: 80px;
+            position: relative;
+        }
+
+        .page-header {
+            padding: 20px 16px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #ff7a00;
+            cursor: pointer;
+        }
+
+        .products-list {
+            padding: 0 16px;
+        }
+
+        .product-item {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #eef2f7;
+            display: flex;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .product-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .product-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #f0f2f5, #e8ecf1);
+        }
+
+        .product-details {
+            flex: 1;
+        }
+
+        .product-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .product-price {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ff7a00;
+            margin-bottom: 4px;
+        }
+
+        .product-margin {
+            font-size: 11px;
+            color: #10b981;
+            margin-bottom: 6px;
+        }
+
+        .product-date {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            padding: 8px;
+            font-size: 14px;
+            align-self: center;
+            transition: all 0.2s;
+        }
+
+        .remove-btn:hover {
+            color: #dc2626;
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #cbd5e1;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        .loading-spinner {
+            text-align: center;
+        }
+
+        .loading-spinner i {
+            font-size: 40px;
+            color: #ff7a00;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .load-more-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .load-more-btn {
+            background: white;
+            border: 1px solid #eef2f7;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #ff7a00;
+            cursor: pointer;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid #eef2f7;
+            display: flex;
+            padding: 10px 0 14px;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            cursor: pointer;
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item.active {
+            color: #ff7a00;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="phone">
+
+    <div class="page-header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h1>My Products</h1>
+        <div style="width: 30px;"></div>
+    </div>
+
+    <div class="products-list" id="productsList">
+        <div class="loading-container">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner"></i>
+                <div style="margin-top: 10px;">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+        <button class="load-more-btn" id="loadMoreBtn">Load More</button>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
+    </div>
+
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allProducts = [];
+    let displayCount = 10;
+
+    function getCurrentUser() {
+        const userStr = localStorage.getItem('currentUser');
+        if (!userStr) return null;
+        try { return JSON.parse(userStr); } catch(e) { return null; }
+    }
+
+    async function loadMyProducts() {
+        const user = getCurrentUser();
+        if (!user) {
+            window.location.href = 'signin.html';
+            return;
+        }
+
+        const container = document.getElementById('productsList');
+        container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading...</div></div></div>`;
+
+        try {
+            const { data, error } = await sb
+                .from('user_products')
+                .select('*')
+                .eq('uid', user.uid)
+                .order('added_at', { ascending: false });
+
+            if (error) throw error;
+            allProducts = data || [];
+            renderProducts();
+        } catch (e) {
+            console.error('加载失败:', e);
+            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-circle-xmark"></i>Failed to load products</div>';
+        }
+    }
+
+    function renderProducts() {
+        const container = document.getElementById('productsList');
+        const toShow = allProducts.slice(0, displayCount);
+        const hasMore = allProducts.length > displayCount;
+        document.getElementById('loadMoreContainer').style.display = hasMore ? 'block' : 'none';
+
+        if (toShow.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-regular fa-folder-open"></i>
+                    No products added yet
+                    <div style="margin-top: 12px; font-size: 12px;">Go to Products page to add your first product</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = toShow.map(product => `
+            <div class="product-item" data-id="${product.id}">
+                <img class="product-image" src="${product.image_url || 'https://placehold.co/80x80/f0f2f5/94a3b8?text=Product'}" 
+                     onerror="this.src='https://placehold.co/80x80/f0f2f5/94a3b8?text=Product'">
+                <div class="product-details">
+                    <div class="product-name">${escapeHtml(product.product_name)}</div>
+                    <div class="product-price">€${product.price.toFixed(2)}</div>
+                    <div class="product-margin">+${product.margin_percent}% Margin (+€${product.margin_profit} profit)</div>
+                    <div class="product-date">Added on ${formatDate(product.added_at)}</div>
+                </div>
+                <button class="remove-btn" data-id="${product.id}" data-name="${escapeHtml(product.product_name)}">
+                    <i class="fa-regular fa-trash-can"></i>
+                </button>
+            </div>
+        `).join('');
+
+        document.querySelectorAll('.remove-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const id = btn.dataset.id;
+                const name = btn.dataset.name;
+                await removeProduct(id, name);
+            });
+        });
+    }
+
+    async function removeProduct(productId, productName) {
+        const user = getCurrentUser();
+        if (!user) return;
+
+        showConfirm('Remove Product', `Remove "${productName}" from your list?`, async () => {
+            const { error } = await sb.from('user_products').delete().eq('id', parseInt(productId)).eq('uid', user.uid);
+            if (error) {
+                showToast('Remove failed: ' + error.message, 'error');
+                return;
+            }
+            showToast(`Removed "${productName}"`, 'success');
+            allProducts = allProducts.filter(p => p.id != productId);
+            renderProducts();
+            
+            // 更新 onboarding 进度（如果产品数降到10以下，Step 3 变为未完成）
+            const newCount = allProducts.length;
+            if (newCount < 10) {
+                await sb.from('user_onboarding').upsert({
+                    uid: user.uid,
+                    step3_completed: false,
+                    products_added_count: newCount
+                }, { onConflict: 'uid' });
+            } else {
+                await sb.from('user_onboarding').upsert({
+                    uid: user.uid,
+                    products_added_count: newCount
+                }, { onConflict: 'uid' });
+            }
+        });
+    }
+
+    function loadMore() {
+        if (displayCount < allProducts.length) {
+            displayCount = Math.min(displayCount + 10, allProducts.length);
+            renderProducts();
+        }
+    }
+
+    function goBack() {
+        window.location.href = 'dashboard.html';
+    }
+
+    function formatDate(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    }
+
+    function setupBottomNav() {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.dataset.page;
+                if (page === 'dashboard') window.location.href = 'start.html';
+                else if (page === 'products') window.location.href = 'products.html';
+                else if (page === 'orders') window.location.href = 'history.html';
+                else if (page === 'profile') window.location.href = 'dashboard.html';
+            });
+        });
+    }
+
+    document.getElementById('loadMoreBtn')?.addEventListener('click', loadMore);
+    setupBottomNav();
+    loadMyProducts();
+</script>
+</body>
+</html>

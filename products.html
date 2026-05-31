@@ -6,7 +6,9 @@
     <title>Products - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="toast.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="toast.js"></script>
     <style>
         * {
             margin: 0;
@@ -256,7 +258,13 @@
             transition: all 0.2s;
         }
 
-        .add-btn:hover {
+        .add-btn.added {
+            background: #e8f5e9;
+            color: #2e7d32;
+            cursor: default;
+        }
+
+        .add-btn:hover:not(.added) {
             background: #ff7a00;
             color: white;
         }
@@ -419,115 +427,62 @@
     let currentCategory = 'all';
     let currentSort = 'default';
     let displayCount = 10;
+    let userAddedProductIds = new Set();
 
-    // ========== 根据价格区间计算 Margin ==========
+    // 根据价格区间计算 Margin
     function getMarginByPrice(price) {
-        let minPercent = 0;
-        let maxPercent = 0;
-        
-        if (price >= 1 && price <= 100) {
-            minPercent = 4.5;
-            maxPercent = 5.0;
-        } else if (price >= 101 && price <= 500) {
-            minPercent = 5.1;
-            maxPercent = 10.0;
-        } else if (price >= 501 && price <= 1000) {
-            minPercent = 10.1;
-            maxPercent = 15.0;
-        } else if (price >= 1001 && price <= 3000) {
-            minPercent = 15.1;
-            maxPercent = 20.0;
-        } else if (price >= 3001 && price <= 5000) {
-            minPercent = 20.1;
-            maxPercent = 25.0;
-        } else if (price > 5000) {
-            minPercent = 25.1;
-            maxPercent = 30.0;
-        } else {
-            minPercent = 4.5;
-            maxPercent = 5.0;
-        }
+        let minPercent = 0, maxPercent = 0;
+        if (price >= 1 && price <= 100) { minPercent = 4.5; maxPercent = 5.0; }
+        else if (price >= 101 && price <= 500) { minPercent = 5.1; maxPercent = 10.0; }
+        else if (price >= 501 && price <= 1000) { minPercent = 10.1; maxPercent = 15.0; }
+        else if (price >= 1001 && price <= 3000) { minPercent = 15.1; maxPercent = 20.0; }
+        else if (price >= 3001 && price <= 5000) { minPercent = 20.1; maxPercent = 25.0; }
+        else if (price > 5000) { minPercent = 25.1; maxPercent = 30.0; }
+        else { minPercent = 4.5; maxPercent = 5.0; }
         
         const percent = minPercent + Math.random() * (maxPercent - minPercent);
         const finalPercent = Math.round(percent * 10) / 10;
         const profit = (price * finalPercent / 100).toFixed(0);
-        
         return { percent: finalPercent, profit: parseFloat(profit) };
     }
 
-    // ========== 动态生成标签（每个产品不同） ==========
     function getProductTags(product, marginPercent) {
         const tags = [];
-        const price = product.price;
-        const random = Math.random();
-        
-        // 价格标签（根据价格范围）
-        if (price >= 300) {
-            tags.push({ type: 'premium', label: 'Premium', class: 'tag-exclusive' });
-        } else if (price >= 150 && price < 300) {
-            tags.push({ type: 'mid', label: 'Popular', class: 'tag-best' });
-        } else if (price < 50) {
-            tags.push({ type: 'budget', label: 'Budget', class: 'tag-eco' });
-        }
-        
-        // 根据 Margin 高低判断
-        if (marginPercent >= 18) {
-            tags.push({ type: 'high_margin', label: 'High Profit', class: 'tag-high' });
-        } else if (marginPercent <= 7) {
-            tags.push({ type: 'low_margin', label: 'Standard', class: 'tag-eco' });
-        }
-        
-        // 随机标签（让产品更多样化）
-        if (random < 0.25 && !tags.some(t => t.label === 'Trending')) {
-            tags.push({ type: 'trending', label: 'Trending', class: 'tag-trending' });
-        }
-        
-        if (random > 0.75 && !tags.some(t => t.label === 'Limited')) {
-            tags.push({ type: 'limited', label: 'Limited', class: 'tag-limited' });
-        }
-        
-        if (price > 800 && !tags.some(t => t.label === 'Luxury')) {
-            tags.push({ type: 'luxury', label: 'Luxury', class: 'tag-exclusive' });
-        }
-        
-        // 限制最多 2 个标签，至少保留 1 个
-        if (tags.length === 0) {
-            if (price >= 100) {
-                tags.push({ type: 'standard', label: 'Standard', class: 'tag-best' });
-            } else {
-                tags.push({ type: 'value', label: 'Value', class: 'tag-eco' });
-            }
-        }
-        
-        // 返回最多 2 个标签，并映射 CSS 类
-        return tags.slice(0, 2).map(tag => ({
-            label: tag.label,
-            class: tag.class
-        }));
+        if (product.price > 90) tags.push({ type: 'trending', label: 'Trending', class: 'tag-trending' });
+        if (product.price < 40) tags.push({ type: 'eco', label: 'Eco-Friendly', class: 'tag-eco' });
+        if (product.price > 60 && product.price < 160) tags.push({ type: 'best', label: 'Best Seller', class: 'tag-best' });
+        if (marginPercent > 18) tags.push({ type: 'high', label: 'High Profit', class: 'tag-high' });
+        if (product.price > 250) tags.push({ type: 'exclusive', label: 'Exclusive', class: 'tag-exclusive' });
+        if (Math.random() < 0.25) tags.push({ type: 'limited', label: 'Limited', class: 'tag-limited' });
+        if (tags.length === 0) tags.push({ type: 'standard', label: 'Standard', class: 'tag-best' });
+        return tags.slice(0, 2);
     }
 
     const categoryMap = {
-        all: { filter: () => true, label: 'All Items' },
-        trending: { filter: (p) => p.price > 70, label: 'Trending' },
-        new: { filter: (p) => p.id > 50, label: 'New Arrivals' },
-        eco: { filter: (p) => p.price < 40, label: 'Eco-Friendly' },
-        high: { filter: (p) => p.price > 120, label: 'High Profit' }
+        all: { filter: () => true },
+        trending: { filter: (p) => p.price > 70 },
+        new: { filter: (p) => p.id > 50 },
+        eco: { filter: (p) => p.price < 40 },
+        high: { filter: (p) => p.price > 120 }
     };
 
     function sortProducts(products, sortType) {
         const sorted = [...products];
         switch (sortType) {
-            case 'price_asc':
-                return sorted.sort((a, b) => a.price - b.price);
-            case 'price_desc':
-                return sorted.sort((a, b) => b.price - a.price);
-            case 'margin_desc':
-                return sorted.sort((a, b) => getMarginByPrice(b.price).percent - getMarginByPrice(a.price).percent);
-            case 'margin_asc':
-                return sorted.sort((a, b) => getMarginByPrice(a.price).percent - getMarginByPrice(b.price).percent);
-            default:
-                return sorted;
+            case 'price_asc': return sorted.sort((a, b) => a.price - b.price);
+            case 'price_desc': return sorted.sort((a, b) => b.price - a.price);
+            case 'margin_desc': return sorted.sort((a, b) => getMarginByPrice(b.price).percent - getMarginByPrice(a.price).percent);
+            case 'margin_asc': return sorted.sort((a, b) => getMarginByPrice(a.price).percent - getMarginByPrice(b.price).percent);
+            default: return sorted;
         }
+    }
+
+    async function loadUserAddedProducts() {
+        const user = getCurrentUser();
+        if (!user) return;
+        const { data } = await sb.from('user_products').select('product_id').eq('uid', user.uid);
+        userAddedProductIds.clear();
+        (data || []).forEach(item => userAddedProductIds.add(item.product_id));
     }
 
     function applyFilterAndSort() {
@@ -557,11 +512,10 @@
             const margin = getMarginByPrice(product.price);
             const tags = getProductTags(product, margin.percent);
             const isRightColumn = (index % 2 === 1);
+            const isAdded = userAddedProductIds.has(product.id);
             
-            const tagsHtml = tags.map(tag => 
-                `<span class="tag ${tag.class}">${tag.label}</span>`
-            ).join('');
-
+            const tagsHtml = tags.map(tag => `<span class="tag ${tag.class}">${tag.label}</span>`).join('');
+            
             html += `
                 <div class="product-card ${isRightColumn ? 'product-card-right' : ''}" data-id="${product.id}">
                     <img class="product-image" src="${product.image_url || ''}" 
@@ -574,8 +528,8 @@
                             <span class="margin-badge">+${margin.percent}% Margin</span>
                             <span class="margin-amount">+€${margin.profit} profit</span>
                         </div>
-                        <button class="add-btn" data-id="${product.id}" data-price="${product.price}">
-                            <i class="fas fa-plus-circle"></i> Add Product
+                        <button class="add-btn ${isAdded ? 'added' : ''}" data-id="${product.id}" data-price="${product.price}" data-name="${escapeHtml(product.accommodation_name)}" data-image="${product.image_url || ''}" data-margin="${margin.percent}" data-profit="${margin.profit}" ${isAdded ? 'disabled' : ''}>
+                            <i class="fas ${isAdded ? 'fa-check' : 'fa-plus-circle'}"></i> ${isAdded ? 'Added' : 'Add Product'}
                         </button>
                     </div>
                 </div>
@@ -584,20 +538,24 @@
 
         grid.innerHTML = html;
 
-        document.querySelectorAll('.add-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.add-btn:not(.added)').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                const id = btn.dataset.id;
+                const id = parseInt(btn.dataset.id);
                 const price = parseFloat(btn.dataset.price);
-                addToCart(id, price);
+                const name = btn.dataset.name;
+                const imageUrl = btn.dataset.image;
+                const marginPercent = parseFloat(btn.dataset.margin);
+                const marginProfit = parseFloat(btn.dataset.profit);
+                await addToCart(id, price, name, imageUrl, marginPercent, marginProfit);
             });
         });
 
         document.querySelectorAll('.product-card').forEach(card => {
             card.addEventListener('click', (e) => {
                 if (e.target.classList.contains('add-btn')) return;
-                const id = card.dataset.id;
-                const product = allProducts.find(p => p.id == id);
+                const id = parseInt(card.dataset.id);
+                const product = allProducts.find(p => p.id === id);
                 if (product) {
                     alert(`📦 ${product.accommodation_name || 'Premium Task'}\nPrice: €${product.price}\nStart task to earn commission`);
                 }
@@ -605,28 +563,16 @@
         });
     }
 
-    function loadMore() {
-        if (displayCount < filteredProducts.length) {
-            displayCount = Math.min(displayCount + 10, filteredProducts.length);
-            renderProducts();
-        }
-    }
-
-    async function addToCart(productId, price) {
+    async function addToCart(productId, price, productName, imageUrl, marginPercent, marginProfit) {
         const user = getCurrentUser();
         if (!user) {
             window.location.href = 'signin.html';
             return;
         }
 
-        const { data: userData } = await sb
-            .from('users')
-            .select('balance')
-            .eq('uid', user.uid)
-            .single();
-
+        const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
         if (!userData || userData.balance < price) {
-            alert(`Insufficient balance! Need €${price.toFixed(2)}`);
+            showToast(`Insufficient balance! Need €${price.toFixed(2)}`, 'error');
             return;
         }
 
@@ -635,7 +581,62 @@
         user.balance = newBalance;
         localStorage.setItem('currentUser', JSON.stringify(user));
 
-        alert(`✅ Product added! €${price.toFixed(2)} deducted. Go to START to complete.`);
+        // 添加到 user_products 表
+        const { error: insertError } = await sb.from('user_products').insert({
+            uid: user.uid,
+            product_id: productId,
+            product_name: productName,
+            price: price,
+            image_url: imageUrl,
+            margin_percent: marginPercent,
+            margin_profit: marginProfit,
+            added_at: new Date().toISOString()
+        });
+
+        if (insertError) {
+            console.error('保存产品失败:', insertError);
+            showToast('Failed to save product', 'error');
+            return;
+        }
+
+        userAddedProductIds.add(productId);
+        
+        // 更新产品和进度
+        await updateProductAndProgress(user.uid);
+        
+        showToast(`✅ ${productName} added! €${price.toFixed(2)} deducted.`, 'success');
+        
+        // 重新渲染当前页面
+        renderProducts();
+    }
+
+    async function updateProductAndProgress(uid) {
+        // 获取用户已添加产品数量
+        const { data: userProducts } = await sb.from('user_products').select('id').eq('uid', uid);
+        const productCount = userProducts?.length || 0;
+        
+        // 更新 onboarding 进度（需要10个产品完成 Step 3）
+        if (productCount >= 10) {
+            await sb.from('user_onboarding').upsert({
+                uid: uid,
+                step3_completed: true,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'uid' });
+        }
+        
+        // 更新 products_added_count
+        await sb.from('user_onboarding').upsert({
+            uid: uid,
+            products_added_count: productCount,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'uid' });
+    }
+
+    function loadMore() {
+        if (displayCount < filteredProducts.length) {
+            displayCount = Math.min(displayCount + 10, filteredProducts.length);
+            renderProducts();
+        }
     }
 
     function getCurrentUser() {
@@ -646,26 +647,12 @@
 
     async function loadProducts() {
         const grid = document.getElementById('productsGrid');
-        grid.innerHTML = `
-            <div class="loading-container">
-                <div class="loading-spinner">
-                    <i class="fas fa-spinner"></i>
-                    <div style="margin-top: 10px; font-size: 13px; color: #6b7280;">Loading products...</div>
-                </div>
-            </div>
-        `;
+        grid.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div style="margin-top: 10px;">Loading products...</div></div></div>`;
 
         try {
-            const { data, error } = await sb
-                .from('orders_pool')
-                .select('*')
-                .eq('status', 'available')
-                .order('price', { ascending: false });
-
+            const { data, error } = await sb.from('orders_pool').select('*').eq('status', 'available').order('price', { ascending: false });
             if (error) throw error;
-
             allProducts = data || [];
-            
             if (allProducts.length === 0) {
                 allProducts = [
                     { id: 1, accommodation_name: 'Luxury Beach Resort', price: 299, image_url: '' },
@@ -676,11 +663,10 @@
                     { id: 6, accommodation_name: 'Business Suite', price: 249, image_url: '' },
                     { id: 7, accommodation_name: 'Eco Lodge', price: 79, image_url: '' },
                     { id: 8, accommodation_name: 'Sunset Resort', price: 359, image_url: '' },
-                    { id: 9, accommodation_name: 'Grand Hotel', price: 520, image_url: '' },
-                    { id: 10, accommodation_name: 'Urban Stay', price: 129, image_url: '' }
+                    { id: 9, accommodation_name: 'Grand Hotel', price: 520, image_url: '' }
                 ];
             }
-
+            await loadUserAddedProducts();
             applyFilterAndSort();
         } catch (e) {
             console.error('加载失败:', e);
@@ -726,34 +712,23 @@
                 textSpan.textContent = label;
                 trigger.classList.remove('open');
                 dropdown.classList.remove('open');
-                
                 options.forEach(o => o.classList.remove('selected'));
                 opt.classList.add('selected');
-                
-                if (isCategory) {
-                    currentCategory = value;
-                } else {
-                    currentSort = value;
-                }
+                if (isCategory) currentCategory = value;
+                else currentSort = value;
                 applyFilterAndSort();
             });
         });
     }
 
     function setupBottomNav() {
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
+        document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const page = item.dataset.page;
-                if (page === 'dashboard') {
-                    window.location.href = 'start.html';
-                } else if (page === 'products') {
-                    window.location.href = 'products.html';
-                } else if (page === 'orders') {
-                    window.location.href = 'history.html';
-                } else if (page === 'profile') {
-                    window.location.href = 'dashboard.html';
-                }
+                if (page === 'dashboard') window.location.href = 'start.html';
+                else if (page === 'products') window.location.href = 'products.html';
+                else if (page === 'orders') window.location.href = 'history.html';
+                else if (page === 'profile') window.location.href = 'dashboard.html';
             });
         });
     }
