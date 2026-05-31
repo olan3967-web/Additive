@@ -564,51 +564,40 @@
     }
 
     async function addToCart(productId, price, productName, imageUrl, marginPercent, marginProfit) {
-        const user = getCurrentUser();
-        if (!user) {
-            window.location.href = 'signin.html';
-            return;
-        }
-
-        const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
-        if (!userData || userData.balance < price) {
-            showToast(`Insufficient balance! Need €${price.toFixed(2)}`, 'error');
-            return;
-        }
-
-        const newBalance = userData.balance - price;
-        await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
-        user.balance = newBalance;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-
-        // 添加到 user_products 表
-        const { error: insertError } = await sb.from('user_products').insert({
-            uid: user.uid,
-            product_id: productId,
-            product_name: productName,
-            price: price,
-            image_url: imageUrl,
-            margin_percent: marginPercent,
-            margin_profit: marginProfit,
-            added_at: new Date().toISOString()
-        });
-
-        if (insertError) {
-            console.error('保存产品失败:', insertError);
-            showToast('Failed to save product', 'error');
-            return;
-        }
-
-        userAddedProductIds.add(productId);
-        
-        // 更新产品和进度
-        await updateProductAndProgress(user.uid);
-        
-        showToast(`✅ ${productName} added! €${price.toFixed(2)} deducted.`, 'success');
-        
-        // 重新渲染当前页面
-        renderProducts();
+    const user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
     }
+
+    // 不扣除余额，只添加到 user_products 表
+    const { error: insertError } = await sb.from('user_products').insert({
+        uid: user.uid,
+        product_id: productId,
+        product_name: productName,
+        price: price,
+        image_url: imageUrl,
+        margin_percent: marginPercent,
+        margin_profit: marginProfit,
+        added_at: new Date().toISOString()
+    });
+
+    if (insertError) {
+        console.error('保存产品失败:', insertError);
+        showToast('Failed to save product', 'error');
+        return;
+    }
+
+    userAddedProductIds.add(productId);
+    
+    // 更新产品和进度
+    await updateProductAndProgress(user.uid);
+    
+    showToast(`✅ ${productName} added to My Products!`, 'success');
+    
+    // 重新渲染当前页面
+    renderProducts();
+}
 
     async function updateProductAndProgress(uid) {
         // 获取用户已添加产品数量
