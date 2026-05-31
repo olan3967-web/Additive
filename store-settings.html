@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Store Settings - ADDITIVE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Cropper.js 用于图片裁剪（CDN 引入，不需要额外文件） -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fb;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .phone {
+            width: 390px;
+            min-height: 100vh;
+            background: #f5f7fb;
+            padding-bottom: 30px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .form-container {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-label i {
+            color: #ff7a00;
+            font-size: 14px;
+        }
+
+        .required {
+            color: #ef4444;
+            font-size: 12px;
+        }
+
+        .optional {
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: normal;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #1f2937;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: #ff7a00;
+            box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
+        }
+
+        textarea {
+            resize: none;
+            height: 90px;
+        }
+
+        input.error, textarea.error, select.error {
+            border-color: #ef4444;
+        }
+
+        /* 图片上传区域 */
+        .upload-area {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .logo-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #fff7ed, #ffe7cc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid #eef2f7;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .logo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .logo-preview i {
+            font-size: 32px;
+            color: #ff7a00;
+        }
+
+        .logo-preview .edit-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            font-size: 10px;
+            text-align: center;
+            padding: 4px;
+            display: none;
+        }
+
+        .logo-preview:hover .edit-overlay {
+            display: block;
+        }
+
+        .upload-btn {
+            background: #fff3e8;
+            border: 1px solid #ffe7cc;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #ff7a00;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-btn:hover {
+            background: #ff7a00;
+            color: white;
+        }
+
+        /* 裁剪模态框 */
+        .crop-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .crop-modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .crop-container {
+            background: #1a1a2e;
+            border-radius: 24px;
+            padding: 20px;
+            width: 90%;
+            max-width: 350px;
+        }
+
+        .crop-image {
+            max-width: 100%;
+            max-height: 300px;
+        }
+
+        .crop-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .crop-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .crop-confirm {
+            background: #ff7a00;
+            color: white;
+        }
+
+        .crop-cancel {
+            background: #334155;
+            color: white;
+        }
+
+        /* 分类标签 */
+        .categories-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .category-tag {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 30px;
+            padding: 6px 14px;
+            font-size: 12px;
+            color: #1f2937;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-tag i {
+            color: #ff7a00;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+        .category-tag:hover {
+            background: #fff3e8;
+            border-color: #ff7a00;
+        }
+
+        .add-category {
+            background: transparent;
+            border: 1px dashed #cbd5e1;
+            color: #94a3b8;
+        }
+
+        .save-btn {
+            width: 100%;
+            background: #ff7a00;
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: all 0.2s;
+        }
+
+        .save-btn:hover {
+            background: #ea580c;
+            transform: scale(1.01);
+        }
+
+        .divider {
+            height: 1px;
+            background: #eef2f7;
+            margin: 20px 0;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 11px;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone">
+        <div class="header">
+            <h1>Store Settings</h1>
+            <p>Manage your store information</p>
+        </div>
+
+        <div class="form-container">
+            <!-- Store Name（必填） -->
+            <div class="form-group">
+                <div class="form-label">
+                    <i class="fa-regular fa-building"></i> Store Name
+                    <span class="required">*</span>
+                </div>
+                <input type="text" id="storeName" placeholder="Enter store name">
+                <div class="error-message" id="storeNameError"></div>
+            </div>
+
+            <!-- Store Logo（可选） -->
+            <div class="form-group">
+                <div class="form-label">
+                    <i class="fa-regular fa-image"></i> Store Logo
+                    <span class="optional">(optional)</span>
+                </div>
+                <div class="upload-area">
+                    <div class="logo-preview" id="logoPreview">
+                        <i class="fa-regular fa-store"></i>
+                        <div class="edit-overlay">Edit</div>
+                    </div>
+                    <button class="upload-btn" id="uploadLogoBtn">
+                        <i class="fa-solid fa-upload"></i> Upload Logo
+                    </button>
+                    <input type="file" id="logoFile" accept="image/*" style="display: none;">
+                </div>
+            </div>
+
+            <!-- Store Description（必填） -->
+            <div class="form-group">
+                <div class="form-label">
+                    <i class="fa-regular fa-file-lines"></i> Store Description
+                    <span class="required">*</span>
+                </div>
+                <textarea id="storeDesc" placeholder="Describe your store..."></textarea>
+                <div class="error-message" id="storeDescError"></div>
+            </div>
+
+            <!-- Store Category（必填，至少一个） -->
+            <div class="form-group">
+                <div class="form-label">
+                    <i class="fa-regular fa-tag"></i> Store Category
+                    <span class="required">*</span>
+                </div>
+                <div class="categories-preview" id="categoriesContainer">
+                    <!-- 动态显示已选分类 -->
+                </div>
+                <div class="error-message" id="categoryError"></div>
+                <select id="categorySelect" style="display: none; margin-top: 10px;">
+                    <option value="">Select category</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Home & Kitchen">Home & Kitchen</option>
+                    <option value="Beauty & Personal Care">Beauty & Personal Care</option>
+                    <option value="Sports & Outdoors">Sports & Outdoors</option>
+                    <option value="Toys & Games">Toys & Games</option>
+                    <option value="Automotive">Automotive</option>
+                    <option value="Pet Supplies">Pet Supplies</option>
+                </select>
+            </div>
+
+            <div class="divider"></div>
+
+            <button class="save-btn" id="saveBtn">
+                <i class="fa-regular fa-floppy-disk"></i> Save Settings
+            </button>
+        </div>
+    </div>
+
+    <!-- 图片裁剪模态框 -->
+    <div class="crop-modal" id="cropModal">
+        <div class="crop-container">
+            <img id="cropImage" class="crop-image">
+            <div class="crop-buttons">
+                <button class="crop-btn crop-cancel" id="cropCancel">Cancel</button>
+                <button class="crop-btn crop-confirm" id="cropConfirm">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    <script>
+        // Supabase 配置
+        const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let cropper = null;
+        let currentImageFile = null;
+        let logoImageUrl = null;
+        let currentCategories = [];
+        let onboardingData = {
+            storeName: '',
+            categories: [],
+            storeDesc: ''
+        };
+
+        // 获取当前用户
+        function getCurrentUser() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) return null;
+            try {
+                return JSON.parse(userStr);
+            } catch(e) { return null; }
+        }
+
+        // 加载 Onboarding 数据
+        async function loadOnboardingData() {
+            const user = getCurrentUser();
+            if (!user) {
+                window.location.href = 'signin.html';
+                return;
+            }
+
+            // 从 user_onboarding 表获取数据
+            const { data, error } = await sb
+                .from('user_onboarding')
+                .select('*')
+                .eq('uid', user.uid)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('加载数据失败:', error);
+            }
+
+            // 从 localStorage 获取 onboarding 数据（备用）
+            const savedOnboarding = localStorage.getItem('onboarding_data');
+            if (savedOnboarding) {
+                try {
+                    const onboarding = JSON.parse(savedOnboarding);
+                    onboardingData.storeName = onboarding.storeName || '';
+                    onboardingData.categories = onboarding.categories || [];
+                    onboardingData.storeDesc = onboarding.storeDesc || '';
+                } catch(e) {}
+            }
+
+            // 如果数据库有数据，优先使用
+            if (data) {
+                onboardingData.storeName = data.store_name || onboardingData.storeName;
+                onboardingData.storeDesc = data.store_description || onboardingData.storeDesc;
+                if (data.categories) {
+                    onboardingData.categories = data.categories.split(',');
+                }
+            }
+
+            // 初始化表单
+            document.getElementById('storeName').value = onboardingData.storeName || '';
+            document.getElementById('storeDesc').value = onboardingData.storeDesc || '';
+            currentCategories = [...onboardingData.categories];
+            renderCategories();
+        }
+
+        // 渲染分类标签
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            container.innerHTML = '';
+            
+            currentCategories.forEach(cat => {
+                const tag = document.createElement('span');
+                tag.className = 'category-tag';
+                tag.innerHTML = `${cat} <i class="fa-regular fa-circle-xmark" data-category="${cat}"></i>`;
+                container.appendChild(tag);
+            });
+            
+            const addBtn = document.createElement('span');
+            addBtn.className = 'category-tag add-category';
+            addBtn.id = 'addCategoryBtn';
+            addBtn.innerHTML = '+ Add Category';
+            container.appendChild(addBtn);
+            
+            // 绑定删除事件
+            document.querySelectorAll('.category-tag i').forEach(icon => {
+                icon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const cat = icon.getAttribute('data-category');
+                    if (cat) {
+                        currentCategories = currentCategories.filter(c => c !== cat);
+                        renderCategories();
+                        validateCategories();
+                    }
+                });
+            });
+            
+            // 绑定添加事件
+            const addBtnEl = document.getElementById('addCategoryBtn');
+            if (addBtnEl) {
+                addBtnEl.addEventListener('click', showCategorySelect);
+            }
+            
+            validateCategories();
+        }
+
+        // 验证分类
+        function validateCategories() {
+            const errorEl = document.getElementById('categoryError');
+            if (currentCategories.length === 0) {
+                errorEl.textContent = 'Please select at least one category';
+                return false;
+            } else {
+                errorEl.textContent = '';
+                return true;
+            }
+        }
+
+        // 显示分类选择下拉框
+        function showCategorySelect() {
+            const select = document.getElementById('categorySelect');
+            select.style.display = 'block';
+            select.focus();
+            
+            const handleSelect = () => {
+                const value = select.value;
+                if (value && !currentCategories.includes(value)) {
+                    currentCategories.push(value);
+                    renderCategories();
+                }
+                select.style.display = 'none';
+                select.value = '';
+                select.removeEventListener('change', handleSelect);
+                select.removeEventListener('blur', handleBlur);
+            };
+            
+            const handleBlur = () => {
+                setTimeout(() => {
+                    if (select.style.display === 'block') {
+                        select.style.display = 'none';
+                        select.value = '';
+                        select.removeEventListener('change', handleSelect);
+                        select.removeEventListener('blur', handleBlur);
+                    }
+                }, 200);
+            };
+            
+            select.addEventListener('change', handleSelect);
+            select.addEventListener('blur', handleBlur);
+        }
+
+        // 图片上传和裁剪
+        document.getElementById('uploadLogoBtn')?.addEventListener('click', () => {
+            document.getElementById('logoFile').click();
+        });
+        
+        document.getElementById('logoFile')?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                currentImageFile = file;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imageUrl = event.target.result;
+                    const cropModal = document.getElementById('cropModal');
+                    const cropImage = document.getElementById('cropImage');
+                    cropImage.src = imageUrl;
+                    cropModal.classList.add('active');
+                    
+                    if (cropper) cropper.destroy();
+                    cropper = new Cropper(cropImage, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        movable: true,
+                        zoomable: true,
+                        scalable: true,
+                        autoCropArea: 0.8,
+                        cropBoxResizable: true,
+                        background: false
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 确认裁剪
+        document.getElementById('cropConfirm')?.addEventListener('click', () => {
+            if (cropper) {
+                const canvas = cropper.getCroppedCanvas({
+                    width: 200,
+                    height: 200
+                });
+                logoImageUrl = canvas.toDataURL('image/jpeg', 0.9);
+                const preview = document.getElementById('logoPreview');
+                preview.innerHTML = `<img src="${logoImageUrl}" style="width:100%; height:100%; object-fit:cover;"><div class="edit-overlay">Edit</div>`;
+                cropper.destroy();
+                cropper = null;
+                document.getElementById('cropModal').classList.remove('active');
+            }
+        });
+
+        // 取消裁剪
+        document.getElementById('cropCancel')?.addEventListener('click', () => {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            document.getElementById('cropModal').classList.remove('active');
+        });
+
+        // 点击预览图编辑
+        document.getElementById('logoPreview')?.addEventListener('click', () => {
+            if (logoImageUrl) {
+                document.getElementById('logoFile').click();
+            }
+        });
+
+        // 验证表单
+        function validateForm() {
+            let isValid = true;
+            
+            const storeName = document.getElementById('storeName').value.trim();
+            const storeDesc = document.getElementById('storeDesc').value.trim();
+            
+            if (!storeName) {
+                document.getElementById('storeNameError').textContent = 'Store name is required';
+                isValid = false;
+            } else {
+                document.getElementById('storeNameError').textContent = '';
+            }
+            
+            if (!storeDesc) {
+                document.getElementById('storeDescError').textContent = 'Store description is required';
+                isValid = false;
+            } else {
+                document.getElementById('storeDescError').textContent = '';
+            }
+            
+            if (!validateCategories()) {
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+
+        // 保存设置
+        document.getElementById('saveBtn')?.addEventListener('click', async () => {
+            if (!validateForm()) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            const user = getCurrentUser();
+            if (!user) {
+                window.location.href = 'signin.html';
+                return;
+            }
+            
+            const storeName = document.getElementById('storeName').value.trim();
+            const storeDesc = document.getElementById('storeDesc').value.trim();
+            
+            const formData = {
+                storeName: storeName,
+                storeLogo: logoImageUrl || null,
+                storeDescription: storeDesc,
+                categories: currentCategories
+            };
+            
+            console.log('保存的数据:', formData);
+            
+            try {
+                // 保存到 user_store_settings 表
+                const { error: storeError } = await sb
+                    .from('user_store_settings')
+                    .upsert({
+                        uid: user.uid,
+                        store_name: formData.storeName,
+                        store_logo: formData.storeLogo,
+                        store_description: formData.storeDescription,
+                        store_category: formData.categories.join(','),
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (storeError) throw storeError;
+                
+                // 更新 onboarding 进度 step1_completed = true
+                const { error: onboardingError } = await sb
+                    .from('user_onboarding')
+                    .upsert({
+                        uid: user.uid,
+                        step1_completed: true,
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (onboardingError) throw onboardingError;
+                
+                alert('✅ Store settings saved successfully!');
+                
+                // 跳转回 Dashboard
+                window.location.href = 'dashboard.html';
+                
+            } catch (err) {
+                console.error('保存失败:', err);
+                alert('Save failed: ' + err.message);
+            }
+        });
+
+        // 初始化
+        loadOnboardingData();
+    </script>
+</body>
+</html>

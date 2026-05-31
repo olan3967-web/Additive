@@ -83,6 +83,119 @@
             object-fit: cover;
         }
 
+        /* ========== 新手引导进度条 - 流动圆点风格 ========== */
+        .progress-container {
+            background: white;
+            border-radius: 20px;
+            padding: 20px 20px;
+            margin: 16px 20px 20px 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid #eef2f7;
+            transition: all 0.3s ease;
+        }
+
+        .progress-container.hidden {
+            display: none;
+        }
+
+        .steps-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .step-wrapper {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #eef2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: 700;
+            font-size: 16px;
+            color: #94a3b8;
+            transition: all 0.3s;
+        }
+
+        .step-circle.completed {
+            background: #ff7a00;
+            color: white;
+        }
+
+        .step-circle.active {
+            background: #ff7a00;
+            color: white;
+            box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.2);
+        }
+
+        .step-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .step-label.completed {
+            color: #ff7a00;
+        }
+
+        .step-label.active {
+            color: #ff7a00;
+        }
+
+        .step-desc {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .progress-track {
+            position: relative;
+            height: 4px;
+            background: #eef2f7;
+            border-radius: 4px;
+            margin: 8px 0 16px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff7a00, #ff9f43);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.animated {
+            background: linear-gradient(90deg, #ff7a00, #ff9f43, #ff7a00);
+            background-size: 200% 100%;
+            animation: flow 1.5s linear infinite;
+        }
+
+        @keyframes flow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
         /* 统计卡片网格 */
         .stats-grid {
             display: grid;
@@ -392,12 +505,8 @@
         }
 
         @keyframes marqueeScroll {
-            0% {
-                transform: translateX(0);
-            }
-            100% {
-                transform: translateX(-50%);
-            }
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
         }
 
         /* 底部导航栏 */
@@ -458,6 +567,31 @@
         <video id="heroVideo" autoplay loop muted playsinline>
             <source src="" type="video/mp4">
         </video>
+    </div>
+
+    <!-- 新手引导进度条 - 流动圆点风格 -->
+    <div class="progress-container" id="progressContainer">
+        <div class="steps-row">
+            <div class="step-wrapper" id="step1Wrapper">
+                <div class="step-circle" id="step1Circle">1</div>
+                <div class="step-label" id="step1Label">Set Up Store</div>
+                <div class="step-desc">Store information</div>
+            </div>
+            <div class="step-wrapper" id="step2Wrapper">
+                <div class="step-circle" id="step2Circle">2</div>
+                <div class="step-label" id="step2Label">KYC Verification</div>
+                <div class="step-desc">Verify identity</div>
+            </div>
+            <div class="step-wrapper" id="step3Wrapper">
+                <div class="step-circle" id="step3Circle">3</div>
+                <div class="step-label" id="step3Label">Add Products</div>
+                <div class="step-desc">Add 10 products</div>
+            </div>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">0 of 3 completed</div>
     </div>
 
     <!-- KPI 指标 -->
@@ -600,8 +734,9 @@
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let revenueChart = null;
+    let currentUser = null;
 
-    // 粒子效果
+    // ========== 粒子效果 ==========
     function startParticleEffect(canvasId, wrapperId) {
         const canvas = document.getElementById(canvasId);
         const wrapper = document.getElementById(wrapperId);
@@ -672,74 +807,129 @@
         };
     }
 
-    // 加载 CJ's Partners
-    async function loadPartners() {
-        const container = document.getElementById('partnersContent');
-        if (!container) return;
-        
+    // ========== 新手引导进度条逻辑 ==========
+    async function loadUserOnboardingProgress(uid) {
         try {
             const { data, error } = await sb
-                .from('animated_settings')
-                .select('featured_hotels')
-                .eq('id', 1)
+                .from('user_onboarding')
+                .select('step1_completed, step2_completed, step3_completed, products_added_count')
+                .eq('uid', uid)
                 .single();
             
-            if (error) throw error;
-            
-            let partners = data?.featured_hotels || [];
-            
-            if (partners.length === 0) {
-                partners = [
-                    { name: 'Shopify', image: '' },
-                    { name: 'WooCommerce', image: '' },
-                    { name: 'TikTok Shop', image: '' },
-                    { name: 'eBay', image: '' },
-                    { name: 'Shopee', image: '' },
-                    { name: 'Lazada', image: '' }
-                ];
+            if (error && error.code === 'PGRST116') {
+                await sb.from('user_onboarding').insert([{
+                    uid: uid,
+                    step1_completed: false,
+                    step2_completed: false,
+                    step3_completed: false,
+                    products_added_count: 0
+                }]);
+                return { step1: false, step2: false, step3: false, productCount: 0 };
             }
             
-            // 双倍数量实现无缝滚动
-            const allPartners = [...partners, ...partners];
-            
-            const partnersHtml = allPartners.map(partner => `
-                <div class="partner-item">
-                    ${partner.image ? 
-                        `<img src="${partner.image}" onerror="this.src=''" alt="${partner.name}">` : 
-                        `<div class="no-image">${escapeHtml(partner.name)}</div>`
-                    }
-                </div>
-            `).join('');
-            
-            container.innerHTML = partnersHtml;
-            
+            return {
+                step1: data?.step1_completed || false,
+                step2: data?.step2_completed || false,
+                step3: data?.step3_completed || false,
+                productCount: data?.products_added_count || 0
+            };
         } catch (e) {
-            console.error('加载合作伙伴失败:', e);
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">暂无数据</div>';
+            console.error('加载进度失败:', e);
+            return { step1: false, step2: false, step3: false, productCount: 0 };
         }
     }
 
-    function getCurrentUser() {
-        const userStr = localStorage.getItem('currentUser');
-        if (!userStr) return null;
-        try { return JSON.parse(userStr); } catch(e) { return null; }
+    function updateProgressUI(progress) {
+        const steps = [progress.step1, progress.step2, progress.step3];
+        const completedCount = steps.filter(s => s === true).length;
+        
+        const step1Circle = document.getElementById('step1Circle');
+        const step2Circle = document.getElementById('step2Circle');
+        const step3Circle = document.getElementById('step3Circle');
+        const step1Label = document.getElementById('step1Label');
+        const step2Label = document.getElementById('step2Label');
+        const step3Label = document.getElementById('step3Label');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        
+        // Step 1
+        if (steps[0]) {
+            step1Circle.classList.add('completed');
+            step1Circle.classList.remove('active');
+            step1Label.classList.add('completed');
+            step1Circle.textContent = '✓';
+        } else if (completedCount === 0) {
+            step1Circle.classList.remove('completed');
+            step1Circle.classList.add('active');
+            step1Label.classList.remove('completed');
+            step1Label.classList.add('active');
+            step1Circle.textContent = '1';
+        } else {
+            step1Circle.classList.remove('active');
+            step1Label.classList.remove('active');
+            step1Circle.textContent = '1';
+        }
+        
+        // Step 2
+        if (steps[1]) {
+            step2Circle.classList.add('completed');
+            step2Circle.classList.remove('active');
+            step2Label.classList.add('completed');
+            step2Circle.textContent = '✓';
+        } else if (completedCount === 1) {
+            step2Circle.classList.remove('completed');
+            step2Circle.classList.add('active');
+            step2Label.classList.remove('completed');
+            step2Label.classList.add('active');
+            step2Circle.textContent = '2';
+        } else {
+            step2Circle.classList.remove('completed', 'active');
+            step2Label.classList.remove('completed', 'active');
+            step2Circle.textContent = '2';
+        }
+        
+        // Step 3
+        if (steps[2]) {
+            step3Circle.classList.add('completed');
+            step3Circle.classList.remove('active');
+            step3Label.classList.add('completed');
+            step3Circle.textContent = '✓';
+        } else if (completedCount === 2) {
+            step3Circle.classList.remove('completed');
+            step3Circle.classList.add('active');
+            step3Label.classList.remove('completed');
+            step3Label.classList.add('active');
+            step3Circle.textContent = '3';
+        } else {
+            step3Circle.classList.remove('completed', 'active');
+            step3Label.classList.remove('completed', 'active');
+            step3Circle.textContent = '3';
+        }
+        
+        const percent = (completedCount / 3) * 100;
+        progressFill.style.width = percent + '%';
+        
+        if (completedCount < 3) {
+            progressFill.classList.add('animated');
+        } else {
+            progressFill.classList.remove('animated');
+        }
+        
+        progressText.textContent = `${completedCount} of 3 completed`;
+        
+        const progressContainer = document.getElementById('progressContainer');
+        if (completedCount === 3) {
+            progressContainer.classList.add('hidden');
+        } else {
+            progressContainer.classList.remove('hidden');
+        }
     }
 
-    function checkLogin() {
-        const user = getCurrentUser();
-        if (!user || !user.isLoggedIn) window.location.href = 'signin.html';
-        return user;
-    }
-
-    async function fetchUserData(uid) {
-        const { data, error } = await sb.from('users').select('*').eq('uid', uid).single();
-        if (error) return null;
-        return data;
-    }
-
+    // ========== 加载数据 ==========
     async function loadUserData() {
-        const user = checkLogin();
+        const user = getCurrentUser();
         if (!user) return;
+        currentUser = user;
         
         document.getElementById('displayUsername').innerText = user.username || 'User';
         
@@ -766,6 +956,10 @@
         document.getElementById('overviewCert').innerHTML = certProgress + '/100';
         const remaining = orderCount >= 100 ? 0 : 100 - orderCount;
         document.getElementById('certTag').innerHTML = remaining === 0 ? 'Completed!' : remaining + ' orders to go';
+        
+        // 加载新手引导进度
+        const progress = await loadUserOnboardingProgress(user.uid);
+        updateProgressUI(progress);
     }
 
     async function loadVideoConfig() {
@@ -781,6 +975,50 @@
                 }
             }
         } catch (e) { console.error('加载视频失败:', e); }
+    }
+
+    async function loadPartners() {
+        const container = document.getElementById('partnersContent');
+        if (!container) return;
+        
+        try {
+            const { data, error } = await sb
+                .from('animated_settings')
+                .select('featured_hotels')
+                .eq('id', 1)
+                .single();
+            
+            if (error) throw error;
+            
+            let partners = data?.featured_hotels || [];
+            
+            if (partners.length === 0) {
+                partners = [
+                    { name: 'Shopify', image: '' },
+                    { name: 'WooCommerce', image: '' },
+                    { name: 'TikTok Shop', image: '' },
+                    { name: 'eBay', image: '' },
+                    { name: 'Shopee', image: '' },
+                    { name: 'Lazada', image: '' }
+                ];
+            }
+            
+            const allPartners = [...partners, ...partners];
+            
+            const partnersHtml = allPartners.map(partner => `
+                <div class="partner-item">
+                    ${partner.image ? 
+                        `<img src="${partner.image}" onerror="this.src=''" alt="${partner.name}">` : 
+                        `<div class="no-image">${escapeHtml(partner.name)}</div>`
+                    }
+                </div>
+            `).join('');
+            
+            container.innerHTML = partnersHtml;
+        } catch (e) {
+            console.error('加载合作伙伴失败:', e);
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">暂无数据</div>';
+        }
     }
 
     function initChart() {
@@ -810,6 +1048,12 @@
                 scales: { x: { grid: { display: false } }, y: { grid: { color: '#eef2f7' } } }
             }
         });
+    }
+
+    function getCurrentUser() {
+        const userStr = localStorage.getItem('currentUser');
+        if (!userStr) return null;
+        try { return JSON.parse(userStr); } catch(e) { return null; }
     }
 
     function setupBottomNav() {

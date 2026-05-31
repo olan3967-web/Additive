@@ -22,6 +22,7 @@
             justify-content: center;
         }
 
+        /* 手机容器 */
         .phone {
             width: 390px;
             min-height: 100vh;
@@ -128,7 +129,7 @@
             color: #7e8aa8;
         }
 
-        /* 统计卡片 - 带粒子漂浮效果 */
+        /* 统计卡片 */
         .stats-card {
             background: white;
             margin: 16px;
@@ -136,84 +137,18 @@
             border-radius: 20px;
             border: 1px solid #eef2f7;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-            position: relative;
-            overflow: hidden;
         }
 
         .stat-label {
             font-size: 13px;
             color: #6b7280;
             margin-bottom: 8px;
-            position: relative;
-            z-index: 2;
         }
 
         .stat-value {
             font-size: 28px;
             font-weight: 800;
             color: #1f2937;
-            position: relative;
-            z-index: 2;
-        }
-
-        /* 双卡片行卡片 - 带粒子漂浮效果 */
-        .half-card {
-            flex: 1;
-            background: white;
-            border: 1px solid #eef2f7;
-            border-radius: 20px;
-            padding: 18px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .half-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-        }
-
-        .half-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .half-card-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #fff7ed, #ffe7cc);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            color: #ff7a00;
-        }
-
-        .half-card-title {
-            font-size: 18px;
-            font-weight: 700;
-            position: relative;
-            z-index: 2;
-        }
-
-        .view-link {
-            color: #ff7a00;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        .double-card-row {
-            display: flex;
-            gap: 16px;
-            margin: 16px;
         }
 
         /* 余额卡片 */
@@ -248,23 +183,17 @@
             font-size: 14px;
             font-weight: 500;
             opacity: 0.9;
-            position: relative;
-            z-index: 2;
         }
 
         .wallet-balance {
             font-size: 34px;
             font-weight: 800;
             margin: 12px 0 16px;
-            position: relative;
-            z-index: 2;
         }
 
         .wallet-actions {
             display: flex;
             gap: 12px;
-            position: relative;
-            z-index: 2;
         }
 
         .btn-topup {
@@ -291,6 +220,60 @@
             cursor: pointer;
             border: none;
             font-size: 14px;
+        }
+
+        /* 双卡片行 */
+        .double-card-row {
+            display: flex;
+            gap: 16px;
+            margin: 16px;
+        }
+
+        .half-card {
+            flex: 1;
+            background: white;
+            border: 1px solid #eef2f7;
+            border-radius: 20px;
+            padding: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .half-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .half-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .half-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #fff7ed, #ffe7cc);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #ff7a00;
+        }
+
+        .half-card-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .view-link {
+            color: #ff7a00;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
         }
 
         /* 大卡片 - 粒子漂浮效果 */
@@ -331,7 +314,7 @@
             pointer-events: none;
             opacity: 0;
             animation: floatParticle 4s infinite ease-out;
-            z-index: 1;
+            z-index: 5;
         }
 
         @keyframes floatParticle {
@@ -434,7 +417,6 @@
             font-size: 11px;
             color: #9ca3af;
             cursor: pointer;
-            transition: all 0.2s;
         }
 
         .nav-item i {
@@ -473,8 +455,8 @@
         </div>
     </div>
 
-    <!-- 赚取的总佣金 - 带粒子漂浮 -->
-    <div class="stats-card" id="particleStatsCard">
+    <!-- 赚取的总佣金 -->
+    <div class="stats-card">
         <div class="stat-label">Total Commissions Earned</div>
         <div class="stat-value" id="totalCommissions">€0.00</div>
     </div>
@@ -489,9 +471,9 @@
         </div>
     </div>
 
-    <!-- My Sales 和 Sourcing 双卡片 - 都带粒子漂浮 -->
+    <!-- My Sales 和 Sourcing 双卡片 -->
     <div class="double-card-row">
-        <div class="half-card" id="particleSalesCard" onclick="location.href='history.html?tab=balance'">
+        <div class="half-card" onclick="location.href='history.html?tab=balance'">
             <div class="half-card-header">
                 <div class="half-card-icon"><i class="fa-solid fa-chart-line"></i></div>
                 <span class="view-link">View →</span>
@@ -499,7 +481,7 @@
             <div class="half-card-title">My Sales</div>
             <div style="font-size: 12px; color: #6b7280; margin-top: 6px;" id="salesAmount">€0.00 earned</div>
         </div>
-        <div class="half-card" id="particleSourcingCard" onclick="location.href='start.html'">
+        <div class="half-card" onclick="location.href='start.html'">
             <div class="half-card-header">
                 <div class="half-card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
                 <span class="view-link">View →</span>
@@ -517,7 +499,8 @@
                 QUICK ACTIONS
             </div>
             <div class="grid-4">
-                <div class="grid-item" onclick="location.href='#'">
+                <!-- Store 按钮 - 跳转到店铺设置 -->
+                <div class="grid-item" onclick="location.href='store-settings.html'">
                     <div class="grid-icon"><i class="fa-solid fa-store"></i></div>
                     <div class="grid-label">Store</div>
                 </div>
@@ -610,16 +593,18 @@
 </div>
 
 <script>
+    // Supabase 配置
     const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // 粒子漂浮效果
     let particleIntervals = [];
 
-    function createParticle(container) {
+    function createParticle(card) {
         const particle = document.createElement('div');
         particle.className = 'particle';
-        const size = 3 + Math.random() * 8;
+        const size = 3 + Math.random() * 10;
         const left = Math.random() * 100;
         const duration = 2.5 + Math.random() * 2;
         const delay = Math.random() * 3;
@@ -629,19 +614,20 @@
         particle.style.bottom = '0px';
         particle.style.animationDuration = duration + 's';
         particle.style.animationDelay = delay + 's';
-        container.appendChild(particle);
+        card.appendChild(particle);
         setTimeout(() => {
             if (particle.parentNode) particle.remove();
         }, duration * 1000);
     }
 
-    function startParticleEffect(elementId) {
-        const element = document.getElementById(elementId);
-        if (!element) return;
-        const interval = setInterval(() => createParticle(element), 300);
+    function startParticleEffect(cardId) {
+        const card = document.getElementById(cardId);
+        if (!card) return;
+        const interval = setInterval(() => createParticle(card), 250);
         particleIntervals.push(interval);
     }
 
+    // ========== 辅助函数 ==========
     function getCurrentUser() {
         const userStr = localStorage.getItem('currentUser');
         if (!userStr) return null;
@@ -679,6 +665,7 @@
         return data?.is_verified || false;
     }
 
+    // ========== 加载页面数据 ==========
     async function loadProfile() {
         const user = checkLogin();
         if (!user) return;
@@ -744,22 +731,22 @@
     }
 
     function setupBottomNav() {
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const page = item.dataset.page;
-            if (page === 'dashboard') {
-                window.location.href = 'start.html';
-            } else if (page === 'products') {
-                window.location.href = 'products.html';
-            } else if (page === 'orders') {
-                window.location.href = 'history.html';
-            } else if (page === 'profile') {
-                // 当前页面
-            }
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.dataset.page;
+                if (page === 'dashboard') {
+                    window.location.href = 'start.html';
+                } else if (page === 'products') {
+                    window.location.href = 'products.html';
+                } else if (page === 'orders') {
+                    window.location.href = 'history.html';
+                } else if (page === 'profile') {
+                    // 当前页面
+                }
+            });
         });
-    });
-}
+    }
 
     document.getElementById('topUpBtn').addEventListener('click', topUp);
     document.getElementById('withdrawBtn').addEventListener('click', () => {
@@ -769,11 +756,7 @@
     loadProfile();
     setupBottomNav();
 
-    // 启动所有粒子漂浮效果
     setTimeout(() => {
-        startParticleEffect('particleStatsCard');
-        startParticleEffect('particleSalesCard');
-        startParticleEffect('particleSourcingCard');
         startParticleEffect('particleCard1');
         startParticleEffect('particleCard2');
     }, 500);
