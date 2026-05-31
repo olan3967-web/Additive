@@ -1,7 +1,8 @@
-// admin-setorders.js - 设置订单页面（使用自定义弹窗）
+// admin-setorders.js - 设置订单页面（添加用户产品展示卡片）
 let setordersSearchKeyword = '';
 let selectedAdvancedOrdersList = [];
 let currentSetUser = null;
+let userProductsList = [];
 
 async function loadSetordersPage() {
     const container = document.getElementById('page_setorders');
@@ -22,10 +23,19 @@ async function loadSetordersPage() {
                 </div>
             </div>
             <div id="setordersMain" style="display: none;">
-                <div class="uid-header" style="background: rgba(74,124,255,0.1); padding: 10px 16px; border-radius: 12px; margin-bottom: 20px;">当前用户：<span id="selectedUidDisplay" style="color:#4a7cff;"></span> - <span id="selectedUsernameDisplay"></span></div>
+                <div class="uid-header" style="background: rgba(74,124,255,0.1); padding: 10px 16px; border-radius: 12px; margin-bottom: 20px;">
+                    当前用户：<span id="selectedUidDisplay" style="color:#4a7cff;"></span> - <span id="selectedUsernameDisplay"></span>
+                </div>
                 <div id="userTriggerOrdersList" style="margin-bottom: 20px;">
                     <h4 style="margin-bottom: 12px; color: #4a7cff;"><i class="fas fa-list"></i> 已设置的订单</h4>
                     <div id="triggerOrdersContainer" style="max-height: 300px; overflow-y: auto;"></div>
+                </div>
+                <!-- 新增：用户已添加产品卡片 -->
+                <div id="userProductsCard" style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 12px; color: #4a7cff;"><i class="fas fa-box"></i> 用户已添加的产品</h4>
+                    <div id="userProductsContainer" style="max-height: 300px; overflow-y: auto; background: #0f172a; border-radius: 16px; padding: 12px;">
+                        <div style="text-align:center; padding: 20px; color: #aaa;">点击用户后显示已添加产品</div>
+                    </div>
                 </div>
                 <div class="history-tabs" style="display: flex; gap: 8px; margin-bottom: 20px;">
                     <button class="tab-btn active" data-setorder-tab="advanced">高级订单</button>
@@ -81,7 +91,10 @@ async function selectUserForSetOrder(uid, username) {
     document.getElementById('selectedUsernameDisplay').innerText = username;
     document.getElementById('setordersUserSearch').style.display = 'none';
     document.getElementById('setordersMain').style.display = 'block';
-    await loadUserTriggerOrders(uid);
+    await Promise.all([
+        loadUserTriggerOrders(uid),
+        loadUserProducts(uid)
+    ]);
 }
 
 async function loadUserTriggerOrders(uid) {
@@ -120,6 +133,54 @@ async function loadUserTriggerOrders(uid) {
             showToast('删除成功', 'success');
         });
     }));
+}
+
+// 新增：加载用户已添加的产品
+async function loadUserProducts(uid) {
+    const container = document.getElementById('userProductsContainer');
+    if (!container) return;
+    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">加载中...</div>';
+    
+    try {
+        const { data: products, error } = await sb
+            .from('user_products')
+            .select('*')
+            .eq('uid', uid)
+            .order('added_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (!products || products.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">该用户暂无已添加的产品</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        for (let product of products) {
+            const productDiv = document.createElement('div');
+            productDiv.style.cssText = 'background:#0f172a; border-radius:12px; padding:12px; margin-bottom:10px; border:1px solid rgba(74,124,255,0.2); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;';
+            
+            const addedDate = new Date(product.added_at).toLocaleString();
+            
+            productDiv.innerHTML = `
+                <div style="flex:2;">
+                    <div style="font-weight:600; color:#ffb84d;">${escapeHtml(product.product_name)}</div>
+                    <div style="font-size:12px; color:#8a9abb; margin-top:4px;">价格: €${parseFloat(product.price).toFixed(2)} | Margin: +${product.margin_percent}% (€${product.margin_profit})</div>
+                    <div style="font-size:11px; color:#6a7a9a;">添加时间: ${addedDate}</div>
+                </div>
+                <div>
+                    <span style="display:inline-block; padding:4px 12px; border-radius:20px; font-size:11px; background:rgba(46,209,90,0.15); color:#2ed15a;">已添加</span>
+                </div>
+            `;
+            
+            container.appendChild(productDiv);
+        }
+        
+    } catch (e) {
+        console.error('加载用户产品失败:', e);
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff8888;">加载失败: ' + e.message + '</div>';
+    }
 }
 
 async function advancedSearchOrder() {
@@ -216,6 +277,11 @@ async function addCardOrder() {
     await loadUserTriggerOrders(currentSetUser.uid);
     document.getElementById('cardorderOrderCount').value = '';
     document.getElementById('cardorderTargetPrice').value = '';
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
 
 window.loadSetordersPage = loadSetordersPage;
