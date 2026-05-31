@@ -645,66 +645,64 @@
         }
 
         // 保存设置
-        document.getElementById('saveBtn')?.addEventListener('click', async () => {
-            if (!validateForm()) {
-                alert('Please fill in all required fields');
-                return;
-            }
-            
-            const user = getCurrentUser();
-            if (!user) {
-                window.location.href = 'signin.html';
-                return;
-            }
-            
-            const storeName = document.getElementById('storeName').value.trim();
-            const storeDesc = document.getElementById('storeDesc').value.trim();
-            
-            const formData = {
-                storeName: storeName,
-                storeLogo: logoImageUrl || null,
-                storeDescription: storeDesc,
-                categories: currentCategories
-            };
-            
-            console.log('保存的数据:', formData);
-            
-            try {
-                // 保存到 user_store_settings 表
-                const { error: storeError } = await sb
-                    .from('user_store_settings')
-                    .upsert({
-                        uid: user.uid,
-                        store_name: formData.storeName,
-                        store_logo: formData.storeLogo,
-                        store_description: formData.storeDescription,
-                        store_category: formData.categories.join(','),
-                        updated_at: new Date().toISOString()
-                    });
-                
-                if (storeError) throw storeError;
-                
-                // 更新 onboarding 进度 step1_completed = true
-                const { error: onboardingError } = await sb
-                    .from('user_onboarding')
-                    .upsert({
-                        uid: user.uid,
-                        step1_completed: true,
-                        updated_at: new Date().toISOString()
-                    });
-                
-                if (onboardingError) throw onboardingError;
-                
-                alert('✅ Store settings saved successfully!');
-                
-                // 跳转回 Dashboard
-                window.location.href = 'dashboard.html';
-                
-            } catch (err) {
-                console.error('保存失败:', err);
-                alert('Save failed: ' + err.message);
-            }
-        });
+document.getElementById('saveBtn')?.addEventListener('click', async () => {
+    if (!validateForm()) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    const user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
+    }
+    
+    const storeName = document.getElementById('storeName').value.trim();
+    const storeDesc = document.getElementById('storeDesc').value.trim();
+    
+    const formData = {
+        storeName: storeName,
+        storeLogo: logoImageUrl || null,
+        storeDescription: storeDesc,
+        categories: currentCategories
+    };
+    
+    console.log('保存的数据:', formData);
+    
+    try {
+        // 使用 upsert - 关键：onConflict 指定 'uid'
+        const { error: storeError } = await sb
+            .from('user_store_settings')
+            .upsert({
+                uid: user.uid,
+                store_name: formData.storeName,
+                store_logo: formData.storeLogo,
+                store_description: formData.storeDescription,
+                store_category: formData.categories.join(','),
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'uid' });  // ← 这一行很重要
+        
+        if (storeError) throw storeError;
+        
+        // 更新 onboarding 进度
+        const { error: onboardingError } = await sb
+            .from('user_onboarding')
+            .upsert({
+                uid: user.uid,
+                step1_completed: true,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'uid' });
+        
+        if (onboardingError) throw onboardingError;
+        
+        alert('✅ Store settings saved successfully!');
+        window.location.href = 'dashboard.html';
+        
+    } catch (err) {
+        console.error('保存失败:', err);
+        alert('Save failed: ' + err.message);
+    }
+});
 
         // 初始化
         loadOnboardingData();
