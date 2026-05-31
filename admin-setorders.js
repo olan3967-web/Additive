@@ -1,4 +1,4 @@
-// admin-setorders.js - 设置订单页面（添加用户产品展示卡片）
+// admin-setorders.js - 设置订单页面（添加用户产品展示卡片，带图片）
 let setordersSearchKeyword = '';
 let selectedAdvancedOrdersList = [];
 let currentSetUser = null;
@@ -30,10 +30,10 @@ async function loadSetordersPage() {
                     <h4 style="margin-bottom: 12px; color: #4a7cff;"><i class="fas fa-list"></i> 已设置的订单</h4>
                     <div id="triggerOrdersContainer" style="max-height: 300px; overflow-y: auto;"></div>
                 </div>
-                <!-- 新增：用户已添加产品卡片 -->
+                <!-- 用户已添加产品卡片（带图片） -->
                 <div id="userProductsCard" style="margin-bottom: 20px;">
                     <h4 style="margin-bottom: 12px; color: #4a7cff;"><i class="fas fa-box"></i> 用户已添加的产品</h4>
-                    <div id="userProductsContainer" style="max-height: 300px; overflow-y: auto; background: #0f172a; border-radius: 16px; padding: 12px;">
+                    <div id="userProductsContainer" style="max-height: 400px; overflow-y: auto; background: #0f172a; border-radius: 16px; padding: 12px;">
                         <div style="text-align:center; padding: 20px; color: #aaa;">点击用户后显示已添加产品</div>
                     </div>
                 </div>
@@ -135,7 +135,7 @@ async function loadUserTriggerOrders(uid) {
     }));
 }
 
-// 新增：加载用户已添加的产品
+// 加载用户已添加的产品（带图片）
 async function loadUserProducts(uid) {
     const container = document.getElementById('userProductsContainer');
     if (!container) return;
@@ -159,11 +159,16 @@ async function loadUserProducts(uid) {
         
         for (let product of products) {
             const productDiv = document.createElement('div');
-            productDiv.style.cssText = 'background:#0f172a; border-radius:12px; padding:12px; margin-bottom:10px; border:1px solid rgba(74,124,255,0.2); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;';
+            productDiv.style.cssText = 'background:#0f172a; border-radius:12px; padding:12px; margin-bottom:10px; border:1px solid rgba(74,124,255,0.2); display:flex; gap:12px; align-items:center; flex-wrap:wrap;';
             
             const addedDate = new Date(product.added_at).toLocaleString();
+            const imageUrl = product.image_url || 'https://placehold.co/60x60/1e2a3a/4a7cff?text=No+Image';
             
             productDiv.innerHTML = `
+                <div style="flex-shrink:0;">
+                    <img src="${imageUrl}" style="width:60px; height:60px; border-radius:12px; object-fit:cover;" 
+                         onerror="this.src='https://placehold.co/60x60/1e2a3a/4a7cff?text=No+Image'">
+                </div>
                 <div style="flex:2;">
                     <div style="font-weight:600; color:#ffb84d;">${escapeHtml(product.product_name)}</div>
                     <div style="font-size:12px; color:#8a9abb; margin-top:4px;">价格: €${parseFloat(product.price).toFixed(2)} | Margin: +${product.margin_percent}% (€${product.margin_profit})</div>
