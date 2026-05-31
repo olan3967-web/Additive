@@ -572,15 +572,15 @@
 
     // 不扣除余额，只添加到 user_products 表
     const { error: insertError } = await sb.from('user_products').insert({
-        uid: user.uid,
-        product_id: productId,
-        product_name: productName,
-        price: price,
-        image_url: imageUrl,
-        margin_percent: marginPercent,
-        margin_profit: marginProfit,
-        added_at: new Date().toISOString()
-    });
+    uid: user.uid,
+    product_id: productId,
+    product_name: productName,
+    price: price,
+    image_url: imageUrl,
+    margin_percent: marginPercent,
+    margin_profit: marginProfit,  // 确保有这个字段
+    added_at: new Date().toISOString()
+});
 
     if (insertError) {
         console.error('保存产品失败:', insertError);
