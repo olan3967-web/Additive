@@ -6,9 +6,11 @@
     <title>Store Settings - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Cropper.js 用于图片裁剪（CDN 引入，不需要额外文件） -->
+    <link rel="stylesheet" href="toast.css">
+    <!-- Cropper.js 用于图片裁剪 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="toast.js"></script>
     <style>
         * {
             margin: 0;
@@ -358,9 +360,7 @@
                     <i class="fa-regular fa-tag"></i> Store Category
                     <span class="required">*</span>
                 </div>
-                <div class="categories-preview" id="categoriesContainer">
-                    <!-- 动态显示已选分类 -->
-                </div>
+                <div class="categories-preview" id="categoriesContainer"></div>
                 <div class="error-message" id="categoryError"></div>
                 <select id="categorySelect" style="display: none; margin-top: 10px;">
                     <option value="">Select category</option>
@@ -428,34 +428,34 @@
                 return;
             }
 
-            // 从 user_onboarding 表获取数据
-            const { data, error } = await sb
-                .from('user_onboarding')
+            // 从 user_store_settings 表获取已有数据
+            const { data: storeData, error: storeError } = await sb
+                .from('user_store_settings')
                 .select('*')
                 .eq('uid', user.uid)
                 .single();
 
-            if (error && error.code !== 'PGRST116') {
-                console.error('加载数据失败:', error);
-            }
-
-            // 从 localStorage 获取 onboarding 数据（备用）
-            const savedOnboarding = localStorage.getItem('onboarding_data');
-            if (savedOnboarding) {
-                try {
-                    const onboarding = JSON.parse(savedOnboarding);
-                    onboardingData.storeName = onboarding.storeName || '';
-                    onboardingData.categories = onboarding.categories || [];
-                    onboardingData.storeDesc = onboarding.storeDesc || '';
-                } catch(e) {}
-            }
-
-            // 如果数据库有数据，优先使用
-            if (data) {
-                onboardingData.storeName = data.store_name || onboardingData.storeName;
-                onboardingData.storeDesc = data.store_description || onboardingData.storeDesc;
-                if (data.categories) {
-                    onboardingData.categories = data.categories.split(',');
+            if (!storeError && storeData) {
+                onboardingData.storeName = storeData.store_name || '';
+                onboardingData.storeDesc = storeData.store_description || '';
+                if (storeData.store_category) {
+                    onboardingData.categories = storeData.store_category.split(',');
+                }
+                if (storeData.store_logo) {
+                    logoImageUrl = storeData.store_logo;
+                    const preview = document.getElementById('logoPreview');
+                    preview.innerHTML = `<img src="${logoImageUrl}" style="width:100%; height:100%; object-fit:cover;"><div class="edit-overlay">Edit</div>`;
+                }
+            } else {
+                // 从 localStorage 获取 onboarding 数据（备用）
+                const savedOnboarding = localStorage.getItem('onboarding_data');
+                if (savedOnboarding) {
+                    try {
+                        const onboarding = JSON.parse(savedOnboarding);
+                        onboardingData.storeName = onboarding.storeName || '';
+                        onboardingData.categories = onboarding.categories || [];
+                        onboardingData.storeDesc = onboarding.storeDesc || '';
+                    } catch(e) {}
                 }
             }
 
@@ -484,7 +484,6 @@
             addBtn.innerHTML = '+ Add Category';
             container.appendChild(addBtn);
             
-            // 绑定删除事件
             document.querySelectorAll('.category-tag i').forEach(icon => {
                 icon.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -497,7 +496,6 @@
                 });
             });
             
-            // 绑定添加事件
             const addBtnEl = document.getElementById('addCategoryBtn');
             if (addBtnEl) {
                 addBtnEl.addEventListener('click', showCategorySelect);
@@ -506,7 +504,6 @@
             validateCategories();
         }
 
-        // 验证分类
         function validateCategories() {
             const errorEl = document.getElementById('categoryError');
             if (currentCategories.length === 0) {
@@ -518,7 +515,6 @@
             }
         }
 
-        // 显示分类选择下拉框
         function showCategorySelect() {
             const select = document.getElementById('categorySelect');
             select.style.display = 'block';
@@ -584,7 +580,6 @@
             }
         });
 
-        // 确认裁剪
         document.getElementById('cropConfirm')?.addEventListener('click', () => {
             if (cropper) {
                 const canvas = cropper.getCroppedCanvas({
@@ -600,7 +595,6 @@
             }
         });
 
-        // 取消裁剪
         document.getElementById('cropCancel')?.addEventListener('click', () => {
             if (cropper) {
                 cropper.destroy();
@@ -609,14 +603,12 @@
             document.getElementById('cropModal').classList.remove('active');
         });
 
-        // 点击预览图编辑
         document.getElementById('logoPreview')?.addEventListener('click', () => {
             if (logoImageUrl) {
                 document.getElementById('logoFile').click();
             }
         });
 
-        // 验证表单
         function validateForm() {
             let isValid = true;
             
@@ -645,66 +637,70 @@
         }
 
         // 保存设置
-document.getElementById('saveBtn')?.addEventListener('click', async () => {
-    if (!validateForm()) {
-        alert('Please fill in all required fields');
-        return;
-    }
-    
-    const user = getCurrentUser();
-    if (!user) {
-        window.location.href = 'signin.html';
-        return;
-    }
-    
-    const storeName = document.getElementById('storeName').value.trim();
-    const storeDesc = document.getElementById('storeDesc').value.trim();
-    
-    const formData = {
-        storeName: storeName,
-        storeLogo: logoImageUrl || null,
-        storeDescription: storeDesc,
-        categories: currentCategories
-    };
-    
-    console.log('保存的数据:', formData);
-    
-    try {
-        // 使用 upsert - 关键：onConflict 指定 'uid'
-        const { error: storeError } = await sb
-            .from('user_store_settings')
-            .upsert({
-                uid: user.uid,
-                store_name: formData.storeName,
-                store_logo: formData.storeLogo,
-                store_description: formData.storeDescription,
-                store_category: formData.categories.join(','),
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'uid' });  // ← 这一行很重要
-        
-        if (storeError) throw storeError;
-        
-        // 更新 onboarding 进度
-        const { error: onboardingError } = await sb
-            .from('user_onboarding')
-            .upsert({
-                uid: user.uid,
-                step1_completed: true,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'uid' });
-        
-        if (onboardingError) throw onboardingError;
-        
-        alert('✅ Store settings saved successfully!');
-        window.location.href = 'dashboard.html';
-        
-    } catch (err) {
-        console.error('保存失败:', err);
-        alert('Save failed: ' + err.message);
-    }
-});
+        document.getElementById('saveBtn')?.addEventListener('click', async () => {
+            if (!validateForm()) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            const user = getCurrentUser();
+            if (!user) {
+                window.location.href = 'signin.html';
+                return;
+            }
+            
+            const storeName = document.getElementById('storeName').value.trim();
+            const storeDesc = document.getElementById('storeDesc').value.trim();
+            
+            try {
+                // 先删除已存在的记录
+                await sb
+                    .from('user_store_settings')
+                    .delete()
+                    .eq('uid', user.uid);
+                
+                // 再插入新记录
+                const { error: storeError } = await sb
+                    .from('user_store_settings')
+                    .insert({
+                        uid: user.uid,
+                        store_name: storeName,
+                        store_logo: logoImageUrl || null,
+                        store_description: storeDesc,
+                        store_category: currentCategories.join(','),
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (storeError) throw storeError;
+                
+                // 更新 onboarding 进度 step1_completed = true
+                await sb
+                    .from('user_onboarding')
+                    .delete()
+                    .eq('uid', user.uid);
+                
+                const { error: onboardingError } = await sb
+                    .from('user_onboarding')
+                    .insert({
+                        uid: user.uid,
+                        step1_completed: true,
+                        updated_at: new Date().toISOString()
+                    });
+                
+                if (onboardingError) throw onboardingError;
+                
+                showToast('Store settings saved successfully!', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1500);
+                
+            } catch (err) {
+                console.error('保存失败:', err);
+                showToast('Save failed: ' + err.message, 'error');
+            }
+        });
 
-        // 初始化
         loadOnboardingData();
     </script>
 </body>
