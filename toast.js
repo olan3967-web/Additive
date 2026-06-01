@@ -1,4 +1,4 @@
-// toast.js - 超紧凑弹窗（最小上下内边距）
+// toast.js - 超紧凑弹窗（零多余空白）
 
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
@@ -137,7 +137,7 @@ window.alert = function(message) {
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
-        /* Toast - 超紧凑 */
+        /* Toast - 零多余空白 */
         .custom-toast {
             position: fixed;
             top: 50%;
@@ -145,7 +145,7 @@ window.alert = function(message) {
             transform: translate(-50%, -50%) scale(0.9);
             background: white;
             border-radius: 40px;
-            padding: 3px 18px;
+            padding: 0 18px;
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -171,10 +171,10 @@ window.alert = function(message) {
         .custom-toast-warning .toast-icon i { color: #f59e0b; }
         .custom-toast-info { border-left-color: #ff7a00; }
         .custom-toast-info .toast-icon i { color: #ff7a00; }
-        .toast-icon i { font-size: 12px; }
-        .toast-message { font-size: 12px; color: #1f2937; line-height: 1.2; }
+        .toast-icon i { font-size: 13px; }
+        .toast-message { font-size: 13px; color: #1f2937; line-height: 1.2; }
 
-        /* 确认弹窗 - 超紧凑 */
+        /* 确认弹窗 - 零多余空白 */
         .custom-confirm {
             position: fixed;
             top: 0;
@@ -206,7 +206,7 @@ window.alert = function(message) {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 8px 20px;
+            padding: 0 20px;
             width: 280px;
             max-width: 80%;
             text-align: center;
@@ -220,22 +220,26 @@ window.alert = function(message) {
             font-size: 15px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 2px;
+            margin-bottom: 0;
+            padding-top: 12px;
         }
         .confirm-message {
             font-size: 12px;
             color: #6b7280;
-            margin-bottom: 6px;
+            margin-bottom: 0;
+            padding-top: 6px;
             line-height: 1.3;
         }
         .confirm-buttons {
             display: flex;
             gap: 8px;
             justify-content: center;
+            padding-top: 12px;
+            padding-bottom: 12px;
         }
         .confirm-btn {
             flex: 1;
-            padding: 4px 12px;
+            padding: 6px 12px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
@@ -251,7 +255,7 @@ window.alert = function(message) {
             color: white;
         }
 
-        /* 输入弹窗 - 超紧凑 */
+        /* 输入弹窗 - 零多余空白 */
         .custom-prompt {
             position: fixed;
             top: 0;
@@ -283,7 +287,7 @@ window.alert = function(message) {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 8px 20px;
+            padding: 0 20px;
             width: 280px;
             max-width: 80%;
             text-align: center;
@@ -297,18 +301,20 @@ window.alert = function(message) {
             font-size: 15px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 6px;
+            margin-bottom: 0;
+            padding-top: 12px;
         }
         .prompt-input {
             width: 100%;
-            padding: 6px 12px;
+            padding: 8px 12px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
             color: #1f2937;
             font-size: 13px;
             outline: none;
-            margin-bottom: 6px;
+            margin-bottom: 0;
+            margin-top: 8px;
             font-family: 'Inter', sans-serif;
         }
         .prompt-input:focus {
@@ -319,10 +325,12 @@ window.alert = function(message) {
             display: flex;
             gap: 8px;
             justify-content: center;
+            padding-top: 12px;
+            padding-bottom: 12px;
         }
         .prompt-btn {
             flex: 1;
-            padding: 4px 12px;
+            padding: 6px 12px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
