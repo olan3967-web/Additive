@@ -1,6 +1,6 @@
-// toast.js - 自定义网页内提示弹窗 + 全局拦截 alert（ADDITIVE 主题风格）
+// toast.js - 自定义网页内提示弹窗 + 全局拦截 alert（ADDITIVE 主题风格 - 居中显示）
 
-// ========== Toast 提示消息 ==========
+// ========== Toast 提示消息（居中显示） ==========
 function showToast(message, type = 'success') {
     // 移除已存在的弹窗
     const existingToast = document.querySelector('.custom-toast');
@@ -19,7 +19,6 @@ function showToast(message, type = 'success') {
     toast.innerHTML = `
         <div class="toast-icon"><i class="fas ${icon}"></i></div>
         <div class="toast-message">${message}</div>
-        <div class="toast-progress"></div>
     `;
     
     document.body.appendChild(toast);
@@ -27,11 +26,11 @@ function showToast(message, type = 'success') {
     // 显示动画
     setTimeout(() => toast.classList.add('show'), 10);
     
-    // 3秒后自动消失
+    // 2.5秒后自动消失
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    }, 2500);
 }
 
 // ========== 确认弹窗 ==========
@@ -86,7 +85,7 @@ function showPrompt(title, placeholder, callback) {
         <div class="prompt-overlay"></div>
         <div class="prompt-content">
             <div class="prompt-title">${escapeHtml(title)}</div>
-            <input type="text" class="prompt-input" placeholder="${escapeHtml(placeholder)}">
+            <input type="text" class="prompt-input" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
             <div class="prompt-buttons">
                 <button class="prompt-btn prompt-cancel">取消</button>
                 <button class="prompt-btn prompt-ok">确认</button>
@@ -150,29 +149,32 @@ window.alert = function(message) {
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
-        /* Toast 通知样式 */
+        /* Toast 通知样式 - 居中显示 */
         .custom-toast {
             position: fixed;
-            bottom: 30px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%) translateY(100px);
+            transform: translate(-50%, -50%) scale(0.9);
             background: white;
-            border-radius: 50px;
-            padding: 14px 24px;
+            border-radius: 60px;
+            padding: 16px 28px;
             display: flex;
             align-items: center;
             gap: 12px;
             z-index: 10000;
             opacity: 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            visibility: hidden;
+            transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            box-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.15);
             border-left: 4px solid;
             font-family: 'Inter', sans-serif;
-            max-width: 90%;
+            max-width: 85%;
+            white-space: nowrap;
         }
         .custom-toast.show {
-            transform: translateX(-50%) translateY(0);
             opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
         }
         .custom-toast-success { border-left-color: #10b981; }
         .custom-toast-success .toast-icon i { color: #10b981; }
@@ -184,22 +186,17 @@ window.alert = function(message) {
         .custom-toast-info .toast-icon i { color: #ff7a00; }
         .toast-icon i { font-size: 20px; }
         .toast-message { font-size: 14px; color: #1f2937; }
-        .toast-progress {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: #ff7a00;
-            width: 100%;
-            border-radius: 0 0 50px 50px;
-            animation: toastProgress 3s linear forwards;
-        }
-        @keyframes toastProgress {
-            0% { width: 100%; }
-            100% { width: 0%; }
+        
+        @media (max-width: 480px) {
+            .custom-toast {
+                white-space: normal;
+                text-align: center;
+                max-width: 85%;
+                padding: 14px 20px;
+            }
         }
         
-        /* 确认弹窗样式 */
+        /* 确认弹窗样式 - 居中显示 */
         .custom-confirm {
             position: fixed;
             top: 0;
@@ -284,7 +281,7 @@ window.alert = function(message) {
             transform: scale(1.01);
         }
         
-        /* 输入弹窗样式 */
+        /* 输入弹窗样式 - 居中显示 */
         .custom-prompt {
             position: fixed;
             top: 0;
