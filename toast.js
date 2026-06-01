@@ -1,4 +1,4 @@
-// toast.js - 紧凑弹窗（左右伸长，几乎满屏）
+// toast.js - 深色强模糊背景效果
 
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
@@ -30,10 +30,13 @@ function showConfirm(title, message, onConfirm, onCancel) {
     const existingModal = document.querySelector('.custom-confirm');
     if (existingModal) existingModal.remove();
     
+    // 创建遮罩层（深色强模糊）
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay-glass';
+    
     const modal = document.createElement('div');
     modal.className = 'custom-confirm';
     modal.innerHTML = `
-        <div class="confirm-overlay"></div>
         <div class="confirm-content">
             <div class="confirm-title">${escapeHtml(title)}</div>
             <div class="confirm-message">${escapeHtml(message)}</div>
@@ -44,6 +47,7 @@ function showConfirm(title, message, onConfirm, onCancel) {
         </div>
     `;
     
+    modal.appendChild(overlay);
     document.body.appendChild(modal);
     setTimeout(() => modal.classList.add('show'), 10);
     
@@ -58,22 +62,18 @@ function showConfirm(title, message, onConfirm, onCancel) {
         setTimeout(() => modal.remove(), 300);
         if (onConfirm) onConfirm();
     };
-    
-    modal.querySelector('.confirm-overlay').onclick = () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-        if (onCancel) onCancel();
-    };
 }
 
 function showPrompt(title, placeholder, callback) {
     const existingModal = document.querySelector('.custom-prompt');
     if (existingModal) existingModal.remove();
     
+    const overlay = document.createElement('div');
+    overlay.className = 'prompt-overlay-glass';
+    
     const modal = document.createElement('div');
     modal.className = 'custom-prompt';
     modal.innerHTML = `
-        <div class="prompt-overlay"></div>
         <div class="prompt-content">
             <div class="prompt-title">${escapeHtml(title)}</div>
             <input type="text" class="prompt-input" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
@@ -84,6 +84,7 @@ function showPrompt(title, placeholder, callback) {
         </div>
     `;
     
+    modal.appendChild(overlay);
     document.body.appendChild(modal);
     setTimeout(() => modal.classList.add('show'), 10);
     
@@ -101,12 +102,6 @@ function showPrompt(title, placeholder, callback) {
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
         if (callback) callback(value);
-    };
-    
-    modal.querySelector('.prompt-overlay').onclick = () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-        if (callback) callback(null);
     };
     
     input.addEventListener('keypress', (e) => {
@@ -137,6 +132,31 @@ window.alert = function(message) {
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
+        /* 深色强模糊遮罩层 */
+        .confirm-overlay-glass {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: -1;
+            border-radius: 28px;
+        }
+        
+        .prompt-overlay-glass {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: -1;
+            border-radius: 28px;
+        }
+
         /* Toast - 左右伸长 */
         .custom-toast {
             position: fixed;
@@ -197,15 +217,6 @@ window.alert = function(message) {
             visibility: visible;
             opacity: 1;
         }
-        .confirm-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-        }
         .confirm-content {
             position: relative;
             background: white;
@@ -216,6 +227,7 @@ window.alert = function(message) {
             text-align: center;
             transform: scale(0.9);
             transition: transform 0.2s ease;
+            z-index: 2;
         }
         .custom-confirm.show .confirm-content {
             transform: scale(1);
@@ -280,15 +292,6 @@ window.alert = function(message) {
             visibility: visible;
             opacity: 1;
         }
-        .prompt-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
-        }
         .prompt-content {
             position: relative;
             background: white;
@@ -299,6 +302,7 @@ window.alert = function(message) {
             text-align: center;
             transform: scale(0.9);
             transition: transform 0.2s ease;
+            z-index: 2;
         }
         .custom-prompt.show .prompt-content {
             transform: scale(1);
