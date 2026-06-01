@@ -23,6 +23,7 @@
             color: #1f2937;
             display: flex;
             justify-content: center;
+            min-height: 100vh;
         }
 
         .phone {
@@ -33,164 +34,358 @@
             position: relative;
         }
 
+        /* 装饰性背景光晕 */
+        .glow-bg {
+            position: fixed;
+            top: -20%;
+            left: -20%;
+            width: 140%;
+            height: 140%;
+            background: radial-gradient(circle at 30% 20%, rgba(255,122,0,0.06), transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
         .page-header {
-            padding: 20px 20px 10px;
+            padding: 24px 20px 16px;
+            position: relative;
+            z-index: 2;
+            animation: fadeSlideDown 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
         }
 
         .page-header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 4px;
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
         }
 
         .page-header p {
             font-size: 13px;
-            color: #6b7280;
+            color: #64748b;
         }
 
         /* 统计卡片 */
         .stats-card {
             background: white;
-            margin: 0 20px 20px;
-            padding: 16px;
-            border-radius: 20px;
-            border: 1px solid #eef2f7;
+            margin: 8px 20px 20px;
+            padding: 18px 20px;
+            border-radius: 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(255,122,0,0.1);
+            position: relative;
+            z-index: 2;
+            animation: fadeSlideUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1) 0.1s forwards;
+            opacity: 0;
+            transform: translateY(20px);
         }
 
         .stats-label {
             font-size: 13px;
-            color: #6b7280;
+            font-weight: 500;
+            color: #64748b;
         }
 
         .stats-value {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 800;
-            color: #ff7a00;
+            background: linear-gradient(135deg, #ff7a00, #ff9f43);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         /* 签到网格 */
         .checkin-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             margin: 20px;
+            position: relative;
+            z-index: 2;
         }
 
         .day-card {
             background: white;
-            border-radius: 20px;
-            padding: 16px 8px;
+            border-radius: 24px;
+            padding: 18px 12px;
             text-align: center;
-            border: 1px solid #eef2f7;
-            transition: all 0.2s;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             position: relative;
             overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            animation: cardReveal 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+            opacity: 0;
+            transform: scale(0.9);
         }
 
-        .day-card.completed {
-            border-color: #10b981;
-            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        .day-card:nth-child(1) { animation-delay: 0.05s; }
+        .day-card:nth-child(2) { animation-delay: 0.1s; }
+        .day-card:nth-child(3) { animation-delay: 0.15s; }
+        .day-card:nth-child(4) { animation-delay: 0.2s; }
+        .day-card:nth-child(5) { animation-delay: 0.25s; }
+        .day-card:nth-child(6) { animation-delay: 0.3s; }
+        .day-card:nth-child(7) { animation-delay: 0.35s; }
+
+        @keyframes cardReveal {
+            0% {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
-        .day-card.today {
-            border-color: #ff7a00;
-            background: #fff7ed;
-            box-shadow: 0 4px 12px rgba(255, 122, 0, 0.1);
+        .day-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 24px rgba(255,122,0,0.12);
+            border-color: rgba(255,122,0,0.3);
         }
 
-        .day-num {
-            font-size: 12px;
-            font-weight: 600;
+        /* 未签到 */
+        .day-card.pending {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+        }
+
+        .day-card.pending .day-reward {
             color: #94a3b8;
-            margin-bottom: 6px;
         }
 
-        .day-card.completed .day-num {
-            color: #10b981;
+        .day-card.pending .day-num {
+            color: #94a3b8;
         }
 
-        .day-card.today .day-num {
-            color: #ff7a00;
+        /* 已签到卡片 - 高级动画效果 */
+        .day-card.completed {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-color: #10b981;
+            box-shadow: 0 4px 20px rgba(16,185,129,0.2);
+            animation: completedGlow 3s ease-in-out infinite;
         }
 
-        .day-reward {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1a1a2e;
+        @keyframes completedGlow {
+            0% {
+                box-shadow: 0 4px 12px rgba(16,185,129,0.2);
+                border-color: #10b981;
+            }
+            50% {
+                box-shadow: 0 6px 20px rgba(255,215,0,0.3);
+                border-color: #ffd700;
+            }
+            100% {
+                box-shadow: 0 4px 12px rgba(16,185,129,0.2);
+                border-color: #10b981;
+            }
+        }
+
+        /* 飘浮光点效果 */
+        .day-card.completed::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,215,0,0.15), transparent 60%);
+            animation: floatOrb 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes floatOrb {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% {
+                transform: translate(10%, 10%) rotate(180deg);
+                opacity: 0.6;
+            }
+            100% {
+                transform: translate(0, 0) rotate(360deg);
+                opacity: 0.3;
+            }
+        }
+
+        /* 已签到内部光晕扫过 */
+        .day-card.completed::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,215,0,0.3), transparent);
+            animation: shineSweep 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shineSweep {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
         }
 
         .day-card.completed .day-reward {
             color: #10b981;
+            animation: rewardPop 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        @keyframes rewardPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); color: #ffd700; }
+            100% { transform: scale(1); }
+        }
+
+        .day-card.completed .day-num {
+            color: #10b981;
+            font-weight: 700;
+        }
+
+        /* 勾勾图标 - 放在底部，不遮挡文字 */
+        .check-icon {
+            display: block;
+            margin-top: 8px;
+            font-size: 14px;
+            color: #ffd700;
+            filter: drop-shadow(0 0 2px rgba(255,215,0,0.5));
+            animation: checkPop 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(10deg); }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+
+        /* 今日高亮 */
+        .day-card.today {
+            background: linear-gradient(135deg, #fff7ed, #ffedd5);
+            border: 2px solid #ff7a00;
+            box-shadow: 0 0 20px rgba(255,122,0,0.3);
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(255,122,0,0.2), 0 4px 12px rgba(0,0,0,0.05); border-color: #ff7a00; }
+            50% { box-shadow: 0 0 0 8px rgba(255,122,0,0), 0 8px 20px rgba(255,122,0,0.15); border-color: #ff9f43; }
+            100% { box-shadow: 0 0 0 0 rgba(255,122,0,0), 0 4px 12px rgba(0,0,0,0.05); border-color: #ff7a00; }
         }
 
         .day-card.today .day-reward {
             color: #ff7a00;
         }
 
-        .check-icon {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            font-size: 16px;
-            color: #10b981;
+        .day-card.today .day-num {
+            color: #ff7a00;
+            font-weight: 800;
         }
 
-        /* 签到按钮区域 */
+        .day-num {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .day-reward {
+            font-size: 16px;
+            font-weight: 800;
+            transition: all 0.3s ease;
+        }
+
+        /* 签到按钮 */
         .claim-section {
             margin: 0 20px 20px;
             text-align: center;
+            position: relative;
+            z-index: 2;
         }
 
         .claim-btn {
             width: 100%;
-            background: #ff7a00;
+            background: linear-gradient(135deg, #ff7a00, #ff9f43);
             border: none;
-            padding: 14px;
-            border-radius: 40px;
+            padding: 16px;
+            border-radius: 60px;
             color: white;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 18px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            transition: all 0.2s;
+            gap: 12px;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            box-shadow: 0 4px 14px rgba(255,122,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .claim-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .claim-btn:hover::before {
+            left: 100%;
         }
 
         .claim-btn:hover:not(.disabled) {
-            background: #ea580c;
-            transform: scale(1.01);
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(255,122,0,0.4);
         }
 
         .claim-btn.disabled {
-            opacity: 0.5;
+            background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+            box-shadow: none;
             cursor: not-allowed;
+            transform: none;
         }
 
         .claim-warning {
             font-size: 11px;
-            color: #94a3b8;
+            color: #64748b;
             margin-top: 12px;
+            animation: fadeIn 0.5s ease;
         }
 
-        /* 右侧卡片 */
+        /* 连击卡片 */
         .info-card {
             background: white;
-            border-radius: 24px;
+            border-radius: 28px;
             padding: 20px;
             margin: 20px;
-            border: 1px solid #eef2f7;
+            border: 1px solid rgba(255,122,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            position: relative;
+            z-index: 2;
+            animation: fadeSlideUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1) 0.2s forwards;
+            opacity: 0;
+            transform: translateY(20px);
         }
 
         .info-title {
             font-size: 14px;
             font-weight: 600;
-            color: #1a1a2e;
+            color: #1e293b;
             margin-bottom: 16px;
             display: flex;
             align-items: center;
@@ -199,14 +394,16 @@
 
         .info-title i {
             color: #ff7a00;
+            font-size: 18px;
         }
 
         .streak-progress {
-            background: #f1f5f9;
+            background: #e2e8f0;
             border-radius: 30px;
-            height: 8px;
+            height: 10px;
             overflow: hidden;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
+            position: relative;
         }
 
         .streak-bar {
@@ -214,14 +411,42 @@
             width: 0%;
             height: 100%;
             border-radius: 30px;
-            transition: width 0.5s;
+            transition: width 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .streak-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: barShine 2s infinite;
+        }
+
+        @keyframes barShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
         }
 
         .streak-text {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a1a2e;
+            font-size: 28px;
+            font-weight: 800;
             text-align: center;
+            color: #1e293b;
+        }
+
+        .streak-fire {
+            display: inline-block;
+            animation: flameFlicker 0.8s ease-in-out infinite;
+        }
+
+        @keyframes flameFlicker {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; color: #ff7a00; }
         }
 
         .rules-list {
@@ -240,13 +465,13 @@
         .rule-title {
             font-size: 13px;
             font-weight: 600;
-            color: #1f2937;
+            color: #1e293b;
             margin-bottom: 4px;
         }
 
         .rule-desc {
             font-size: 11px;
-            color: #94a3b8;
+            color: #64748b;
             line-height: 1.4;
         }
 
@@ -256,10 +481,10 @@
             border-radius: 24px;
             padding: 20px;
             border: 1px solid rgba(255, 122, 0, 0.2);
-            animation: pulseGlow 2.5s ease-in-out infinite;
+            animation: pulseGlowCard 2.5s ease-in-out infinite;
         }
 
-        @keyframes pulseGlow {
+        @keyframes pulseGlowCard {
             0% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0.1); border-color: rgba(255, 122, 0, 0.2); }
             50% { box-shadow: 0 0 0 8px rgba(255, 122, 0, 0); border-color: rgba(255, 122, 0, 0.4); }
             100% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0); border-color: rgba(255, 122, 0, 0.2); }
@@ -299,7 +524,49 @@
             transform: scale(1.02);
         }
 
-        /* 底部导航栏 */
+        /* 礼花 canvas */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* 粒子特效容器 */
+        .particle-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, #ffd700, #ff7a00);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleFloat 1.5s ease-out forwards;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(0);
+                opacity: 0;
+            }
+        }
+
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -333,13 +600,34 @@
             font-weight: 600;
         }
 
+        @keyframes fadeSlideDown {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeSlideUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         @media (max-width: 390px) {
             .phone { width: 100%; }
-            .checkin-grid { grid-template-columns: repeat(2, 1fr); }
+            .checkin-grid { gap: 8px; }
+            .day-card { padding: 14px 8px; }
+            .day-reward { font-size: 14px; }
         }
     </style>
 </head>
 <body>
+<div class="glow-bg"></div>
+<canvas id="confettiCanvas"></canvas>
+<div id="particleContainer" class="particle-container"></div>
+
 <div class="phone">
 
     <div class="page-header">
@@ -347,17 +635,17 @@
         <p>Build your daily reward streak and unlock exclusive member bonuses</p>
     </div>
 
-    <!-- 双列布局 -->
     <div class="stats-card">
-        <span class="stats-label">TOTAL REWARDS</span>
-        <span class="stats-value" id="totalRewards">€0</span>
+        <span class="stats-label">TOTAL CLAIMED</span>
+        <span class="stats-value" id="totalClaimed">€0</span>
     </div>
 
     <div class="checkin-grid" id="daysGrid"></div>
 
     <div class="claim-section">
-        <button class="claim-btn" id="claimBtn" onclick="handleClaim()">
-            <i class="fas fa-gift"></i> Claim now
+        <button class="claim-btn" id="claimBtn">
+            <i class="fas fa-gift"></i> Claim Reward
+            <i class="fas fa-arrow-right"></i>
         </button>
         <div class="claim-warning" id="claimWarning"></div>
     </div>
@@ -369,7 +657,9 @@
         <div class="streak-progress">
             <div class="streak-bar" id="streakBar"></div>
         </div>
-        <div class="streak-text" id="streakText">0/6 Days</div>
+        <div class="streak-text">
+            <span id="streakCount">0</span>/7 <span class="streak-fire">🔥</span>
+        </div>
     </div>
 
     <div class="info-card">
@@ -378,16 +668,16 @@
         </div>
         <div class="rules-list">
             <div class="rule-item">
-                <div class="rule-title">ELIGIBILITY</div>
+                <div class="rule-title">🎁 7-DAY REWARDS</div>
+                <div class="rule-desc">Day 1: €5 | Day 2: €10 | Day 3: €20 | Day 4: €35 | Day 5: €55 | Day 6: €80 | Day 7: €120</div>
+            </div>
+            <div class="rule-item">
+                <div class="rule-title">✅ ELIGIBILITY</div>
                 <div class="rule-desc">Complete <strong>30 orders</strong> to unlock reward claims.</div>
             </div>
             <div class="rule-item">
-                <div class="rule-title">CLAIM LIMIT</div>
-                <div class="rule-desc">You can claim once per reset round.</div>
-            </div>
-            <div class="rule-item">
-                <div class="rule-title">NEXT ROUND</div>
-                <div class="rule-desc">After claiming, wait for the next day to continue.</div>
+                <div class="rule-title">⚠️ MISS A DAY</div>
+                <div class="rule-desc">Your streak resets to Day 1, but you can start again!</div>
             </div>
         </div>
     </div>
@@ -408,160 +698,370 @@
 </div>
 
 <script>
-    let signInRewards = [];
-    let userOrderCount = 0;
+    // 7天签到奖励
+    const REWARDS = [
+        { day: 1, amount: 5 },
+        { day: 2, amount: 10 },
+        { day: 3, amount: 20 },
+        { day: 4, amount: 35 },
+        { day: 5, amount: 55 },
+        { day: 6, amount: 80 },
+        { day: 7, amount: 120 }
+    ];
 
-    async function loadRewards() {
-        const { data, error } = await sb
-            .from('signin_rewards')
-            .select('*')
-            .order('day', { ascending: true });
-        
-        if (error) {
-            signInRewards = [{day:1,amount:10},{day:2,amount:30},{day:3,amount:50},{day:4,amount:90},{day:5,amount:110},{day:6,amount:200}];
-        } else {
-            signInRewards = data;
-        }
+    // 状态
+    let streak = 0;
+    let lastClaimDate = null;
+    let claimedDays = [];
+    let totalClaimedAmount = 0;
+
+    // Supabase 相关
+    let sb = null;
+    let currentUser = null;
+
+    async function initSupabase() {
+        const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+        sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     }
-    
+
+    function getCurrentUserFromLocal() {
+        const userStr = localStorage.getItem('currentUser');
+        if (!userStr) return null;
+        try {
+            return JSON.parse(userStr);
+        } catch(e) { return null; }
+    }
+
     function loadData() {
-        const saved = localStorage.getItem('additive_checkin');
-        if(saved) {
+        const saved = localStorage.getItem('additive_checkin_data');
+        if (saved) {
             const data = JSON.parse(saved);
-            return {streak: data.streak || 0, lastClaimDate: data.lastClaimDate || null, claimedDays: data.claimedDays || []};
+            streak = data.streak || 0;
+            lastClaimDate = data.lastClaimDate || null;
+            claimedDays = data.claimedDays || [];
+            totalClaimedAmount = data.totalClaimedAmount || 0;
         }
-        return {streak: 0, lastClaimDate: null, claimedDays: []};
     }
-    
-    function saveData(streak, lastClaimDate, claimedDays) {
-        localStorage.setItem('additive_checkin', JSON.stringify({streak, lastClaimDate, claimedDays}));
+
+    function saveData() {
+        localStorage.setItem('additive_checkin_data', JSON.stringify({
+            streak, lastClaimDate, claimedDays, totalClaimedAmount
+        }));
     }
-    
-    function hasClaimedToday(last){
-        if(!last) return false;
-        return new Date().toDateString() === new Date(last).toDateString();
+
+    function hasClaimedToday() {
+        if (!lastClaimDate) return false;
+        return new Date().toDateString() === new Date(lastClaimDate).toDateString();
     }
-    
-    function isConsecutive(last){
-        if(!last) return false;
+
+    function isConsecutive() {
+        if (!lastClaimDate) return false;
         const today = new Date();
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        return new Date(last).toDateString() === yesterday.toDateString();
+        return new Date(lastClaimDate).toDateString() === yesterday.toDateString();
     }
-    
-    async function getUserOrderCountFromDB() {
-        const user = getCurrentUser();
-        if (!user) return 0;
-        
-        const { data: orders } = await sb
-            .from('order_history')
-            .select('id', { count: 'exact' })
-            .eq('uid', user.uid);
-        
-        return orders?.length || 0;
+
+    // 数字跳动动画
+    function animateNumber(element, target, prefix = '€') {
+        let current = 0;
+        const duration = 800;
+        const step = target / (duration / 16);
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                element.innerText = prefix + target.toFixed(2);
+                clearInterval(timer);
+            } else {
+                element.innerText = prefix + current.toFixed(2);
+            }
+        }, 16);
     }
-    
-    async function addReward(amount) {
-        const user = getCurrentUser();
-        if(!user) return;
+
+    // 礼花特效
+    function burstConfetti() {
+        const canvas = document.getElementById('confettiCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         
-        const { data: userData } = await sb
-            .from('users')
-            .select('balance')
-            .eq('uid', user.uid)
-            .single();
+        let particles = [];
+        const colors = ['#ff7a00', '#ff9f43', '#10b981', '#fbbf24', '#ffd700', '#ef4444'];
         
-        const newBalance = (userData?.balance || 0) + amount;
-        await updateUserBalance(user.uid, newBalance);
+        for (let i = 0; i < 120; i++) {
+            particles.push({
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                vx: (Math.random() - 0.5) * 16,
+                vy: (Math.random() - 0.5) * 16 - 8,
+                size: Math.random() * 6 + 2,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                life: 1,
+                gravity: 0.2,
+                friction: 0.98
+            });
+        }
         
-        // 记录奖励
-        await sb.from('deposits').insert([{
-            uid: user.uid,
-            username: user.username,
-            amount: amount,
-            type: 'signin_reward',
-            created_at: new Date().toISOString()
-        }]);
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let allDead = true;
+            
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                if (p.life <= 0) continue;
+                allDead = false;
+                
+                p.vx *= p.friction;
+                p.vy += p.gravity;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.015;
+                
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            }
+            
+            ctx.globalAlpha = 1;
+            if (!allDead) {
+                requestAnimationFrame(animate);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+        
+        animate();
+        setTimeout(() => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }, 2000);
     }
-    
+
+    // 粒子特效从卡片位置爆发
+    function burstParticlesFromCard(cardElement) {
+        const rect = cardElement.getBoundingClientRect();
+        const container = document.getElementById('particleContainer');
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 80 + 40;
+            const vx = Math.cos(angle) * velocity;
+            const vy = Math.sin(angle) * velocity - 60;
+            
+            particle.style.left = centerX + 'px';
+            particle.style.top = centerY + 'px';
+            particle.style.setProperty('--vx', vx + 'px');
+            particle.style.setProperty('--vy', vy + 'px');
+            
+            container.appendChild(particle);
+            setTimeout(() => particle.remove(), 1500);
+        }
+    }
+
+    function animateCard(dayNum) {
+        const cards = document.querySelectorAll('.day-card');
+        const card = cards[dayNum - 1];
+        if (card) {
+            card.style.animation = 'none';
+            card.offsetHeight;
+            card.style.animation = 'cardReveal 0.5s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards';
+            burstParticlesFromCard(card);
+        }
+    }
+
+    // 添加奖励到余额和数据库
+    async function addRewardToBalance(amount) {
+        const user = getCurrentUserFromLocal();
+        if (!user) {
+            console.log('用户未登录，仅本地记录');
+            return true;
+        }
+
+        try {
+            const { data: userData } = await sb
+                .from('users')
+                .select('balance')
+                .eq('uid', user.uid)
+                .single();
+            
+            const newBalance = (userData?.balance || 0) + amount;
+            
+            const { error: updateError } = await sb
+                .from('users')
+                .update({ balance: newBalance })
+                .eq('uid', user.uid);
+            
+            if (updateError) throw updateError;
+            
+            // 记录签到奖励到 deposits 表
+            await sb.from('deposits').insert([{
+                uid: user.uid,
+                username: user.username,
+                amount: amount,
+                type: 'signin_reward',
+                created_at: new Date().toISOString()
+            }]);
+            
+            // 更新本地用户数据
+            if (currentUser) {
+                currentUser.balance = newBalance;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
+            return true;
+        } catch (err) {
+            console.error('添加奖励失败:', err);
+            return false;
+        }
+    }
+
+    // 获取用户订单数
+    async function getUserOrderCount() {
+        const user = getCurrentUserFromLocal();
+        if (!user) return 35; // 演示模式返回35单
+        
+        try {
+            const { data: orders } = await sb
+                .from('order_history')
+                .select('id', { count: 'exact' })
+                .eq('uid', user.uid);
+            return orders?.length || 0;
+        } catch (err) {
+            return 35;
+        }
+    }
+
     async function render() {
-        const {streak, lastClaimDate, claimedDays} = loadData();
-        const hasClaimed = hasClaimedToday(lastClaimDate);
-        userOrderCount = await getUserOrderCountFromDB();
+        const userOrderCount = await getUserOrderCount();
         
-        const total = signInRewards.reduce((s, r) => s + r.amount, 0);
-        document.getElementById('totalRewards').innerText = '€' + total;
+        // 更新 Total Claimed 显示
+        animateNumber(document.getElementById('totalClaimed'), totalClaimedAmount, '€');
         
         const grid = document.getElementById('daysGrid');
         grid.innerHTML = '';
         
-        signInRewards.forEach((r, idx) => {
-            const dayNum = r.day;
+        REWARDS.forEach((reward) => {
+            const dayNum = reward.day;
             const isClaimed = claimedDays.includes(dayNum);
-            const isToday = (streak + 1) === dayNum && !hasClaimed;
+            const isToday = (streak + 1) === dayNum && !hasClaimedToday();
+            
             const div = document.createElement('div');
             div.className = 'day-card';
-            if(isClaimed) div.classList.add('completed');
-            if(isToday) div.classList.add('today');
+            
+            if (isClaimed) {
+                div.classList.add('completed');
+            } else if (isToday) {
+                div.classList.add('today');
+            } else {
+                div.classList.add('pending');
+            }
+            
+            // 勾勾放在底部，不遮挡 Day 数字
             div.innerHTML = `
                 <div class="day-num">Day ${dayNum}</div>
-                <div class="day-reward">€${r.amount}</div>
-                ${isClaimed ? '<i class="fas fa-check-circle check-icon"></i>' : ''}
+                <div class="day-reward">€${reward.amount}</div>
+                ${isClaimed ? '<i class="fas fa-check-circle check-icon"></i>' : '<div style="height: 20px;"></div>'}
             `;
             grid.appendChild(div);
         });
         
-        const percent = (streak / signInRewards.length) * 100;
-        document.getElementById('streakBar').style.width = percent + '%';
-        document.getElementById('streakText').innerHTML = `${streak}/${signInRewards.length} Days`;
+        const percent = (streak / REWARDS.length) * 100;
+        const streakBar = document.getElementById('streakBar');
+        streakBar.style.width = percent + '%';
+        document.getElementById('streakCount').innerText = streak;
         
         const claimBtn = document.getElementById('claimBtn');
         const nextDay = streak + 1;
-        const canClaim = !hasClaimed && nextDay <= signInRewards.length && userOrderCount >= 30;
+        const canClaim = !hasClaimedToday() && nextDay <= REWARDS.length && userOrderCount >= 30;
         
-        if(canClaim) {
+        if (canClaim) {
             claimBtn.classList.remove('disabled');
             claimBtn.disabled = false;
-            document.getElementById('claimWarning').innerHTML = `You have ${userOrderCount}/30 orders. Complete more to unlock higher rewards.`;
-        } else if(hasClaimed) {
+            document.getElementById('claimWarning').innerHTML = `✨ Day ${nextDay} reward: €${REWARDS[nextDay - 1].amount} ✨`;
+        } else if (hasClaimedToday()) {
             claimBtn.classList.add('disabled');
             claimBtn.disabled = true;
-            document.getElementById('claimWarning').innerHTML = `Already claimed today. Come back tomorrow.`;
-        } else if(userOrderCount < 30) {
+            document.getElementById('claimWarning').innerHTML = `✅ Already claimed today. Come back tomorrow!`;
+        } else if (userOrderCount < 30) {
             claimBtn.classList.add('disabled');
             claimBtn.disabled = true;
-            document.getElementById('claimWarning').innerHTML = `Complete ${30 - userOrderCount} more orders to unlock rewards.`;
+            document.getElementById('claimWarning').innerHTML = `📋 Complete ${30 - userOrderCount} more orders to unlock rewards.`;
+        } else if (nextDay > REWARDS.length) {
+            claimBtn.classList.add('disabled');
+            claimBtn.disabled = true;
+            document.getElementById('claimWarning').innerHTML = `🏆 Champion! You completed all 7 days!`;
         } else {
             claimBtn.classList.add('disabled');
             claimBtn.disabled = true;
-            document.getElementById('claimWarning').innerHTML = `Complete Day ${streak + 1} to continue.`;
+            document.getElementById('claimWarning').innerHTML = `🔒 Complete Day ${streak} to unlock Day ${nextDay}`;
         }
     }
-    
-    async function handleClaim() {
-        const {streak, lastClaimDate, claimedDays} = loadData();
-        const hasClaimed = hasClaimedToday(lastClaimDate);
-        const nextDay = streak + 1;
-        
-        if(hasClaimed) { showToast('Already claimed today', 'warning'); return; }
-        if(nextDay > signInRewards.length) { showToast('Completed all days!', 'success'); return; }
-        if(userOrderCount < 30) { showToast(`Need 30 orders to claim rewards. You have ${userOrderCount}/30.`, 'error'); return; }
-        
-        if(streak > 0 && !isConsecutive(lastClaimDate)) {
-            const amount = signInRewards[0].amount;
-            await addReward(amount);
-            saveData(1, new Date().toISOString(), [1]);
-            await render();
-            showToast(`Day 1 claimed! +€${amount}`, 'success');
+
+    async function claimReward() {
+        if (hasClaimedToday()) {
+            showToast('Already claimed today!', 'warning');
             return;
         }
         
-        const amount = signInRewards[nextDay - 1].amount;
-        await addReward(amount);
-        saveData(streak + 1, new Date().toISOString(), [...claimedDays, nextDay]);
-        await render();
-        showToast(`Day ${nextDay} claimed! +€${amount}`, 'success');
+        const nextDay = streak + 1;
+        if (nextDay > REWARDS.length) {
+            showToast('You already completed all days!', 'info');
+            return;
+        }
+        
+        const userOrderCount = await getUserOrderCount();
+        if (userOrderCount < 30) {
+            showToast(`Need 30 orders to claim rewards. You have ${userOrderCount}/30.`, 'error');
+            return;
+        }
+        
+        // 断签处理
+        if (streak > 0 && !isConsecutive()) {
+            const amount = REWARDS[0].amount;
+            const success = await addRewardToBalance(amount);
+            if (success) {
+                streak = 1;
+                claimedDays = [1];
+                totalClaimedAmount += amount;
+                lastClaimDate = new Date().toISOString();
+                saveData();
+                await render();
+                animateCard(1);
+                burstConfetti();
+                showToast(`⚠️ Streak reset! You got €${amount} for Day 1.`, 'warning');
+            } else {
+                showToast('Failed to add reward. Please try again.', 'error');
+            }
+            return;
+        }
+        
+        // 正常签到
+        const amount = REWARDS[nextDay - 1].amount;
+        const success = await addRewardToBalance(amount);
+        
+        if (success) {
+            streak = nextDay;
+            claimedDays.push(nextDay);
+            totalClaimedAmount += amount;
+            lastClaimDate = new Date().toISOString();
+            saveData();
+            await render();
+            animateCard(nextDay);
+            burstConfetti();
+            showToast(`🎉 Day ${nextDay} claimed! +€${amount}`, 'success');
+            
+            if (nextDay === 7) {
+                setTimeout(() => {
+                    showToast(`🏆 AMAZING! Total claimed: €${totalClaimedAmount}`, 'success');
+                }, 500);
+            }
+        } else {
+            showToast('Failed to claim reward. Please try again.', 'error');
+        }
     }
 
     function setupBottomNav() {
@@ -575,11 +1075,23 @@
             });
         });
     }
+
+    async function init() {
+        await initSupabase();
+        currentUser = getCurrentUserFromLocal();
+        loadData();
+        await render();
+        
+        document.getElementById('claimBtn').onclick = claimReward;
+        setupBottomNav();
+    }
     
-    checkLogin();
-    setupBottomNav();
-    loadRewards();
-    render();
+    // 检查登录
+    if (!getCurrentUserFromLocal()) {
+        window.location.href = 'signin.html';
+    } else {
+        init();
+    }
 </script>
 </body>
 </html>
