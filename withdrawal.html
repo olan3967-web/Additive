@@ -33,7 +33,6 @@
             position: relative;
         }
 
-        /* 页面头部 */
         .page-header {
             padding: 20px 20px 10px;
         }
@@ -63,7 +62,6 @@
             margin-top: 8px;
         }
 
-        /* 步骤容器 */
         .step-container {
             background: white;
             border-radius: 24px;
@@ -88,65 +86,95 @@
             font-size: 20px;
         }
 
-        /* 支付方式网格 */
-        .payment-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+        /* 支付方式列表 - 从上往下排列 */
+        .payment-list {
+            display: flex;
+            flex-direction: column;
             gap: 12px;
-            margin-bottom: 8px;
         }
 
-        .payment-card {
+        .payment-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 20px;
-            padding: 16px 8px;
-            text-align: center;
+            padding: 16px 20px;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .payment-card:hover:not(.disabled) {
+        .payment-item:hover:not(.disabled) {
             border-color: #ff7a00;
             background: #fff7ed;
-            transform: translateY(-2px);
+            transform: translateX(4px);
         }
 
-        .payment-card.selected {
+        .payment-item.selected {
             border-color: #ff7a00;
             background: #fff7ed;
             box-shadow: 0 0 0 2px rgba(255, 122, 0, 0.1);
         }
 
-        .payment-card.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .payment-item.disabled {
+            opacity: 0.6;
+            cursor: pointer;
         }
 
-        .payment-card i {
-            font-size: 28px;
+        .payment-icon {
+            width: 48px;
+            height: 48px;
+            background: white;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .payment-icon i {
+            font-size: 24px;
             color: #ff7a00;
-            margin-bottom: 8px;
-            display: block;
         }
 
-        .payment-card h4 {
-            font-size: 13px;
+        .payment-info {
+            flex: 1;
+        }
+
+        .payment-name {
+            font-size: 16px;
             font-weight: 600;
             color: #1f2937;
             margin-bottom: 4px;
         }
 
-        .payment-card p {
-            font-size: 10px;
+        .payment-desc {
+            font-size: 11px;
             color: #94a3b8;
         }
 
-        .disabled-tag {
-            font-size: 9px;
+        .payment-status {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        .payment-status.unavailable {
+            background: #fee2e2;
             color: #ef4444;
-            margin-top: 6px;
-            display: block;
+        }
+
+        .payment-status.available {
+            background: #dcfce7;
+            color: #10b981;
+        }
+
+        .payment-arrow {
+            color: #94a3b8;
+            font-size: 14px;
         }
 
         /* 地址卡片 */
@@ -196,7 +224,6 @@
             color: #94a3b8;
         }
 
-        /* 输入框 */
         .address-input {
             width: 100%;
             background: #f8fafc;
@@ -215,11 +242,6 @@
             box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
         }
 
-        .address-input::placeholder {
-            color: #94a3b8;
-        }
-
-        /* 余额卡片 */
         .balance-card {
             background: linear-gradient(135deg, #ff7a00, #ff9f43);
             border-radius: 20px;
@@ -239,7 +261,6 @@
             margin-top: 8px;
         }
 
-        /* 金额输入 */
         .amount-input-wrapper {
             position: relative;
             margin-bottom: 12px;
@@ -304,7 +325,6 @@
             border-color: #ff7a00;
         }
 
-        /* 按钮 */
         .step-btn {
             width: 100%;
             background: #ff7a00;
@@ -324,7 +344,6 @@
             transform: scale(1.01);
         }
 
-        /* 底部导航栏 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -360,7 +379,6 @@
 
         @media (max-width: 390px) {
             .phone { width: 100%; }
-            .payment-grid { grid-template-columns: 1fr; }
             .address-cards { flex-direction: column; }
         }
     </style>
@@ -377,23 +395,38 @@
     <!-- Step 1: 选择支付方式 -->
     <div id="step1Container" class="step-container">
         <div class="step-title"><i class="fas fa-credit-card"></i> Select Method</div>
-        <div class="payment-grid">
-            <div class="payment-card disabled" data-method="paypal">
-                <i class="fab fa-paypal"></i>
-                <h4>PayPal</h4>
-                <p>Currently unavailable</p>
-                <span class="disabled-tag">Unavailable</span>
+        <div class="payment-list">
+            <!-- PayPal - 不可用 -->
+            <div class="payment-item disabled" data-method="paypal" data-reason="Your employment contract has not yet been activated">
+                <div class="payment-icon"><i class="fab fa-paypal"></i></div>
+                <div class="payment-info">
+                    <div class="payment-name">PayPal</div>
+                    <div class="payment-desc">Instant withdrawal to PayPal account</div>
+                </div>
+                <div class="payment-status unavailable">Unavailable</div>
+                <div class="payment-arrow"><i class="fas fa-chevron-right"></i></div>
             </div>
-            <div class="payment-card disabled" data-method="sepa">
-                <i class="fas fa-university"></i>
-                <h4>SEPA</h4>
-                <p>Currently unavailable</p>
-                <span class="disabled-tag">Unavailable</span>
+
+            <!-- SEPA Instant - 不可用 -->
+            <div class="payment-item disabled" data-method="sepa" data-reason="Your employment contract has not yet been activated">
+                <div class="payment-icon"><i class="fas fa-university"></i></div>
+                <div class="payment-info">
+                    <div class="payment-name">SEPA Instant</div>
+                    <div class="payment-desc">Instant bank transfer (EU only)</div>
+                </div>
+                <div class="payment-status unavailable">Unavailable</div>
+                <div class="payment-arrow"><i class="fas fa-chevron-right"></i></div>
             </div>
-            <div class="payment-card" data-method="crypto">
-                <i class="fab fa-bitcoin"></i>
-                <h4>Cryptocurrencies</h4>
-                <p>USDT, ETH, BTC, USDC</p>
+
+            <!-- Crypto Currencies - 可用 -->
+            <div class="payment-item" data-method="crypto">
+                <div class="payment-icon"><i class="fab fa-bitcoin"></i></div>
+                <div class="payment-info">
+                    <div class="payment-name">Crypto Currencies</div>
+                    <div class="payment-desc">USDT, ETH, BTC, USDC</div>
+                </div>
+                <div class="payment-status available">Available</div>
+                <div class="payment-arrow"><i class="fas fa-chevron-right"></i></div>
             </div>
         </div>
     </div>
@@ -477,7 +510,6 @@
         try { return JSON.parse(userStr); } catch(e) { return null; }
     }
 
-    // 检查 KYC 状态
     async function checkKycStatus() {
         const user = getCurrentUser();
         if (!user) return false;
@@ -539,16 +571,17 @@
     }
 
     function initPaymentSelection() {
-        const cards = document.querySelectorAll('.payment-card');
-        cards.forEach(card => {
-            card.addEventListener('click', () => {
-                if (card.classList.contains('disabled')) {
-                    showToast(card.querySelector('p')?.innerText || 'Not available', 'warning');
+        const items = document.querySelectorAll('.payment-item');
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                if (item.classList.contains('disabled')) {
+                    const reason = item.dataset.reason || 'This method is currently unavailable';
+                    showToast(reason, 'warning');
                     return;
                 }
-                cards.forEach(c => c.classList.remove('selected'));
-                card.classList.add('selected');
-                selectedMethod = card.dataset.method;
+                items.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                selectedMethod = item.dataset.method;
                 if (selectedMethod === 'crypto') {
                     showStep2();
                 }
