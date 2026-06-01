@@ -30,9 +30,10 @@ async function loadCertificates() {
     if (!container) return;
     
     try {
+        // 先获取所有证书
         const { data: certificates, error } = await sb
             .from('certificates')
-            .select('*, users!inner(username)')
+            .select('*')
             .order('created_at', { ascending: false });
         
         if (error) throw error;
@@ -40,6 +41,18 @@ async function loadCertificates() {
         if (!certificates || certificates.length === 0) {
             container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无证书，点击"上传证书"添加</div>';
             return;
+        }
+        
+        // 获取所有用户的 UID 列表
+        const uids = [...new Set(certificates.map(c => c.uid))];
+        const { data: users } = await sb
+            .from('users')
+            .select('uid, username')
+            .in('uid', uids);
+        
+        const userMap = {};
+        if (users) {
+            users.forEach(u => { userMap[u.uid] = u.username; });
         }
         
         container.innerHTML = `
@@ -53,13 +66,7 @@ async function loadCertificates() {
         
         const tbody = document.getElementById('certificateTableBody');
         for (let cert of certificates) {
-            let username = cert.uid;
-            if (cert.users && cert.users.username) {
-                username = cert.users.username;
-            } else {
-                const { data: user } = await sb.from('users').select('username').eq('uid', cert.uid).single();
-                if (user) username = user.username;
-            }
+            const username = userMap[cert.uid] || cert.uid;
             
             const row = tbody.insertRow();
             row.insertCell(0).innerHTML = `<span class="badge">${escapeHtml(username)}</span><br><small style="color:#6a7a9a;">UID: ${cert.uid}</small>`;
@@ -72,6 +79,7 @@ async function loadCertificates() {
             `;
         }
         
+        // 绑定事件...
         document.querySelectorAll('.toggle-cert-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.dataset.id;
