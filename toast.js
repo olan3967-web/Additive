@@ -1,6 +1,6 @@
-// toast.js - 自定义网页内提示弹窗 + 全局拦截 alert（ADDITIVE 主题风格 - 居中紧凑）
+// toast.js - 小型紧凑弹窗（ADDITIVE 主题风格）
 
-// ========== Toast 提示消息（居中显示，紧凑宽度） ==========
+// ========== Toast 提示消息 ==========
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
     if (existingToast) existingToast.remove();
@@ -15,7 +15,7 @@ function showToast(message, type = 'success') {
     
     toast.innerHTML = `
         <div class="toast-icon"><i class="fas ${icon}"></i></div>
-        <div class="toast-message">${message}</div>
+        <div class="toast-message">${escapeHtml(message)}</div>
     `;
     
     document.body.appendChild(toast);
@@ -23,8 +23,8 @@ function showToast(message, type = 'success') {
     
     setTimeout(() => {
         toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 2500);
+        setTimeout(() => toast.remove(), 200);
+    }, 2000);
 }
 
 // ========== 确认弹窗 ==========
@@ -119,6 +119,7 @@ function showPrompt(title, placeholder, callback) {
     });
 }
 
+// ========== 辅助函数 ==========
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
@@ -129,38 +130,39 @@ function escapeHtml(str) {
     });
 }
 
+// ========== 全局拦截 alert ==========
 window.originalAlert = window.alert;
 window.alert = function(message) {
     showToast(message, 'info');
 };
 
+// ========== 添加样式 ==========
 (function addStyles() {
     if (document.getElementById('additive-toast-styles')) return;
     
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
-        /* Toast 通知 - 居中紧凑 */
+        /* Toast 小型紧凑 */
         .custom-toast {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
             background: white;
-            border-radius: 50px;
-            padding: 12px 24px;
+            border-radius: 40px;
+            padding: 10px 20px;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             z-index: 10000;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid;
+            transition: all 0.2s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-left: 3px solid;
             font-family: 'Inter', sans-serif;
-            max-width: 85%;
-            white-space: nowrap;
+            max-width: 80%;
         }
         .custom-toast.show {
             opacity: 1;
@@ -175,19 +177,10 @@ window.alert = function(message) {
         .custom-toast-warning .toast-icon i { color: #f59e0b; }
         .custom-toast-info { border-left-color: #ff7a00; }
         .custom-toast-info .toast-icon i { color: #ff7a00; }
-        .toast-icon i { font-size: 18px; }
-        .toast-message { font-size: 14px; color: #1f2937; line-height: 1.4; }
-        
-        @media (max-width: 480px) {
-            .custom-toast {
-                white-space: normal;
-                text-align: center;
-                max-width: 85%;
-                padding: 10px 20px;
-            }
-        }
-        
-        /* 确认弹窗 */
+        .toast-icon i { font-size: 14px; }
+        .toast-message { font-size: 13px; color: #1f2937; line-height: 1.3; }
+
+        /* 确认弹窗小型紧凑 */
         .custom-confirm {
             position: fixed;
             top: 0;
@@ -212,16 +205,16 @@ window.alert = function(message) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
         }
         .confirm-content {
             position: relative;
             background: white;
-            border-radius: 24px;
-            padding: 24px 20px;
-            width: 300px;
-            max-width: 85%;
+            border-radius: 20px;
+            padding: 18px 16px;
+            width: 260px;
+            max-width: 80%;
             text-align: center;
             transform: scale(0.9);
             transition: transform 0.2s ease;
@@ -230,30 +223,30 @@ window.alert = function(message) {
             transform: scale(1);
         }
         .confirm-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .confirm-message {
-            font-size: 13px;
+            font-size: 12px;
             color: #6b7280;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             line-height: 1.4;
         }
         .confirm-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
         }
         .confirm-btn {
             flex: 1;
-            padding: 10px;
+            padding: 8px 12px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
             border: none;
-            font-size: 13px;
+            font-size: 12px;
         }
         .confirm-cancel {
             background: #f1f5f9;
@@ -269,8 +262,8 @@ window.alert = function(message) {
         .confirm-ok:hover {
             background: #ea580c;
         }
-        
-        /* 输入弹窗 */
+
+        /* 输入弹窗小型紧凑 */
         .custom-prompt {
             position: fixed;
             top: 0;
@@ -295,16 +288,16 @@ window.alert = function(message) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
         }
         .prompt-content {
             position: relative;
             background: white;
-            border-radius: 24px;
-            padding: 24px 20px;
-            width: 300px;
-            max-width: 85%;
+            border-radius: 20px;
+            padding: 18px 16px;
+            width: 260px;
+            max-width: 80%;
             text-align: center;
             transform: scale(0.9);
             transition: transform 0.2s ease;
@@ -313,21 +306,21 @@ window.alert = function(message) {
             transform: scale(1);
         }
         .prompt-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         .prompt-input {
             width: 100%;
-            padding: 12px 14px;
+            padding: 10px 12px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-radius: 14px;
+            border-radius: 12px;
             color: #1f2937;
-            font-size: 14px;
+            font-size: 13px;
             outline: none;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             font-family: 'Inter', sans-serif;
         }
         .prompt-input:focus {
@@ -336,17 +329,17 @@ window.alert = function(message) {
         }
         .prompt-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
         }
         .prompt-btn {
             flex: 1;
-            padding: 10px;
+            padding: 8px 12px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
             border: none;
-            font-size: 13px;
+            font-size: 12px;
         }
         .prompt-cancel {
             background: #f1f5f9;
