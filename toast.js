@@ -1,4 +1,4 @@
-// toast.js - 超紧凑弹窗（零多余空白）
+// toast.js - 最终版（零多余空白）
 
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
@@ -19,7 +19,6 @@ function showToast(message, type = 'success') {
     
     document.body.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
-    
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 200);
@@ -52,13 +51,11 @@ function showConfirm(title, message, onConfirm, onCancel) {
         setTimeout(() => modal.remove(), 300);
         if (onCancel) onCancel();
     };
-    
     modal.querySelector('.confirm-ok').onclick = () => {
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
         if (onConfirm) onConfirm();
     };
-    
     modal.querySelector('.confirm-overlay').onclick = () => {
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
@@ -95,35 +92,25 @@ function showPrompt(title, placeholder, callback) {
         setTimeout(() => modal.remove(), 300);
         if (callback) callback(null);
     };
-    
     modal.querySelector('.prompt-ok').onclick = () => {
         const value = input.value.trim();
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
         if (callback) callback(value);
     };
-    
     modal.querySelector('.prompt-overlay').onclick = () => {
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
         if (callback) callback(null);
     };
-    
     input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            modal.querySelector('.prompt-ok').click();
-        }
+        if (e.key === 'Enter') modal.querySelector('.prompt-ok').click();
     });
 }
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
 
 window.originalAlert = window.alert;
@@ -137,15 +124,14 @@ window.alert = function(message) {
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
-        /* Toast - 零多余空白 */
         .custom-toast {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
             background: white;
-            border-radius: 40px;
-            padding: 0 18px;
+            border-radius: 30px;
+            padding: 0;
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -153,10 +139,9 @@ window.alert = function(message) {
             opacity: 0;
             visibility: hidden;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             border-left: 3px solid;
             font-family: 'Inter', sans-serif;
-            max-width: 85%;
         }
         .custom-toast.show {
             opacity: 1;
@@ -164,17 +149,16 @@ window.alert = function(message) {
             transform: translate(-50%, -50%) scale(1);
         }
         .custom-toast-success { border-left-color: #10b981; }
-        .custom-toast-success .toast-icon i { color: #10b981; }
         .custom-toast-error { border-left-color: #ef4444; }
-        .custom-toast-error .toast-icon i { color: #ef4444; }
         .custom-toast-warning { border-left-color: #f59e0b; }
-        .custom-toast-warning .toast-icon i { color: #f59e0b; }
         .custom-toast-info { border-left-color: #ff7a00; }
+        .custom-toast-success .toast-icon i { color: #10b981; }
+        .custom-toast-error .toast-icon i { color: #ef4444; }
+        .custom-toast-warning .toast-icon i { color: #f59e0b; }
         .custom-toast-info .toast-icon i { color: #ff7a00; }
         .toast-icon i { font-size: 13px; }
-        .toast-message { font-size: 13px; color: #1f2937; line-height: 1.2; }
-
-        /* 确认弹窗 - 零多余空白 */
+        .toast-message { font-size: 13px; color: #1f2937; line-height: 1.2; padding: 6px 18px 6px 0; }
+        
         .custom-confirm {
             position: fixed;
             top: 0;
@@ -199,14 +183,14 @@ window.alert = function(message) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0,0,0,0.5);
             backdrop-filter: blur(4px);
         }
         .confirm-content {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 0 20px;
+            padding: 0;
             width: 280px;
             max-width: 80%;
             text-align: center;
@@ -220,22 +204,21 @@ window.alert = function(message) {
             font-size: 15px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 0;
-            padding-top: 12px;
+            margin: 0;
+            padding: 12px 20px 0 20px;
         }
         .confirm-message {
             font-size: 12px;
             color: #6b7280;
-            margin-bottom: 0;
-            padding-top: 6px;
+            margin: 0;
+            padding: 6px 20px 0 20px;
             line-height: 1.3;
         }
         .confirm-buttons {
             display: flex;
             gap: 8px;
             justify-content: center;
-            padding-top: 12px;
-            padding-bottom: 12px;
+            padding: 12px 20px;
         }
         .confirm-btn {
             flex: 1;
@@ -246,16 +229,9 @@ window.alert = function(message) {
             border: none;
             font-size: 12px;
         }
-        .confirm-cancel {
-            background: #f1f5f9;
-            color: #475569;
-        }
-        .confirm-ok {
-            background: #ff7a00;
-            color: white;
-        }
-
-        /* 输入弹窗 - 零多余空白 */
+        .confirm-cancel { background: #f1f5f9; color: #475569; }
+        .confirm-ok { background: #ff7a00; color: white; }
+        
         .custom-prompt {
             position: fixed;
             top: 0;
@@ -280,14 +256,14 @@ window.alert = function(message) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0,0,0,0.5);
             backdrop-filter: blur(4px);
         }
         .prompt-content {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 0 20px;
+            padding: 0;
             width: 280px;
             max-width: 80%;
             text-align: center;
@@ -301,11 +277,12 @@ window.alert = function(message) {
             font-size: 15px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 0;
-            padding-top: 12px;
+            margin: 0;
+            padding: 12px 20px 0 20px;
         }
         .prompt-input {
-            width: 100%;
+            width: calc(100% - 40px);
+            margin: 8px 20px 0 20px;
             padding: 8px 12px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -313,20 +290,17 @@ window.alert = function(message) {
             color: #1f2937;
             font-size: 13px;
             outline: none;
-            margin-bottom: 0;
-            margin-top: 8px;
             font-family: 'Inter', sans-serif;
         }
         .prompt-input:focus {
             border-color: #ff7a00;
-            box-shadow: 0 0 0 2px rgba(255, 122, 0, 0.1);
+            box-shadow: 0 0 0 2px rgba(255,122,0,0.1);
         }
         .prompt-buttons {
             display: flex;
             gap: 8px;
             justify-content: center;
-            padding-top: 12px;
-            padding-bottom: 12px;
+            padding: 12px 20px;
         }
         .prompt-btn {
             flex: 1;
@@ -337,14 +311,8 @@ window.alert = function(message) {
             border: none;
             font-size: 12px;
         }
-        .prompt-cancel {
-            background: #f1f5f9;
-            color: #475569;
-        }
-        .prompt-ok {
-            background: #ff7a00;
-            color: white;
-        }
+        .prompt-cancel { background: #f1f5f9; color: #475569; }
+        .prompt-ok { background: #ff7a00; color: white; }
     `;
     document.head.appendChild(style);
 })();
