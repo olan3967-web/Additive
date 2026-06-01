@@ -1,4 +1,4 @@
-// toast.js - compact notifications, borders hug content
+// toast.js - ultra-compact notifications (top/bottom borders hug content)
 
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
@@ -13,8 +13,8 @@ function showToast(message, type = 'success') {
     else if (type === 'info') icon = 'fa-info-circle';
     
     toast.innerHTML = `
-        <div class="toast-icon"><i class="fas ${icon}"></i></div>
-        <div class="toast-message">${escapeHtml(message)}</div>
+        <span class="toast-icon"><i class="fas ${icon}"></i></span>
+        <span class="toast-message">${escapeHtml(message)}</span>
     `;
     
     document.body.appendChild(toast);
@@ -143,31 +143,33 @@ window.alert = function(message) {
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
-            background: white;
+            background: #fff;
             border-radius: 999px;
             display: inline-flex;
             align-items: center;
-            padding: 4px 12px;
+            padding: 0 10px !important;   /* ZERO top/bottom padding */
             gap: 4px;
-            z-index: 10000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,.1);
             border-left: 3px solid;
             font-family: 'Inter', sans-serif;
-            line-height: 1;
+            line-height: 10px !important;
+            min-height: unset !important;
+            height: auto !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            opacity: 0;
+            visibility: hidden;
+            z-index: 10000;
+            transition: all 0.2s ease;
         }
         .custom-toast.show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
         .custom-toast-success { border-left-color: #10b981; }
         .custom-toast-error { border-left-color: #ef4444; }
         .custom-toast-warning { border-left-color: #f59e0b; }
         .custom-toast-info { border-left-color: #ff7a00; }
-        .toast-icon { display: flex; align-items: center; justify-content: center; height: 14px; }
-        .toast-icon i { font-size: 12px; line-height: 1; }
-        .toast-message { font-size: 12px; color: #1f2937; display: flex; align-items: center; margin: 0; padding: 0; }
+        .toast-icon { display: flex; align-items: center; justify-content: center; margin:0; padding:0; height:10px !important; line-height:10px !important; }
+        .toast-icon i { font-size:10px !important; line-height:10px !important; margin:0; padding:0; display:block; }
+        .toast-message { font-size:11px; line-height:10px !important; margin:0 !important; padding:0 !important; display:block; }
 
-        /* --- Confirm --- */
+        /* --- Confirm & Prompt --- */
         .custom-confirm, .custom-prompt { position: fixed; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; z-index:10001; visibility:hidden; opacity:0; transition: all 0.2s ease; }
         .custom-confirm.show, .custom-prompt.show { visibility: visible; opacity: 1; }
         .confirm-overlay, .prompt-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
