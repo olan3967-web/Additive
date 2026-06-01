@@ -55,26 +55,62 @@
             cursor: pointer;
         }
 
-        /* Certificate 卡片容器 */
+        /* 证书容器 */
         .certificate-container {
-            padding: 0 16px;
+            padding: 16px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
         }
 
-        .certificate-card {
-            background: white;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        /* 棉纸纹理 + 烫金边框架 */
+        .certificate-frame {
+            background: #fef9ef;
+            padding: 16px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e8dcc8;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease;
             width: 100%;
-            max-width: 100%;
+            max-width: 320px;
+            margin: 0 auto;
         }
 
-        /* Certificate 图片 - 900x1288 比例 */
+        .certificate-frame::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 1px solid #d4af37;
+            pointer-events: none;
+        }
+
+        .certificate-inner {
+            background: #fffdf8;
+            padding: 4px;
+        }
+
         .certificate-image {
             width: 100%;
             height: auto;
+            display: block;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #cbd5e1;
+            margin-bottom: 12px;
             display: block;
         }
 
@@ -101,17 +137,59 @@
             100% { transform: rotate(360deg); }
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #94a3b8;
+        /* 放大查看模态框 */
+        .zoom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
         }
 
-        .empty-state i {
-            font-size: 48px;
-            color: #cbd5e1;
-            margin-bottom: 12px;
-            display: block;
+        .zoom-modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .zoom-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .zoom-image {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 85vh;
+            border-radius: 8px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .zoom-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .zoom-close:hover {
+            opacity: 1;
         }
 
         /* 底部导航栏 */
@@ -148,27 +226,13 @@
             font-weight: 600;
         }
 
-/* 证书网格布局 */
-.certificates-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 0 16px;
-}
-
-.certificate-card {
-    background: white;
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-    width: 100%;
-}
-
-.certificate-image {
-    width: 100%;
-    height: auto;
-    display: block;
-}
+        /* 证书列表网格 */
+        .certificates-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -184,7 +248,7 @@
         <div class="loading-container">
             <div class="loading-spinner">
                 <i class="fas fa-spinner"></i>
-                <div style="margin-top: 10px;">Loading certificate...</div>
+                <div style="margin-top: 10px;">Loading...</div>
             </div>
         </div>
     </div>
@@ -198,7 +262,16 @@
 
 </div>
 
+<!-- 放大查看模态框 -->
+<div id="zoomModal" class="zoom-modal">
+    <div class="zoom-content">
+        <button class="zoom-close" id="zoomCloseBtn">&times;</button>
+        <img id="zoomImage" class="zoom-image" src="" alt="Certificate">
+    </div>
+</div>
+
 <script>
+    // 使用全局的 sb 对象（来自 user-data.js）
 
     function getCurrentUser() {
         const userStr = localStorage.getItem('currentUser');
@@ -206,53 +279,80 @@
         try { return JSON.parse(userStr); } catch(e) { return null; }
     }
 
-    async function loadCertificate() {
-    const user = getCurrentUser();
-    if (!user) {
-        window.location.href = 'signin.html';
-        return;
-    }
-
-    const container = document.getElementById('certificateContainer');
-    container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading...</div></div></div>`;
-
-    try {
-        // 获取所有启用的证书（不限制数量）
-        const { data: certificates, error } = await sb
-            .from('certificates')
-            .select('image_url')
-            .eq('is_active', true)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        if (!certificates || certificates.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fa-regular fa-certificate"></i>
-                    No certificate yet
-                    <div style="margin-top: 12px; font-size: 12px;">Complete 100 orders to earn your certificate</div>
-                </div>
-            `;
+    async function loadCertificates() {
+        const user = getCurrentUser();
+        if (!user) {
+            window.location.href = 'signin.html';
             return;
         }
 
-        // 显示所有证书（网格布局）
-        container.innerHTML = `
-            <div class="certificates-grid">
-                ${certificates.map(cert => `
-                    <div class="certificate-card">
-                        <img class="certificate-image" src="${cert.image_url}" alt="Certificate" onerror="this.src='https://placehold.co/900x1288/f0f2f5/94a3b8?text=Certificate+Not+Found'">
+        const container = document.getElementById('certificateContainer');
+        container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading...</div></div></div>`;
+
+        try {
+            // 获取所有启用的证书
+            const { data: certificates, error } = await sb
+                .from('certificates')
+                .select('image_url, created_at')
+                .eq('is_active', true)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!certificates || certificates.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-regular fa-certificate"></i>
+                        No certificate yet
+                        <div style="margin-top: 12px; font-size: 12px;">Complete 100 orders to earn your certificate</div>
                     </div>
-                `).join('')}
-            </div>
-        `;
-        
-    } catch (e) {
-        console.error('加载证书失败:', e);
-        container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-circle-xmark"></i>Failed to load certificate</div>';
+                `;
+                return;
+            }
+
+            // 渲染所有证书
+            container.innerHTML = `
+                <div class="certificates-list">
+                    ${certificates.map((cert, index) => `
+                        <div class="certificate-frame" data-index="${index}" data-url="${cert.image_url}">
+                            <div class="certificate-inner">
+                                <img class="certificate-image" src="${cert.image_url}" alt="Certificate" onerror="this.src='https://placehold.co/900x1288/f0f2f5/94a3b8?text=Certificate+Not+Found'">
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            // 绑定点击放大事件
+            document.querySelectorAll('.certificate-frame').forEach(frame => {
+                frame.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const imageUrl = frame.dataset.url;
+                    if (imageUrl) {
+                        openZoomImage(imageUrl);
+                    }
+                });
+            });
+
+        } catch (e) {
+            console.error('加载证书失败:', e);
+            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-circle-xmark"></i>Failed to load certificate</div>';
+        }
     }
-}
+
+    // 打开放大查看
+    function openZoomImage(imageUrl) {
+        const modal = document.getElementById('zoomModal');
+        const zoomImage = document.getElementById('zoomImage');
+        zoomImage.src = imageUrl;
+        modal.classList.add('active');
+    }
+
+    // 关闭放大查看
+    function closeZoomImage() {
+        const modal = document.getElementById('zoomModal');
+        modal.classList.remove('active');
+    }
 
     function goBack() {
         window.location.href = 'dashboard.html';
@@ -270,8 +370,16 @@
         });
     }
 
+    // 绑定关闭事件
+    document.getElementById('zoomCloseBtn')?.addEventListener('click', closeZoomImage);
+    document.getElementById('zoomModal')?.addEventListener('click', (e) => {
+        if (e.target === document.getElementById('zoomModal')) {
+            closeZoomImage();
+        }
+    });
+
     setupBottomNav();
-    loadCertificate();
+    loadCertificates();
 </script>
 </body>
 </html>
