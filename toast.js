@@ -1,4 +1,4 @@
-// toast.js - 紧凑弹窗（上下留一点缝隙，左右伸长）
+// toast.js - 紧凑弹窗（左右伸长，几乎满屏）
 
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
@@ -137,7 +137,7 @@ window.alert = function(message) {
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
-        /* Toast - 居中紧凑 */
+        /* Toast - 左右伸长 */
         .custom-toast {
             position: fixed;
             top: 50%;
@@ -145,7 +145,7 @@ window.alert = function(message) {
             transform: translate(-50%, -50%) scale(0.9);
             background: white;
             border-radius: 40px;
-            padding: 8px 28px;
+            padding: 8px 24px;
             display: inline-flex;
             align-items: center;
             gap: 10px;
@@ -156,7 +156,7 @@ window.alert = function(message) {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             border-left: 3px solid;
             font-family: 'Inter', sans-serif;
-            max-width: 90%;
+            max-width: 85%;
         }
         .custom-toast .toast-message {
             white-space: normal;
@@ -178,7 +178,7 @@ window.alert = function(message) {
         .toast-icon i { font-size: 15px; }
         .toast-message { font-size: 14px; color: #1f2937; line-height: 1.3; }
 
-        /* 确认弹窗 - 紧凑 */
+        /* 确认弹窗 - 左右伸长 */
         .custom-confirm {
             position: fixed;
             top: 0;
@@ -210,9 +210,9 @@ window.alert = function(message) {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 6px 24px;
-            width: 300px;
-            max-width: 85%;
+            padding: 6px 20px;
+            width: 85%;
+            max-width: 360px;
             text-align: center;
             transform: scale(0.9);
             transition: transform 0.2s ease;
@@ -261,7 +261,7 @@ window.alert = function(message) {
             background: #ea580c;
         }
 
-        /* 输入弹窗 - 紧凑 */
+        /* 输入弹窗 - 左右伸长 */
         .custom-prompt {
             position: fixed;
             top: 0;
@@ -293,9 +293,9 @@ window.alert = function(message) {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 6px 24px;
-            width: 300px;
-            max-width: 85%;
+            padding: 6px 20px;
+            width: 85%;
+            max-width: 360px;
             text-align: center;
             transform: scale(0.9);
             transition: transform 0.2s ease;
@@ -310,8 +310,8 @@ window.alert = function(message) {
             margin-bottom: 8px;
         }
         .prompt-input {
-            width: calc(100% - 48px);
-            margin: 6px 24px 0 24px;
+            width: calc(100% - 40px);
+            margin: 6px 20px 0 20px;
             padding: 10px 14px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
