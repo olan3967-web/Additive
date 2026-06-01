@@ -1,23 +1,23 @@
-/* toast.css - 自定义弹窗样式 */
+/* toast.css - ADDITIVE 主题风格 */
 
-/* Toast 提示消息 */
+/* Toast 通知样式 */
 .custom-toast {
     position: fixed;
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: linear-gradient(135deg, #1a1f3a, #0f1428);
-    backdrop-filter: blur(20px);
+    background: white;
     border-radius: 50px;
-    padding: 12px 24px;
+    padding: 14px 24px;
     display: flex;
     align-items: center;
     gap: 12px;
     z-index: 10000;
     opacity: 0;
     transition: all 0.3s ease;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    border: 1px solid rgba(140, 163, 255, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid;
+    font-family: 'Inter', sans-serif;
     max-width: 90%;
 }
 
@@ -26,22 +26,24 @@
     opacity: 1;
 }
 
-.toast-icon i {
-    font-size: 20px;
-}
+.custom-toast-success { border-left-color: #10b981; }
+.custom-toast-success .toast-icon i { color: #10b981; }
+.custom-toast-error { border-left-color: #ef4444; }
+.custom-toast-error .toast-icon i { color: #ef4444; }
+.custom-toast-warning { border-left-color: #f59e0b; }
+.custom-toast-warning .toast-icon i { color: #f59e0b; }
+.custom-toast-info { border-left-color: #ff7a00; }
+.custom-toast-info .toast-icon i { color: #ff7a00; }
 
-.toast-message {
-    font-size: 14px;
-    color: #fff;
-    word-break: break-word;
-}
+.toast-icon i { font-size: 20px; }
+.toast-message { font-size: 14px; color: #1f2937; }
 
 .toast-progress {
     position: absolute;
     bottom: 0;
     left: 0;
     height: 3px;
-    background: #8ca3ff;
+    background: #ff7a00;
     width: 100%;
     border-radius: 0 0 50px 50px;
     animation: toastProgress 3s linear forwards;
@@ -52,12 +54,7 @@
     100% { width: 0%; }
 }
 
-.custom-toast-success .toast-icon i { color: #4ade80; }
-.custom-toast-error .toast-icon i { color: #ff8888; }
-.custom-toast-warning .toast-icon i { color: #ffaa66; }
-.custom-toast-info .toast-icon i { color: #8ca3ff; }
-
-/* 确认弹窗 */
+/* 确认弹窗样式 */
 .custom-confirm {
     position: fixed;
     top: 0;
@@ -84,20 +81,18 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(5px);
 }
 
 .confirm-content {
     position: relative;
-    background: linear-gradient(145deg, #12172e, #0e1225);
-    border-radius: 24px;
-    padding: 24px;
+    background: white;
+    border-radius: 28px;
+    padding: 28px 24px;
     width: 320px;
     max-width: 90%;
     text-align: center;
-    border: 1px solid rgba(140,163,255,0.3);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     transform: scale(0.9);
     transition: transform 0.2s ease;
 }
@@ -107,15 +102,15 @@
 }
 
 .confirm-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #8ca3ff;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a2e;
     margin-bottom: 12px;
 }
 
 .confirm-message {
     font-size: 14px;
-    color: #c0c8e0;
+    color: #6b7280;
     margin-bottom: 24px;
     line-height: 1.5;
 }
@@ -127,33 +122,36 @@
 }
 
 .confirm-btn {
-    padding: 10px 24px;
+    flex: 1;
+    padding: 12px;
     border-radius: 40px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
     border: none;
+    font-size: 14px;
 }
 
 .confirm-cancel {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
+    background: #f1f5f9;
+    color: #475569;
 }
 
 .confirm-cancel:hover {
-    background: rgba(255,255,255,0.2);
+    background: #e2e8f0;
 }
 
 .confirm-ok {
-    background: linear-gradient(135deg, #8ca3ff, #6a85e0);
-    color: #0a0f2a;
+    background: #ff7a00;
+    color: white;
 }
 
 .confirm-ok:hover {
-    transform: scale(1.02);
+    background: #ea580c;
+    transform: scale(1.01);
 }
 
-/* 输入弹窗 */
+/* 输入弹窗样式 */
 .custom-prompt {
     position: fixed;
     top: 0;
@@ -180,20 +178,18 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(5px);
 }
 
 .prompt-content {
     position: relative;
-    background: linear-gradient(145deg, #12172e, #0e1225);
-    border-radius: 24px;
-    padding: 24px;
+    background: white;
+    border-radius: 28px;
+    padding: 28px 24px;
     width: 320px;
     max-width: 90%;
     text-align: center;
-    border: 1px solid rgba(140,163,255,0.3);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     transform: scale(0.9);
     transition: transform 0.2s ease;
 }
@@ -203,26 +199,28 @@
 }
 
 .prompt-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #8ca3ff;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a2e;
     margin-bottom: 20px;
 }
 
 .prompt-input {
     width: 100%;
-    padding: 12px 16px;
-    background: #0a0e25;
-    border: 1px solid #2a3560;
-    border-radius: 12px;
-    color: white;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    color: #1f2937;
     font-size: 14px;
-    margin-bottom: 20px;
     outline: none;
+    margin-bottom: 20px;
+    font-family: 'Inter', sans-serif;
 }
 
 .prompt-input:focus {
-    border-color: #8ca3ff;
+    border-color: #ff7a00;
+    box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
 }
 
 .prompt-buttons {
@@ -232,28 +230,29 @@
 }
 
 .prompt-btn {
-    padding: 10px 24px;
+    flex: 1;
+    padding: 12px;
     border-radius: 40px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
     border: none;
+    font-size: 14px;
 }
 
 .prompt-cancel {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
+    background: #f1f5f9;
+    color: #475569;
 }
 
 .prompt-cancel:hover {
-    background: rgba(255,255,255,0.2);
+    background: #e2e8f0;
 }
 
 .prompt-ok {
-    background: linear-gradient(135deg, #8ca3ff, #6a85e0);
-    color: #0a0f2a;
+    background: #ff7a00;
+    color: white;
 }
 
 .prompt-ok:hover {
-    transform: scale(1.02);
+    background: #ea580c;
 }
