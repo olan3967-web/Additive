@@ -1,4 +1,4 @@
-// toast.js - 上下边框紧贴内容
+// toast.js - 紧凑弹窗（上下留一点缝隙，左右伸长）
 
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
@@ -137,17 +137,18 @@ window.alert = function(message) {
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
+        /* Toast - 居中紧凑 */
         .custom-toast {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
             background: white;
-            border-radius: 30px;
-            padding: 0;
+            border-radius: 40px;
+            padding: 8px 28px;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
             z-index: 10000;
             opacity: 0;
             visibility: hidden;
@@ -155,6 +156,11 @@ window.alert = function(message) {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             border-left: 3px solid;
             font-family: 'Inter', sans-serif;
+            max-width: 90%;
+        }
+        .custom-toast .toast-message {
+            white-space: normal;
+            word-break: break-word;
         }
         .custom-toast.show {
             opacity: 1;
@@ -162,21 +168,17 @@ window.alert = function(message) {
             transform: translate(-50%, -50%) scale(1);
         }
         .custom-toast-success { border-left-color: #10b981; }
-        .custom-toast-error { border-left-color: #ef4444; }
-        .custom-toast-warning { border-left-color: #f59e0b; }
-        .custom-toast-info { border-left-color: #ff7a00; }
         .custom-toast-success .toast-icon i { color: #10b981; }
+        .custom-toast-error { border-left-color: #ef4444; }
         .custom-toast-error .toast-icon i { color: #ef4444; }
+        .custom-toast-warning { border-left-color: #f59e0b; }
         .custom-toast-warning .toast-icon i { color: #f59e0b; }
+        .custom-toast-info { border-left-color: #ff7a00; }
         .custom-toast-info .toast-icon i { color: #ff7a00; }
-        .toast-icon i { font-size: 14px; }
-        .toast-message { 
-            font-size: 13px; 
-            color: #1f2937; 
-            line-height: 1;
-            padding: 0 18px 0 0;
-        }
+        .toast-icon i { font-size: 15px; }
+        .toast-message { font-size: 14px; color: #1f2937; line-height: 1.3; }
 
+        /* 确认弹窗 - 紧凑 */
         .custom-confirm {
             position: fixed;
             top: 0;
@@ -208,9 +210,9 @@ window.alert = function(message) {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 0;
-            width: 280px;
-            max-width: 80%;
+            padding: 6px 24px;
+            width: 300px;
+            max-width: 85%;
             text-align: center;
             transform: scale(0.9);
             transition: transform 0.2s ease;
@@ -219,37 +221,47 @@ window.alert = function(message) {
             transform: scale(1);
         }
         .confirm-title {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
             color: #1a1a2e;
-            margin: 0;
-            padding: 0 20px;
+            margin-bottom: 4px;
         }
         .confirm-message {
-            font-size: 12px;
+            font-size: 13px;
             color: #6b7280;
-            margin: 0;
-            padding: 4px 20px 0 20px;
-            line-height: 1.3;
+            margin-bottom: 8px;
+            line-height: 1.4;
         }
         .confirm-buttons {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             justify-content: center;
-            padding: 6px 20px;
         }
         .confirm-btn {
             flex: 1;
-            padding: 5px 12px;
+            padding: 6px 16px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
             border: none;
-            font-size: 12px;
+            font-size: 13px;
         }
-        .confirm-cancel { background: #f1f5f9; color: #475569; }
-        .confirm-ok { background: #ff7a00; color: white; }
-        
+        .confirm-cancel {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .confirm-cancel:hover {
+            background: #e2e8f0;
+        }
+        .confirm-ok {
+            background: #ff7a00;
+            color: white;
+        }
+        .confirm-ok:hover {
+            background: #ea580c;
+        }
+
+        /* 输入弹窗 - 紧凑 */
         .custom-prompt {
             position: fixed;
             top: 0;
@@ -281,9 +293,9 @@ window.alert = function(message) {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 0;
-            width: 280px;
-            max-width: 80%;
+            padding: 6px 24px;
+            width: 300px;
+            max-width: 85%;
             text-align: center;
             transform: scale(0.9);
             transition: transform 0.2s ease;
@@ -292,45 +304,57 @@ window.alert = function(message) {
             transform: scale(1);
         }
         .prompt-title {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
             color: #1a1a2e;
-            margin: 0;
-            padding: 0 20px;
+            margin-bottom: 8px;
         }
         .prompt-input {
-            width: calc(100% - 40px);
-            margin: 6px 20px 0 20px;
-            padding: 8px 12px;
+            width: calc(100% - 48px);
+            margin: 6px 24px 0 24px;
+            padding: 10px 14px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-radius: 12px;
+            border-radius: 14px;
             color: #1f2937;
-            font-size: 13px;
+            font-size: 14px;
             outline: none;
             font-family: 'Inter', sans-serif;
         }
         .prompt-input:focus {
             border-color: #ff7a00;
-            box-shadow: 0 0 0 2px rgba(255,122,0,0.1);
+            box-shadow: 0 0 0 2px rgba(255, 122, 0, 0.1);
         }
         .prompt-buttons {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             justify-content: center;
-            padding: 6px 20px;
+            padding-top: 8px;
+            padding-bottom: 2px;
         }
         .prompt-btn {
             flex: 1;
-            padding: 5px 12px;
+            padding: 6px 16px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
             border: none;
-            font-size: 12px;
+            font-size: 13px;
         }
-        .prompt-cancel { background: #f1f5f9; color: #475569; }
-        .prompt-ok { background: #ff7a00; color: white; }
+        .prompt-cancel {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .prompt-cancel:hover {
+            background: #e2e8f0;
+        }
+        .prompt-ok {
+            background: #ff7a00;
+            color: white;
+        }
+        .prompt-ok:hover {
+            background: #ea580c;
+        }
     `;
     document.head.appendChild(style);
 })();
