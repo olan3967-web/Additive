@@ -147,6 +147,28 @@
             color: #ff7a00;
             font-weight: 600;
         }
+
+/* 证书网格布局 */
+.certificates-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 0 16px;
+}
+
+.certificate-card {
+    background: white;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    width: 100%;
+}
+
+.certificate-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
     </style>
 </head>
 <body>
@@ -195,31 +217,37 @@
     container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading...</div></div></div>`;
 
     try {
-        // 获取系统级证书（is_active = true 且 uid = 'system'）
-        const { data, error } = await sb
+        // 获取所有启用的证书（不限制数量）
+        const { data: certificates, error } = await sb
             .from('certificates')
             .select('image_url')
             .eq('is_active', true)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+            .order('created_at', { ascending: false });
 
-        if (error || !data || !data.image_url) {
+        if (error) throw error;
+
+        if (!certificates || certificates.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <i class="fa-regular fa-certificate"></i>
-                    Certificate not available
-                    <div style="margin-top: 12px; font-size: 12px;">Please check back later</div>
+                    No certificate yet
+                    <div style="margin-top: 12px; font-size: 12px;">Complete 100 orders to earn your certificate</div>
                 </div>
             `;
             return;
         }
 
+        // 显示所有证书（网格布局）
         container.innerHTML = `
-            <div class="certificate-card">
-                <img class="certificate-image" src="${data.image_url}" alt="Certificate" onerror="this.src='https://placehold.co/900x1288/f0f2f5/94a3b8?text=Certificate+Not+Found'">
+            <div class="certificates-grid">
+                ${certificates.map(cert => `
+                    <div class="certificate-card">
+                        <img class="certificate-image" src="${cert.image_url}" alt="Certificate" onerror="this.src='https://placehold.co/900x1288/f0f2f5/94a3b8?text=Certificate+Not+Found'">
+                    </div>
+                `).join('')}
             </div>
         `;
+        
     } catch (e) {
         console.error('加载证书失败:', e);
         container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-circle-xmark"></i>Failed to load certificate</div>';

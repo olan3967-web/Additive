@@ -182,32 +182,30 @@ function openUploadModal() {
         }
     });
     
-    // 保存证书
-    document.getElementById('confirmUploadCertBtn')?.addEventListener('click', async () => {
-        if (!selectedImageUrl) {
-            showToast('请先选择并上传图片', 'error');
-            return;
-        }
-        
-        // 先禁用所有现有证书
-        await sb.from('certificates').update({ is_active: false }).neq('id', 0);
-        
-        const { error } = await sb.from('certificates').insert({
-            uid: 'system',
-            image_url: selectedImageUrl,
-            is_active: true,
-            created_at: new Date().toISOString()
-        });
-        
-        if (error) {
-            showToast('保存失败: ' + error.message, 'error');
-            return;
-        }
-        
-        showToast('证书保存成功', 'success');
-        document.getElementById('uploadCertModal').remove();
-        loadCertificates();
+    // 保存证书 - 不再禁用旧证书
+document.getElementById('confirmUploadCertBtn')?.addEventListener('click', async () => {
+    if (!selectedImageUrl) {
+        showToast('请先选择并上传图片', 'error');
+        return;
+    }
+    
+    // 直接插入新证书，不禁用旧的
+    const { error } = await sb.from('certificates').insert({
+        uid: 'system',
+        image_url: selectedImageUrl,
+        is_active: true,
+        created_at: new Date().toISOString()
     });
+    
+    if (error) {
+        showToast('保存失败: ' + error.message, 'error');
+        return;
+    }
+    
+    showToast('证书添加成功', 'success');
+    document.getElementById('uploadCertModal').remove();
+    loadCertificates();
+});
     
     document.getElementById('cancelUploadCertBtn')?.addEventListener('click', () => {
         document.getElementById('uploadCertModal').remove();
