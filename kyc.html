@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>KYC Verification - ADDITIVE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="toast.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="toast.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fb;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .phone {
+            width: 390px;
+            min-height: 100vh;
+            background: #f5f7fb;
+            padding-bottom: 30px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* 未验证状态 - 上传区域 */
+        .upload-card {
+            background: white;
+            margin: 20px;
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid #eef2f7;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .upload-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 6px;
+        }
+
+        .upload-subtitle {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        .doc-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .doc-btn {
+            flex: 1;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .doc-btn.active {
+            border-color: #ff7a00;
+            background: #fff7ed;
+        }
+
+        .doc-btn i {
+            font-size: 24px;
+            color: #ff7a00;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .doc-btn span {
+            font-size: 12px;
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .upload-area {
+            border: 2px dashed #e2e8f0;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #ff7a00;
+            background: #fff7ed;
+        }
+
+        .upload-area i {
+            font-size: 40px;
+            color: #ff7a00;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .upload-area .hint {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #ff7a00;
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #ea580c;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 已验证状态 */
+        .verified-card {
+            background: white;
+            margin: 20px;
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid #eef2f7;
+            text-align: center;
+        }
+
+        .verified-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #10b98120, #10b98110);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .verified-icon i {
+            font-size: 44px;
+            color: #10b981;
+        }
+
+        .verified-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .verified-sub {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 24px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 12px;
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .benefits-list {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .benefit-item:last-child {
+            border-bottom: none;
+        }
+
+        .benefit-icon {
+            width: 44px;
+            height: 44px;
+            background: #fff7ed;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .benefit-icon i {
+            font-size: 22px;
+            color: #ff7a00;
+        }
+
+        .benefit-info {
+            flex: 1;
+        }
+
+        .benefit-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .benefit-desc {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        /* 审核中状态 */
+        .pending-status {
+            background: #fef3c7;
+            color: #d97706;
+            padding: 12px;
+            border-radius: 16px;
+            text-align: center;
+            margin: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .pending-status i {
+            margin-right: 8px;
+        }
+
+        /* 返回按钮 */
+        .back-btn {
+            width: calc(100% - 40px);
+            margin: 0 20px;
+            background: #f1f5f9;
+            border: none;
+            padding: 12px;
+            border-radius: 40px;
+            color: #475569;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+<div class="phone" id="kycPage">
+    <!-- 内容会根据状态动态加载 -->
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+    let selectedDocType = 'passport';
+    let uploadedImages = { front: null, back: null };
+
+    function getCurrentUser() {
+        const userStr = localStorage.getItem('currentUser');
+        if (!userStr) return null;
+        try {
+            return JSON.parse(userStr);
+        } catch(e) { return null; }
+    }
+
+    async function getUserKycStatus(uid) {
+        const { data, error } = await sb
+            .from('user_kyc_status')
+            .select('is_verified')
+            .eq('uid', uid)
+            .single();
+        if (error) return false;
+        return data?.is_verified || false;
+    }
+
+    async function isKycUnderReview(uid) {
+        const { data, error } = await sb
+            .from('kyc_verifications')
+            .select('status')
+            .eq('uid', uid)
+            .eq('status', 'pending')
+            .limit(1);
+        if (error) return false;
+        return data && data.length > 0;
+    }
+
+    function showUnverifiedPage() {
+        const container = document.getElementById('kycPage');
+        container.innerHTML = `
+            <div class="header">
+                <h1>KYC Verification</h1>
+                <p>Verify your identity to unlock benefits</p>
+            </div>
+
+            <div class="upload-card">
+                <div class="upload-title">Identity Verification</div>
+                <div class="upload-subtitle">Please select document type and upload</div>
+
+                <div class="doc-selector">
+                    <div class="doc-btn ${selectedDocType === 'passport' ? 'active' : ''}" data-doc="passport">
+                        <i class="fas fa-passport"></i>
+                        <span>Passport</span>
+                    </div>
+                    <div class="doc-btn ${selectedDocType === 'id_card' ? 'active' : ''}" data-doc="id_card">
+                        <i class="fas fa-id-card"></i>
+                        <span>ID Card</span>
+                    </div>
+                    <div class="doc-btn ${selectedDocType === 'residence_permit' ? 'active' : ''}" data-doc="residence_permit">
+                        <i class="fas fa-address-card"></i>
+                        <span>Residence Permit</span>
+                    </div>
+                </div>
+
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <div>Click to upload or drag and drop</div>
+                    <div class="hint">Supported: JPG, PNG, PDF (Max 10MB)</div>
+                </div>
+                <input type="file" id="fileInput" accept="image/*,application/pdf" style="display: none;">
+
+                <button class="submit-btn" id="submitKycBtn">Submit Verification</button>
+            </div>
+
+            <button class="back-btn" id="backBtn">← Back to Profile</button>
+        `;
+
+        // 绑定事件
+        document.querySelectorAll('.doc-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.doc-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedDocType = btn.dataset.doc;
+            });
+        });
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    uploadedImages.front = event.target.result;
+                    uploadArea.innerHTML = `
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <div>File uploaded: ${file.name}</div>
+                        <div class="hint">Click to change</div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('submitKycBtn').addEventListener('click', submitKyc);
+        document.getElementById('backBtn').addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+    }
+
+    function showPendingPage() {
+        const container = document.getElementById('kycPage');
+        container.innerHTML = `
+            <div class="header">
+                <h1>KYC Verification</h1>
+                <p>Verification in progress</p>
+            </div>
+
+            <div class="pending-status">
+                <i class="fas fa-clock"></i> Your documents are being reviewed
+                <div style="font-size: 12px; margin-top: 6px;">Less than 30 minutes</div>
+            </div>
+
+            <div class="verified-card" style="opacity: 0.6;">
+                <div class="verified-icon">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="verified-title">Verification Pending</div>
+                <div class="verified-sub">Please wait while we review your documents</div>
+
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <div class="benefit-icon"><i class="fas fa-clock"></i></div>
+                        <div class="benefit-info">
+                            <div class="benefit-title">Estimated Time</div>
+                            <div class="benefit-desc">Less than 30 minutes</div>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"><i class="fas fa-bell"></i></div>
+                        <div class="benefit-info">
+                            <div class="benefit-title">Notification</div>
+                            <div class="benefit-desc">Check your notification status</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="back-btn" id="backBtn">← Back to Profile</button>
+        `;
+        document.getElementById('backBtn').addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+    }
+
+    function showVerifiedPage() {
+        const container = document.getElementById('kycPage');
+        container.innerHTML = `
+            <div class="header">
+                <h1>KYC Verification</h1>
+                <p>Your identity is verified</p>
+            </div>
+
+            <div class="verified-card">
+                <div class="verified-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="verified-title">Your Account Is Verified</div>
+                <div class="verified-sub">Enjoy full access to all platform features</div>
+                <div class="status-badge"><i class="fas fa-check"></i> Verified Account</div>
+
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <div class="benefit-icon"><i class="fas fa-infinity"></i></div>
+                        <div class="benefit-info">
+                            <div class="benefit-title">No Withdrawal Limit</div>
+                            <div class="benefit-desc">Withdraw unlimited amount anytime</div>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"><i class="fas fa-rocket"></i></div>
+                        <div class="benefit-info">
+                            <div class="benefit-title">Priority Task Access</div>
+                            <div class="benefit-desc">Get exclusive high-value tasks first</div>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"><i class="fas fa-headset"></i></div>
+                        <div class="benefit-info">
+                            <div class="benefit-title">User Support</div>
+                            <div class="benefit-desc">Dedicated customer support</div>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"><i class="fas fa-gem"></i></div>
+                        <div class="benefit-info">
+                            <div class="benefit-title">Verified Badge</div>
+                            <div class="benefit-desc">Show verified status on your profile</div>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"><i class="fas fa-shield-alt"></i></div>
+                        <div class="benefit-info">
+                            <div class="benefit-title">Enhanced Security</div>
+                            <div class="benefit-desc">Additional protection for your account</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="back-btn" id="backBtn">← Back to Profile</button>
+        `;
+        document.getElementById('backBtn').addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+    }
+
+    async function submitKyc() {
+        if (!uploadedImages.front) {
+            showToast('Please upload your document', 'error');
+            return;
+        }
+
+        const user = getCurrentUser();
+        if (!user) {
+            window.location.href = 'signin.html';
+            return;
+        }
+
+        showToast('Submitting...', 'info');
+        
+        // 这里需要实际上传图片到 Supabase Storage
+        // 简化起见，先模拟提交
+        const { error } = await sb.from('kyc_verifications').insert([{
+            uid: user.uid,
+            username: user.username,
+            document_type: selectedDocType,
+            image_url: uploadedImages.front,
+            status: 'pending',
+            uploaded_at: new Date().toISOString()
+        }]);
+
+        if (error) {
+            showToast('Submit failed: ' + error.message, 'error');
+            return;
+        }
+
+        showToast('Documents submitted! Verification in progress...', 'success');
+        showPendingPage();
+    }
+
+    async function init() {
+        currentUser = getCurrentUser();
+        if (!currentUser) {
+            window.location.href = 'signin.html';
+            return;
+        }
+
+        const isVerified = await getUserKycStatus(currentUser.uid);
+        const isPending = await isKycUnderReview(currentUser.uid);
+
+        if (isVerified) {
+            showVerifiedPage();
+        } else if (isPending) {
+            showPendingPage();
+        } else {
+            showUnverifiedPage();
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
