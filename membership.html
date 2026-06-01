@@ -2,264 +2,456 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ADDITIVE - Membership</title>
-    <link rel="stylesheet" href="common.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Membership - ADDITIVE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="toast.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
+    <script src="toast.js"></script>
     <style>
-        .membership-header { margin-bottom: 24px; }
-        .membership-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
-        .membership-header p { color: #7a85a5; font-size: 13px; line-height: 1.5; }
-        
-        .membership-two-columns { display: flex; gap: 32px; margin-bottom: 32px; flex-wrap: wrap; }
-        .membership-left { flex: 1; min-width: 260px; }
-        .membership-right { flex: 2; min-width: 300px; }
-        
-        .current-membership-card {
-            background: linear-gradient(145deg, #0F1C3F, #0A122B);
-            border-radius: 24px;
-            padding: 24px;
-            border: 1px solid rgba(201, 176, 149, 0.3);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .current-membership-card h3 { font-size: 12px; color: #C9B095; letter-spacing: 1px; margin-bottom: 12px; }
-        .current-tier-name { font-size: 24px; font-weight: 800; color: #C9B095; margin-bottom: 16px; }
-        .current-stats { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 16px; margin-bottom: 20px; }
-        .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(201,176,149,0.08); }
-        .stat-row:last-child { border-bottom: none; }
-        .stat-label { color: #a0a8c0; font-size: 13px; }
-        .stat-value { color: #ffffff; font-weight: 600; font-size: 15px; }
-        .stat-value.highlight { color: #4ade80; }
-        
-        .premium-upgrade { background: rgba(201,176,149,0.08); border-radius: 16px; padding: 16px; margin-top: 16px; border: 1px solid rgba(201,176,149,0.15); }
-        .premium-upgrade p { font-size: 12px; color: #a0a8c0; margin-bottom: 12px; }
-        .btn-contact-support { background: rgba(201,176,149,0.15); border: 1px solid rgba(201,176,149,0.3); padding: 8px 16px; border-radius: 40px; color: #C9B095; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; transition: 0.2s; }
-        .btn-contact-support:hover { background: rgba(201,176,149,0.25); transform: scale(1.02); }
-        
-        .tiers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .tier-card {
-            background: rgba(20, 30, 55, 0.6);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px;
-            border: 1px solid rgba(201, 176, 149, 0.15);
-            transition: all 0.3s;
+
+        body {
+            background: #f5f7fb;
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+        }
+
+        .phone {
+            width: 390px;
+            min-height: 100vh;
+            background: #f5f7fb;
+            padding-bottom: 80px;
             position: relative;
         }
-        .tier-card:hover { transform: translateY(-4px); border-color: #C9B095; }
-        .tier-card.current-tier { border: 2px solid #C9B095; box-shadow: 0 0 16px rgba(201,176,149,0.2); }
-        .current-badge { position: absolute; top: 12px; right: 12px; background: #C9B095; color: #0A122B; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
-        .tier-name { font-size: 20px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
-        .tier-sub { font-size: 11px; color: #C9B095; margin-bottom: 12px; }
-        .deposit-requirement { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 10px; margin-bottom: 16px; text-align: center; }
-        .deposit-requirement .label { font-size: 10px; color: #a0a8c0; display: block; margin-bottom: 3px; }
-        .deposit-requirement .value { font-size: 16px; font-weight: 700; color: #C9B095; }
-        .tier-description { font-size: 11px; color: #a0a8c0; line-height: 1.5; margin-bottom: 16px; }
-        .tier-features { list-style: none; margin-bottom: 16px; }
-        .tier-features li { font-size: 11px; color: #a0a8c0; padding: 5px 0; display: flex; align-items: center; gap: 6px; }
-        .tier-features li i { color: #4ade80; font-size: 9px; }
-        .tier-stats { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 10px; display: flex; justify-content: space-between; }
-        .tier-stat { text-align: center; flex: 1; }
-        .tier-stat .stat-label { font-size: 9px; color: #a0a8c0; display: block; margin-bottom: 3px; }
-        .tier-stat .stat-value { font-size: 14px; font-weight: 700; color: #ffffff; }
-        
-        .upgrade-card-pulse {
-            margin-top: 32px;
-            background: rgba(20, 30, 55, 0.6);
-            backdrop-filter: blur(12px);
-            border-radius: 28px;
-            padding: 24px;
-            animation: pulseGlow 2.5s ease-in-out infinite;
-            border: 1px solid rgba(201, 176, 149, 0.3);
+
+        .page-header {
+            padding: 20px 20px 10px;
         }
-        @keyframes pulseGlow { 0% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } 50% { box-shadow: inset 0 0 25px rgba(201,176,149,0.25), 0 0 15px rgba(201,176,149,0.12); border-color: rgba(201,176,149,0.5); } 100% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } }
-        .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
-        .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
-        .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); transition: 0.2s; }
-        .btn-upgrade:hover { background: rgba(201,176,149,0.25); transform: scale(1.02); color: #ffd700; }
-        
-        @media (max-width: 1000px) { 
-            .tiers-grid { grid-template-columns: 1fr; } 
-            .membership-two-columns { flex-direction: column; } 
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .page-header p {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* 当前会员卡片 */
+        .current-card {
+            background: linear-gradient(135deg, #1a1a2e, #0f0f23);
+            border-radius: 24px;
+            padding: 24px;
+            margin: 16px 20px;
+            color: white;
+        }
+
+        .current-label {
+            font-size: 12px;
+            color: #ff9f43;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .current-tier {
+            font-size: 28px;
+            font-weight: 800;
+            color: #ff9f43;
+            margin-bottom: 20px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-item .label {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        .stat-item .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ff9f43;
+        }
+
+        .contact-support {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 40px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .contact-support:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .contact-support i {
+            margin-right: 8px;
+        }
+
+        /* 会员等级卡片 */
+        .tiers-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin: 20px;
+        }
+
+        .tier-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            border: 1px solid #eef2f7;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tier-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .tier-card.current-tier {
+            border: 2px solid #ff7a00;
+            background: #fff7ed;
+        }
+
+        .current-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #ff7a00;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .tier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 16px;
+        }
+
+        .tier-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .tier-rate {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ff7a00;
+        }
+
+        .tier-features {
+            list-style: none;
+            margin: 16px 0;
+        }
+
+        .tier-features li {
+            font-size: 12px;
+            color: #6b7280;
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tier-features li i {
+            color: #10b981;
+            font-size: 12px;
+        }
+
+        .tier-stats {
+            display: flex;
+            gap: 16px;
+            padding-top: 12px;
+            border-top: 1px solid #eef2f7;
+        }
+
+        .tier-stat {
+            flex: 1;
+            text-align: center;
+        }
+
+        .tier-stat .stat-label {
+            font-size: 10px;
+            color: #94a3b8;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .tier-stat .stat-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        /* 升级卡片 */
+        .upgrade-card-pulse {
+            margin: 20px;
+            background: linear-gradient(135deg, #fff7ed, #ffe7cc);
+            border-radius: 24px;
+            padding: 20px;
+            border: 1px solid rgba(255, 122, 0, 0.2);
+            animation: pulseGlow 2.5s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0.1); border-color: rgba(255, 122, 0, 0.2); }
+            50% { box-shadow: 0 0 0 8px rgba(255, 122, 0, 0); border-color: rgba(255, 122, 0, 0.4); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0); border-color: rgba(255, 122, 0, 0.2); }
+        }
+
+        .upgrade-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ff7a00;
+            margin-bottom: 8px;
+        }
+
+        .upgrade-desc {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .btn-upgrade {
+            background: #ff7a00;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-upgrade:hover {
+            background: #ea580c;
+            transform: scale(1.02);
+        }
+
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid #eef2f7;
+            display: flex;
+            padding: 10px 0 14px;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            cursor: pointer;
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item.active {
+            color: #ff7a00;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <div class="menu-overlay" onclick="closeMenu()"></div>
+<div class="phone">
 
-    <div class="app">
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-top">
-                <div class="logo">ADDITIVE<span>®</span></div>
-                <nav class="nav">
-                    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
-                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
-                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
-                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
-                    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
-                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
-                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
-                    <a href="membership.html" class="nav-item active"><i class="fas fa-crown"></i><span>Membership</span></a>
-                </nav>
-            </div>
-            <div class="sidebar-upgrade-card">
-                <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
-                <div class="sidebar-upgrade-title">Upgrade your membership</div>
-                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
-                <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-            </div>
-        </aside>
-
-        <main class="main">
-            <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
-                <i class="fas fa-bars"></i>
-            </div>
-
-            <div class="membership-header">
-                <h1>MEMBERSHIP</h1>
-                <p>Compare membership tiers, review your current benefits, and unlock stronger commission rewards through premium access.</p>
-            </div>
-
-            <div class="membership-two-columns">
-                <div class="membership-left">
-                    <div class="current-membership-card">
-                        <h3>YOUR MEMBERSHIP</h3>
-                        <div class="current-tier-name" id="currentTierName">Normal</div>
-                        <div class="current-stats">
-                            <div class="stat-row"><span class="stat-label">ORDERS</span><span class="stat-value highlight" id="currentOrders">0 / 0</span></div>
-                            <div class="stat-row"><span class="stat-label">COMMISSION RATE</span><span class="stat-value" id="currentRate">0%</span></div>
-                        </div>
-                        <div class="premium-upgrade">
-                            <p><strong>Upgrade your membership</strong><br>Unlock higher rewards, priority support, and premium hotel discovery benefits.</p>
-                            <button class="btn-contact-support" onclick="contactSupport()"><i class="fas fa-headset"></i> Contact Support</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="membership-right">
-                    <div class="tiers-grid" id="tiersGrid"></div>
-                </div>
-            </div>
-
-            <div class="upgrade-card-pulse">
-                <div class="upgrade-title">✨ Upgrade your membership</div>
-                <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
-                <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-            </div>
-        </main>
+    <div class="page-header">
+        <h1>Membership</h1>
+        <p>Compare membership tiers and unlock stronger commission rewards</p>
     </div>
 
-    <script>
-        function toggleMenu() { 
-            const sidebar = document.getElementById('sidebar'); 
-            const overlay = document.querySelector('.menu-overlay'); 
-            const menuBtn = document.getElementById('menuToggleBtn'); 
-            if (sidebar) sidebar.classList.toggle('open'); 
-            if (overlay) overlay.classList.toggle('active'); 
-            if (menuBtn) menuBtn.classList.toggle('hidden'); 
-        }
-        function closeMenu() { 
-            const sidebar = document.getElementById('sidebar'); 
-            const overlay = document.querySelector('.menu-overlay'); 
-            const menuBtn = document.getElementById('menuToggleBtn'); 
-            if (sidebar) sidebar.classList.remove('open'); 
-            if (overlay) overlay.classList.remove('active'); 
-            if (menuBtn) menuBtn.classList.remove('hidden'); 
-        }
+    <!-- 当前会员卡片 -->
+    <div class="current-card">
+        <div class="current-label">YOUR MEMBERSHIP</div>
+        <div class="current-tier" id="currentTierName">Normal</div>
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="label">ORDERS</div>
+                <div class="value" id="currentOrders">0 / 0</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">COMMISSION RATE</div>
+                <div class="value" id="currentRate">0%</div>
+            </div>
+        </div>
+        <div class="contact-support" onclick="contactSupport()">
+            <i class="fas fa-headset"></i> Contact Support
+        </div>
+    </div>
 
-        let vipSettings = [];
+    <!-- 会员等级列表 -->
+    <div class="tiers-grid" id="tiersGrid"></div>
 
-        async function loadVipSettings() {
-            const { data, error } = await sb
-                .from('vip_settings')
-                .select('*')
-                .order('level', { ascending: true });
-            
-            if (error) {
-                vipSettings = [
-                    { level: 1, rank_name: "Normal", orders_limit: 30, commission_rate: 0.51 },
-                    { level: 2, rank_name: "VIP", orders_limit: 30, commission_rate: 0.8 },
-                    { level: 3, rank_name: "SVIP", orders_limit: 35, commission_rate: 1.5 }
-                ];
-            } else {
-                vipSettings = data;
-            }
-        }
+    <div class="upgrade-card-pulse">
+        <div class="upgrade-title">✨ Upgrade your membership</div>
+        <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+        <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+    </div>
+
+    <div class="bottom-nav">
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
+    </div>
+
+</div>
+
+<script>
+    let vipSettings = [];
+
+    async function loadVipSettings() {
+        const { data, error } = await sb
+            .from('vip_settings')
+            .select('*')
+            .order('level', { ascending: true });
         
-        async function getUserOrderCount(uid) {
-            const { data: orders } = await sb
-                .from('order_history')
-                .select('id', { count: 'exact' })
-                .eq('uid', uid);
-            return orders?.length || 0;
+        if (error) {
+            vipSettings = [
+                { level: 1, rank_name: "Normal", orders_limit: 30, commission_rate: 0.51 },
+                { level: 2, rank_name: "VIP", orders_limit: 30, commission_rate: 0.8 },
+                { level: 3, rank_name: "SVIP", orders_limit: 35, commission_rate: 1.5 }
+            ];
+        } else {
+            vipSettings = data;
         }
+    }
+    
+    async function getUserOrderCount(uid) {
+        const { data: orders } = await sb
+            .from('order_history')
+            .select('id', { count: 'exact' })
+            .eq('uid', uid);
+        return orders?.length || 0;
+    }
+    
+    async function renderMembership() {
+        const user = checkLogin();
+        if (!user) return;
         
-        async function renderMembership() {
-            const user = checkLogin();
-            if (!user) return;
+        await syncUserData();
+        const freshUser = getCurrentUser();
+        const userVipLevel = freshUser?.vipLevel || 1;
+        const userOrders = await getUserOrderCount(freshUser.uid);
+        const currentVip = vipSettings.find(v => v.level === userVipLevel) || vipSettings[0];
+        
+        document.getElementById('currentTierName').innerText = currentVip.rank_name || 'Normal';
+        document.getElementById('currentOrders').innerHTML = `${userOrders} / ${currentVip.orders_limit || 30}`;
+        document.getElementById('currentRate').innerHTML = `${(currentVip.commission_rate || 0.51)}%`;
+        
+        const tiersGrid = document.getElementById('tiersGrid');
+        tiersGrid.innerHTML = '';
+        
+        const featuresMap = {
+            1: ['Standard daily access', 'Standard commission rate', 'Standard order limit'],
+            2: ['Higher commission rate per order', 'Better account benefits', 'Priority support access'],
+            3: ['Maximum commission rate', 'Premium level benefits', 'Exclusive priority services']
+        };
+        
+        vipSettings.forEach(vip => {
+            const isCurrent = vip.level === userVipLevel;
+            const card = document.createElement('div');
+            card.className = 'tier-card';
+            if (isCurrent) card.classList.add('current-tier');
             
-            await syncUserData();
-            const freshUser = getCurrentUser();
-            const userVipLevel = freshUser?.vipLevel || 1;
-            const userOrders = await getUserOrderCount(freshUser.uid);
-            const currentVip = vipSettings.find(v => v.level === userVipLevel) || vipSettings[0];
+            const features = featuresMap[vip.level] || [`${vip.commission_rate}% commission`, `${vip.orders_limit} orders limit`];
             
-            document.getElementById('currentTierName').innerText = currentVip.rank_name || 'Normal';
-            document.getElementById('currentOrders').innerHTML = `${userOrders} / ${currentVip.orders_limit || 30}`;
-            document.getElementById('currentRate').innerHTML = `${(currentVip.commission_rate || 0.51)}%`;
-            
-            const tiersGrid = document.getElementById('tiersGrid');
-            tiersGrid.innerHTML = '';
-            
-            const featuresMap = {
-                1: ['Standard daily access', 'Standard commission rate', 'Standard order limit'],
-                2: ['Higher commission rate per order', 'Better account benefits', 'Priority support access'],
-                3: ['Maximum commission rate', 'Premium level benefits', 'Exclusive priority services']
-            };
-            
-            vipSettings.forEach(vip => {
-                const isCurrent = vip.level === userVipLevel;
-                const card = document.createElement('div');
-                card.className = 'tier-card';
-                if (isCurrent) card.classList.add('current-tier');
-                
-                const features = featuresMap[vip.level] || [`${vip.commission_rate}% commission`, `${vip.orders_limit} orders limit`];
-                
-                card.innerHTML = `
-                    ${isCurrent ? '<div class="current-badge">CURRENT</div>' : ''}
-                    <div class="tier-name">${vip.rank_name}</div>
-                    <div class="tier-sub">${vip.rank_name} Membership</div>
-                    <div class="deposit-requirement">
-                        <span class="label">COMMISSION RATE</span>
-                        <span class="value">${vip.commission_rate}%</span>
+            card.innerHTML = `
+                ${isCurrent ? '<div class="current-badge">CURRENT</div>' : ''}
+                <div class="tier-header">
+                    <span class="tier-name">${vip.rank_name}</span>
+                    <span class="tier-rate">${vip.commission_rate}%</span>
+                </div>
+                <ul class="tier-features">
+                    ${features.map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
+                </ul>
+                <div class="tier-stats">
+                    <div class="tier-stat">
+                        <span class="stat-label">Orders Limit</span>
+                        <span class="stat-value">${vip.orders_limit}</span>
                     </div>
-                    <div class="tier-description">${vip.rank_name} membership benefits</div>
-                    <ul class="tier-features">
-                        ${features.map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
-                    </ul>
-                    <div class="tier-stats">
-                        <div class="tier-stat">
-                            <span class="stat-label">Orders Limit</span>
-                            <span class="stat-value">${vip.orders_limit}</span>
-                        </div>
-                        <div class="tier-stat">
-                            <span class="stat-label">Commission Rate</span>
-                            <span class="stat-value">${vip.commission_rate}%</span>
-                        </div>
+                    <div class="tier-stat">
+                        <span class="stat-label">Commission Rate</span>
+                        <span class="stat-value">${vip.commission_rate}%</span>
                     </div>
-                `;
-                tiersGrid.appendChild(card);
+                </div>
+            `;
+            tiersGrid.appendChild(card);
+        });
+    }
+    
+    function contactSupport() { 
+        window.location.href = 'chat.html'; 
+    }
+
+    function setupBottomNav() {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.dataset.page;
+                if (page === 'dashboard') window.location.href = 'start.html';
+                else if (page === 'products') window.location.href = 'products.html';
+                else if (page === 'orders') window.location.href = 'orders-history.html';
+                else if (page === 'profile') window.location.href = 'dashboard.html';
             });
-        }
-        
-        function contactSupport() { 
-            window.location.href = 'chat.html'; 
-        }
-        
-        (async function() {
-            await loadVipSettings();
-            await renderMembership();
-        })();
-    </script>
+        });
+    }
+
+    (async function() {
+        await loadVipSettings();
+        await renderMembership();
+        setupBottomNav();
+    })();
+</script>
 </body>
 </html>
