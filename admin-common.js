@@ -525,6 +525,8 @@ function showPage(pageId) {
         window.loadSigninPage();
     } else if (pageId === 'content' && window.loadContentPage) {
         window.loadContentPage();
+    } else if (pageId === 'certificate' && window.loadCertificatePage) {
+        window.loadCertificatePage();
     }
 }
 
