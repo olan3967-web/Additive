@@ -1,4 +1,4 @@
-// toast.js - 最终版（零多余空白）
+// toast.js - 最终版（上下高度最小化）
 
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
@@ -19,6 +19,7 @@ function showToast(message, type = 'success') {
     
     document.body.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
+    
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 200);
@@ -51,11 +52,13 @@ function showConfirm(title, message, onConfirm, onCancel) {
         setTimeout(() => modal.remove(), 300);
         if (onCancel) onCancel();
     };
+    
     modal.querySelector('.confirm-ok').onclick = () => {
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
         if (onConfirm) onConfirm();
     };
+    
     modal.querySelector('.confirm-overlay').onclick = () => {
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
@@ -92,25 +95,35 @@ function showPrompt(title, placeholder, callback) {
         setTimeout(() => modal.remove(), 300);
         if (callback) callback(null);
     };
+    
     modal.querySelector('.prompt-ok').onclick = () => {
         const value = input.value.trim();
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
         if (callback) callback(value);
     };
+    
     modal.querySelector('.prompt-overlay').onclick = () => {
         modal.classList.remove('show');
         setTimeout(() => modal.remove(), 300);
         if (callback) callback(null);
     };
+    
     input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') modal.querySelector('.prompt-ok').click();
+        if (e.key === 'Enter') {
+            modal.querySelector('.prompt-ok').click();
+        }
     });
 }
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
 }
 
 window.originalAlert = window.alert;
@@ -124,6 +137,7 @@ window.alert = function(message) {
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
+        /* Toast - 上下高度最小化 */
         .custom-toast {
             position: fixed;
             top: 50%;
@@ -139,7 +153,7 @@ window.alert = function(message) {
             opacity: 0;
             visibility: hidden;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             border-left: 3px solid;
             font-family: 'Inter', sans-serif;
         }
@@ -156,9 +170,15 @@ window.alert = function(message) {
         .custom-toast-error .toast-icon i { color: #ef4444; }
         .custom-toast-warning .toast-icon i { color: #f59e0b; }
         .custom-toast-info .toast-icon i { color: #ff7a00; }
-        .toast-icon i { font-size: 13px; }
-        .toast-message { font-size: 13px; color: #1f2937; line-height: 1.2; padding: 6px 18px 6px 0; }
-        
+        .toast-icon i { font-size: 14px; }
+        .toast-message { 
+            font-size: 13px; 
+            color: #1f2937; 
+            line-height: 1.2; 
+            padding: 0 18px 0 0;
+        }
+
+        /* 确认弹窗 - 上下高度最小化 */
         .custom-confirm {
             position: fixed;
             top: 0;
@@ -183,7 +203,7 @@ window.alert = function(message) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
         }
         .confirm-content {
@@ -205,24 +225,24 @@ window.alert = function(message) {
             font-weight: 700;
             color: #1a1a2e;
             margin: 0;
-            padding: 12px 20px 0 20px;
+            padding: 6px 20px 0 20px;
         }
         .confirm-message {
             font-size: 12px;
             color: #6b7280;
             margin: 0;
-            padding: 6px 20px 0 20px;
+            padding: 4px 20px 0 20px;
             line-height: 1.3;
         }
         .confirm-buttons {
             display: flex;
             gap: 8px;
             justify-content: center;
-            padding: 12px 20px;
+            padding: 6px 20px;
         }
         .confirm-btn {
             flex: 1;
-            padding: 6px 12px;
+            padding: 5px 12px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
@@ -232,6 +252,7 @@ window.alert = function(message) {
         .confirm-cancel { background: #f1f5f9; color: #475569; }
         .confirm-ok { background: #ff7a00; color: white; }
         
+        /* 输入弹窗 - 上下高度最小化 */
         .custom-prompt {
             position: fixed;
             top: 0;
@@ -256,7 +277,7 @@ window.alert = function(message) {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(4px);
         }
         .prompt-content {
@@ -278,11 +299,11 @@ window.alert = function(message) {
             font-weight: 700;
             color: #1a1a2e;
             margin: 0;
-            padding: 12px 20px 0 20px;
+            padding: 6px 20px 0 20px;
         }
         .prompt-input {
             width: calc(100% - 40px);
-            margin: 8px 20px 0 20px;
+            margin: 4px 20px 0 20px;
             padding: 8px 12px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -300,11 +321,11 @@ window.alert = function(message) {
             display: flex;
             gap: 8px;
             justify-content: center;
-            padding: 12px 20px;
+            padding: 6px 20px;
         }
         .prompt-btn {
             flex: 1;
-            padding: 6px 12px;
+            padding: 5px 12px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
