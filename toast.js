@@ -1,4 +1,4 @@
-// toast.js - 超紧凑弹窗（最小内边距）
+// toast.js - 超紧凑弹窗（最小上下内边距）
 
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
@@ -23,7 +23,7 @@ function showToast(message, type = 'success') {
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 200);
-    }, 2000);
+    }, 2500);
 }
 
 function showConfirm(title, message, onConfirm, onCancel) {
@@ -137,7 +137,7 @@ window.alert = function(message) {
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
-        /* Toast - 最小内边距 */
+        /* Toast - 极小上下内边距 */
         .custom-toast {
             position: fixed;
             top: 50%;
@@ -145,10 +145,10 @@ window.alert = function(message) {
             transform: translate(-50%, -50%) scale(0.9);
             background: white;
             border-radius: 30px;
-            padding: 6px 16px;
+            padding: 4px 18px;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             z-index: 10000;
             opacity: 0;
             visibility: hidden;
@@ -171,10 +171,10 @@ window.alert = function(message) {
         .custom-toast-warning .toast-icon i { color: #f59e0b; }
         .custom-toast-info { border-left-color: #ff7a00; }
         .custom-toast-info .toast-icon i { color: #ff7a00; }
-        .toast-icon i { font-size: 13px; }
+        .toast-icon i { font-size: 14px; }
         .toast-message { font-size: 13px; color: #1f2937; line-height: 1.3; }
 
-        /* 确认弹窗 - 最小内边距 */
+        /* 确认弹窗 - 极小上下内边距 */
         .custom-confirm {
             position: fixed;
             top: 0;
@@ -206,8 +206,8 @@ window.alert = function(message) {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 14px 16px;
-            width: 260px;
+            padding: 12px 20px;
+            width: 280px;
             max-width: 80%;
             text-align: center;
             transform: scale(0.9);
@@ -217,15 +217,15 @@ window.alert = function(message) {
             transform: scale(1);
         }
         .confirm-title {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         .confirm-message {
             font-size: 12px;
             color: #6b7280;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             line-height: 1.4;
         }
         .confirm-buttons {
@@ -251,7 +251,7 @@ window.alert = function(message) {
             color: white;
         }
 
-        /* 输入弹窗 - 最小内边距 */
+        /* 输入弹窗 - 极小上下内边距 */
         .custom-prompt {
             position: fixed;
             top: 0;
@@ -283,8 +283,8 @@ window.alert = function(message) {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 14px 16px;
-            width: 260px;
+            padding: 12px 20px;
+            width: 280px;
             max-width: 80%;
             text-align: center;
             transform: scale(0.9);
@@ -297,11 +297,11 @@ window.alert = function(message) {
             font-size: 15px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .prompt-input {
             width: 100%;
-            padding: 8px 10px;
+            padding: 8px 12px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
