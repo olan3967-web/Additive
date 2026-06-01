@@ -1,4 +1,5 @@
-// admin-users.js - 完整版（使用自定义弹窗）
+// admin-users.js - 完整版（含充值金额 + 奖励金额）
+
 let searchKeyword = '';
 
 async function loadUsersPage() {
@@ -14,7 +15,9 @@ async function loadUsersPage() {
             </div>
             <div class="table-container">
                 <table class="data-table">
-                    <thead><tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>钱包地址</th><th>操作</th></tr></thead>
+                    <thead>
+                        <tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>钱包地址</th><th>操作</th>
+                    </thead>
                     <tbody id="usersTableBody"></tbody>
                 </table>
             </div>
@@ -69,23 +72,83 @@ async function resetUserOrders(uid) {
     });
 }
 
+// ========== 充值：输入充值金额 + 奖励金额 ==========
 async function depositBalance(uid) {
-    showPrompt('充值金额', '请输入充值金额 (€)', async (amt) => {
-        const amount = parseFloat(amt) || 0;
-        if (amount <= 0) {
-            showToast('请输入有效金额', 'error');
+    // 第一步：输入充值金额
+    showPrompt('充值金额', '请输入充值金额 (€)', async (amount) => {
+        const depositAmount = parseFloat(amount);
+        if (isNaN(depositAmount) || depositAmount <= 0) {
+            showToast('请输入有效的充值金额', 'error');
             return;
         }
-        const { data: user } = await sb.from('users').select('balance, username').eq('uid', uid).single();
-        const newBalance = (user.balance || 0) + amount;
-        await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
-        await sb.from('deposits').insert([{ uid, username: user.username, amount: amount, type: 'manual' }]);
-        loadUsers();
-        if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        showToast(`充值 €${amount} 成功`, 'success');
+        
+        // 第二步：输入奖励金额（可选）
+        showPrompt('奖励金额', '请输入奖励金额 (€) - 可不填', async (bonus) => {
+            const bonusAmount = parseFloat(bonus) || 0;
+            
+            // 获取用户信息
+            const { data: user, error: fetchError } = await sb
+                .from('users')
+                .select('balance, username')
+                .eq('uid', uid)
+                .single();
+            
+            if (fetchError || !user) {
+                showToast('获取用户信息失败', 'error');
+                return;
+            }
+            
+            const currentBalance = user.balance || 0;
+            const newBalance = currentBalance + depositAmount + bonusAmount;
+            
+            // 第三步：二次确认
+            let confirmMessage = `用户：${user.username}\n充值金额：€${depositAmount.toFixed(2)}`;
+            if (bonusAmount > 0) {
+                confirmMessage += `\n奖励金额：€${bonusAmount.toFixed(2)}`;
+            }
+            confirmMessage += `\n充值后总余额：€${newBalance.toFixed(2)}`;
+            
+            showConfirm('确认充值', confirmMessage, async () => {
+                // 更新余额
+                const { error: updateError } = await sb
+                    .from('users')
+                    .update({ balance: newBalance })
+                    .eq('uid', uid);
+                
+                if (updateError) {
+                    showToast('充值失败: ' + updateError.message, 'error');
+                    return;
+                }
+                
+                // 记录充值记录
+                await sb.from('deposits').insert([{
+                    uid: uid,
+                    username: user.username,
+                    amount: depositAmount,
+                    type: 'manual',
+                    created_at: new Date().toISOString()
+                }]);
+                
+                // 如果有奖励，记录奖励记录
+                if (bonusAmount > 0) {
+                    await sb.from('deposits').insert([{
+                        uid: uid,
+                        username: user.username,
+                        amount: bonusAmount,
+                        type: 'deposit_bonus',
+                        created_at: new Date().toISOString()
+                    }]);
+                }
+                
+                showToast(`✅ 充值成功！`, 'success');
+                loadUsers();
+                if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+            });
+        });
     });
 }
 
+// ========== 扣款（无奖励） ==========
 async function cutBalance(uid) {
     showPrompt('扣款金额', '请输入扣款金额 (€)', async (amt) => {
         const amount = parseFloat(amt);
@@ -93,18 +156,34 @@ async function cutBalance(uid) {
             showToast('请输入有效金额', 'error');
             return;
         }
-        const { data: user } = await sb.from('users').select('balance').eq('uid', uid).single();
+        
+        const { data: user } = await sb.from('users').select('balance, username').eq('uid', uid).single();
+        if (!user) {
+            showToast('用户不存在', 'error');
+            return;
+        }
+        
         if ((user.balance || 0) < amount) {
             showToast('余额不足', 'error');
             return;
         }
-        await sb.from('users').update({ balance: (user.balance || 0) - amount }).eq('uid', uid);
-        loadUsers();
-        if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        showToast(`-€${amount}`, 'success');
+        
+        const newBalance = (user.balance || 0) - amount;
+        
+        showConfirm('确认扣款', `用户: ${user.username}\n扣款金额: €${amount.toFixed(2)}\n扣款后余额: €${newBalance.toFixed(2)}`, async () => {
+            const { error } = await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
+            if (error) {
+                showToast('扣款失败: ' + error.message, 'error');
+                return;
+            }
+            showToast(`-€${amount.toFixed(2)}`, 'success');
+            loadUsers();
+            if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+        });
     });
 }
 
+// ========== 修改用户信息 ==========
 function openEditUserModal(uid, phone, username, pin) {
     const modalHtml = `
         <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
@@ -199,5 +278,10 @@ document.getElementById('createUserBtn')?.addEventListener('click', async () => 
 });
 
 document.getElementById('closeUserModalBtn')?.addEventListener('click', () => document.getElementById('addUserModal').classList.remove('active'));
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+}
 
 window.loadUsersPage = loadUsersPage;
