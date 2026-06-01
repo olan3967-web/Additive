@@ -1,6 +1,5 @@
-// toast.js - 小型紧凑弹窗（ADDITIVE 主题风格）
+// toast.js - 超紧凑弹窗（最小内边距）
 
-// ========== Toast 提示消息 ==========
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
     if (existingToast) existingToast.remove();
@@ -27,7 +26,6 @@ function showToast(message, type = 'success') {
     }, 2000);
 }
 
-// ========== 确认弹窗 ==========
 function showConfirm(title, message, onConfirm, onCancel) {
     const existingModal = document.querySelector('.custom-confirm');
     if (existingModal) existingModal.remove();
@@ -68,7 +66,6 @@ function showConfirm(title, message, onConfirm, onCancel) {
     };
 }
 
-// ========== 输入弹窗 ==========
 function showPrompt(title, placeholder, callback) {
     const existingModal = document.querySelector('.custom-prompt');
     if (existingModal) existingModal.remove();
@@ -119,7 +116,6 @@ function showPrompt(title, placeholder, callback) {
     });
 }
 
-// ========== 辅助函数 ==========
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
@@ -130,39 +126,37 @@ function escapeHtml(str) {
     });
 }
 
-// ========== 全局拦截 alert ==========
 window.originalAlert = window.alert;
 window.alert = function(message) {
     showToast(message, 'info');
 };
 
-// ========== 添加样式 ==========
 (function addStyles() {
     if (document.getElementById('additive-toast-styles')) return;
     
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
-        /* Toast 小型紧凑 */
+        /* Toast - 最小内边距 */
         .custom-toast {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.9);
             background: white;
-            border-radius: 40px;
-            padding: 10px 20px;
+            border-radius: 30px;
+            padding: 6px 16px;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             z-index: 10000;
             opacity: 0;
             visibility: hidden;
             transition: all 0.2s ease;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             border-left: 3px solid;
             font-family: 'Inter', sans-serif;
-            max-width: 80%;
+            max-width: 85%;
         }
         .custom-toast.show {
             opacity: 1;
@@ -177,10 +171,10 @@ window.alert = function(message) {
         .custom-toast-warning .toast-icon i { color: #f59e0b; }
         .custom-toast-info { border-left-color: #ff7a00; }
         .custom-toast-info .toast-icon i { color: #ff7a00; }
-        .toast-icon i { font-size: 14px; }
+        .toast-icon i { font-size: 13px; }
         .toast-message { font-size: 13px; color: #1f2937; line-height: 1.3; }
 
-        /* 确认弹窗小型紧凑 */
+        /* 确认弹窗 - 最小内边距 */
         .custom-confirm {
             position: fixed;
             top: 0;
@@ -212,7 +206,7 @@ window.alert = function(message) {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 18px 16px;
+            padding: 14px 16px;
             width: 260px;
             max-width: 80%;
             text-align: center;
@@ -223,15 +217,15 @@ window.alert = function(message) {
             transform: scale(1);
         }
         .confirm-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .confirm-message {
             font-size: 12px;
             color: #6b7280;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             line-height: 1.4;
         }
         .confirm-buttons {
@@ -241,7 +235,7 @@ window.alert = function(message) {
         }
         .confirm-btn {
             flex: 1;
-            padding: 8px 12px;
+            padding: 6px 12px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
@@ -252,18 +246,12 @@ window.alert = function(message) {
             background: #f1f5f9;
             color: #475569;
         }
-        .confirm-cancel:hover {
-            background: #e2e8f0;
-        }
         .confirm-ok {
             background: #ff7a00;
             color: white;
         }
-        .confirm-ok:hover {
-            background: #ea580c;
-        }
 
-        /* 输入弹窗小型紧凑 */
+        /* 输入弹窗 - 最小内边距 */
         .custom-prompt {
             position: fixed;
             top: 0;
@@ -295,7 +283,7 @@ window.alert = function(message) {
             position: relative;
             background: white;
             border-radius: 20px;
-            padding: 18px 16px;
+            padding: 14px 16px;
             width: 260px;
             max-width: 80%;
             text-align: center;
@@ -306,21 +294,21 @@ window.alert = function(message) {
             transform: scale(1);
         }
         .prompt-title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
         .prompt-input {
             width: 100%;
-            padding: 10px 12px;
+            padding: 8px 10px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
             color: #1f2937;
             font-size: 13px;
             outline: none;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             font-family: 'Inter', sans-serif;
         }
         .prompt-input:focus {
@@ -334,7 +322,7 @@ window.alert = function(message) {
         }
         .prompt-btn {
             flex: 1;
-            padding: 8px 12px;
+            padding: 6px 12px;
             border-radius: 40px;
             font-weight: 600;
             cursor: pointer;
@@ -345,15 +333,9 @@ window.alert = function(message) {
             background: #f1f5f9;
             color: #475569;
         }
-        .prompt-cancel:hover {
-            background: #e2e8f0;
-        }
         .prompt-ok {
             background: #ff7a00;
             color: white;
-        }
-        .prompt-ok:hover {
-            background: #ea580c;
         }
     `;
     document.head.appendChild(style);
