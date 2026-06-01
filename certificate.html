@@ -55,7 +55,6 @@
             cursor: pointer;
         }
 
-        /* 证书容器 */
         .certificate-container {
             padding: 16px;
             display: flex;
@@ -64,7 +63,6 @@
             gap: 20px;
         }
 
-        /* 棉纸纹理 + 烫金边框架 */
         .certificate-frame {
             background: #fef9ef;
             padding: 16px;
@@ -100,7 +98,6 @@
             display: block;
         }
 
-        /* 空状态 */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -114,7 +111,6 @@
             display: block;
         }
 
-        /* 加载状态 */
         .loading-container {
             display: flex;
             justify-content: center;
@@ -137,7 +133,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* 放大查看模态框 */
         .zoom-modal {
             position: fixed;
             top: 0;
@@ -192,7 +187,13 @@
             opacity: 1;
         }
 
-        /* 底部导航栏 */
+        .certificates-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -225,14 +226,6 @@
             color: #ff7a00;
             font-weight: 600;
         }
-
-        /* 证书列表网格 */
-        .certificates-list {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            width: 100%;
-        }
     </style>
 </head>
 <body>
@@ -262,7 +255,6 @@
 
 </div>
 
-<!-- 放大查看模态框 -->
 <div id="zoomModal" class="zoom-modal">
     <div class="zoom-content">
         <button class="zoom-close" id="zoomCloseBtn">&times;</button>
@@ -271,8 +263,6 @@
 </div>
 
 <script>
-    // 使用全局的 sb 对象（来自 user-data.js）
-
     function getCurrentUser() {
         const userStr = localStorage.getItem('currentUser');
         if (!userStr) return null;
@@ -290,7 +280,6 @@
         container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading...</div></div></div>`;
 
         try {
-            // 获取所有启用的证书
             const { data: certificates, error } = await sb
                 .from('certificates')
                 .select('image_url, created_at')
@@ -310,7 +299,6 @@
                 return;
             }
 
-            // 渲染所有证书
             container.innerHTML = `
                 <div class="certificates-list">
                     ${certificates.map((cert, index) => `
@@ -323,7 +311,6 @@
                 </div>
             `;
 
-            // 绑定点击放大事件
             document.querySelectorAll('.certificate-frame').forEach(frame => {
                 frame.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -340,7 +327,6 @@
         }
     }
 
-    // 打开放大查看
     function openZoomImage(imageUrl) {
         const modal = document.getElementById('zoomModal');
         const zoomImage = document.getElementById('zoomImage');
@@ -348,7 +334,6 @@
         modal.classList.add('active');
     }
 
-    // 关闭放大查看
     function closeZoomImage() {
         const modal = document.getElementById('zoomModal');
         modal.classList.remove('active');
@@ -364,13 +349,12 @@
                 const page = item.dataset.page;
                 if (page === 'dashboard') window.location.href = 'start.html';
                 else if (page === 'products') window.location.href = 'products.html';
-                else if (page === 'orders') window.location.href = 'history.html';
+                else if (page === 'orders') window.location.href = 'orders-history.html';
                 else if (page === 'profile') window.location.href = 'dashboard.html';
             });
         });
     }
 
-    // 绑定关闭事件
     document.getElementById('zoomCloseBtn')?.addEventListener('click', closeZoomImage);
     document.getElementById('zoomModal')?.addEventListener('click', (e) => {
         if (e.target === document.getElementById('zoomModal')) {

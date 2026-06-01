@@ -7,9 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
-    <!-- Cropper.js 用于图片裁剪 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
         * {
@@ -30,7 +30,8 @@
             width: 390px;
             min-height: 100vh;
             background: #f5f7fb;
-            padding-bottom: 30px;
+            padding-bottom: 80px;
+            position: relative;
         }
 
         .header {
@@ -108,11 +109,6 @@
             height: 90px;
         }
 
-        input.error, textarea.error, select.error {
-            border-color: #ef4444;
-        }
-
-        /* 图片上传区域 */
         .upload-area {
             display: flex;
             gap: 16px;
@@ -179,7 +175,6 @@
             color: white;
         }
 
-        /* 裁剪模态框 */
         .crop-modal {
             position: fixed;
             top: 0;
@@ -239,7 +234,6 @@
             color: white;
         }
 
-        /* 分类标签 */
         .categories-preview {
             display: flex;
             flex-wrap: wrap;
@@ -306,6 +300,39 @@
             font-size: 11px;
             margin-top: 6px;
         }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid #eef2f7;
+            display: flex;
+            padding: 10px 0 14px;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            cursor: pointer;
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item.active {
+            color: #ff7a00;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -316,7 +343,6 @@
         </div>
 
         <div class="form-container">
-            <!-- Store Name（必填） -->
             <div class="form-group">
                 <div class="form-label">
                     <i class="fa-regular fa-building"></i> Store Name
@@ -326,7 +352,6 @@
                 <div class="error-message" id="storeNameError"></div>
             </div>
 
-            <!-- Store Logo（可选） -->
             <div class="form-group">
                 <div class="form-label">
                     <i class="fa-regular fa-image"></i> Store Logo
@@ -344,7 +369,6 @@
                 </div>
             </div>
 
-            <!-- Store Description（必填） -->
             <div class="form-group">
                 <div class="form-label">
                     <i class="fa-regular fa-file-lines"></i> Store Description
@@ -354,7 +378,6 @@
                 <div class="error-message" id="storeDescError"></div>
             </div>
 
-            <!-- Store Category（必填，至少一个） -->
             <div class="form-group">
                 <div class="form-label">
                     <i class="fa-regular fa-tag"></i> Store Category
@@ -383,7 +406,6 @@
         </div>
     </div>
 
-    <!-- 图片裁剪模态框 -->
     <div class="crop-modal" id="cropModal">
         <div class="crop-container">
             <img id="cropImage" class="crop-image">
@@ -394,13 +416,15 @@
         </div>
     </div>
 
+    <div class="bottom-nav">
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script>
-        // Supabase 配置
-        const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         let cropper = null;
         let currentImageFile = null;
         let logoImageUrl = null;
@@ -411,16 +435,12 @@
             storeDesc: ''
         };
 
-        // 获取当前用户
         function getCurrentUser() {
             const userStr = localStorage.getItem('currentUser');
             if (!userStr) return null;
-            try {
-                return JSON.parse(userStr);
-            } catch(e) { return null; }
+            try { return JSON.parse(userStr); } catch(e) { return null; }
         }
 
-        // 加载 Onboarding 数据
         async function loadOnboardingData() {
             const user = getCurrentUser();
             if (!user) {
@@ -428,7 +448,6 @@
                 return;
             }
 
-            // 从 user_store_settings 表获取已有数据
             const { data: storeData, error: storeError } = await sb
                 .from('user_store_settings')
                 .select('*')
@@ -447,7 +466,6 @@
                     preview.innerHTML = `<img src="${logoImageUrl}" style="width:100%; height:100%; object-fit:cover;"><div class="edit-overlay">Edit</div>`;
                 }
             } else {
-                // 从 localStorage 获取 onboarding 数据（备用）
                 const savedOnboarding = localStorage.getItem('onboarding_data');
                 if (savedOnboarding) {
                     try {
@@ -459,14 +477,12 @@
                 }
             }
 
-            // 初始化表单
             document.getElementById('storeName').value = onboardingData.storeName || '';
             document.getElementById('storeDesc').value = onboardingData.storeDesc || '';
             currentCategories = [...onboardingData.categories];
             renderCategories();
         }
 
-        // 渲染分类标签
         function renderCategories() {
             const container = document.getElementById('categoriesContainer');
             container.innerHTML = '';
@@ -547,7 +563,6 @@
             select.addEventListener('blur', handleBlur);
         }
 
-        // 图片上传和裁剪
         document.getElementById('uploadLogoBtn')?.addEventListener('click', () => {
             document.getElementById('logoFile').click();
         });
@@ -636,7 +651,6 @@
             return isValid;
         }
 
-        // 保存设置
         document.getElementById('saveBtn')?.addEventListener('click', async () => {
             if (!validateForm()) {
                 showToast('Please fill in all required fields', 'error');
@@ -653,13 +667,11 @@
             const storeDesc = document.getElementById('storeDesc').value.trim();
             
             try {
-                // 先删除已存在的记录
                 await sb
                     .from('user_store_settings')
                     .delete()
                     .eq('uid', user.uid);
                 
-                // 再插入新记录
                 const { error: storeError } = await sb
                     .from('user_store_settings')
                     .insert({
@@ -673,7 +685,6 @@
                 
                 if (storeError) throw storeError;
                 
-                // 更新 onboarding 进度 step1_completed = true
                 await sb
                     .from('user_onboarding')
                     .delete()
@@ -701,6 +712,19 @@
             }
         });
 
+        function setupBottomNav() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const page = item.dataset.page;
+                    if (page === 'dashboard') window.location.href = 'start.html';
+                    else if (page === 'products') window.location.href = 'products.html';
+                    else if (page === 'orders') window.location.href = 'orders-history.html';
+                    else if (page === 'profile') window.location.href = 'dashboard.html';
+                });
+            });
+        }
+
+        setupBottomNav();
         loadOnboardingData();
     </script>
 </body>

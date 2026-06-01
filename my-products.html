@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
         * {
@@ -243,10 +244,6 @@
 </div>
 
 <script>
-    const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
     let allProducts = [];
     let displayCount = 10;
 
@@ -339,7 +336,6 @@
             allProducts = allProducts.filter(p => p.id != productId);
             renderProducts();
             
-            // 更新 onboarding 进度（如果产品数降到10以下，Step 3 变为未完成）
             const newCount = allProducts.length;
             if (newCount < 10) {
                 await sb.from('user_onboarding').upsert({
@@ -383,7 +379,7 @@
                 const page = item.dataset.page;
                 if (page === 'dashboard') window.location.href = 'start.html';
                 else if (page === 'products') window.location.href = 'products.html';
-                else if (page === 'orders') window.location.href = 'history.html';
+                else if (page === 'orders') window.location.href = 'orders-history.html';
                 else if (page === 'profile') window.location.href = 'dashboard.html';
             });
         });

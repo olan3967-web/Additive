@@ -176,7 +176,6 @@
                 .order('level', { ascending: true });
             
             if (error) {
-                // 默认数据
                 vipSettings = [
                     { level: 1, rank_name: "Normal", orders_limit: 30, commission_rate: 0.51 },
                     { level: 2, rank_name: "VIP", orders_limit: 30, commission_rate: 0.8 },
@@ -199,7 +198,6 @@
             const user = checkLogin();
             if (!user) return;
             
-            // 同步最新用户数据
             await syncUserData();
             const freshUser = getCurrentUser();
             const userVipLevel = freshUser?.vipLevel || 1;
@@ -213,7 +211,6 @@
             const tiersGrid = document.getElementById('tiersGrid');
             tiersGrid.innerHTML = '';
             
-            // 定义每个等级的功能特性
             const featuresMap = {
                 1: ['Standard daily access', 'Standard commission rate', 'Standard order limit'],
                 2: ['Higher commission rate per order', 'Better account benefits', 'Priority support access'],
@@ -259,7 +256,6 @@
             window.location.href = 'chat.html'; 
         }
         
-        // 初始化
         (async function() {
             await loadVipSettings();
             await renderMembership();

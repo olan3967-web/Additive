@@ -24,7 +24,6 @@
         }
         .settings-section h3 { font-size: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; color: #C9B095; }
         
-        /* UID 和邀请码卡片样式 */
         .info-card {
             background: rgba(0,0,0,0.3);
             border-radius: 14px;
@@ -130,32 +129,31 @@
 
             <div class="settings-grid">
                 <div class="settings-section">
-    <h3><i class="fas fa-user-circle"></i> ACCOUNT CENTER</h3>
-    
-    <!-- UID 和邀请码卡片 -->
-    <div class="info-card">
-        <div class="info-row">
-            <span class="info-label">UID</span>
-            <div class="info-value">
-                <span id="displayUid">---</span>
-                <button class="copy-btn" onclick="copyUID()"><i class="fas fa-copy"></i> Copy</button>
-            </div>
-        </div>
-        <div class="info-row-divider"></div>
-        <div class="info-row">
-            <span class="info-label">Invitation Code</span>
-            <div class="info-value">
-                <span id="displayInviteCode">---</span>
-                <button class="copy-btn" onclick="copyInviteCode()"><i class="fas fa-copy"></i> Copy</button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="setting-item"><div><div class="setting-title">Change Password</div><div class="setting-desc">Update your login password</div></div><button class="setting-action" onclick="changePassword()">→</button></div>
-    <div class="setting-item"><div><div class="setting-title">Set Withdrawal PIN</div><div class="setting-desc">Create a PIN to protect your withdrawals</div></div><button class="setting-action" onclick="setWithdrawalPin()">→</button></div>
-    <div class="setting-item"><div><div class="setting-title">Change Withdrawal PIN</div><div class="setting-desc">Update your withdrawal PIN</div></div><button class="setting-action" onclick="changeWithdrawalPin()">→</button></div>
-    <div class="setting-item"><div><div class="setting-title">Contact Support</div><div class="setting-desc">Chat with customer service</div></div><button class="setting-action" onclick="contactSupport()">→</button></div>
-</div>
+                    <h3><i class="fas fa-user-circle"></i> ACCOUNT CENTER</h3>
+                    
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label">UID</span>
+                            <div class="info-value">
+                                <span id="displayUid">---</span>
+                                <button class="copy-btn" onclick="copyUID()"><i class="fas fa-copy"></i> Copy</button>
+                            </div>
+                        </div>
+                        <div class="info-row-divider"></div>
+                        <div class="info-row">
+                            <span class="info-label">Invitation Code</span>
+                            <div class="info-value">
+                                <span id="displayInviteCode">---</span>
+                                <button class="copy-btn" onclick="copyInviteCode()"><i class="fas fa-copy"></i> Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item"><div><div class="setting-title">Change Password</div><div class="setting-desc">Update your login password</div></div><button class="setting-action" onclick="changePassword()">→</button></div>
+                    <div class="setting-item"><div><div class="setting-title">Set Withdrawal PIN</div><div class="setting-desc">Create a PIN to protect your withdrawals</div></div><button class="setting-action" onclick="setWithdrawalPin()">→</button></div>
+                    <div class="setting-item"><div><div class="setting-title">Change Withdrawal PIN</div><div class="setting-desc">Update your withdrawal PIN</div></div><button class="setting-action" onclick="changeWithdrawalPin()">→</button></div>
+                    <div class="setting-item"><div><div class="setting-title">Contact Support</div><div class="setting-desc">Chat with customer service</div></div><button class="setting-action" onclick="contactSupport()">→</button></div>
+                </div>
                 <div class="settings-section">
                     <h3><i class="fas fa-shield-alt"></i> SECURITY OPTIONS</h3>
                     <div class="setting-item"><div><div class="setting-title">Language</div><div class="setting-desc">Change app language</div></div><button class="setting-action" onclick="changeLanguage()">English ▼</button></div>

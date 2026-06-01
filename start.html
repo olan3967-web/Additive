@@ -62,7 +62,6 @@
             font-size: 20px;
         }
 
-        /* 视频卡片 */
         .video-card {
             width: calc(100% + 40px);
             margin-left: -20px;
@@ -83,7 +82,7 @@
             object-fit: cover;
         }
 
-        /* ========== 新手引导进度条 - 流动圆点风格 ========== */
+        /* 新手引导进度条 - 流动圆点风格 */
         .progress-container {
             background: white;
             border-radius: 20px;
@@ -196,7 +195,6 @@
             color: #6b7280;
         }
 
-        /* 统计卡片网格 */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -232,7 +230,6 @@
             font-size: 11px;
         }
 
-        /* 图表卡片 */
         .chart-card {
             background: white;
             border-radius: 24px;
@@ -263,7 +260,6 @@
             height: 140px;
         }
 
-        /* Overview 卡片网格 */
         .overview-cards-container {
             padding: 0 8px;
             margin-bottom: 20px;
@@ -283,6 +279,7 @@
             position: relative;
             border-radius: 24px;
             overflow: hidden;
+            cursor: pointer;
         }
 
         .overview-card-content {
@@ -397,7 +394,6 @@
             border-radius: 24px;
         }
 
-        /* 热门产品卡片 */
         .products-card {
             background: white;
             border-radius: 24px;
@@ -434,7 +430,6 @@
             color: #ff7a00;
         }
 
-        /* CJ's Partners 轮播图 */
         .partners-section {
             margin: 0 20px 20px;
             overflow: hidden;
@@ -509,7 +504,6 @@
             100% { transform: translateX(-50%); }
         }
 
-        /* 底部导航栏 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -569,7 +563,6 @@
         </video>
     </div>
 
-    <!-- 新手引导进度条 - 流动圆点风格 -->
     <div class="progress-container" id="progressContainer">
         <div class="steps-row">
             <div class="step-wrapper" id="step1Wrapper">
@@ -594,7 +587,6 @@
         <div class="progress-text" id="progressText">0 of 3 completed</div>
     </div>
 
-    <!-- KPI 指标 -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Total Sales</div>
@@ -618,7 +610,6 @@
         </div>
     </div>
 
-    <!-- 趋势图表 -->
     <div class="chart-card">
         <div class="chart-header">
             <span class="chart-title">Revenue Trend</span>
@@ -627,7 +618,6 @@
         <canvas id="revenueChart"></canvas>
     </div>
 
-    <!-- Overview 卡片网格 -->
     <div class="overview-cards-container">
         <div class="cards-grid">
             <div class="overview-card" id="card1">
@@ -663,21 +653,20 @@
                     <div class="overview-tag">Upgrade Now</div>
                 </div>
             </div>
-            <div class="overview-card" id="card4" onclick="location.href='certificate.html'" style="cursor: pointer;">
-    <div class="overview-card-content">
-        <canvas id="particleCanvas4" class="particle-canvas"></canvas>
-        <i class="fas fa-award card-icon"></i>
-        <div class="overview-title-row">
-            <span class="overview-label">CERTIFICATE</span>
-        </div>
-        <div class="overview-value" id="overviewCert">0/100</div>
-        <div class="overview-tag" id="certTag">100 orders to go</div>
-    </div>
-</div>
+            <div class="overview-card" id="card4" onclick="location.href='certificate.html'">
+                <div class="overview-card-content">
+                    <canvas id="particleCanvas4" class="particle-canvas"></canvas>
+                    <i class="fas fa-award card-icon"></i>
+                    <div class="overview-title-row">
+                        <span class="overview-label">CERTIFICATE</span>
+                    </div>
+                    <div class="overview-value" id="overviewCert">0/100</div>
+                    <div class="overview-tag" id="certTag">100 orders to go</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 热门产品 -->
     <div class="products-card">
         <div class="products-title">🔥 Top Products</div>
         <div class="product-row">
@@ -694,7 +683,6 @@
         </div>
     </div>
 
-    <!-- CJ's Partners 轮播图 -->
     <div class="partners-section">
         <div class="partners-title">
             <i class="fa-solid fa-handshake"></i> CJ's Partners
@@ -706,7 +694,6 @@
         </div>
     </div>
 
-    <!-- 底部固定菜单栏 -->
     <div class="bottom-nav">
         <div class="nav-item active" data-page="dashboard">
             <i class="fa-solid fa-house"></i>
@@ -736,7 +723,6 @@
     let revenueChart = null;
     let currentUser = null;
 
-    // ========== 粒子效果 ==========
     function startParticleEffect(canvasId, wrapperId) {
         const canvas = document.getElementById(canvasId);
         const wrapper = document.getElementById(wrapperId);
@@ -807,7 +793,6 @@
         };
     }
 
-    // ========== 新手引导进度条逻辑 ==========
     async function loadUserOnboardingProgress(uid) {
         try {
             const { data, error } = await sb
@@ -852,7 +837,6 @@
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
         
-        // Step 1
         if (steps[0]) {
             step1Circle.classList.add('completed');
             step1Circle.classList.remove('active');
@@ -870,7 +854,6 @@
             step1Circle.textContent = '1';
         }
         
-        // Step 2
         if (steps[1]) {
             step2Circle.classList.add('completed');
             step2Circle.classList.remove('active');
@@ -888,7 +871,6 @@
             step2Circle.textContent = '2';
         }
         
-        // Step 3
         if (steps[2]) {
             step3Circle.classList.add('completed');
             step3Circle.classList.remove('active');
@@ -925,7 +907,6 @@
         }
     }
 
-    // ========== 加载数据 ==========
     async function loadUserData() {
         const user = getCurrentUser();
         if (!user) return;
@@ -957,7 +938,6 @@
         const remaining = orderCount >= 100 ? 0 : 100 - orderCount;
         document.getElementById('certTag').innerHTML = remaining === 0 ? 'Completed!' : remaining + ' orders to go';
         
-        // 加载新手引导进度
         const progress = await loadUserOnboardingProgress(user.uid);
         updateProgressUI(progress);
     }
@@ -1063,7 +1043,7 @@
                 const page = item.dataset.page;
                 if (page === 'dashboard') window.location.href = 'start.html';
                 else if (page === 'products') window.location.href = 'products.html';
-                else if (page === 'orders') window.location.href = 'history.html';
+                else if (page === 'orders') window.location.href = 'orders-history.html';
                 else if (page === 'profile') window.location.href = 'dashboard.html';
             });
         });

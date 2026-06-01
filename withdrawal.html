@@ -86,7 +86,6 @@
             font-size: 20px;
         }
 
-        /* 支付方式列表 - 从上往下排列 */
         .payment-list {
             display: flex;
             flex-direction: column;
@@ -177,7 +176,6 @@
             font-size: 14px;
         }
 
-        /* 地址卡片 */
         .address-cards {
             display: flex;
             gap: 12px;
@@ -392,11 +390,9 @@
         <div class="step-indicator" id="stepIndicator"><i class="fas fa-circle"></i> Step 1 of 3</div>
     </div>
 
-    <!-- Step 1: 选择支付方式 -->
     <div id="step1Container" class="step-container">
         <div class="step-title"><i class="fas fa-credit-card"></i> Select Method</div>
         <div class="payment-list">
-            <!-- PayPal - 不可用 -->
             <div class="payment-item disabled" data-method="paypal" data-reason="Your employment contract has not yet been activated">
                 <div class="payment-icon"><i class="fab fa-paypal"></i></div>
                 <div class="payment-info">
@@ -407,7 +403,6 @@
                 <div class="payment-arrow"><i class="fas fa-chevron-right"></i></div>
             </div>
 
-            <!-- SEPA Instant - 不可用 -->
             <div class="payment-item disabled" data-method="sepa" data-reason="Your employment contract has not yet been activated">
                 <div class="payment-icon"><i class="fas fa-university"></i></div>
                 <div class="payment-info">
@@ -418,7 +413,6 @@
                 <div class="payment-arrow"><i class="fas fa-chevron-right"></i></div>
             </div>
 
-            <!-- Crypto Currencies - 可用 -->
             <div class="payment-item" data-method="crypto">
                 <div class="payment-icon"><i class="fab fa-bitcoin"></i></div>
                 <div class="payment-info">
@@ -431,7 +425,6 @@
         </div>
     </div>
 
-    <!-- Step 2: 绑定地址 -->
     <div id="step2Container" class="step-container" style="display: none;">
         <div class="step-title"><i class="fas fa-link"></i> Bind Address</div>
         <div class="address-cards">
@@ -460,7 +453,6 @@
         <button id="bindAddressBtn" class="step-btn">Bind Address</button>
     </div>
 
-    <!-- Step 3: 提款金额 -->
     <div id="step3Container" class="step-container" style="display: none;">
         <div class="step-title"><i class="fas fa-money-bill-wave"></i> Amount</div>
         <div class="balance-card">
@@ -483,7 +475,6 @@
         <button id="withdrawBtn" class="step-btn">Request Withdrawal</button>
     </div>
 
-    <!-- 底部固定菜单栏 -->
     <div class="bottom-nav">
         <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
         <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
@@ -491,8 +482,8 @@
         <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
     </div>
 </div>
+
 <script>
-  
     let currentUser = null;
     let currentUserBalance = 0;
     let selectedMethod = null;
@@ -653,7 +644,7 @@
                 const page = item.dataset.page;
                 if (page === 'dashboard') window.location.href = 'start.html';
                 else if (page === 'products') window.location.href = 'products.html';
-                else if (page === 'orders') window.location.href = 'history.html';
+                else if (page === 'orders') window.location.href = 'orders-history.html';
                 else if (page === 'profile') window.location.href = 'dashboard.html';
             });
         });
