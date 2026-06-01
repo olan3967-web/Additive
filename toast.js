@@ -1,4 +1,4 @@
-// toast.js - 最终版（上下高度最小化）
+// toast.js - 上下边框紧贴内容
 
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
@@ -137,7 +137,6 @@ window.alert = function(message) {
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
-        /* Toast - 上下高度最小化 */
         .custom-toast {
             position: fixed;
             top: 50%;
@@ -174,11 +173,10 @@ window.alert = function(message) {
         .toast-message { 
             font-size: 13px; 
             color: #1f2937; 
-            line-height: 1.2; 
+            line-height: 1;
             padding: 0 18px 0 0;
         }
 
-        /* 确认弹窗 - 上下高度最小化 */
         .custom-confirm {
             position: fixed;
             top: 0;
@@ -225,7 +223,7 @@ window.alert = function(message) {
             font-weight: 700;
             color: #1a1a2e;
             margin: 0;
-            padding: 6px 20px 0 20px;
+            padding: 0 20px;
         }
         .confirm-message {
             font-size: 12px;
@@ -252,7 +250,6 @@ window.alert = function(message) {
         .confirm-cancel { background: #f1f5f9; color: #475569; }
         .confirm-ok { background: #ff7a00; color: white; }
         
-        /* 输入弹窗 - 上下高度最小化 */
         .custom-prompt {
             position: fixed;
             top: 0;
@@ -299,11 +296,11 @@ window.alert = function(message) {
             font-weight: 700;
             color: #1a1a2e;
             margin: 0;
-            padding: 6px 20px 0 20px;
+            padding: 0 20px;
         }
         .prompt-input {
             width: calc(100% - 40px);
-            margin: 4px 20px 0 20px;
+            margin: 6px 20px 0 20px;
             padding: 8px 12px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
