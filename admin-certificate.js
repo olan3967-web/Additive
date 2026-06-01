@@ -1,4 +1,4 @@
-// admin-certificate.js - 证书管理页面
+// admin-certificate.js - 证书管理页面（系统级，不绑定用户）
 
 async function loadCertificatePage() {
     const container = document.getElementById('page_certificate');
@@ -9,7 +9,7 @@ async function loadCertificatePage() {
             <div class="search-bar" style="justify-content: space-between;">
                 <h3><i class="fas fa-certificate"></i> Certificate 管理</h3>
                 <div style="display: flex; gap: 12px;">
-                    <button id="uploadCertificateBtn" class="btn-primary"><i class="fas fa-upload"></i> 上传证书</button>
+                    <button id="uploadCertificateBtn" class="btn-primary"><i class="fas fa-upload"></i> 设置证书图片</button>
                     <button id="refreshCertificateBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
                 </div>
             </div>
@@ -30,7 +30,7 @@ async function loadCertificates() {
     if (!container) return;
     
     try {
-        // 先获取所有证书
+        // 获取所有证书（系统级，不区分用户）
         const { data: certificates, error } = await sb
             .from('certificates')
             .select('*')
@@ -39,26 +39,14 @@ async function loadCertificates() {
         if (error) throw error;
         
         if (!certificates || certificates.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无证书，点击"上传证书"添加</div>';
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无证书，点击"设置证书图片"添加</div>';
             return;
-        }
-        
-        // 获取所有用户的 UID 列表
-        const uids = [...new Set(certificates.map(c => c.uid))];
-        const { data: users } = await sb
-            .from('users')
-            .select('uid, username')
-            .in('uid', uids);
-        
-        const userMap = {};
-        if (users) {
-            users.forEach(u => { userMap[u.uid] = u.username; });
         }
         
         container.innerHTML = `
             <table class="data-table">
                 <thead>
-                    <tr><th>用户</th><th>证书图片</th><th>上传时间</th><th>状态</th><th>操作</th></tr>
+                    <tr><th>证书图片</th><th>上传时间</th><th>状态</th><th>操作</th></tr>
                 </thead>
                 <tbody id="certificateTableBody"></tbody>
             </table>
@@ -66,20 +54,16 @@ async function loadCertificates() {
         
         const tbody = document.getElementById('certificateTableBody');
         for (let cert of certificates) {
-            const username = userMap[cert.uid] || cert.uid;
-            
             const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<span class="badge">${escapeHtml(username)}</span><br><small style="color:#6a7a9a;">UID: ${cert.uid}</small>`;
-            row.insertCell(1).innerHTML = `<img src="${cert.image_url}" style="width:60px; height:86px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="window.open('${cert.image_url}','_blank')">`;
-            row.insertCell(2).innerHTML = new Date(cert.created_at).toLocaleString();
-            row.insertCell(3).innerHTML = cert.is_active ? '<span class="badge" style="background:#2f6b3a;">✓ 启用</span>' : '<span class="badge" style="background:#7a2f2f;">禁用</span>';
-            row.insertCell(4).innerHTML = `
+            row.insertCell(0).innerHTML = `<img src="${cert.image_url}" style="width:60px; height:86px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="window.open('${cert.image_url}','_blank')">`;
+            row.insertCell(1).innerHTML = new Date(cert.created_at).toLocaleString();
+            row.insertCell(2).innerHTML = cert.is_active ? '<span class="badge" style="background:#2f6b3a;">✓ 启用</span>' : '<span class="badge" style="background:#7a2f2f;">禁用</span>';
+            row.insertCell(3).innerHTML = `
                 <button class="toggle-cert-btn" data-id="${cert.id}" data-status="${cert.is_active}" style="background:#2f6b3a; padding:4px 12px; margin-right:4px;">${cert.is_active ? '禁用' : '启用'}</button>
                 <button class="delete-cert-btn" data-id="${cert.id}" style="background:#7a2f2f; padding:4px 12px;">删除</button>
             `;
         }
         
-        // 绑定事件...
         document.querySelectorAll('.toggle-cert-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const id = btn.dataset.id;
@@ -110,21 +94,14 @@ function openUploadModal() {
     const modalHtml = `
         <div id="uploadCertModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
             <div class="modal-card" style="max-width: 500px;">
-                <h3><i class="fas fa-upload"></i> 上传证书</h3>
+                <h3><i class="fas fa-upload"></i> 设置证书图片</h3>
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label>选择用户</label>
-                    <input type="text" id="certUserUid" placeholder="输入用户 UID" style="width:100%; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;">
-                </div>
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label>证书图片 (推荐 900x1288)</label>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <button id="uploadCertImageBtn" class="btn-primary"><i class="fas fa-image"></i> 选择图片</button>
-                        <input type="file" id="certImageFile" accept="image/*" style="display:none;">
-                        <div id="certImagePreview" style="width:60px; height:86px; background:#0f172a; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#666;">预览</div>
-                    </div>
+                    <label>证书图片 URL</label>
+                    <input type="text" id="certImageUrl" placeholder="https://... 证书图片地址 (推荐 900x1288)" style="width:100%; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;">
+                    <div id="certImagePreview" style="margin-top:10px; width:90px; height:129px; background:#0f172a; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#666; overflow:hidden;">预览</div>
                 </div>
                 <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button id="confirmUploadCertBtn" class="success">上传</button>
+                    <button id="confirmUploadCertBtn" class="success">保存</button>
                     <button id="cancelUploadCertBtn">取消</button>
                 </div>
             </div>
@@ -135,58 +112,41 @@ function openUploadModal() {
     if (existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     
-    let selectedImageUrl = null;
-    let cropper = null;
-    
-    document.getElementById('uploadCertImageBtn')?.addEventListener('click', () => {
-        document.getElementById('certImageFile').click();
-    });
-    
-    document.getElementById('certImageFile')?.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        // 上传到 Supabase Storage
-        const fileName = `certificates/${Date.now()}_${file.name}`;
-        const { data, error } = await sb.storage.from('certificates').upload(fileName, file);
-        
-        if (error) {
-            showToast('上传失败: ' + error.message, 'error');
-            return;
-        }
-        
-        const { data: urlData } = sb.storage.from('certificates').getPublicUrl(fileName);
-        selectedImageUrl = urlData.publicUrl;
-        
+    // 实时预览
+    document.getElementById('certImageUrl')?.addEventListener('input', (e) => {
+        const url = e.target.value;
         const preview = document.getElementById('certImagePreview');
-        preview.innerHTML = `<img src="${selectedImageUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
-        showToast('图片上传成功', 'success');
+        if (url) {
+            preview.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" onerror="this.parentElement.innerHTML='❌ 图片加载失败'">`;
+        } else {
+            preview.innerHTML = '预览';
+        }
     });
     
     document.getElementById('confirmUploadCertBtn')?.addEventListener('click', async () => {
-        const uid = document.getElementById('certUserUid').value.trim();
-        if (!uid) {
-            showToast('请输入用户 UID', 'error');
-            return;
-        }
-        if (!selectedImageUrl) {
-            showToast('请先上传证书图片', 'error');
+        const imageUrl = document.getElementById('certImageUrl').value.trim();
+        
+        if (!imageUrl) {
+            showToast('请输入证书图片 URL', 'error');
             return;
         }
         
+        // 先禁用所有现有证书，再添加新的作为激活
+        await sb.from('certificates').update({ is_active: false }).neq('id', 0);
+        
         const { error } = await sb.from('certificates').insert({
-            uid: uid,
-            image_url: selectedImageUrl,
+            uid: 'system',  // 系统级，不绑定特定用户
+            image_url: imageUrl,
             is_active: true,
             created_at: new Date().toISOString()
         });
         
         if (error) {
-            showToast('上传失败: ' + error.message, 'error');
+            showToast('保存失败: ' + error.message, 'error');
             return;
         }
         
-        showToast('证书上传成功', 'success');
+        showToast('证书设置成功', 'success');
         document.getElementById('uploadCertModal').remove();
         loadCertificates();
     });

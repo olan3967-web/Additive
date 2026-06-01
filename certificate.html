@@ -185,46 +185,46 @@
     }
 
     async function loadCertificate() {
-        const user = getCurrentUser();
-        if (!user) {
-            window.location.href = 'signin.html';
+    const user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
+    }
+
+    const container = document.getElementById('certificateContainer');
+    container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading...</div></div></div>`;
+
+    try {
+        // 获取系统级证书（is_active = true 且 uid = 'system'）
+        const { data, error } = await sb
+            .from('certificates')
+            .select('image_url')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (error || !data || !data.image_url) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa-regular fa-certificate"></i>
+                    Certificate not available
+                    <div style="margin-top: 12px; font-size: 12px;">Please check back later</div>
+                </div>
+            `;
             return;
         }
 
-        const container = document.getElementById('certificateContainer');
-        container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading...</div></div></div>`;
-
-        try {
-            const { data, error } = await sb
-                .from('certificates')
-                .select('image_url')
-                .eq('uid', user.uid)
-                .eq('is_active', true)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
-
-            if (error || !data || !data.image_url) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fa-regular fa-certificate"></i>
-                        No certificate yet
-                        <div style="margin-top: 12px; font-size: 12px;">Complete 100 orders to earn your certificate</div>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = `
-                <div class="certificate-card">
-                    <img class="certificate-image" src="${data.image_url}" alt="Certificate" onerror="this.src='https://placehold.co/900x1288/f0f2f5/94a3b8?text=Certificate+Not+Found'">
-                </div>
-            `;
-        } catch (e) {
-            console.error('加载证书失败:', e);
-            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-circle-xmark"></i>Failed to load certificate</div>';
-        }
+        container.innerHTML = `
+            <div class="certificate-card">
+                <img class="certificate-image" src="${data.image_url}" alt="Certificate" onerror="this.src='https://placehold.co/900x1288/f0f2f5/94a3b8?text=Certificate+Not+Found'">
+            </div>
+        `;
+    } catch (e) {
+        console.error('加载证书失败:', e);
+        container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-circle-xmark"></i>Failed to load certificate</div>';
     }
+}
 
     function goBack() {
         window.location.href = 'dashboard.html';
