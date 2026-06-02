@@ -82,7 +82,7 @@
             object-fit: cover;
         }
 
-        /* 新手引导进度条 - 流动圆点风格 */
+        /* 新手引导进度条 */
         .progress-container {
             background: white;
             border-radius: 20px;
@@ -128,7 +128,7 @@
         }
 
         .step-circle.completed {
-            background: #ff7a00;
+            background: #10b981;
             color: white;
         }
 
@@ -146,7 +146,7 @@
         }
 
         .step-label.completed {
-            color: #ff7a00;
+            color: #10b981;
         }
 
         .step-label.active {
@@ -286,9 +286,7 @@
             background: linear-gradient(145deg, #ff8c33, #e66a00);
             border-radius: 24px;
             padding: 20px 16px;
-            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.4),
-                        inset 0 2px 3px rgba(255, 255, 255, 0.6),
-                        inset 0 -2px 3px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.4);
             min-height: 180px;
             display: flex;
             flex-direction: column;
@@ -309,19 +307,6 @@
             pointer-events: none;
             z-index: 1;
             border-radius: 24px 24px 0 0;
-        }
-
-        .overview-card-content::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 30%;
-            background: linear-gradient(0deg, rgba(0, 0, 0, 0.15) 0%, transparent 100%);
-            pointer-events: none;
-            z-index: 1;
-            border-radius: 0 0 24px 24px;
         }
 
         .overview-title-row {
@@ -377,10 +362,6 @@
             z-index: 1;
             pointer-events: none;
             filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
-        }
-
-        .card-icon {
-            font-size: 60px;
         }
 
         .particle-canvas {
@@ -695,22 +676,10 @@
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item active" data-page="dashboard">
-            <i class="fa-solid fa-house"></i>
-            <span>Dashboard</span>
-        </div>
-        <div class="nav-item" data-page="products">
-            <i class="fa-solid fa-box"></i>
-            <span>Products</span>
-        </div>
-        <div class="nav-item" data-page="orders">
-            <i class="fa-solid fa-list-check"></i>
-            <span>Orders</span>
-        </div>
-        <div class="nav-item" data-page="profile">
-            <i class="fa-solid fa-user"></i>
-            <span>My Profile</span>
-        </div>
+        <div class="nav-item active" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+        <div class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
     </div>
 
 </div>
@@ -722,6 +691,12 @@
 
     let revenueChart = null;
     let currentUser = null;
+
+    function getCurrentUser() {
+        const userStr = localStorage.getItem('currentUser');
+        if (!userStr) return null;
+        try { return JSON.parse(userStr); } catch(e) { return null; }
+    }
 
     function startParticleEffect(canvasId, wrapperId) {
         const canvas = document.getElementById(canvasId);
@@ -793,11 +768,31 @@
         };
     }
 
-    async function loadUserOnboardingProgress(uid) {
+    // 获取用户 KYC 状态（从 user_kyc_status 表）
+    async function getUserKycStatus(uid) {
         try {
             const { data, error } = await sb
+                .from('user_kyc_status')
+                .select('is_verified')
+                .eq('uid', uid)
+                .single();
+            if (error) return false;
+            return data?.is_verified || false;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // 加载用户新手引导进度（关键修复：Step 2 从 KYC 表读取）
+    async function loadUserOnboardingProgress(uid) {
+        try {
+            // 获取 KYC 状态（从 user_kyc_status 表）
+            const isKycVerified = await getUserKycStatus(uid);
+            
+            // 获取其他进度
+            const { data, error } = await sb
                 .from('user_onboarding')
-                .select('step1_completed, step2_completed, step3_completed, products_added_count')
+                .select('step1_completed, step3_completed, products_added_count')
                 .eq('uid', uid)
                 .single();
             
@@ -814,7 +809,7 @@
             
             return {
                 step1: data?.step1_completed || false,
-                step2: data?.step2_completed || false,
+                step2: isKycVerified,  // 👈 关键：从 user_kyc_status 读取
                 step3: data?.step3_completed || false,
                 productCount: data?.products_added_count || 0
             };
@@ -837,6 +832,7 @@
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
         
+        // Step 1
         if (steps[0]) {
             step1Circle.classList.add('completed');
             step1Circle.classList.remove('active');
@@ -854,6 +850,7 @@
             step1Circle.textContent = '1';
         }
         
+        // Step 2 - KYC
         if (steps[1]) {
             step2Circle.classList.add('completed');
             step2Circle.classList.remove('active');
@@ -871,6 +868,7 @@
             step2Circle.textContent = '2';
         }
         
+        // Step 3
         if (steps[2]) {
             step3Circle.classList.add('completed');
             step3Circle.classList.remove('active');
@@ -938,6 +936,7 @@
         const remaining = orderCount >= 100 ? 0 : 100 - orderCount;
         document.getElementById('certTag').innerHTML = remaining === 0 ? 'Completed!' : remaining + ' orders to go';
         
+        // 加载进度（Step 2 会从 KYC 表读取）
         const progress = await loadUserOnboardingProgress(user.uid);
         updateProgressUI(progress);
     }
@@ -1030,12 +1029,6 @@
         });
     }
 
-    function getCurrentUser() {
-        const userStr = localStorage.getItem('currentUser');
-        if (!userStr) return null;
-        try { return JSON.parse(userStr); } catch(e) { return null; }
-    }
-
     function setupBottomNav() {
         const navItems = document.querySelectorAll('.nav-item');
         navItems.forEach(item => {
@@ -1067,7 +1060,12 @@
         startParticleEffect('particleCanvas4', 'card4');
     }
     
-    init();
+    // 检查登录
+    if (!getCurrentUser()) {
+        window.location.href = 'signin.html';
+    } else {
+        init();
+    }
 </script>
 </body>
 </html>
