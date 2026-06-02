@@ -714,6 +714,27 @@
             claimedDays = data.claimedDays || [];
             totalClaimedAmount = data.totalClaimedAmount || 0;
         }
+        
+        // 修复：如果 streak 和 claimedDays 不一致，重置
+        // 例如：streak=1 但 claimedDays=[] 是不一致的状态
+        if (streak > 0 && claimedDays.length === 0) {
+            console.log('检测到数据不一致，重置签到状态');
+            streak = 0;
+            lastClaimDate = null;
+            claimedDays = [];
+            totalClaimedAmount = 0;
+            saveLocalData();
+        }
+        
+        // 修复：如果 claimedDays 的长度不等于 streak，说明数据损坏
+        if (claimedDays.length !== streak) {
+            console.log('检测到 claimedDays 与 streak 不一致，重置');
+            streak = 0;
+            lastClaimDate = null;
+            claimedDays = [];
+            totalClaimedAmount = 0;
+            saveLocalData();
+        }
     }
 
     function saveLocalData() {
@@ -745,7 +766,6 @@
             
             if (error) {
                 console.error('加载签到奖励失败:', error);
-                // 默认奖励
                 signInRewards = [
                     { day: 1, amount: 5 },
                     { day: 2, amount: 10 },
@@ -758,7 +778,6 @@
             } else if (data && data.length > 0) {
                 signInRewards = data;
             } else {
-                // 没有数据，插入默认数据
                 signInRewards = [
                     { day: 1, amount: 5 },
                     { day: 2, amount: 10 },
@@ -768,7 +787,6 @@
                     { day: 6, amount: 80 },
                     { day: 7, amount: 120 }
                 ];
-                // 尝试插入默认数据到数据库
                 for (const reward of signInRewards) {
                     await sb.from('signin_rewards').upsert(reward, { onConflict: 'day' });
                 }
@@ -789,7 +807,6 @@
         }
     }
 
-    // 数字跳动动画
     function animateNumber(element, target, prefix = '€') {
         let current = 0;
         const duration = 800;
@@ -805,7 +822,6 @@
         }, 16);
     }
 
-    // 礼花特效
     function burstConfetti() {
         const canvas = document.getElementById('confettiCanvas');
         const ctx = canvas.getContext('2d');
@@ -894,7 +910,6 @@
         }
     }
 
-    // 添加奖励到余额
     async function addRewardToBalance(amount) {
         const user = getCurrentUserFromLocal();
         if (!user) {
@@ -938,7 +953,6 @@
         }
     }
 
-    // 获取用户订单数
     async function getUserOrderCount() {
         const user = getCurrentUserFromLocal();
         if (!user) return 35;
@@ -961,25 +975,22 @@
         
         const userOrderCount = await getUserOrderCount();
         
-        // 更新 Total Claimed
         animateNumber(document.getElementById('totalClaimed'), totalClaimedAmount, '€');
-        
-        // 更新总天数显示
         document.getElementById('totalDays').innerText = totalDaysCount;
         
-        // 更新奖励规则描述
         const rewardsDesc = signInRewards.map(r => `Day ${r.day}: €${r.amount}`).join(' | ');
         document.getElementById('rewardsDesc').innerHTML = rewardsDesc;
         
         const grid = document.getElementById('daysGrid');
         grid.innerHTML = '';
         
-        // 遍历所有签到奖励（确保 Day 1 正确显示）
+        // 遍历所有奖励，正确显示 Day 1 到 Day N
         for (let i = 0; i < signInRewards.length; i++) {
             const reward = signInRewards[i];
             const dayNum = reward.day;
             const isClaimed = claimedDays.includes(dayNum);
-            const isToday = (streak + 1) === dayNum && !hasClaimedToday();
+            // 关键修复：streak 表示已连续签到的天数，所以下一个可签到的天数是 streak + 1
+            const isToday = !hasClaimedToday() && (streak + 1) === dayNum;
             
             const div = document.createElement('div');
             div.className = 'day-card';
@@ -1115,14 +1126,13 @@
     async function init() {
         currentUser = getCurrentUserFromLocal();
         await loadSignInRewards();
-        loadLocalData();
+        loadLocalData();  // 这里会修复不一致的数据
         await render();
         
         document.getElementById('claimBtn').onclick = claimReward;
         setupBottomNav();
     }
     
-    // 检查登录
     if (!getCurrentUserFromLocal()) {
         window.location.href = 'signin.html';
     } else {
