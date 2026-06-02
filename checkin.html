@@ -716,14 +716,7 @@
     let totalClaimedAmount = 0;
 
     // Supabase 相关
-    let sb = null;
-    let currentUser = null;
-
-    async function initSupabase() {
-        const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-        sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    }
+let currentUser = null;
 
     function getCurrentUserFromLocal() {
         const userStr = localStorage.getItem('currentUser');
@@ -1077,14 +1070,13 @@
     }
 
     async function init() {
-        await initSupabase();
         currentUser = getCurrentUserFromLocal();
-        loadData();
-        await render();
-        
-        document.getElementById('claimBtn').onclick = claimReward;
-        setupBottomNav();
-    }
+    loadData();
+    await render();
+    
+    document.getElementById('claimBtn').onclick = claimReward;
+    setupBottomNav();
+}
     
     // 检查登录
     if (!getCurrentUserFromLocal()) {
