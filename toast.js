@@ -362,3 +362,10 @@ window.alert = function(message) {
     `;
     document.head.appendChild(style);
 })();
+
+// ========== 移除所有点击蓝色高亮（全局生效） ==========
+(function() {
+    const style = document.createElement('style');
+    style.textContent = '*{-webkit-tap-highlight-color:transparent!important}';
+    document.head.appendChild(style);
+})();
