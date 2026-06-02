@@ -34,7 +34,6 @@
             position: relative;
         }
 
-        /* 装饰性背景光晕 */
         .glow-bg {
             position: fixed;
             top: -20%;
@@ -69,7 +68,6 @@
             color: #64748b;
         }
 
-        /* 统计卡片 */
         .stats-card {
             background: white;
             margin: 8px 20px 20px;
@@ -102,7 +100,6 @@
             color: transparent;
         }
 
-        /* 签到网格 */
         .checkin-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -135,6 +132,7 @@
         .day-card:nth-child(5) { animation-delay: 0.25s; }
         .day-card:nth-child(6) { animation-delay: 0.3s; }
         .day-card:nth-child(7) { animation-delay: 0.35s; }
+        .day-card:nth-child(8) { animation-delay: 0.4s; }
 
         @keyframes cardReveal {
             0% {
@@ -153,7 +151,6 @@
             border-color: rgba(255,122,0,0.3);
         }
 
-        /* 未签到 */
         .day-card.pending {
             background: #f8fafc;
             border-color: #e2e8f0;
@@ -167,7 +164,6 @@
             color: #94a3b8;
         }
 
-        /* 已签到卡片 - 高级动画效果 */
         .day-card.completed {
             background: linear-gradient(135deg, #f0fdf4, #dcfce7);
             border-color: #10b981;
@@ -190,7 +186,6 @@
             }
         }
 
-        /* 飘浮光点效果 */
         .day-card.completed::before {
             content: '';
             position: absolute;
@@ -218,7 +213,6 @@
             }
         }
 
-        /* 已签到内部光晕扫过 */
         .day-card.completed::after {
             content: '';
             position: absolute;
@@ -253,7 +247,6 @@
             font-weight: 700;
         }
 
-        /* 勾勾图标 - 放在底部，不遮挡文字 */
         .check-icon {
             display: block;
             margin-top: 8px;
@@ -269,7 +262,6 @@
             100% { transform: scale(1) rotate(0); opacity: 1; }
         }
 
-        /* 今日高亮 */
         .day-card.today {
             background: linear-gradient(135deg, #fff7ed, #ffedd5);
             border: 2px solid #ff7a00;
@@ -305,7 +297,6 @@
             transition: all 0.3s ease;
         }
 
-        /* 签到按钮 */
         .claim-section {
             margin: 0 20px 20px;
             text-align: center;
@@ -367,7 +358,6 @@
             animation: fadeIn 0.5s ease;
         }
 
-        /* 连击卡片 */
         .info-card {
             background: white;
             border-radius: 28px;
@@ -524,7 +514,6 @@
             transform: scale(1.02);
         }
 
-        /* 礼花 canvas */
         #confettiCanvas {
             position: fixed;
             top: 0;
@@ -535,7 +524,6 @@
             z-index: 1000;
         }
 
-        /* 粒子特效容器 */
         .particle-container {
             position: fixed;
             top: 0;
@@ -658,7 +646,7 @@
             <div class="streak-bar" id="streakBar"></div>
         </div>
         <div class="streak-text">
-            <span id="streakCount">0</span>/7 <span class="streak-fire">🔥</span>
+            <span id="streakCount">0</span>/<span id="totalDays">7</span> <span class="streak-fire">🔥</span>
         </div>
     </div>
 
@@ -666,10 +654,10 @@
         <div class="info-title">
             <i class="fas fa-file-contract"></i> Sign In Rewards Rules
         </div>
-        <div class="rules-list">
+        <div class="rules-list" id="rulesList">
             <div class="rule-item">
-                <div class="rule-title">🎁 7-DAY REWARDS</div>
-                <div class="rule-desc">Day 1: €5 | Day 2: €10 | Day 3: €20 | Day 4: €35 | Day 5: €55 | Day 6: €80 | Day 7: €120</div>
+                <div class="rule-title">🎁 REWARDS</div>
+                <div class="rule-desc" id="rewardsDesc">Loading...</div>
             </div>
             <div class="rule-item">
                 <div class="rule-title">✅ ELIGIBILITY</div>
@@ -698,25 +686,16 @@
 </div>
 
 <script>
-    // 7天签到奖励
-    const REWARDS = [
-        { day: 1, amount: 5 },
-        { day: 2, amount: 10 },
-        { day: 3, amount: 20 },
-        { day: 4, amount: 35 },
-        { day: 5, amount: 55 },
-        { day: 6, amount: 80 },
-        { day: 7, amount: 120 }
-    ];
-
+    // 签到奖励数据 - 从后台读取
+    let signInRewards = [];
+    let totalDaysCount = 0;
+    
     // 状态
     let streak = 0;
     let lastClaimDate = null;
     let claimedDays = [];
     let totalClaimedAmount = 0;
-
-    // Supabase 相关
-let currentUser = null;
+    let currentUser = null;
 
     function getCurrentUserFromLocal() {
         const userStr = localStorage.getItem('currentUser');
@@ -726,7 +705,7 @@ let currentUser = null;
         } catch(e) { return null; }
     }
 
-    function loadData() {
+    function loadLocalData() {
         const saved = localStorage.getItem('additive_checkin_data');
         if (saved) {
             const data = JSON.parse(saved);
@@ -737,7 +716,7 @@ let currentUser = null;
         }
     }
 
-    function saveData() {
+    function saveLocalData() {
         localStorage.setItem('additive_checkin_data', JSON.stringify({
             streak, lastClaimDate, claimedDays, totalClaimedAmount
         }));
@@ -754,6 +733,60 @@ let currentUser = null;
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
         return new Date(lastClaimDate).toDateString() === yesterday.toDateString();
+    }
+
+    // 从 Supabase 加载签到奖励配置
+    async function loadSignInRewards() {
+        try {
+            const { data, error } = await sb
+                .from('signin_rewards')
+                .select('*')
+                .order('day', { ascending: true });
+            
+            if (error) {
+                console.error('加载签到奖励失败:', error);
+                // 默认奖励
+                signInRewards = [
+                    { day: 1, amount: 5 },
+                    { day: 2, amount: 10 },
+                    { day: 3, amount: 20 },
+                    { day: 4, amount: 35 },
+                    { day: 5, amount: 55 },
+                    { day: 6, amount: 80 },
+                    { day: 7, amount: 120 }
+                ];
+            } else if (data && data.length > 0) {
+                signInRewards = data;
+            } else {
+                // 没有数据，插入默认数据
+                signInRewards = [
+                    { day: 1, amount: 5 },
+                    { day: 2, amount: 10 },
+                    { day: 3, amount: 20 },
+                    { day: 4, amount: 35 },
+                    { day: 5, amount: 55 },
+                    { day: 6, amount: 80 },
+                    { day: 7, amount: 120 }
+                ];
+                // 尝试插入默认数据到数据库
+                for (const reward of signInRewards) {
+                    await sb.from('signin_rewards').upsert(reward, { onConflict: 'day' });
+                }
+            }
+            totalDaysCount = signInRewards.length;
+        } catch (err) {
+            console.error('加载签到奖励异常:', err);
+            signInRewards = [
+                { day: 1, amount: 5 },
+                { day: 2, amount: 10 },
+                { day: 3, amount: 20 },
+                { day: 4, amount: 35 },
+                { day: 5, amount: 55 },
+                { day: 6, amount: 80 },
+                { day: 7, amount: 120 }
+            ];
+            totalDaysCount = signInRewards.length;
+        }
     }
 
     // 数字跳动动画
@@ -830,7 +863,6 @@ let currentUser = null;
         }, 2000);
     }
 
-    // 粒子特效从卡片位置爆发
     function burstParticlesFromCard(cardElement) {
         const rect = cardElement.getBoundingClientRect();
         const container = document.getElementById('particleContainer');
@@ -842,13 +874,9 @@ let currentUser = null;
             particle.className = 'particle';
             const angle = Math.random() * Math.PI * 2;
             const velocity = Math.random() * 80 + 40;
-            const vx = Math.cos(angle) * velocity;
-            const vy = Math.sin(angle) * velocity - 60;
             
             particle.style.left = centerX + 'px';
             particle.style.top = centerY + 'px';
-            particle.style.setProperty('--vx', vx + 'px');
-            particle.style.setProperty('--vy', vy + 'px');
             
             container.appendChild(particle);
             setTimeout(() => particle.remove(), 1500);
@@ -866,7 +894,7 @@ let currentUser = null;
         }
     }
 
-    // 添加奖励到余额和数据库
+    // 添加奖励到余额
     async function addRewardToBalance(amount) {
         const user = getCurrentUserFromLocal();
         if (!user) {
@@ -890,7 +918,6 @@ let currentUser = null;
             
             if (updateError) throw updateError;
             
-            // 记录签到奖励到 deposits 表
             await sb.from('deposits').insert([{
                 uid: user.uid,
                 username: user.username,
@@ -899,7 +926,6 @@ let currentUser = null;
                 created_at: new Date().toISOString()
             }]);
             
-            // 更新本地用户数据
             if (currentUser) {
                 currentUser.balance = newBalance;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -915,7 +941,7 @@ let currentUser = null;
     // 获取用户订单数
     async function getUserOrderCount() {
         const user = getCurrentUserFromLocal();
-        if (!user) return 35; // 演示模式返回35单
+        if (!user) return 35;
         
         try {
             const { data: orders } = await sb
@@ -929,15 +955,28 @@ let currentUser = null;
     }
 
     async function render() {
+        if (signInRewards.length === 0) {
+            await loadSignInRewards();
+        }
+        
         const userOrderCount = await getUserOrderCount();
         
-        // 更新 Total Claimed 显示
+        // 更新 Total Claimed
         animateNumber(document.getElementById('totalClaimed'), totalClaimedAmount, '€');
+        
+        // 更新总天数显示
+        document.getElementById('totalDays').innerText = totalDaysCount;
+        
+        // 更新奖励规则描述
+        const rewardsDesc = signInRewards.map(r => `Day ${r.day}: €${r.amount}`).join(' | ');
+        document.getElementById('rewardsDesc').innerHTML = rewardsDesc;
         
         const grid = document.getElementById('daysGrid');
         grid.innerHTML = '';
         
-        REWARDS.forEach((reward) => {
+        // 遍历所有签到奖励（确保 Day 1 正确显示）
+        for (let i = 0; i < signInRewards.length; i++) {
+            const reward = signInRewards[i];
             const dayNum = reward.day;
             const isClaimed = claimedDays.includes(dayNum);
             const isToday = (streak + 1) === dayNum && !hasClaimedToday();
@@ -953,28 +992,29 @@ let currentUser = null;
                 div.classList.add('pending');
             }
             
-            // 勾勾放在底部，不遮挡 Day 数字
             div.innerHTML = `
                 <div class="day-num">Day ${dayNum}</div>
                 <div class="day-reward">€${reward.amount}</div>
                 ${isClaimed ? '<i class="fas fa-check-circle check-icon"></i>' : '<div style="height: 20px;"></div>'}
             `;
             grid.appendChild(div);
-        });
+        }
         
-        const percent = (streak / REWARDS.length) * 100;
+        const percent = totalDaysCount > 0 ? (streak / totalDaysCount) * 100 : 0;
         const streakBar = document.getElementById('streakBar');
         streakBar.style.width = percent + '%';
         document.getElementById('streakCount').innerText = streak;
         
         const claimBtn = document.getElementById('claimBtn');
         const nextDay = streak + 1;
-        const canClaim = !hasClaimedToday() && nextDay <= REWARDS.length && userOrderCount >= 30;
+        const canClaim = !hasClaimedToday() && nextDay <= totalDaysCount && userOrderCount >= 30;
         
         if (canClaim) {
+            const nextReward = signInRewards.find(r => r.day === nextDay);
+            const rewardAmount = nextReward ? nextReward.amount : 0;
             claimBtn.classList.remove('disabled');
             claimBtn.disabled = false;
-            document.getElementById('claimWarning').innerHTML = `✨ Day ${nextDay} reward: €${REWARDS[nextDay - 1].amount} ✨`;
+            document.getElementById('claimWarning').innerHTML = `✨ Day ${nextDay} reward: €${rewardAmount} ✨`;
         } else if (hasClaimedToday()) {
             claimBtn.classList.add('disabled');
             claimBtn.disabled = true;
@@ -983,10 +1023,10 @@ let currentUser = null;
             claimBtn.classList.add('disabled');
             claimBtn.disabled = true;
             document.getElementById('claimWarning').innerHTML = `📋 Complete ${30 - userOrderCount} more orders to unlock rewards.`;
-        } else if (nextDay > REWARDS.length) {
+        } else if (nextDay > totalDaysCount) {
             claimBtn.classList.add('disabled');
             claimBtn.disabled = true;
-            document.getElementById('claimWarning').innerHTML = `🏆 Champion! You completed all 7 days!`;
+            document.getElementById('claimWarning').innerHTML = `🏆 Champion! You completed all days!`;
         } else {
             claimBtn.classList.add('disabled');
             claimBtn.disabled = true;
@@ -1001,7 +1041,7 @@ let currentUser = null;
         }
         
         const nextDay = streak + 1;
-        if (nextDay > REWARDS.length) {
+        if (nextDay > totalDaysCount) {
             showToast('You already completed all days!', 'info');
             return;
         }
@@ -1012,20 +1052,24 @@ let currentUser = null;
             return;
         }
         
+        const nextReward = signInRewards.find(r => r.day === nextDay);
+        const amount = nextReward ? nextReward.amount : 0;
+        
         // 断签处理
         if (streak > 0 && !isConsecutive()) {
-            const amount = REWARDS[0].amount;
-            const success = await addRewardToBalance(amount);
+            const firstReward = signInRewards.find(r => r.day === 1);
+            const firstAmount = firstReward ? firstReward.amount : 5;
+            const success = await addRewardToBalance(firstAmount);
             if (success) {
                 streak = 1;
                 claimedDays = [1];
-                totalClaimedAmount += amount;
+                totalClaimedAmount += firstAmount;
                 lastClaimDate = new Date().toISOString();
-                saveData();
+                saveLocalData();
                 await render();
                 animateCard(1);
                 burstConfetti();
-                showToast(`⚠️ Streak reset! You got €${amount} for Day 1.`, 'warning');
+                showToast(`⚠️ Streak reset! You got €${firstAmount} for Day 1.`, 'warning');
             } else {
                 showToast('Failed to add reward. Please try again.', 'error');
             }
@@ -1033,7 +1077,6 @@ let currentUser = null;
         }
         
         // 正常签到
-        const amount = REWARDS[nextDay - 1].amount;
         const success = await addRewardToBalance(amount);
         
         if (success) {
@@ -1041,13 +1084,13 @@ let currentUser = null;
             claimedDays.push(nextDay);
             totalClaimedAmount += amount;
             lastClaimDate = new Date().toISOString();
-            saveData();
+            saveLocalData();
             await render();
             animateCard(nextDay);
             burstConfetti();
             showToast(`🎉 Day ${nextDay} claimed! +€${amount}`, 'success');
             
-            if (nextDay === 7) {
+            if (nextDay === totalDaysCount) {
                 setTimeout(() => {
                     showToast(`🏆 AMAZING! Total claimed: €${totalClaimedAmount}`, 'success');
                 }, 500);
@@ -1071,12 +1114,13 @@ let currentUser = null;
 
     async function init() {
         currentUser = getCurrentUserFromLocal();
-    loadData();
-    await render();
-    
-    document.getElementById('claimBtn').onclick = claimReward;
-    setupBottomNav();
-}
+        await loadSignInRewards();
+        loadLocalData();
+        await render();
+        
+        document.getElementById('claimBtn').onclick = claimReward;
+        setupBottomNav();
+    }
     
     // 检查登录
     if (!getCurrentUserFromLocal()) {
