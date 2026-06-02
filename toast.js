@@ -30,7 +30,6 @@ function showConfirm(title, message, onConfirm, onCancel) {
     const existingModal = document.querySelector('.custom-confirm');
     if (existingModal) existingModal.remove();
     
-    // 创建遮罩层（深色强模糊）
     const overlay = document.createElement('div');
     overlay.className = 'confirm-overlay-glass';
     
@@ -132,7 +131,6 @@ window.alert = function(message) {
     const style = document.createElement('style');
     style.id = 'additive-toast-styles';
     style.textContent = `
-        /* 深色强模糊遮罩层 */
         .confirm-overlay-glass {
             position: absolute;
             top: 0;
@@ -157,7 +155,6 @@ window.alert = function(message) {
             border-radius: 28px;
         }
 
-        /* Toast - 左右伸长 */
         .custom-toast {
             position: fixed;
             top: 50%;
@@ -198,7 +195,6 @@ window.alert = function(message) {
         .toast-icon i { font-size: 15px; }
         .toast-message { font-size: 14px; color: #1f2937; line-height: 1.3; }
 
-        /* 确认弹窗 - 左右伸长 */
         .custom-confirm {
             position: fixed;
             top: 0;
@@ -273,7 +269,6 @@ window.alert = function(message) {
             background: #ea580c;
         }
 
-        /* 输入弹窗 - 左右伸长 */
         .custom-prompt {
             position: fixed;
             top: 0;
@@ -363,9 +358,38 @@ window.alert = function(message) {
     document.head.appendChild(style);
 })();
 
-// ========== 移除所有点击蓝色高亮（全局生效） ==========
+// ========== 移除所有点击蓝色高亮和按钮点击闪动 ==========
 (function() {
     const style = document.createElement('style');
-    style.textContent = '*{-webkit-tap-highlight-color:transparent!important}';
+    style.textContent = `
+        * {
+            -webkit-tap-highlight-color: transparent !important;
+        }
+        
+        button:active,
+        button:focus,
+        .btn:active,
+        .btn:focus,
+        .day-card:active,
+        .day-card:focus,
+        .nav-item:active,
+        .nav-item:focus,
+        .claim-btn:active,
+        .claim-btn:focus,
+        .confirm-btn:active,
+        .confirm-btn:focus,
+        .prompt-btn:active,
+        .prompt-btn:focus,
+        .control-btn:active,
+        .control-btn:focus,
+        [onclick]:active,
+        [onclick]:focus {
+            transform: none !important;
+            background-color: inherit !important;
+            opacity: 1 !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+    `;
     document.head.appendChild(style);
 })();
