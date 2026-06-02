@@ -238,3 +238,41 @@ async function cancelTriggerOrder(triggerId) {
     
     return !error;
 }
+
+// ========== 彻底移除所有点击闪动/蓝色格子 ==========
+(function() {
+    // 移除点击高亮
+    const style = document.createElement('style');
+    style.textContent = `
+        * {
+            -webkit-tap-highlight-color: transparent !important;
+        }
+        *:active {
+            transform: none !important;
+            scale: none !important;
+            opacity: 1 !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+            transition: none !important;
+        }
+        button:active, .btn:active, .nav-item:active, .stat-card:active,
+        .product-card:active, .overview-card:active, .day-card:active,
+        [onclick]:active, a:active, div:active, span:active, i:active {
+            transform: none !important;
+            opacity: 1 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // 监听动态添加的元素，确保新元素也生效
+    const observer = new MutationObserver(() => {
+        document.querySelectorAll('*').forEach(el => {
+            el.style.setProperty('-webkit-tap-highlight-color', 'transparent', 'important');
+        });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+})();
