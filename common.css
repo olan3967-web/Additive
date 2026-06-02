@@ -1,9 +1,7 @@
 /* ========== common.css - 所有页面共用 ========== */
 
-/* ========== 移除点击高亮 ========== */
 * {
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent !important;
 }
 
 *:focus {
