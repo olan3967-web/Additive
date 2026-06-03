@@ -347,6 +347,7 @@ if (Notification && Notification.permission !== 'denied') {
 
 window.clearOrderBadge = clearOrderBadge;
 window.updateOrderBadge = updateBadge;
+window.enableAudio = enableAudio;
 
 console.log('✅ 通知系统已启动');
 console.log('🔊 点击顶部喇叭按钮激活声音（只需激活一次，所有页面共用）');
