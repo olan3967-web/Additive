@@ -217,46 +217,73 @@ async function loadUnreadOrderCount() {
 async function startOrderSubscription() {
     const user = getCurrentUser();
     if (!user) {
-        console.log('❌ 用户未登录');
-        return;
+        console.log('❌ 用户未登录，无法启动订单订阅');
+        return false;
     }
+    
     console.log('✅ 启动订单订阅, UID:', user.uid);
     await requestNotificationPermission();
     await loadUnreadOrderCount();
-    if (orderSubscription) sb.removeChannel(orderSubscription);
+    
+    if (orderSubscription) {
+        try { sb.removeChannel(orderSubscription); } catch(e) {}
+        orderSubscription = null;
+    }
+    
+    console.log('📡 创建 Supabase 订阅...');
+    
     orderSubscription = sb
         .channel('orders-realtime')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_orders' }, (payload) => {
-            const newOrder = payload.new;
-            console.log('🔔 收到新订单:', newOrder.order_no);
-            const currentUser = getCurrentUser();
-            // 关键修复：转为字符串比较
-            if (String(newOrder.uid) === String(currentUser?.uid) && newOrder.status === 'pending') {
-                console.log('✅ 触发通知！');
-                unreadOrderCount++;
-                updateOrderBadge();
-                playNotificationSound();
-                showBrowserNotification(newOrder);
-                showInAppNotification(newOrder);
-                if (window.location.pathname.includes('orders.html') && window.refreshOrdersList) {
-                    window.refreshOrdersList();
+        .on('postgres_changes', 
+            { event: 'INSERT', schema: 'public', table: 'user_orders' }, 
+            (payload) => {
+                const newOrder = payload.new;
+                console.log('🔔 收到新订单事件:', newOrder.order_no);
+                console.log('订单UID:', newOrder.uid);
+                console.log('当前用户UID:', getCurrentUser()?.uid);
+                
+                const currentUser = getCurrentUser();
+                // 字符串比较，避免类型问题
+                if (String(newOrder.uid) === String(currentUser?.uid) && newOrder.status === 'pending') {
+                    console.log('✅ 条件满足，触发通知！');
+                    unreadOrderCount++;
+                    updateOrderBadge();
+                    playNotificationSound();
+                    showBrowserNotification(newOrder);
+                    showInAppNotification(newOrder);
+                    
+                    // 如果在订单页面，刷新列表
+                    if (window.location.pathname.includes('orders.html')) {
+                        if (typeof window.refreshOrdersList === 'function') {
+                            window.refreshOrdersList();
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                } else {
+                    console.log('❌ 条件不满足:', {
+                        uidMatch: String(newOrder.uid) === String(currentUser?.uid),
+                        statusMatch: newOrder.status === 'pending'
+                    });
                 }
-            } else {
-                console.log('❌ 条件不满足:', {
-                    uidMatch: String(newOrder.uid) === String(currentUser?.uid),
-                    statusMatch: newOrder.status === 'pending'
-                });
             }
-        })
+        )
         .subscribe((status) => {
             console.log('📡 订阅状态:', status);
+            if (status === 'SUBSCRIBED') {
+                console.log('✅ 实时订阅已连接！');
+            }
         });
+    
+    return true;
 }
 
+// 停止订阅
 function stopOrderSubscription() {
     if (orderSubscription) {
-        sb.removeChannel(orderSubscription);
+        try { sb.removeChannel(orderSubscription); } catch(e) {}
         orderSubscription = null;
+        console.log('订阅已停止');
     }
 }
 
@@ -269,37 +296,52 @@ window.updateOrderBadge = updateOrderBadge;
 window.playNotificationSound = playNotificationSound;
 window.showBrowserNotification = showBrowserNotification;
 window.showInAppNotification = showInAppNotification;
+window.sb = sb;
 
 // ========== 页面加载时自动启动 ==========
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        if (getCurrentUser()) startOrderSubscription();
-    });
-} else {
-    if (getCurrentUser()) startOrderSubscription();
-}
+(function autoInit() {
+    console.log('🚀 user-data.js 初始化...');
+    const user = getCurrentUser();
+    if (user) {
+        console.log('用户已登录，启动订阅');
+        startOrderSubscription();
+    } else {
+        console.log('用户未登录，等待登录');
+    }
+})();
 
 // ========== 动画样式 ==========
 if (!document.getElementById('notification-animation-style')) {
     const style = document.createElement('style');
     style.id = 'notification-animation-style';
-    style.textContent = `@keyframes slideInRight{0%{transform:translateX(100%);opacity:0}100%{transform:translateX(0);opacity:1}}.order-notification-toast{position:fixed;top:60px;right:0;left:0;z-index:10000;pointer-events:auto}.nav-item{position:relative}`;
+    style.textContent = `
+        @keyframes slideInRight {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        .order-notification-toast {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            left: 0;
+            z-index: 100000;
+            pointer-events: auto;
+        }
+        .nav-item {
+            position: relative;
+        }
+    `;
     document.head.appendChild(style);
 }
 
 // ========== 移除点击蓝色高亮 ==========
 (function() {
     const style = document.createElement('style');
-    style.textContent = `*{-webkit-tap-highlight-color:transparent!important}*:active{transform:none!important;opacity:1!important;background:transparent!important;box-shadow:none!important}`;
+    style.textContent = `
+        * { -webkit-tap-highlight-color: transparent !important; }
+        *:active { transform: none !important; opacity: 1 !important; background: transparent !important; box-shadow: none !important; }
+    `;
     document.head.appendChild(style);
 })();
 
 console.log('✅ user-data.js 加载完成');
-
-// 强制暴露到 window 对象
-window.playNotificationSound = playNotificationSound;
-window.showInAppNotification = showInAppNotification;
-window.showBrowserNotification = showBrowserNotification;
-window.updateOrderBadge = updateOrderBadge;
-window.clearOrderBadge = clearOrderBadge;
-window.startOrderSubscription = startOrderSubscription;
