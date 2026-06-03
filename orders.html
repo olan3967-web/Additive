@@ -123,6 +123,7 @@
             font-size: 13px;
             color: #1f2937;
             margin-bottom: 8px;
+            word-break: break-word;
         }
 
         .order-footer {
@@ -419,6 +420,22 @@
         window.location.href = 'dashboard.html';
     }
 
+    // ========== 解析产品文本 ==========
+    function parseProductsText(productsData) {
+        try {
+            let products = productsData;
+            if (typeof productsData === 'string') {
+                products = JSON.parse(productsData);
+            }
+            if (!Array.isArray(products)) {
+                return '-';
+            }
+            return products.map(p => `${p.product_name || '产品'} ×${p.quantity || 1}`).join(', ');
+        } catch(e) {
+            return String(productsData || '-');
+        }
+    }
+
     // ========== 页面状态 ==========
     let currentTab = 'new';
     let pendingOrders = [];
@@ -467,13 +484,8 @@
         }
 
         container.innerHTML = pendingOrders.map(order => {
-            let productsText = '';
-            try {
-                const products = JSON.parse(order.products || '[]');
-                productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
-            } catch(e) {
-                productsText = order.products || '-';
-            }
+            const productsText = parseProductsText(order.products);
+            const displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
             
             return `
                 <div class="order-card" data-order='${JSON.stringify(order)}'>
@@ -481,7 +493,7 @@
                         <span class="order-no">${order.order_no}</span>
                         <span class="order-date">${formatDate(order.created_at)}</span>
                     </div>
-                    <div class="order-products">${productsText.substring(0, 60)}${productsText.length > 60 ? '...' : ''}</div>
+                    <div class="order-products">${displayText}</div>
                     <div class="order-footer">
                         <span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span>
                         <span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span>
@@ -509,13 +521,8 @@
         }
 
         container.innerHTML = processingOrders.map(order => {
-            let productsText = '';
-            try {
-                const products = JSON.parse(order.products || '[]');
-                productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
-            } catch(e) {
-                productsText = order.products || '-';
-            }
+            const productsText = parseProductsText(order.products);
+            const displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
             
             return `
                 <div class="order-card" data-order='${JSON.stringify(order)}'>
@@ -523,7 +530,7 @@
                         <span class="order-no">${order.order_no}</span>
                         <span class="order-date">${formatDate(order.created_at)}</span>
                     </div>
-                    <div class="order-products">${productsText.substring(0, 60)}${productsText.length > 60 ? '...' : ''}</div>
+                    <div class="order-products">${displayText}</div>
                     <div class="order-footer">
                         <span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span>
                         <span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span>
@@ -550,19 +557,26 @@
         
         let productsHtml = '';
         try {
-            const products = JSON.parse(order.products || '[]');
-            products.forEach(p => {
-                productsHtml += `
-                    <div class="product-item-modal">
-                        <img src="${p.image_url || 'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'}" onerror="this.src='https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'">
-                        <div style="flex:1;">
-                            <div style="font-weight:600;">${escapeHtml(p.product_name)}</div>
-                            <div style="font-size:12px; color:#6b7280;">×${p.quantity} | €${p.unit_price.toFixed(2)}/each</div>
+            let products = order.products;
+            if (typeof products === 'string') {
+                products = JSON.parse(products);
+            }
+            if (Array.isArray(products)) {
+                products.forEach(p => {
+                    productsHtml += `
+                        <div class="product-item-modal">
+                            <img src="${p.image_url || 'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'}" onerror="this.src='https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'">
+                            <div style="flex:1;">
+                                <div style="font-weight:600;">${escapeHtml(p.product_name)}</div>
+                                <div style="font-size:12px; color:#6b7280;">×${p.quantity} | €${p.unit_price.toFixed(2)}/each</div>
+                            </div>
+                            <div style="font-weight:700; color:#ff7a00;">€${(p.unit_price * p.quantity).toFixed(2)}</div>
                         </div>
-                        <div style="font-weight:700; color:#ff7a00;">€${(p.unit_price * p.quantity).toFixed(2)}</div>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            } else {
+                productsHtml = '<div>产品信息加载失败</div>';
+            }
         } catch(e) {
             productsHtml = '<div>产品信息加载失败</div>';
         }
@@ -653,18 +667,23 @@
         
         // 记录订单历史
         try {
-            const products = JSON.parse(currentOrder.products || '[]');
-            for (const product of products) {
-                for (let i = 0; i < product.quantity; i++) {
-                    await sb.from('order_history').insert({
-                        uid: user.uid,
-                        username: user.username,
-                        order_code: currentOrder.order_no,
-                        accommodation_name: product.product_name,
-                        price: product.unit_price,
-                        commission: product.commission / product.quantity,
-                        date: new Date().toISOString()
-                    });
+            let products = currentOrder.products;
+            if (typeof products === 'string') {
+                products = JSON.parse(products);
+            }
+            if (Array.isArray(products)) {
+                for (const product of products) {
+                    for (let i = 0; i < product.quantity; i++) {
+                        await sb.from('order_history').insert({
+                            uid: user.uid,
+                            username: user.username,
+                            order_code: currentOrder.order_no,
+                            accommodation_name: product.product_name,
+                            price: product.unit_price,
+                            commission: product.commission / product.quantity,
+                            date: new Date().toISOString()
+                        });
+                    }
                 }
             }
         } catch(e) {
