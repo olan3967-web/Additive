@@ -1,80 +1,76 @@
-// translate.js - 自动翻译为英文（完全隐藏 Google Translate 横幅）
+// translate.js - 自动翻译（移除顶部空白）
 
 (function() {
-    // 隐藏 Google Translate 横幅的样式（提前添加）
-    const hideStyle = document.createElement('style');
-    hideStyle.textContent = `
-        .goog-te-banner-frame,
-        .goog-te-banner,
-        .goog-te-balloon-frame,
-        .goog-te-balloon,
-        .goog-te-gadget,
-        .goog-te-gadget-simple,
-        .goog-te-menu-frame,
-        .goog-te-menu,
-        .goog-te-cta-bar,
-        .goog-te-tooltip,
-        .skiptranslate,
-        .goog-te-banner-frame.skiptranslate {
+    // 强制隐藏 Google Translate 横幅
+    const style = document.createElement('style');
+    style.textContent = `
+        .goog-te-banner-frame, .goog-te-banner, .goog-te-balloon-frame,
+        .goog-te-balloon, .goog-te-gadget, .goog-te-gadget-simple,
+        .goog-te-menu-frame, .goog-te-menu, .skiptranslate {
             display: none !important;
         }
         body {
             top: 0px !important;
-            position: relative !important;
+            position: static !important;
         }
     `;
-    document.head.appendChild(hideStyle);
+    document.head.appendChild(style);
     
-    // 创建 Google Translate 容器（隐藏）
+    // 创建隐藏容器
     const div = document.createElement('div');
     div.id = 'google_translate_element';
     div.style.display = 'none';
     document.body.appendChild(div);
     
-    // 获取用户保存的语言偏好
     const preferredLang = localStorage.getItem('preferred_language') || 'en';
     
-    // 初始化翻译
     window.googleTranslateElementInit = function() {
         new google.translate.TranslateElement({
             pageLanguage: 'zh-CN',
             includedLanguages: 'en,de,es,it',
-            autoDisplay: false,
-            layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            autoDisplay: false
         }, 'google_translate_element');
         
-        // 切换到用户偏好的语言
         setTimeout(() => {
             const select = document.querySelector('.goog-te-combo');
             if (select && select.value !== preferredLang) {
                 select.value = preferredLang;
                 select.dispatchEvent(new Event('change'));
             }
+            document.body.style.top = '0px';
             
-            // 再次隐藏可能出现的横幅
-            const banner = document.querySelector('.goog-te-banner-frame');
-            if (banner) banner.style.display = 'none';
-            document.body.style.top = '0px';
+            // 删除 Google Translate 插入的空白节点
+            removeGoogleBlankNode();
         }, 300);
-        
-        // 定时检查并隐藏横幅
-        setInterval(() => {
-            const banner = document.querySelector('.goog-te-banner-frame');
-            if (banner) banner.style.display = 'none';
-            document.body.style.top = '0px';
-        }, 1000);
     };
     
-    // 加载 Google Translate 脚本
+    // 删除 Google Translate 插入的空白节点
+    function removeGoogleBlankNode() {
+        // 删除 body 开头的空白文本节点
+        if (document.body.firstChild && document.body.firstChild.nodeType === Node.TEXT_NODE && document.body.firstChild.textContent.trim() === '') {
+            document.body.removeChild(document.body.firstChild);
+        }
+        // 删除 font 标签
+        const fonts = document.querySelectorAll('font');
+        fonts.forEach(font => {
+            if (font.getAttribute('face') === 'arial' || font.getAttribute('size') === '2') {
+                if (font.textContent.trim() === '') font.remove();
+            }
+        });
+        // 确保 body 没有额外边距
+        document.body.style.margin = '0';
+        document.body.style.padding = '0';
+    }
+    
     const script = document.createElement('script');
     script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
     document.head.appendChild(script);
     
-    // 监听 body 变化，防止 Google 修改 top 值
-    const observer = new MutationObserver(() => {
+    // 持续监控，防止 Google 修改 body 位置和插入空白
+    setInterval(() => {
         if (document.body.style.top !== '0px') {
             document.body.style.top = '0px';
         }
-    });
-    observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+        removeGoogleBlankNode();
+    }, 500);
 })();
