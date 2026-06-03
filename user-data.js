@@ -304,6 +304,7 @@ let orderSubscription = null;
 let unreadOrderCount = 0;
 let notificationPermissionGranted = false;
 
+// 请求通知权限
 async function requestNotificationPermission() {
     if (!('Notification' in window)) {
         console.log('浏览器不支持通知');
@@ -312,60 +313,51 @@ async function requestNotificationPermission() {
     
     if (Notification.permission === 'granted') {
         notificationPermissionGranted = true;
-        console.log('通知权限已授权');
         return true;
     }
     
     if (Notification.permission !== 'denied') {
-        console.log('请求通知权限...');
         const permission = await Notification.requestPermission();
         notificationPermissionGranted = permission === 'granted';
-        console.log('通知权限结果:', permission);
         return notificationPermissionGranted;
     }
     
-    console.log('通知权限已被拒绝');
     return false;
 }
 
+// 播放提示音
 function playNotificationSound() {
     try {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
         oscillator.frequency.value = 880;
         gainNode.gain.value = 0.3;
-        
         oscillator.start();
         gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
         oscillator.stop(audioContext.currentTime + 0.5);
-        
         audioContext.resume();
-        console.log('🔊 播放提示音');
     } catch(e) {
         console.log('播放音效失败:', e);
     }
 }
 
+// 显示浏览器通知
 function showBrowserNotification(order) {
-    if (!notificationPermissionGranted) {
-        console.log('通知权限未授权，跳过浏览器通知');
-        return;
-    }
+    if (!notificationPermissionGranted) return;
     
     let productsText = '';
     try {
-        const products = JSON.parse(order.products || '[]');
-        productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
+        let products = order.products;
+        if (typeof products === 'string') products = JSON.parse(products);
+        if (Array.isArray(products)) {
+            productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
+        }
     } catch(e) {
-        productsText = order.products || '订单';
+        productsText = '新订单';
     }
-    
-    console.log('🔔 显示浏览器通知:', order.order_no);
     
     const notification = new Notification('📦 新订单通知', {
         body: `订单号：${order.order_no}\n产品：${productsText}\n总价：€${(order.total_supply_price || 0).toFixed(2)}`,
@@ -383,19 +375,21 @@ function showBrowserNotification(order) {
     setTimeout(() => notification.close(), 10000);
 }
 
+// 显示页面内弹窗
 function showInAppNotification(order) {
     const existing = document.querySelector('.order-notification-toast');
     if (existing) existing.remove();
     
     let productsText = '';
     try {
-        const products = JSON.parse(order.products || '[]');
-        productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
+        let products = order.products;
+        if (typeof products === 'string') products = JSON.parse(products);
+        if (Array.isArray(products)) {
+            productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
+        }
     } catch(e) {
-        productsText = order.products || '订单';
+        productsText = '新订单';
     }
-    
-    console.log('📱 显示页面内弹窗:', order.order_no);
     
     const toast = document.createElement('div');
     toast.className = 'order-notification-toast';
@@ -417,19 +411,15 @@ function showInAppNotification(order) {
             </div>
         </div>
     `;
-    
     document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        if (toast.parentNode) toast.remove();
-    }, 8000);
+    setTimeout(() => toast.remove(), 8000);
 }
 
+// 更新底部导航小红点
 function updateOrderBadge() {
     const orderNavItems = document.querySelectorAll('.nav-item[data-page="orders"]');
     orderNavItems.forEach(item => {
         let badge = item.querySelector('.order-badge');
-        
         if (unreadOrderCount > 0) {
             if (!badge) {
                 badge = document.createElement('span');
@@ -438,53 +428,37 @@ function updateOrderBadge() {
                 item.appendChild(badge);
             }
             badge.textContent = unreadOrderCount > 99 ? '99+' : unreadOrderCount;
-            badge.style.cssText = `
-                position: absolute;
-                top: -5px;
-                right: -5px;
-                background: #ef4444;
-                color: white;
-                font-size: 10px;
-                font-weight: 600;
-                padding: 2px 6px;
-                border-radius: 20px;
-                min-width: 18px;
-                text-align: center;
-            `;
+            badge.style.cssText = `position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; font-size:10px; font-weight:600; padding:2px 6px; border-radius:20px; min-width:18px; text-align:center;`;
         } else if (badge) {
             badge.remove();
         }
     });
 }
 
+// 清除小红点
 function clearOrderBadge() {
     unreadOrderCount = 0;
     updateOrderBadge();
     localStorage.setItem('last_read_order_time', new Date().toISOString());
-    console.log('🧹 小红点已清除');
 }
 
+// 加载未读订单数量
 async function loadUnreadOrderCount() {
     const user = getCurrentUser();
     if (!user) return;
     
     const lastReadTime = localStorage.getItem('last_read_order_time');
-    
     let query = sb.from('user_orders').select('id', { count: 'exact' }).eq('uid', user.uid).eq('status', 'pending');
-    
-    if (lastReadTime) {
-        query = query.gt('created_at', lastReadTime);
-    }
+    if (lastReadTime) query = query.gt('created_at', lastReadTime);
     
     const { count, error } = await query;
-    
     if (!error && count !== null) {
         unreadOrderCount = count;
         updateOrderBadge();
-        console.log('📊 未读订单数:', unreadOrderCount);
     }
 }
 
+// 启动订单实时订阅
 async function startOrderSubscription() {
     const user = getCurrentUser();
     if (!user) {
@@ -492,144 +466,83 @@ async function startOrderSubscription() {
         return;
     }
     
-    console.log('✅ 用户已登录，启动订单订阅, UID:', user.uid);
-    
+    console.log('✅ 启动订单订阅, UID:', user.uid);
     await requestNotificationPermission();
     await loadUnreadOrderCount();
     
-    if (orderSubscription) {
-        console.log('🔄 取消已有订阅');
-        sb.removeChannel(orderSubscription);
-    }
-    
-    console.log('📡 创建订单实时订阅...');
+    if (orderSubscription) sb.removeChannel(orderSubscription);
     
     orderSubscription = sb
-        .channel('orders-realtime-' + user.uid)
-        .on(
-            'postgres_changes',
-            {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'user_orders',
-                filter: `uid=eq.${user.uid}`
-            },
-            (payload) => {
-                const newOrder = payload.new;
-                console.log('🔔 收到新订单事件:', newOrder);
-                console.log('订单状态:', newOrder.status);
+        .channel('orders-realtime')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_orders' }, (payload) => {
+            const newOrder = payload.new;
+            console.log('🔔 收到新订单:', newOrder.order_no);
+            
+            const currentUser = getCurrentUser();
+            if (newOrder.uid === currentUser?.uid && newOrder.status === 'pending') {
+                unreadOrderCount++;
+                updateOrderBadge();
+                playNotificationSound();
+                showBrowserNotification(newOrder);
+                showInAppNotification(newOrder);
                 
-                if (newOrder.status === 'pending') {
-                    console.log('✅ 是新订单，触发通知');
-                    unreadOrderCount++;
-                    updateOrderBadge();
-                    playNotificationSound();
-                    showBrowserNotification(newOrder);
-                    showInAppNotification(newOrder);
-                    
-                    if (window.location.pathname.includes('orders.html')) {
-                        if (window.refreshOrdersList) {
-                            window.refreshOrdersList();
-                        } else {
-                            window.location.reload();
-                        }
-                    }
-                } else {
-                    console.log('⏭️ 订单状态不是 pending，跳过通知');
+                if (window.location.pathname.includes('orders.html') && window.refreshOrdersList) {
+                    window.refreshOrdersList();
                 }
             }
-        )
+        })
         .subscribe((status) => {
-            console.log('📡 订单订阅状态:', status);
-            if (status === 'SUBSCRIBED') {
-                console.log('✅ 订单实时订阅已成功连接！');
-            } else if (status === 'CHANNEL_ERROR') {
-                console.error('❌ 订单订阅失败，5秒后重试...');
-                setTimeout(() => startOrderSubscription(), 5000);
-            }
+            console.log('📡 订阅状态:', status);
         });
 }
 
+// 停止订阅
 function stopOrderSubscription() {
     if (orderSubscription) {
         sb.removeChannel(orderSubscription);
         orderSubscription = null;
-        console.log('订单订阅已停止');
     }
 }
 
-// 测试通知函数
+// 测试函数
 window.testNotification = function() {
-    console.log('🔔 测试通知功能');
     playNotificationSound();
-    
     if (Notification.permission === 'granted') {
-        new Notification('测试通知', {
-            body: '如果你看到这条消息，通知功能正常',
-            icon: 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png'
-        });
+        new Notification('测试通知', { body: '通知功能正常' });
     } else {
-        console.log('通知权限未授权，正在请求...');
         Notification.requestPermission();
     }
-    
-    showInAppNotification({
-        order_no: 'TEST001',
-        products: '[{"product_name":"测试产品","quantity":1}]',
-        total_supply_price: 100
-    });
+    showInAppNotification({ order_no: 'TEST001', products: '[{"product_name":"测试产品","quantity":1}]', total_supply_price: 100 });
 };
 
-// 添加动画样式
-if (!document.getElementById('notification-animation-style')) {
-    const notificationStyle = document.createElement('style');
-    notificationStyle.id = 'notification-animation-style';
-    notificationStyle.textContent = `
-        @keyframes slideInRight {
-            0% { transform: translateX(100%); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
-        }
-        .order-notification-toast {
-            position: fixed;
-            top: 60px;
-            right: 0;
-            left: 0;
-            z-index: 10000;
-            pointer-events: auto;
-        }
-        .nav-item {
-            position: relative;
-        }
-    `;
-    document.head.appendChild(notificationStyle);
-}
+// ========== 暴露全局函数 ==========
+window.startOrderSubscription = startOrderSubscription;
+window.stopOrderSubscription = stopOrderSubscription;
+window.clearOrderBadge = clearOrderBadge;
+window.updateOrderBadge = updateOrderBadge;
 
-// 页面加载时启动订阅
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        if (getCurrentUser()) {
-            startOrderSubscription();
-        }
-    });
-} else {
-    if (getCurrentUser()) {
-        startOrderSubscription();
+// ========== 页面加载时自动启动 ==========
+(function autoStart() {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            if (getCurrentUser()) startOrderSubscription();
+        });
+    } else {
+        if (getCurrentUser()) startOrderSubscription();
     }
+})();
+
+// ========== 动画样式 ==========
+if (!document.getElementById('notification-animation-style')) {
+    const style = document.createElement('style');
+    style.id = 'notification-animation-style';
+    style.textContent = `@keyframes slideInRight{0%{transform:translateX(100%);opacity:0}100%{transform:translateX(0);opacity:1}}.order-notification-toast{position:fixed;top:60px;right:0;left:0;z-index:10000;pointer-events:auto}.nav-item{position:relative}`;
+    document.head.appendChild(style);
 }
 
-// ========== 移除所有点击蓝色高亮 ==========
+// ========== 移除点击蓝色高亮 ==========
 (function() {
     const style = document.createElement('style');
-    style.textContent = `
-        * {
-            -webkit-tap-highlight-color: transparent !important;
-        }
-        *:active {
-            transform: none !important;
-            opacity: 1 !important;
-            background: transparent !important;
-            box-shadow: none !important;
-        }
-    `;
+    style.textContent = `*{-webkit-tap-highlight-color:transparent!important}*:active{transform:none!important;opacity:1!important;background:transparent!important;box-shadow:none!important}`;
     document.head.appendChild(style);
 })();
