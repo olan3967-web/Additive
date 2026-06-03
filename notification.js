@@ -1,4 +1,4 @@
-// notification.js - 独立订单通知系统（复用 user-data.js 的 sb）
+// notification.js - 独立订单通知系统
 
 let lastCheckTime = localStorage.getItem('last_order_check_time') || new Date().toISOString();
 let unreadCount = 0;
@@ -55,12 +55,22 @@ function updateBadge() {
     }
 }
 
+function clearOrderBadge() {
+    unreadCount = 0;
+    const ordersBtn = document.querySelector('.nav-item[data-page="orders"]');
+    if (ordersBtn) {
+        const badge = ordersBtn.querySelector('.order-badge');
+        if (badge) badge.remove();
+    }
+    localStorage.setItem('last_order_check_time', new Date().toISOString());
+    console.log('🧹 小红点已清除');
+}
+
 async function checkOrders() {
     const userStr = localStorage.getItem('currentUser');
     if (!userStr) return;
     const user = JSON.parse(userStr);
     
-    // 使用 user-data.js 中的 sb 对象（已在页面加载时定义）
     if (typeof sb === 'undefined') {
         console.log('等待 sb 初始化...');
         return;
@@ -90,7 +100,6 @@ async function checkOrders() {
     localStorage.setItem('last_order_check_time', lastCheckTime);
 }
 
-// 延迟启动，确保 sb 已加载
 setTimeout(() => {
     let interval = setInterval(checkOrders, 10000);
     checkOrders();
@@ -103,5 +112,9 @@ if (Notification && Notification.permission !== 'denied') {
 const style = document.createElement('style');
 style.textContent = `@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}.order-popup{animation:slideDown 0.3s ease;}`;
 document.head.appendChild(style);
+
+// 暴露全局函数
+window.clearOrderBadge = clearOrderBadge;
+window.updateOrderBadge = updateBadge;
 
 console.log('✅ 通知系统已启动，每10秒检查一次');

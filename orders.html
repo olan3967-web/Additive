@@ -777,13 +777,8 @@
     // ========== 页面初始化 ==========
     initTabs();
     setupBottomNav();
-    
-    // 清除小红点（进入订单页面时）
     clearOrderBadge();
-    
-    // 暴露刷新函数供实时订阅调用
     window.refreshOrdersList = loadOrders;
-    
     loadOrders();
 </script>
 </body>
