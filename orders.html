@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
+    <script src="notification.js"></script>
     <style>
         * {
             margin: 0;
@@ -176,7 +177,6 @@
             display: block;
         }
 
-        /* 做单弹窗 */
         .order-modal {
             position: fixed;
             top: 0;
@@ -279,7 +279,6 @@
             cursor: not-allowed;
         }
 
-        /* Shipping Info 弹窗 */
         .shipping-modal {
             position: fixed;
             top: 0;
@@ -302,7 +301,6 @@
             opacity: 1;
         }
 
-        /* 底部导航 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -379,24 +377,21 @@
     </div>
 </div>
 
-<!-- Shipping Info 弹窗 - 只显示一个地址 -->
+<!-- Shipping Info 弹窗 -->
 <div id="shippingModal" class="shipping-modal">
     <div class="order-modal-content" style="max-width: 380px;">
         <h3><i class="fas fa-map-marker-alt"></i> 地址确认</h3>
-        
         <div style="background: #fef3c7; border-radius: 16px; padding: 16px; margin: 16px 0;">
             <p style="font-weight: 600; color: #d97706; margin-bottom: 8px;">
                 <i class="fas fa-map-marker-alt"></i> 请确认发货地址
             </p>
             <p id="shippingAddressText" style="font-size: 13px; line-height: 1.5; background: white; padding: 12px; border-radius: 12px;"></p>
         </div>
-        
         <div style="background: #e6f7ec; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
             <p style="font-size: 12px; color: #2e7d32;">
                 <i class="fas fa-check-circle"></i> 请确认地址无误后，返回点击"确认发货"
             </p>
         </div>
-        
         <button id="closeShippingBtn" class="btn-confirm" style="background:#475569;">我已确认，关闭</button>
     </div>
 </div>
@@ -417,7 +412,6 @@
         window.location.href = 'dashboard.html';
     }
 
-    // ========== 解析产品文本 ==========
     function parseProductsText(productsData) {
         try {
             let products = productsData;
@@ -433,14 +427,12 @@
         }
     }
 
-    // ========== 页面状态 ==========
     let currentTab = 'new';
     let pendingOrders = [];
     let processingOrders = [];
     let currentOrder = null;
     let hasCheckedShipping = false;
 
-    // ========== 加载订单 ==========
     async function loadOrders() {
         const user = getCurrentUser();
         if (!user) {
@@ -465,7 +457,6 @@
         renderOrders();
     }
 
-    // ========== 渲染订单列表 ==========
     function renderOrders() {
         renderNewOrders();
         renderProcessingOrders();
@@ -545,7 +536,6 @@
         });
     }
 
-    // ========== 做单弹窗 ==========
     function openOrderModal(order) {
         currentOrder = order;
         hasCheckedShipping = false;
@@ -596,15 +586,11 @@
         document.getElementById('orderModal').classList.add('active');
     }
 
-    // ========== Check Shipping Info（显示买家地址） ==========
     document.getElementById('checkShippingBtn')?.addEventListener('click', () => {
         if (!currentOrder) return;
         
-        // 显示买家地址作为发货地址
         const buyerAddress = `${currentOrder.buyer_name || '未知'}，${currentOrder.buyer_phone || '未知'}，${currentOrder.buyer_address || '未知'}`;
-        
         document.getElementById('shippingAddressText').innerHTML = buyerAddress.replace(/\n/g, '<br>');
-        
         document.getElementById('shippingModal').classList.add('active');
         
         hasCheckedShipping = true;
@@ -620,7 +606,6 @@
         document.getElementById('shippingModal').classList.remove('active');
     });
 
-    // ========== 确认发货 ==========
     document.getElementById('confirmOrderBtn')?.addEventListener('click', async () => {
         if (!hasCheckedShipping) {
             showToast('请先点击 Check Shipping Info 确认发货地址', 'warning');
@@ -642,18 +627,14 @@
         
         showToast('处理订单中...', 'info');
         
-        // 扣除供应价
         const newBalance = currentBalance - currentOrder.total_supply_price;
         await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
         
-        // 返还供应价 + 佣金
         const finalBalance = newBalance + currentOrder.total_supply_price + currentOrder.total_commission;
         await sb.from('users').update({ balance: finalBalance }).eq('uid', user.uid);
         
-        // 生成物流时间线
         const timeline = generateTrackingTimeline();
         
-        // 更新订单状态
         await sb.from('user_orders').update({
             status: 'processing',
             tracking_status: 'processing',
@@ -661,7 +642,6 @@
             completed_at: new Date().toISOString()
         }).eq('order_no', currentOrder.order_no);
         
-        // 记录订单历史
         try {
             let products = currentOrder.products;
             if (typeof products === 'string') {
@@ -686,7 +666,6 @@
             console.error('记录订单历史失败:', e);
         }
         
-        // 更新本地用户数据
         const updatedUser = getCurrentUser();
         if (updatedUser) {
             updatedUser.balance = finalBalance;
@@ -696,11 +675,9 @@
         document.getElementById('orderModal').classList.remove('active');
         showToast(`订单 ${currentOrder.order_no} 已确认发货！`, 'success');
         
-        // 重新加载订单列表
         await loadOrders();
     });
 
-    // ========== Tab 切换 ==========
     function initTabs() {
         const tabs = document.querySelectorAll('.tab-btn');
         tabs.forEach(tab => {
@@ -714,7 +691,6 @@
         });
     }
 
-    // ========== 底部导航 ==========
     function setupBottomNav() {
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -727,7 +703,6 @@
         });
     }
 
-    // ========== 生成物流时间线 ==========
     function generateTrackingTimeline() {
         const startTime = new Date();
         const timeline = [];
@@ -769,16 +744,10 @@
         return timeline;
     }
 
-    // ========== 页面初始化 ==========
     initTabs();
     setupBottomNav();
-    
-    // 清除小红点（进入订单页面时）
     clearOrderBadge();
-    
-    // 暴露刷新函数供实时订阅调用
     window.refreshOrdersList = loadOrders;
-    
     loadOrders();
 </script>
 </body>

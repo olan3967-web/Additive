@@ -7,6 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
+    <script src="toast.js"></script>
+    <script src="notification.js"></script>
     <style>
         * {
             margin: 0;
@@ -22,7 +25,6 @@
             justify-content: center;
         }
 
-        /* 手机容器 */
         .phone {
             width: 390px;
             min-height: 100vh;
@@ -31,7 +33,6 @@
             position: relative;
         }
 
-        /* 霓虹边框深色卡片 - 淡光透出效果 */
         .profile-header {
             background: #0f0f23;
             padding: 24px 20px;
@@ -129,7 +130,6 @@
             color: #7e8aa8;
         }
 
-        /* 统计卡片 */
         .stats-card {
             background: white;
             margin: 16px;
@@ -151,7 +151,6 @@
             color: #1f2937;
         }
 
-        /* 余额卡片 */
         .wallet-card {
             background: linear-gradient(135deg, #ff7a00, #ff6b6b);
             margin: 16px;
@@ -222,7 +221,6 @@
             font-size: 14px;
         }
 
-        /* 双卡片行 */
         .double-card-row {
             display: flex;
             gap: 16px;
@@ -276,7 +274,6 @@
             text-decoration: none;
         }
 
-        /* 大卡片 - 粒子漂浮效果 */
         .glass-card {
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(12px);
@@ -306,7 +303,6 @@
             100% { box-shadow: 0 0 12px #ff7a00, 0 0 8px #ff9f43; opacity: 1; }
         }
 
-        /* 粒子漂浮动画 */
         .particle {
             position: absolute;
             background: radial-gradient(circle, #ff9f43, #ff7a00);
@@ -318,20 +314,10 @@
         }
 
         @keyframes floatParticle {
-            0% {
-                transform: translateY(0) translateX(0) scale(0.5);
-                opacity: 0;
-            }
-            15% {
-                opacity: 0.6;
-            }
-            85% {
-                opacity: 0.3;
-            }
-            100% {
-                transform: translateY(-180px) translateX(20px) scale(0);
-                opacity: 0;
-            }
+            0% { transform: translateY(0) translateX(0) scale(0.5); opacity: 0; }
+            15% { opacity: 0.6; }
+            85% { opacity: 0.3; }
+            100% { transform: translateY(-180px) translateX(20px) scale(0); opacity: 0; }
         }
 
         .card-inner {
@@ -396,7 +382,6 @@
             justify-content: center;
         }
 
-        /* 底部导航栏 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -417,6 +402,7 @@
             font-size: 11px;
             color: #9ca3af;
             cursor: pointer;
+            position: relative;
         }
 
         .nav-item i {
@@ -431,16 +417,13 @@
         }
 
         @media (max-width: 390px) {
-            .phone {
-                width: 100%;
-            }
+            .phone { width: 100%; }
         }
     </style>
 </head>
 <body>
 <div class="phone">
 
-    <!-- 霓虹边框深色卡片 -->
     <div class="profile-header">
         <div class="profile-row">
             <div class="avatar" id="avatarInitial">O</div>
@@ -455,13 +438,11 @@
         </div>
     </div>
 
-    <!-- 赚取的总佣金 -->
     <div class="stats-card">
         <div class="stat-label">Total Commissions Earned</div>
         <div class="stat-value" id="totalCommissions">€0.00</div>
     </div>
 
-    <!-- Account Balance 卡片 -->
     <div class="wallet-card">
         <div class="wallet-title">Account Balance</div>
         <div class="wallet-balance" id="displayBalance">€0.00</div>
@@ -471,7 +452,6 @@
         </div>
     </div>
 
-    <!-- My Sales 和 Sourcing 双卡片 -->
     <div class="double-card-row">
         <div class="half-card" onclick="location.href='history.html?tab=balance'">
             <div class="half-card-header">
@@ -491,7 +471,6 @@
         </div>
     </div>
 
-    <!-- 大卡片 1 - Quick Actions -->
     <div class="glass-card" id="particleCard1">
         <div class="card-inner">
             <div class="section-title">
@@ -499,24 +478,23 @@
                 QUICK ACTIONS
             </div>
             <div class="grid-4">
-                <!-- Store 按钮 - 跳转到店铺设置 -->
                 <div class="grid-item" onclick="location.href='store-settings.html'">
                     <div class="grid-icon"><i class="fa-solid fa-store"></i></div>
                     <div class="grid-label">Store</div>
                 </div>
                 <div class="grid-item" onclick="location.href='my-products.html'">
-    <div class="grid-icon"><i class="fa-regular fa-bookmark"></i></div>
-    <div class="grid-label">My Products</div>
-</div>
+                    <div class="grid-icon"><i class="fa-regular fa-bookmark"></i></div>
+                    <div class="grid-label">My Products</div>
+                </div>
                 <div class="grid-item" onclick="location.href='certificate.html'">
-    <div class="grid-icon"><i class="fa-solid fa-certificate"></i></div>
-    <div class="grid-label">Certificate</div>
-</div>
+                    <div class="grid-icon"><i class="fa-solid fa-certificate"></i></div>
+                    <div class="grid-label">Certificate</div>
+                </div>
                 <div class="grid-item" onclick="location.href='kyc.html'">
-    <div class="grid-icon"><i class="fa-solid fa-id-card"></i></div>
-    <div class="grid-label">KYC Verification</div>
-</div>
-                <div class="grid-item" onclick="location.href='history.html?tab=orders'">
+                    <div class="grid-icon"><i class="fa-solid fa-id-card"></i></div>
+                    <div class="grid-label">KYC Verification</div>
+                </div>
+                <div class="grid-item" onclick="location.href='orders-history.html'">
                     <div class="grid-icon"><i class="fa-solid fa-list-check"></i></div>
                     <div class="grid-label">My Orders</div>
                 </div>
@@ -536,7 +514,6 @@
         </div>
     </div>
 
-    <!-- 大卡片 2 - Support & History -->
     <div class="glass-card" id="particleCard2">
         <div class="card-inner">
             <div class="section-title">
@@ -549,13 +526,13 @@
                     <div class="grid-label">Contact Support</div>
                 </div>
                 <div class="grid-item" onclick="location.href='balance-history.html'">
-    <div class="grid-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-    <div class="grid-label">Balance History</div>
-</div>
-<div class="grid-item" onclick="location.href='orders-history.html'">
-    <div class="grid-icon"><i class="fa-solid fa-cart-flatbed"></i></div>
-    <div class="grid-label">Orders History</div>
-</div>
+                    <div class="grid-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="grid-label">Balance History</div>
+                </div>
+                <div class="grid-item" onclick="location.href='orders-history.html'">
+                    <div class="grid-icon"><i class="fa-solid fa-cart-flatbed"></i></div>
+                    <div class="grid-label">Orders History</div>
+                </div>
                 <div class="grid-item" onclick="location.href='checkin.html'">
                     <div class="grid-icon"><i class="fa-regular fa-calendar-check"></i></div>
                     <div class="grid-label">Check In</div>
@@ -570,7 +547,6 @@
         </div>
     </div>
 
-    <!-- 底部固定菜单栏 -->
     <div class="bottom-nav">
         <div class="nav-item" data-page="dashboard">
             <i class="fa-solid fa-house"></i>
@@ -593,8 +569,6 @@
 </div>
 
 <script>
-
-    // 粒子漂浮效果
     let particleIntervals = [];
 
     function createParticle(card) {
@@ -623,24 +597,6 @@
         particleIntervals.push(interval);
     }
 
-    // ========== 辅助函数 ==========
-    function getCurrentUser() {
-        const userStr = localStorage.getItem('currentUser');
-        if (!userStr) return null;
-        try {
-            return JSON.parse(userStr);
-        } catch(e) { return null; }
-    }
-
-    function checkLogin() {
-        const user = getCurrentUser();
-        if (!user || !user.isLoggedIn) {
-            window.location.href = 'signin.html';
-            return null;
-        }
-        return user;
-    }
-
     async function fetchUserData(uid) {
         const { data, error } = await sb
             .from('users')
@@ -661,9 +617,8 @@
         return data?.is_verified || false;
     }
 
-    // ========== 加载页面数据 ==========
     async function loadProfile() {
-        const user = checkLogin();
+        const user = getCurrentUser();
         if (!user) return;
 
         const userData = await fetchUserData(user.uid);
@@ -707,28 +662,12 @@
         document.getElementById('salesAmount').innerHTML = '€' + totalCommission.toFixed(2) + ' earned';
     }
 
-    async function checkCertificate() {
-        const user = getCurrentUser();
-        if (!user) return;
-        const { data: orders } = await sb
-            .from('order_history')
-            .select('id')
-            .eq('uid', user.uid);
-        const orderCount = orders?.length || 0;
-        if (orderCount >= 100) {
-            alert('🎉 Congratulations! You have earned the Certificate!');
-        } else {
-            alert(`📋 You have completed ${orderCount}/100 orders. Complete ${100 - orderCount} more to earn the certificate.`);
-        }
-    }
-
     function topUp() {
         alert('Please contact support for deposit.');
     }
 
     function setupBottomNav() {
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
+        document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const page = item.dataset.page;
                 if (page === 'dashboard') {
@@ -757,10 +696,9 @@
         startParticleEffect('particleCard2');
     }, 500);
 
-    window.checkCertificate = checkCertificate;
+    window.checkCertificate = function() {
+        alert('Certificate function');
+    };
 </script>
-<script src="user-data.js"></script>
-<script src="toast.js"></script>
-<script src="notification.js"></script>
 </body>
 </html>
