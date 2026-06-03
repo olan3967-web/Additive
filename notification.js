@@ -1,8 +1,9 @@
-// notification.js - 独立订单通知系统
+// notification.js - 独立订单通知系统（金属质感 + 流光溢彩）
 
 let lastCheckTime = localStorage.getItem('last_order_check_time') || new Date().toISOString();
 let unreadCount = 0;
 
+// 播放提示音
 function playSound() {
     try {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -11,32 +12,98 @@ function playSound() {
         oscillator.connect(gain);
         gain.connect(audioContext.destination);
         oscillator.frequency.value = 880;
-        gain.gain.value = 0.3;
+        gain.gain.value = 0.2;
         oscillator.start();
-        gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
-        oscillator.stop(audioContext.currentTime + 0.5);
+        gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+        oscillator.stop(audioContext.currentTime + 0.3);
         audioContext.resume();
     } catch(e) { console.log('声音失败:', e); }
 }
 
+// 显示弹窗（堆叠 + 金属质感 + 流光效果）
 function showPopup(order) {
-    const existing = document.querySelector('.order-popup');
-    if (existing) existing.remove();
+    const existingStack = document.querySelector('.toast-stack');
+    let stack = existingStack;
     
-    const div = document.createElement('div');
-    div.className = 'order-popup';
-    div.innerHTML = `
-        <div style="position:fixed;top:60px;left:10px;right:10px;background:linear-gradient(135deg,#ff7a00,#ff9f43);color:white;padding:16px;border-radius:20px;z-index:100000;box-shadow:0 4px 12px rgba(0,0,0,0.3);text-align:center;animation:slideDown 0.3s ease;">
-            <strong>📦 新订单！</strong><br>
-            订单号: ${order.order_no}<br>
-            金额: €${order.total_supply_price}
-            <button onclick="window.location.href='orders.html'" style="margin-top:10px;background:white;border:none;padding:8px 20px;border-radius:30px;color:#ff7a00;font-weight:bold;">查看</button>
+    if (!stack) {
+        stack = document.createElement('div');
+        stack.className = 'toast-stack';
+        document.body.appendChild(stack);
+    }
+    
+    // 创建弹窗
+    const toast = document.createElement('div');
+    toast.className = 'order-toast-metal';
+    
+    // 格式化时间
+    const now = new Date();
+    const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    
+    let productsText = '';
+    try {
+        let products = order.products;
+        if (typeof products === 'string') products = JSON.parse(products);
+        if (Array.isArray(products)) {
+            productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
+        }
+    } catch(e) {
+        productsText = '新订单';
+    }
+    
+    toast.innerHTML = `
+        <div class="toast-metal-content">
+            <div class="toast-metal-icon">
+                <i class="fas fa-gift"></i>
+            </div>
+            <div class="toast-metal-info">
+                <div class="toast-metal-title">📦 新订单通知</div>
+                <div class="toast-metal-order">${order.order_no}</div>
+                <div class="toast-metal-product">${productsText.substring(0, 35)}</div>
+            </div>
+            <div class="toast-metal-amount">€${(order.total_supply_price || 0).toFixed(2)}</div>
+            <div class="toast-metal-close">
+                <i class="fas fa-times"></i>
+            </div>
         </div>
+        <div class="toast-metal-progress"></div>
+        <div class="toast-metal-shimmer"></div>
     `;
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 8000);
+    
+    stack.insertBefore(toast, stack.firstChild);
+    
+    // 自动消失
+    let timeoutId = setTimeout(() => {
+        removeToast(toast);
+    }, 5000);
+    
+    // 关闭按钮
+    const closeBtn = toast.querySelector('.toast-metal-close');
+    closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearTimeout(timeoutId);
+        removeToast(toast);
+    });
+    
+    // 点击弹窗跳转订单页面
+    toast.addEventListener('click', (e) => {
+        if (e.target.closest('.toast-metal-close')) return;
+        clearTimeout(timeoutId);
+        removeToast(toast);
+        window.location.href = 'orders.html';
+    });
+    
+    toast._timeoutId = timeoutId;
 }
 
+// 移除弹窗动画
+function removeToast(toast) {
+    toast.classList.add('exit');
+    setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+    }, 300);
+}
+
+// 更新底部小红点
 function updateBadge() {
     const ordersBtn = document.querySelector('.nav-item[data-page="orders"]');
     if (!ordersBtn) return;
@@ -55,6 +122,7 @@ function updateBadge() {
     }
 }
 
+// 清除小红点
 function clearOrderBadge() {
     unreadCount = 0;
     const ordersBtn = document.querySelector('.nav-item[data-page="orders"]');
@@ -66,6 +134,7 @@ function clearOrderBadge() {
     console.log('🧹 小红点已清除');
 }
 
+// 检查新订单
 async function checkOrders() {
     const userStr = localStorage.getItem('currentUser');
     if (!userStr) return;
@@ -76,45 +145,261 @@ async function checkOrders() {
         return;
     }
     
-    const { data, error } = await sb
-        .from('user_orders')
-        .select('*')
-        .eq('uid', user.uid)
-        .eq('status', 'pending')
-        .gt('created_at', lastCheckTime);
-    
-    if (error || !data || data.length === 0) return;
-    
-    for (const order of data) {
-        playSound();
-        showPopup(order);
-        unreadCount++;
-        updateBadge();
+    try {
+        const { data, error } = await sb
+            .from('user_orders')
+            .select('*')
+            .eq('uid', user.uid)
+            .eq('status', 'pending')
+            .gt('created_at', lastCheckTime);
         
-        if (Notification.permission === 'granted') {
-            new Notification('📦 新订单', { body: `${order.order_no} - €${order.total_supply_price}` });
+        if (error) {
+            console.error('检查订单失败:', error);
+            return;
+        }
+        
+        if (data && data.length > 0) {
+            console.log(`发现 ${data.length} 个新订单`);
+            
+            for (const order of data) {
+                playSound();
+                showPopup(order);
+                unreadCount++;
+                updateBadge();
+                
+                if (Notification.permission === 'granted') {
+                    new Notification('📦 新订单', {
+                        body: `${order.order_no} - €${(order.total_supply_price || 0).toFixed(2)}`,
+                        icon: 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png'
+                    });
+                }
+            }
+            
+            lastCheckTime = new Date().toISOString();
+            localStorage.setItem('last_order_check_time', lastCheckTime);
+        }
+    } catch(e) {
+        console.error('检查订单出错:', e);
+    }
+}
+
+// 添加全局样式
+const style = document.createElement('style');
+style.textContent = `
+    /* 弹窗堆叠容器 */
+    .toast-stack {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        pointer-events: none;
+    }
+    
+    /* ========== 金属质感 + 流光溢彩弹窗 ========== */
+    .order-toast-metal {
+        pointer-events: auto;
+        width: 100%;
+        max-width: 380px;
+        margin: 0 auto;
+        position: relative;
+        background: linear-gradient(145deg, #2a2a3e, #1a1a2e);
+        border-radius: 20px;
+        border-bottom: 3px solid #ff7a00;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+        animation: metalSlideIn 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    
+    .order-toast-metal.exit {
+        animation: metalSlideOut 0.3s ease forwards;
+    }
+    
+    @keyframes metalSlideIn {
+        0% {
+            opacity: 0;
+            transform: translateY(-80px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
     
-    lastCheckTime = new Date().toISOString();
-    localStorage.setItem('last_order_check_time', lastCheckTime);
-}
+    @keyframes metalSlideOut {
+        0% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-80px);
+        }
+    }
+    
+    /* 金属质感主体 */
+    .toast-metal-content {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 18px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    /* 金属图标 */
+    .toast-metal-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(145deg, #3a3a50, #2a2a3e);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .toast-metal-icon i {
+        font-size: 22px;
+        color: #ff7a00;
+    }
+    
+    /* 信息区域 */
+    .toast-metal-info {
+        flex: 1;
+    }
+    
+    .toast-metal-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #e0e0f0;
+        letter-spacing: 0.5px;
+    }
+    
+    .toast-metal-order {
+        font-size: 11px;
+        color: #ff9f43;
+        font-family: monospace;
+        margin-top: 3px;
+    }
+    
+    .toast-metal-product {
+        font-size: 10px;
+        color: #a0a0c0;
+        margin-top: 2px;
+    }
+    
+    /* 金额 */
+    .toast-metal-amount {
+        font-size: 16px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #ff9f43, #ffcc00);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    
+    /* 关闭按钮 */
+    .toast-metal-close {
+        width: 28px;
+        height: 28px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .toast-metal-close:hover {
+        background: rgba(255,255,255,0.15);
+    }
+    
+    .toast-metal-close i {
+        font-size: 12px;
+        color: rgba(255,255,255,0.5);
+    }
+    
+    /* 进度条 */
+    .toast-metal-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        width: 100%;
+        background: linear-gradient(90deg, #ff7a00, #ffcc00);
+        animation: progressShrink 5s linear forwards;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    @keyframes progressShrink {
+        0% { width: 100%; }
+        100% { width: 0%; }
+    }
+    
+    /* ========== 流光溢彩顶部光效 ========== */
+    .toast-metal-shimmer {
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, 
+            transparent,
+            rgba(255, 255, 255, 0.6),
+            rgba(255, 200, 100, 0.8),
+            rgba(255, 255, 255, 0.6),
+            transparent
+        );
+        animation: shimmerFlow 2.5s ease-in-out infinite;
+        z-index: 3;
+        pointer-events: none;
+        border-radius: 3px;
+    }
+    
+    @keyframes shimmerFlow {
+        0% {
+            left: -100%;
+        }
+        50% {
+            left: 100%;
+        }
+        100% {
+            left: 100%;
+        }
+    }
+    
+    /* 第二个弹窗往下偏移一点（堆叠效果） */
+    .toast-stack .order-toast-metal:nth-child(2) {
+        margin-top: 0;
+    }
+    .toast-stack .order-toast-metal:nth-child(3) {
+        margin-top: 0;
+    }
+    .toast-stack .order-toast-metal:nth-child(4) {
+        margin-top: 0;
+    }
+`;
+document.head.appendChild(style);
 
-setTimeout(() => {
-    let interval = setInterval(checkOrders, 10000);
-    checkOrders();
-}, 1000);
+// 启动轮询
+let interval = setInterval(checkOrders, 10000);
+checkOrders();
 
+// 请求通知权限
 if (Notification && Notification.permission !== 'denied') {
     Notification.requestPermission();
 }
-
-const style = document.createElement('style');
-style.textContent = `@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}.order-popup{animation:slideDown 0.3s ease;}`;
-document.head.appendChild(style);
 
 // 暴露全局函数
 window.clearOrderBadge = clearOrderBadge;
 window.updateOrderBadge = updateBadge;
 
-console.log('✅ 通知系统已启动，每10秒检查一次');
+console.log('✅ 通知系统已启动（金属质感 + 流光溢彩）');
