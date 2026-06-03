@@ -1,7 +1,7 @@
 // notification.js - 独立订单通知系统
-const NOTIFY_SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-const NOTIFY_SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-const notifySb = supabase.createClient(NOTIFY_SUPABASE_URL, NOTIFY_SUPABASE_KEY);
+const NOTIFY_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+const NOTIFY_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+const notifySb = supabase.createClient(NOTIFY_URL, NOTIFY_KEY);
 
 let lastCheckTime = localStorage.getItem('last_order_check_time') || new Date().toISOString();
 let unreadCount = 0;
@@ -87,6 +87,7 @@ async function checkOrders() {
     localStorage.setItem('last_order_check_time', lastCheckTime);
 }
 
+// 启动轮询
 let interval = setInterval(checkOrders, 10000);
 checkOrders();
 
