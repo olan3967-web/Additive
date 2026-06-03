@@ -233,7 +233,7 @@ async function startOrderSubscription() {
     console.log('📡 创建 Supabase 订阅...');
     
     orderSubscription = sb
-        .channel('orders-realtime')
+    .channel('realtime:orders-realtime')
         .on('postgres_changes', 
             { event: 'INSERT', schema: 'public', table: 'user_orders' }, 
             (payload) => {
