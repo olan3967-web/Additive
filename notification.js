@@ -5,26 +5,69 @@ let unreadCount = 0;
 
 // ========== 音频预加载 ==========
 let audioContext = null;
+let audioEnabled = false;
+
+// 显示激活音频提示
+function showAudioHint() {
+    const hint = document.createElement('div');
+    hint.id = 'audio-hint';
+    hint.innerHTML = `
+        <div style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#ff7a00;color:white;padding:10px 20px;border-radius:40px;font-size:12px;z-index:100001;box-shadow:0 4px 12px rgba(0,0,0,0.2);animation:pulse 1s infinite;cursor:pointer;">
+            🔔 点击任意位置激活声音提醒
+        </div>
+    `;
+    document.body.appendChild(hint);
+    
+    // 添加动画
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; transform: translateX(-50%) scale(1); }
+            50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+        }
+    `;
+    document.head.appendChild(style);
+}
 
 function initAudio() {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
     if (audioContext.state === 'suspended') {
-        audioContext.resume();
+        audioContext.resume().then(() => {
+            audioEnabled = true;
+            console.log('🔊 音频已激活');
+            // 移除提示
+            const hint = document.getElementById('audio-hint');
+            if (hint) hint.remove();
+        }).catch(e => console.log('音频激活失败:', e));
+    } else {
+        audioEnabled = true;
+        const hint = document.getElementById('audio-hint');
+        if (hint) hint.remove();
     }
 }
 
-// 用户首次点击激活音频
+// 监听用户首次点击，激活音频
 document.addEventListener('click', function initAudioOnClick() {
     initAudio();
     document.removeEventListener('click', initAudioOnClick);
-    console.log('🔊 音频已激活');
 }, { once: true });
 
+// 页面加载后显示提示
+setTimeout(() => {
+    if (!audioEnabled && !document.getElementById('audio-hint')) {
+        showAudioHint();
+    }
+}, 500);
+
 function playSound() {
+    if (!audioEnabled) {
+        console.log('🔊 音频未激活，跳过声音');
+        return;
+    }
+    
     try {
-        initAudio();
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
         oscillator.connect(gain);
@@ -369,3 +412,4 @@ window.clearOrderBadge = clearOrderBadge;
 window.updateOrderBadge = updateBadge;
 
 console.log('✅ 通知系统已启动（金属质感 + 流光溢彩 + 声音）');
+console.log('🔔 请点击页面任意位置激活声音提醒');
