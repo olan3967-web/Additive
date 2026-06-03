@@ -1,26 +1,46 @@
-// notification.js - 独立订单通知系统（金属质感 + 流光溢彩）
+// notification.js - 独立订单通知系统（金属质感 + 流光溢彩 + 声音修复）
 
 let lastCheckTime = localStorage.getItem('last_order_check_time') || new Date().toISOString();
 let unreadCount = 0;
 
-// 播放提示音
+// ========== 音频预加载 ==========
+let audioContext = null;
+
+function initAudio() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+}
+
+// 用户首次点击激活音频
+document.addEventListener('click', function initAudioOnClick() {
+    initAudio();
+    document.removeEventListener('click', initAudioOnClick);
+    console.log('🔊 音频已激活');
+}, { once: true });
+
 function playSound() {
     try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        initAudio();
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
         oscillator.connect(gain);
         gain.connect(audioContext.destination);
         oscillator.frequency.value = 880;
-        gain.gain.value = 0.2;
+        gain.gain.value = 0.25;
         oscillator.start();
         gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
         oscillator.stop(audioContext.currentTime + 0.3);
-        audioContext.resume();
-    } catch(e) { console.log('声音失败:', e); }
+        console.log('🔊 声音播放成功');
+    } catch(e) {
+        console.log('🔊 声音播放失败:', e);
+    }
 }
 
-// 显示弹窗（堆叠 + 金属质感 + 流光效果）
+// ========== 弹窗函数 ==========
 function showPopup(order) {
     const existingStack = document.querySelector('.toast-stack');
     let stack = existingStack;
@@ -31,13 +51,8 @@ function showPopup(order) {
         document.body.appendChild(stack);
     }
     
-    // 创建弹窗
     const toast = document.createElement('div');
     toast.className = 'order-toast-metal';
-    
-    // 格式化时间
-    const now = new Date();
-    const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
     
     let productsText = '';
     try {
@@ -71,12 +86,8 @@ function showPopup(order) {
     
     stack.insertBefore(toast, stack.firstChild);
     
-    // 自动消失
-    let timeoutId = setTimeout(() => {
-        removeToast(toast);
-    }, 5000);
+    let timeoutId = setTimeout(() => removeToast(toast), 5000);
     
-    // 关闭按钮
     const closeBtn = toast.querySelector('.toast-metal-close');
     closeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -84,7 +95,6 @@ function showPopup(order) {
         removeToast(toast);
     });
     
-    // 点击弹窗跳转订单页面
     toast.addEventListener('click', (e) => {
         if (e.target.closest('.toast-metal-close')) return;
         clearTimeout(timeoutId);
@@ -95,7 +105,6 @@ function showPopup(order) {
     toast._timeoutId = timeoutId;
 }
 
-// 移除弹窗动画
 function removeToast(toast) {
     toast.classList.add('exit');
     setTimeout(() => {
@@ -103,7 +112,6 @@ function removeToast(toast) {
     }, 300);
 }
 
-// 更新底部小红点
 function updateBadge() {
     const ordersBtn = document.querySelector('.nav-item[data-page="orders"]');
     if (!ordersBtn) return;
@@ -122,7 +130,6 @@ function updateBadge() {
     }
 }
 
-// 清除小红点
 function clearOrderBadge() {
     unreadCount = 0;
     const ordersBtn = document.querySelector('.nav-item[data-page="orders"]');
@@ -134,7 +141,6 @@ function clearOrderBadge() {
     console.log('🧹 小红点已清除');
 }
 
-// 检查新订单
 async function checkOrders() {
     const userStr = localStorage.getItem('currentUser');
     if (!userStr) return;
@@ -183,10 +189,9 @@ async function checkOrders() {
     }
 }
 
-// 添加全局样式
+// ========== 样式 ==========
 const style = document.createElement('style');
 style.textContent = `
-    /* 弹窗堆叠容器 */
     .toast-stack {
         position: fixed;
         top: 0;
@@ -201,7 +206,6 @@ style.textContent = `
         pointer-events: none;
     }
     
-    /* ========== 金属质感 + 流光溢彩弹窗 ========== */
     .order-toast-metal {
         pointer-events: auto;
         width: 100%;
@@ -222,28 +226,15 @@ style.textContent = `
     }
     
     @keyframes metalSlideIn {
-        0% {
-            opacity: 0;
-            transform: translateY(-80px);
-        }
-        100% {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        0% { opacity: 0; transform: translateY(-80px); }
+        100% { opacity: 1; transform: translateY(0); }
     }
     
     @keyframes metalSlideOut {
-        0% {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        100% {
-            opacity: 0;
-            transform: translateY(-80px);
-        }
+        0% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-80px); }
     }
     
-    /* 金属质感主体 */
     .toast-metal-content {
         display: flex;
         align-items: center;
@@ -253,7 +244,6 @@ style.textContent = `
         z-index: 2;
     }
     
-    /* 金属图标 */
     .toast-metal-icon {
         width: 48px;
         height: 48px;
@@ -270,7 +260,6 @@ style.textContent = `
         color: #ff7a00;
     }
     
-    /* 信息区域 */
     .toast-metal-info {
         flex: 1;
     }
@@ -295,7 +284,6 @@ style.textContent = `
         margin-top: 2px;
     }
     
-    /* 金额 */
     .toast-metal-amount {
         font-size: 16px;
         font-weight: 800;
@@ -305,7 +293,6 @@ style.textContent = `
         color: transparent;
     }
     
-    /* 关闭按钮 */
     .toast-metal-close {
         width: 28px;
         height: 28px;
@@ -327,7 +314,6 @@ style.textContent = `
         color: rgba(255,255,255,0.5);
     }
     
-    /* 进度条 */
     .toast-metal-progress {
         position: absolute;
         bottom: 0;
@@ -344,7 +330,6 @@ style.textContent = `
         100% { width: 0%; }
     }
     
-    /* ========== 流光溢彩顶部光效 ========== */
     .toast-metal-shimmer {
         position: absolute;
         top: 0;
@@ -365,41 +350,22 @@ style.textContent = `
     }
     
     @keyframes shimmerFlow {
-        0% {
-            left: -100%;
-        }
-        50% {
-            left: 100%;
-        }
-        100% {
-            left: 100%;
-        }
-    }
-    
-    /* 第二个弹窗往下偏移一点（堆叠效果） */
-    .toast-stack .order-toast-metal:nth-child(2) {
-        margin-top: 0;
-    }
-    .toast-stack .order-toast-metal:nth-child(3) {
-        margin-top: 0;
-    }
-    .toast-stack .order-toast-metal:nth-child(4) {
-        margin-top: 0;
+        0% { left: -100%; }
+        50% { left: 100%; }
+        100% { left: 100%; }
     }
 `;
 document.head.appendChild(style);
 
-// 启动轮询
+// ========== 启动轮询 ==========
 let interval = setInterval(checkOrders, 10000);
 checkOrders();
 
-// 请求通知权限
 if (Notification && Notification.permission !== 'denied') {
     Notification.requestPermission();
 }
 
-// 暴露全局函数
 window.clearOrderBadge = clearOrderBadge;
 window.updateOrderBadge = updateBadge;
 
-console.log('✅ 通知系统已启动（金属质感 + 流光溢彩）');
+console.log('✅ 通知系统已启动（金属质感 + 流光溢彩 + 声音）');
