@@ -1,7 +1,4 @@
-// notification.js - 独立订单通知系统
-const NOTIFY_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-const NOTIFY_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-const notifySb = supabase.createClient(NOTIFY_URL, NOTIFY_KEY);
+// notification.js - 独立订单通知系统（复用 user-data.js 的 sb）
 
 let lastCheckTime = localStorage.getItem('last_order_check_time') || new Date().toISOString();
 let unreadCount = 0;
@@ -63,7 +60,13 @@ async function checkOrders() {
     if (!userStr) return;
     const user = JSON.parse(userStr);
     
-    const { data, error } = await notifySb
+    // 使用 user-data.js 中的 sb 对象（已在页面加载时定义）
+    if (typeof sb === 'undefined') {
+        console.log('等待 sb 初始化...');
+        return;
+    }
+    
+    const { data, error } = await sb
         .from('user_orders')
         .select('*')
         .eq('uid', user.uid)
@@ -87,9 +90,11 @@ async function checkOrders() {
     localStorage.setItem('last_order_check_time', lastCheckTime);
 }
 
-// 启动轮询
-let interval = setInterval(checkOrders, 10000);
-checkOrders();
+// 延迟启动，确保 sb 已加载
+setTimeout(() => {
+    let interval = setInterval(checkOrders, 10000);
+    checkOrders();
+}, 1000);
 
 if (Notification && Notification.permission !== 'denied') {
     Notification.requestPermission();
