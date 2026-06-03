@@ -16,7 +16,7 @@ async function loadEmailVerifyPage() {
         <div class="card">
             <div class="search-bar" style="justify-content: space-between;">
                 <h3><i class="fas fa-envelope"></i> 邮箱验证码管理</h3>
-                <button id="refreshEmailRequestsBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
+                <button id="refreshEmailRequestsBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
             </div>
             <div style="margin-bottom: 16px; padding: 12px; background: rgba(74,124,255,0.1); border-radius: 12px;">
                 <i class="fas fa-info-circle" style="color: #4a7cff;"></i> 
@@ -40,7 +40,7 @@ async function loadEmailRequests() {
     const container = document.getElementById('emailRequestsList');
     if (!container) return;
     
-    container.innerHTML = '<div style="text-align:center; padding:40px;">加载中... <i class="fas fa-spinner fa-spin"></i></div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px;">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
     
     try {
         const { data: requests, error } = await sb
@@ -58,7 +58,7 @@ async function loadEmailRequests() {
         }
         
         if (!requests || requests.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无邮箱验证请求。<br>请让用户在注册页面点击"Send"按钮提交邮箱。</div>';
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无邮箱验证请求。<br>请让用户在注册页面点击"Send"按钮Submit邮箱。</div>';
             return;
         }
         

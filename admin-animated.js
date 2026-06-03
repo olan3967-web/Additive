@@ -1,4 +1,4 @@
-// admin-animated.js - 动画/视频设置页面（添加视频上传功能）
+// admin-animated.js - 动画/视频设置页面（Add视频上传功能）
 
 let featuredHotels = [];
 let uploadedImageUrl = '';
@@ -13,7 +13,7 @@ async function loadAnimatedPage() {
             <div><label>视频 / GIF URL</label><input type="text" id="videoUrl" placeholder="https://example.com/video.mp4" class="search-input" style="width:100%;"></div>
             <div style="display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
                 <button id="uploadVideoBtn" class="btn-primary"><i class="fas fa-upload"></i> 上传视频</button>
-                <button id="saveVideoBtn" class="success">保存视频</button>
+                <button id="saveVideoBtn" class="success">Save视频</button>
                 <button id="previewVideoBtn" class="btn-primary">预览</button>
             </div>
             <input type="file" id="videoFileInput" accept="video/*" style="display:none;">
@@ -34,11 +34,11 @@ async function loadAnimatedPage() {
                 <input type="text" id="hotelImageInput" class="search-input" placeholder="图片 URL">
                 <button id="uploadImageBtn" class="btn-primary">上传图片</button>
                 <input type="file" id="hotelImageFile" accept="image/*" style="display:none;">
-                <button id="addHotelBtn" class="success">添加酒店</button>
+                <button id="addHotelBtn" class="success">Add酒店</button>
             </div>
             <div id="hotelPreviewImg" style="display:none;"><img id="previewUploadImg" style="max-width:200px; border-radius:12px;"></div>
             <div id="hotelsListContainer" style="max-height:400px; overflow-y:auto;"></div>
-            <button id="saveHotelsBtn" class="btn-primary" style="margin-top:15px;">保存所有酒店</button>
+            <button id="saveHotelsBtn" class="btn-primary" style="margin-top:15px;">Save所有酒店</button>
         </div>
         <div class="card">
             <h3><i class="fas fa-box-open"></i> Dashboard Product Sample</h3>
@@ -52,12 +52,12 @@ async function loadAnimatedPage() {
             <div class="search-bar">
                 <input type="text" id="productVideoInput" class="search-input" placeholder="视频 URL">
                 <select id="productStatusSelect" style="width:120px;"><option value="active">显示</option><option value="inactive">隐藏</option></select>
-                <button id="addProductBtn" class="success">添加产品</button>
-                <button id="refreshProductsBtn" class="btn-primary">刷新列表</button>
+                <button id="addProductBtn" class="success">Add产品</button>
+                <button id="refreshProductsBtn" class="btn-primary">Refresh列表</button>
             </div>
             <div id="productPreviewImg" style="display:none;"><img id="previewProductImg" style="max-width:200px; border-radius:12px;"></div>
             <div id="productsListContainer" style="max-height:400px; overflow-y:auto;"></div>
-            <button id="saveProductsOrderBtn" class="btn-primary">保存排序</button>
+            <button id="saveProductsOrderBtn" class="btn-primary">Save排序</button>
         </div>
     `;
     
@@ -212,7 +212,7 @@ function renderHotelsList() {
     const container = document.getElementById('hotelsListContainer');
     if (!container) return;
     if (featuredHotels.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无精选酒店，点击"添加酒店"开始</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无精选酒店，点击"Add酒店"开始</div>';
         return;
     }
     container.innerHTML = '';
@@ -222,7 +222,7 @@ function renderHotelsList() {
         div.innerHTML = `<div><img src="${hotel.image || ''}" style="width:100px;height:70px;object-fit:cover;border-radius:12px;" onerror="this.src='https://placehold.co/100x70/0f172a/4a7cff?text=No+Image'"></div>
                         <div><input type="text" class="hotel-name-edit" data-index="${index}" value="${escapeHtml(hotel.name || '')}" placeholder="酒店名称" style="background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;width:200px;"></div>
                         <div><input type="text" class="hotel-image-edit" data-index="${index}" value="${escapeHtml(hotel.image || '')}" placeholder="图片 URL" style="background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;width:300px;"></div>
-                        <div><button class="delete-hotel-btn" data-index="${index}" style="background:#7a2f2f;padding:6px 12px;border-radius:8px;">删除</button></div>`;
+                        <div><button class="delete-hotel-btn" data-index="${index}" style="background:#7a2f2f;padding:6px 12px;border-radius:8px;">Delete</button></div>`;
         container.appendChild(div);
     });
     document.querySelectorAll('.hotel-name-edit').forEach(input => input.addEventListener('change', () => { featuredHotels[parseInt(input.dataset.index)].name = input.value; }));
@@ -233,7 +233,7 @@ function renderHotelsList() {
 async function saveVideo() {
     const videoUrl = document.getElementById('videoUrl').value.trim();
     await sb.from('animated_settings').update({ video_url: videoUrl }).eq('id', 1);
-    showToast('视频已保存', 'success');
+    showToast('视频已Save', 'success');
 }
 
 function previewVideo() {
@@ -267,7 +267,7 @@ async function addHotel() {
 
 async function saveHotels() {
     await sb.from('animated_settings').update({ featured_hotels: featuredHotels }).eq('id', 1);
-    showToast('精选酒店已保存', 'success');
+    showToast('精选酒店已Save', 'success');
 }
 
 async function loadDashboardProducts() {
@@ -295,7 +295,7 @@ function renderProductsList() {
                         <div><input type="text" class="product-image-edit" data-id="${product.id}" value="${escapeHtml(product.image_url || '')}" placeholder="图片 URL" style="width:200px;background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"></div>
                         <div><input type="text" class="product-video-edit" data-id="${product.id}" value="${escapeHtml(product.video_url || '')}" placeholder="视频 URL" style="width:200px;background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"></div>
                         <div><select class="product-status-edit" data-id="${product.id}" style="background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"><option value="active" ${product.status === 'active' ? 'selected' : ''}>显示</option><option value="inactive" ${product.status === 'inactive' ? 'selected' : ''}>隐藏</option></select></div>
-                        <div><button class="delete-product-btn" data-id="${product.id}" style="background:#7a2f2f;padding:6px 12px;border-radius:8px;">删除</button></div>`;
+                        <div><button class="delete-product-btn" data-id="${product.id}" style="background:#7a2f2f;padding:6px 12px;border-radius:8px;">Delete</button></div>`;
         container.appendChild(div);
     });
     document.querySelectorAll('.product-name-edit').forEach(input => input.addEventListener('change', () => updateProductField(input.dataset.id, 'name', input.value)));
@@ -312,10 +312,10 @@ async function updateProductField(id, field, value) {
 }
 
 async function deleteProduct(id) {
-    showConfirm('确认删除', '确定删除此产品吗？', async () => {
+    showConfirm('ConfirmDelete', '确定Delete此产品吗？', async () => {
         await sb.from('dashboard_products').delete().eq('id', parseInt(id));
         loadDashboardProducts();
-        showToast('已删除', 'success');
+        showToast('已Delete', 'success');
     });
 }
 
@@ -335,7 +335,7 @@ async function addProduct() {
     }
     const sort_order = dashboardProducts.length;
     await sb.from('dashboard_products').insert([{ name, price, image_url, video_url: video_url || null, status, sort_order }]);
-    showToast('添加成功', 'success');
+    showToast('Add成功', 'success');
     document.getElementById('productNameInput').value = '';
     document.getElementById('productPriceInput').value = '';
     document.getElementById('productImageInput').value = '';
@@ -350,7 +350,7 @@ async function saveProductsOrder() {
         const id = items[i].getAttribute('data-id');
         if (id) await sb.from('dashboard_products').update({ sort_order: i }).eq('id', parseInt(id));
     }
-    showToast('排序已保存', 'success');
+    showToast('排序已Save', 'success');
     loadDashboardProducts();
 }
 

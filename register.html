@@ -397,7 +397,7 @@
                     return;
                 }
                 
-                // 删除该邮箱旧的待验证记录
+                // Delete该邮箱旧的待验证记录
                 const { error: deleteError } = await sb
                     .from('email_verification_requests')
                     .delete()
@@ -405,7 +405,7 @@
                     .eq('is_verified', false);
                 
                 if (deleteError) {
-                    console.error('删除旧记录失败:', deleteError);
+                    console.error('Delete旧记录失败:', deleteError);
                 }
                 
                 // 计算过期时间（24小时后）
@@ -432,9 +432,9 @@
                     return;
                 }
                 
-                console.log('邮箱提交成功:', insertData);
+                console.log('邮箱Submit成功:', insertData);
                 pendingEmail = email;
-                showMessage('邮箱已提交！请等待管理员发送验证码到您的邮箱', false);
+                showMessage('邮箱已Submit！请等待管理员发送验证码到您的邮箱', false);
                 
                 startCountdown(60);
                 
@@ -608,7 +608,7 @@
                     .eq('email', email)
                     .eq('code', verifyCode);
                 
-                // 9. 保存登录状态
+                // 9. Save登录状态
                 localStorage.setItem('currentUser', JSON.stringify({
                     uid: newUid,
                     username: username,

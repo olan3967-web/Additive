@@ -218,7 +218,7 @@
     font-size: 11px;
     color: #9ca3af;
     cursor: pointer;
-    position: relative;  /* 👈 添加这一行 */
+    position: relative;  /* 👈 Add这一行 */
 }
 
         .nav-item i {
@@ -275,7 +275,7 @@
     async function loadOrder() {
         const orderNo = getQueryParam('order_no');
         if (!orderNo) {
-            showToast('订单号不存在', 'error');
+            showToast('Order No不存在', 'error');
             setTimeout(() => goBack(), 1500);
             return;
         }
@@ -321,7 +321,7 @@
             <div class="order-no">${orderData.order_no}</div>
             <div class="order-date">下单时间：${formatDate(orderData.created_at)}</div>
             <div class="order-date" style="margin-top:8px;">产品：${productsText}</div>
-            <div class="order-date">总金额：€${(orderData.total_supply_price || 0).toFixed(2)}</div>
+            <div class="order-date">总Amount：€${(orderData.total_supply_price || 0).toFixed(2)}</div>
         `;
     }
 
@@ -339,7 +339,7 @@
     }
 
     if (timeline.length === 0) {
-        timelineContainer.innerHTML = '<div style="text-align:center; padding:40px;">物流信息加载中...</div>';
+        timelineContainer.innerHTML = '<div style="text-align:center; padding:40px;">物流信息Loading...</div>';
         return;
     }
 

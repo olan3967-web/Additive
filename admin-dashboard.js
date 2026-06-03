@@ -47,7 +47,7 @@ async function loadQuickCards() {
         if (poolEl) poolEl.innerText = poolRes.count || 0;
         if (emailEl) emailEl.innerText = emailRes.count || 0;
         
-        console.log(`实时更新: KYC待审核=${kycRes.count || 0}, 提现待处理=${withdrawalRes.count || 0}, 待发送Email=${emailRes.count || 0}`);
+        console.log(`实时更新: KYC待审核=${kycRes.count || 0}, Withdraw待处理=${withdrawalRes.count || 0}, 待发送Email=${emailRes.count || 0}`);
     } catch (e) { console.error('加载快捷卡片失败:', e); }
 }
 
@@ -190,11 +190,11 @@ async function loadActivityTimeline(force = false) {
         const userList = userRes.data || [];
         const emailList = emailRes.data || [];
         
-        console.log(`📊 数据统计: KYC=${kycList.length}, 提现=${withdrawalList.length}, 用户=${userList.length}, 邮箱=${emailList.length}`);
+        console.log(`📊 数据统计: KYC=${kycList.length}, Withdraw=${withdrawalList.length}, 用户=${userList.length}, 邮箱=${emailList.length}`);
         
         const activities = [];
         
-        // 添加KYC活动
+        // AddKYC活动
         for (const k of kycList) {
             let username = k.username || k.uid;
             if (!k.username || k.username === k.uid) {
@@ -217,7 +217,7 @@ async function loadActivityTimeline(force = false) {
             });
         }
         
-        // 添加提现活动
+        // AddWithdraw活动
         for (const w of withdrawalList) {
             let statusText = '';
             if (w.status === 'pending') statusText = '待审核';
@@ -226,7 +226,7 @@ async function loadActivityTimeline(force = false) {
             
             activities.push({
                 type: 'withdrawal',
-                title: `💰 提现申请 ${statusText}`,
+                title: `💰 Withdraw申请 ${statusText}`,
                 user: w.username,
                 amount: `€${(w.amount || 0).toFixed(2)}`,
                 time: w.request_date,
@@ -235,7 +235,7 @@ async function loadActivityTimeline(force = false) {
             });
         }
         
-        // 添加新用户注册活动
+        // Add新用户注册活动
         for (const u of userList) {
             activities.push({
                 type: 'user',
@@ -247,7 +247,7 @@ async function loadActivityTimeline(force = false) {
             });
         }
         
-        // 添加邮箱验证请求活动
+        // Add邮箱验证请求活动
         for (const e of emailList) {
             let statusText = '';
             if (e.code && !e.is_verified) statusText = '待验证';
@@ -361,7 +361,7 @@ function initTrendChart() {
         },
         yAxis: { 
             type: 'value', 
-            name: '金额 (€)', 
+            name: 'Amount (€)', 
             nameTextStyle: { color: '#8a9abb' }, 
             axisLabel: { color: '#8a9abb' }, 
             splitLine: { lineStyle: { color: '#1a2a3a', type: 'dashed' } } 
@@ -487,7 +487,7 @@ function loadDashboardPage(days = 1) {
             <div class="quick-card" onclick="showPage('withdrawals')">
                 <i class="fas fa-money-bill-wave"></i>
                 <div class="count" id="withdrawalPendingCount">0</div>
-                <div class="label">待处理提现</div>
+                <div class="label">待处理Withdraw</div>
             </div>
             <div class="quick-card" onclick="showPage('emailverify')">
                 <i class="fas fa-envelope"></i>
@@ -530,7 +530,7 @@ function loadDashboardPage(days = 1) {
                 <div style="font-size: 11px; color: #2ed15a;"><i class="fas fa-circle" style="font-size: 8px;"></i> 实时更新</div>
             </div>
             <div id="activityList" style="max-height: 350px; overflow-y: auto;">
-                <div style="text-align: center; padding: 20px; color: #6a7a9a;">加载中...</div>
+                <div style="text-align: center; padding: 20px; color: #6a7a9a;">Loading...</div>
             </div>
         </div>
     `;

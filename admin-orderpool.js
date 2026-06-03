@@ -10,15 +10,15 @@ async function loadOrderPoolPage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar">
-                <input type="text" id="poolSearchInput" class="search-input" placeholder="🔍 搜索订单号或酒店名...">
-                <button id="poolSearchBtn" class="btn-primary"><i class="fas fa-search"></i> 搜索</button>
-                <button id="poolRefreshBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
-                <button id="addOrderBtn" class="success"><i class="fas fa-plus"></i> 添加订单</button>
+                <input type="text" id="poolSearchInput" class="search-input" placeholder="🔍 SearchOrder No或酒店名...">
+                <button id="poolSearchBtn" class="btn-primary"><i class="fas fa-search"></i> Search</button>
+                <button id="poolRefreshBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
+                <button id="addOrderBtn" class="success"><i class="fas fa-plus"></i> Add订单</button>
             </div>
             <div class="table-container">
                 <table class="data-table">
-                    <thead><tr><th>ID</th><th>订单号</th><th>酒店名称</th><th>价格</th><th>图片</th><th>状态</th><th>操作</th></tr></thead>
-                    <tbody id="orderPoolTableBody"><tr><td colspan="7" class="loading">加载中... <i class="fas fa-spinner fa-spin"></i></td></tr></tbody>
+                    <thead><tr><th>ID</th><th>Order No</th><th>酒店名称</th><th>价格</th><th>图片</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody id="orderPoolTableBody"><tr><td colspan="7" class="loading">Loading... <i class="fas fa-spinner fa-spin"></i></td></tr></tbody>
                 </table>
             </div>
             <div class="pagination" id="pagination"></div>
@@ -28,7 +28,7 @@ async function loadOrderPoolPage() {
     document.getElementById('poolSearchBtn')?.addEventListener('click', () => { poolSearchKeyword = document.getElementById('poolSearchInput').value; currentPage = 1; renderOrderPoolPage(); });
     document.getElementById('poolRefreshBtn')?.addEventListener('click', () => { document.getElementById('poolSearchInput').value = ''; poolSearchKeyword = ''; currentPage = 1; loadAllOrdersFromDB(); });
     document.getElementById('addOrderBtn')?.addEventListener('click', () => {
-        document.getElementById('orderModalTitle').innerHTML = '添加订单';
+        document.getElementById('orderModalTitle').innerHTML = 'Add订单';
         document.getElementById('orderCode').value = '';
         document.getElementById('hotelName').value = '';
         document.getElementById('price').value = '';
@@ -43,7 +43,7 @@ async function loadOrderPoolPage() {
 
 async function loadAllOrdersFromDB() {
     const tbody = document.getElementById('orderPoolTableBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="loading">加载中...</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="loading">Loading...</td></tr>';
     try {
         let allData = [];
         let from = 0;
@@ -79,7 +79,7 @@ function renderOrderPoolPage() {
     if (tbody) {
         tbody.innerHTML = '';
         if (pageOrders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7">暂无数据</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7">No data</td></tr>';
             return;
         }
         for (let o of pageOrders) {
@@ -90,7 +90,7 @@ function renderOrderPoolPage() {
             row.insertCell(3).innerHTML = `<span class="text-gold">€${(o.price || 0).toFixed(2)}</span>`;
             row.insertCell(4).innerHTML = o.image_url ? `<img src="${o.image_url}" style="width:60px;height:45px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="window.open('${o.image_url}','_blank')">` : '-';
             row.insertCell(5).innerHTML = `<span class="${o.status === 'available' ? 'text-green' : 'text-red'}">${o.status || 'available'}</span>`;
-            row.insertCell(6).innerHTML = `<button class="edit-order" data-id="${o.id}" style="background:#2f6b3a; padding:4px 8px; font-size:11px; margin-right:4px;">编辑</button><button class="delete-order" data-id="${o.id}" style="background:#7a2f2f; padding:4px 8px; font-size:11px;">删除</button>`;
+            row.insertCell(6).innerHTML = `<button class="edit-order" data-id="${o.id}" style="background:#2f6b3a; padding:4px 8px; font-size:11px; margin-right:4px;">Edit</button><button class="delete-order" data-id="${o.id}" style="background:#7a2f2f; padding:4px 8px; font-size:11px;">Delete</button>`;
         }
         document.querySelectorAll('.edit-order').forEach(btn => btn.addEventListener('click', () => {
             const order = allOrders.find(o => o.id == btn.dataset.id);
@@ -105,11 +105,11 @@ function renderOrderPoolPage() {
             }
         }));
         document.querySelectorAll('.delete-order').forEach(btn => btn.addEventListener('click', async () => {
-            showConfirm('确认删除', '删除此订单？', async () => {
+            showConfirm('ConfirmDelete', 'Delete此订单？', async () => {
                 await sb.from('orders_pool').delete().eq('id', parseInt(btn.dataset.id));
                 loadAllOrdersFromDB();
                 if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-                showToast('已删除', 'success');
+                showToast('已Delete', 'success');
             });
         }));
     }
@@ -157,13 +157,13 @@ async function saveOrder() {
             showToast('订单已更新', 'success');
         } else {
             await sb.from('orders_pool').insert([{ order_code: orderCode, accommodation_name: hotelName, price: price, image_url: imageUrl, status: status }]);
-            showToast('订单已添加', 'success');
+            showToast('订单已Add', 'success');
         }
         document.getElementById('orderModal').classList.remove('active');
         loadAllOrdersFromDB();
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
     } catch (e) {
-        showToast('保存失败: ' + e.message, 'error');
+        showToast('Save失败: ' + e.message, 'error');
     }
 }
 

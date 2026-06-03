@@ -1,4 +1,4 @@
-// admin-common.js - 完整版（包含自定义弹窗和通知 + 所有页面实时刷新）
+// admin-common.js - 完整版（包含自定义弹窗和通知 + 所有页面实时Refresh）
 const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -96,7 +96,7 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-// ========== 自定义确认弹窗 ==========
+// ========== 自定义Confirm弹窗 ==========
 function showConfirm(title, message, onConfirm, onCancel) {
     const existingModal = document.querySelector('.custom-confirm');
     if (existingModal) existingModal.remove();
@@ -124,8 +124,8 @@ function showConfirm(title, message, onConfirm, onCancel) {
             <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 12px;">${title}</div>
             <div style="font-size: 14px; color: #d4c8a0; margin-bottom: 24px; line-height: 1.5;">${message}</div>
             <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="confirm-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">取消</button>
-                <button id="confirm-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">确认</button>
+                <button id="confirm-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">Cancel</button>
+                <button id="confirm-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">Confirm</button>
             </div>
         </div>
     `;
@@ -187,8 +187,8 @@ function showPrompt(title, placeholder, callback) {
             <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 20px;">${title}</div>
             <input type="text" id="prompt-input" placeholder="${placeholder}" style="width: 100%; padding: 12px 16px; background: #0a0806; border: 1px solid rgba(255,184,77,0.3); border-radius: 12px; color: #fff; font-size: 14px; outline: none; margin-bottom: 20px;">
             <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="prompt-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">取消</button>
-                <button id="prompt-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">确认</button>
+                <button id="prompt-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">Cancel</button>
+                <button id="prompt-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">Confirm</button>
             </div>
         </div>
     `;
@@ -371,12 +371,12 @@ function initGlobalRealtime() {
                 handleNewKyc(payload.new);
             }
         )
-        // 监听提现新申请
+        // 监听Withdraw新申请
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'withdrawals' },
             (payload) => {
-                console.log('🔔 检测到新提现申请:', payload.new);
+                console.log('🔔 检测到新Withdraw申请:', payload.new);
                 handleNewWithdrawal(payload.new);
             }
         )
@@ -411,36 +411,36 @@ function handleNewKyc(data) {
     }
     
     if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) {
-        console.log('刷新KYC页面');
+        console.log('RefreshKYC页面');
         window.loadKycPage();
     }
     
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '📋 新KYC申请',
-            `用户 ${data.username || data.uid} 提交了身份验证申请`,
+            `用户 ${data.username || data.uid} Submit了身份验证申请`,
             'kyc'
         );
     }
 }
 
-// 处理新提现申请
+// 处理新Withdraw申请
 function handleNewWithdrawal(data) {
-    console.log('💰 处理新提现申请:', data);
+    console.log('💰 处理新Withdraw申请:', data);
     
     if (window.refreshDashboardData) {
         window.refreshDashboardData(currentDays);
     }
     
     if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) {
-        console.log('刷新提现页面');
+        console.log('RefreshWithdraw页面');
         window.loadWithdrawalsPage();
     }
     
     if (window.showAmberNotification) {
         window.showAmberNotification(
-            '💰 新提现申请',
-            `用户 ${data.username} 申请提现 €${data.amount}`,
+            '💰 新Withdraw申请',
+            `用户 ${data.username} 申请Withdraw €${data.amount}`,
             'withdrawal'
         );
     }
@@ -456,7 +456,7 @@ function handleNewEmailRequest(data) {
     
     const emailPage = document.getElementById('page_emailverify');
     if (emailPage && emailPage.classList.contains('active')) {
-        console.log('当前在Email页面，自动刷新列表');
+        console.log('当前在Email页面，自动Refresh列表');
         if (window.loadEmailVerifyPage) {
             window.loadEmailVerifyPage();
         }
@@ -509,7 +509,7 @@ function showPage(pageId) {
     } else if (pageId === 'trial' && window.loadTrialPage) {
         window.loadTrialPage();
     } else if (pageId === 'withdrawals' && window.loadWithdrawalsPage) {
-        console.log('加载提现页面');
+        console.log('加载Withdraw页面');
         window.loadWithdrawalsPage();
     } else if (pageId === 'vip' && window.loadVipPage) {
         window.loadVipPage();

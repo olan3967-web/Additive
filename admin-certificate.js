@@ -10,11 +10,11 @@ async function loadCertificatePage() {
                 <h3><i class="fas fa-certificate"></i> Certificate 管理</h3>
                 <div style="display: flex; gap: 12px;">
                     <button id="uploadCertificateBtn" class="btn-primary"><i class="fas fa-upload"></i> 上传证书</button>
-                    <button id="refreshCertificateBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
+                    <button id="refreshCertificateBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
             <div id="certificateListContainer" class="table-container">
-                <div style="text-align:center; padding:40px; color:#aaa;">加载中...</div>
+                <div style="text-align:center; padding:40px; color:#aaa;">Loading...</div>
             </div>
         </div>
     `;
@@ -38,7 +38,7 @@ async function loadCertificates() {
         if (error) throw error;
         
         if (!certificates || certificates.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无证书，点击"上传证书"添加</div>';
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无证书，点击"上传证书"Add</div>';
             return;
         }
         
@@ -59,7 +59,7 @@ async function loadCertificates() {
             row.insertCell(2).innerHTML = cert.is_active ? '<span class="badge" style="background:#2f6b3a;">✓ 启用</span>' : '<span class="badge" style="background:#7a2f2f;">禁用</span>';
             row.insertCell(3).innerHTML = `
                 <button class="toggle-cert-btn" data-id="${cert.id}" data-status="${cert.is_active}" style="background:#2f6b3a; padding:4px 12px; margin-right:4px;">${cert.is_active ? '禁用' : '启用'}</button>
-                <button class="delete-cert-btn" data-id="${cert.id}" style="background:#7a2f2f; padding:4px 12px;">删除</button>
+                <button class="delete-cert-btn" data-id="${cert.id}" style="background:#7a2f2f; padding:4px 12px;">Delete</button>
             `;
         }
         
@@ -75,9 +75,9 @@ async function loadCertificates() {
         
         document.querySelectorAll('.delete-cert-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
-                showConfirm('确认删除', '删除此证书？', async () => {
+                showConfirm('ConfirmDelete', 'Delete此证书？', async () => {
                     await sb.from('certificates').delete().eq('id', parseInt(btn.dataset.id));
-                    showToast('已删除', 'success');
+                    showToast('已Delete', 'success');
                     loadCertificates();
                 });
             });
@@ -106,8 +106,8 @@ function openUploadModal() {
                     </div>
                 </div>
                 <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button id="confirmUploadCertBtn" class="success">保存证书</button>
-                    <button id="cancelUploadCertBtn">取消</button>
+                    <button id="confirmUploadCertBtn" class="success">Save证书</button>
+                    <button id="cancelUploadCertBtn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -182,7 +182,7 @@ function openUploadModal() {
         }
     });
     
-    // 保存证书 - 不再禁用旧证书
+    // Save证书 - 不再禁用旧证书
 document.getElementById('confirmUploadCertBtn')?.addEventListener('click', async () => {
     if (!selectedImageUrl) {
         showToast('请先选择并上传图片', 'error');
@@ -198,11 +198,11 @@ document.getElementById('confirmUploadCertBtn')?.addEventListener('click', async
     });
     
     if (error) {
-        showToast('保存失败: ' + error.message, 'error');
+        showToast('Save失败: ' + error.message, 'error');
         return;
     }
     
-    showToast('证书添加成功', 'success');
+    showToast('证书Add成功', 'success');
     document.getElementById('uploadCertModal').remove();
     loadCertificates();
 });

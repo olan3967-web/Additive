@@ -5,12 +5,12 @@ async function loadWithdrawalsPage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar" style="justify-content: space-between;">
-                <h3 style="margin:0;"><i class="fas fa-spinner fa-pulse"></i> 待处理提现</h3>
-                <button id="refreshWithdrawalsBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
+                <h3 style="margin:0;"><i class="fas fa-spinner fa-pulse"></i> 待处理Withdraw</h3>
+                <button id="refreshWithdrawalsBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
             </div>
             <div class="table-container">
                 <table class="data-table">
-                    <thead><tr><th>UID</th><th>用户名</th><th>金额</th><th>钱包地址</th><th>申请时间</th><th>操作</th></tr></thead>
+                    <thead><tr><th>UID</th><th>用户名</th><th>Amount</th><th>钱包地址</th><th>申请时间</th><th>操作</th></tr></thead>
                     <tbody id="withdrawalsTableBody"></tbody>
                 </table>
             </div>
@@ -35,7 +35,7 @@ async function loadWithdrawals() {
             row.insertCell(5).innerHTML = `<button class="approve-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;">批准</button><button class="reject-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;">拒绝</button>`;
         }
         document.querySelectorAll('.approve-withdraw').forEach(btn => btn.addEventListener('click', async () => {
-            showConfirm('批准提现', `批准 €${parseFloat(btn.dataset.amt)} 提现？`, async () => {
+            showConfirm('批准Withdraw', `批准 €${parseFloat(btn.dataset.amt)} Withdraw？`, async () => {
                 await sb.from('withdrawals').update({ status: 'approved' }).eq('id', parseInt(btn.dataset.id));
                 loadWithdrawals();
                 if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
@@ -43,13 +43,13 @@ async function loadWithdrawals() {
             });
         }));
         document.querySelectorAll('.reject-withdraw').forEach(btn => btn.addEventListener('click', async () => {
-            showConfirm('拒绝提现', '拒绝该提现？金额将退回用户账户', async () => {
+            showConfirm('拒绝Withdraw', '拒绝该Withdraw？Amount将退回用户账户', async () => {
                 const { data: user } = await sb.from('users').select('balance').eq('uid', btn.dataset.uid).single();
                 await sb.from('users').update({ balance: (user.balance || 0) + parseFloat(btn.dataset.amt) }).eq('uid', btn.dataset.uid);
                 await sb.from('withdrawals').update({ status: 'rejected' }).eq('id', parseInt(btn.dataset.id));
                 loadWithdrawals();
                 if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-                showToast('已拒绝，金额已退回', 'success');
+                showToast('已拒绝，Amount已退回', 'success');
             });
         }));
     }

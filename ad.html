@@ -154,7 +154,7 @@
         <div class="nav-item" data-page="kyc"><i class="fas fa-id-card"></i> KYC Verification</div>
         <div class="nav-item" data-page="emailverify"><i class="fas fa-envelope"></i> Email Verification</div>
         <div class="nav-item" data-page="trial"><i class="fas fa-gift"></i> 体验金管理</div>
-        <div class="nav-item" data-page="withdrawals"><i class="fas fa-money-bill-wave"></i> 提现审核</div>
+        <div class="nav-item" data-page="withdrawals"><i class="fas fa-money-bill-wave"></i> Withdraw审核</div>
         <div class="nav-item" data-page="vip"><i class="fas fa-crown"></i> VIP 配置</div>
         <div class="nav-item" data-page="setorders"><i class="fas fa-cog"></i> 设置订单</div>
         <div class="nav-item" data-page="orders"><i class="fas fa-clock"></i> 订单记录</div>
@@ -200,14 +200,14 @@
         <input type="text" id="newPhone" placeholder="手机号" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
         <input type="text" id="newUsername" placeholder="用户名" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
         <input type="password" id="newPassword" placeholder="密码" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
-        <div style="display: flex; gap: 12px; margin-top: 20px;"><button id="createUserBtn" class="success">创建</button><button id="closeUserModalBtn">取消</button></div>
+        <div style="display: flex; gap: 12px; margin-top: 20px;"><button id="createUserBtn" class="success">创建</button><button id="closeUserModalBtn">Cancel</button></div>
     </div>
 </div>
 
 <div id="orderModal" class="modal-overlay">
     <div class="modal-card">
-        <h3 id="orderModalTitle">添加订单</h3>
-        <input type="text" id="orderCode" placeholder="订单号" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
+        <h3 id="orderModalTitle">Add订单</h3>
+        <input type="text" id="orderCode" placeholder="Order No" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
         <input type="text" id="hotelName" placeholder="酒店名称" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
         <input type="number" id="price" placeholder="价格 (€)" step="0.01" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
         <input type="text" id="imageUrl" placeholder="图片 URL" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:12px; color:#fff;">
@@ -216,7 +216,7 @@
             <option value="unavailable">unavailable</option>
         </select>
         <input type="hidden" id="editId" value="">
-        <div style="display: flex; gap: 12px; margin-top: 20px;"><button id="saveOrderBtn" class="success">保存</button><button id="cancelOrderBtn">取消</button></div>
+        <div style="display: flex; gap: 12px; margin-top: 20px;"><button id="saveOrderBtn" class="success">Save</button><button id="cancelOrderBtn">Cancel</button></div>
     </div>
 </div>
 

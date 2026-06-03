@@ -33,7 +33,7 @@
             position: relative;
         }
 
-        /* 下拉刷新指示器 */
+        /* 下拉Refresh指示器 */
         .pull-to-refresh {
             position: relative;
             overflow: hidden;
@@ -377,7 +377,7 @@
     font-size: 11px;
     color: #9ca3af;
     cursor: pointer;
-    position: relative;  /* 👈 添加这一行 */
+    position: relative;  /* 👈 Add这一行 */
 }
 
         .nav-item i {
@@ -397,7 +397,7 @@
             color: #94a3b8;
         }
 
-        /* 下拉刷新触摸区域 */
+        /* 下拉Refresh触摸区域 */
         .refresh-trigger-area {
             position: fixed;
             top: 0;
@@ -416,7 +416,7 @@
 <body>
 <div class="phone" id="app">
 
-    <!-- 下拉刷新指示器 -->
+    <!-- 下拉Refresh指示器 -->
     <div class="refresh-indicator" id="refreshIndicator">
         <i class="fas fa-spinner"></i>
         <span>Refreshing...</span>
@@ -570,25 +570,25 @@
         renderProducts();
     }
 
-    // 刷新并随机排序（不改变筛选条件）
+    // Refresh并随机排序（不改变筛选条件）
     async function refreshAndRandomize() {
         if (isLoading) return;
         isLoading = true;
         
-        // 显示刷新指示器
+        // 显示Refresh指示器
         const indicator = document.getElementById('refreshIndicator');
         indicator.classList.add('show');
         
         // 重新加载产品数据
         await loadProducts(true);
         
-        // 如果当前排序是 default，刷新后应用随机排序
+        // 如果当前排序是 default，Refresh后应用随机排序
         if (currentSort === 'default') {
             filteredProducts = shuffleArray([...filteredProducts]);
             renderProducts();
         }
         
-        // 隐藏刷新指示器
+        // 隐藏Refresh指示器
         setTimeout(() => {
             indicator.classList.remove('show');
             isLoading = false;
@@ -685,7 +685,7 @@
         });
 
         if (insertError) {
-            console.error('保存产品失败:', insertError);
+            console.error('Save产品失败:', insertError);
             showToast('Failed to save product', 'error');
             return;
         }
@@ -760,7 +760,7 @@
             const filterFn = categoryMap[currentCategory]?.filter || (() => true);
             let filtered = allProducts.filter(filterFn);
             
-            // 如果是随机排序或强制刷新时的默认排序，打乱顺序
+            // 如果是随机排序或强制Refresh时的默认排序，打乱顺序
             if (currentSort === 'random' || forceRefresh) {
                 filtered = shuffleArray(filtered);
             } else {
@@ -842,7 +842,7 @@
         });
     }
 
-    // ========== 下拉刷新功能 ==========
+    // ========== 下拉Refresh功能 ==========
     let touchStartY = 0;
     let isRefreshing = false;
 

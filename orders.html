@@ -380,7 +380,7 @@
 <!-- Shipping Info 弹窗 -->
 <div id="shippingModal" class="shipping-modal">
     <div class="order-modal-content" style="max-width: 380px;">
-        <h3><i class="fas fa-map-marker-alt"></i> 地址确认</h3>
+        <h3><i class="fas fa-map-marker-alt"></i> 地址Confirm</h3>
         
         <!-- Supplier Shipping Info -->
         <div style="background: #fef3c7; border-radius: 16px; padding: 16px; margin: 16px 0;">
@@ -400,11 +400,11 @@
         
         <div style="background: #e6f7ec; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
             <p style="font-size: 12px; color: #2e7d32;">
-                <i class="fas fa-check-circle"></i> 请确认两个地址一致后，返回点击"确认发货"
+                <i class="fas fa-check-circle"></i> 请Confirm两个地址一致后，Back点击"Confirm发货"
             </p>
         </div>
         
-        <button id="closeShippingBtn" class="btn-confirm" style="background:#475569;">我已确认，关闭</button>
+        <button id="closeShippingBtn" class="btn-confirm" style="background:#475569;">我已Confirm，Close</button>
     </div>
 </div>
 
@@ -624,7 +624,7 @@
 
     document.getElementById('confirmOrderBtn')?.addEventListener('click', async () => {
         if (!hasCheckedShipping) {
-            showToast('请先点击 Check Shipping Info 确认发货地址', 'warning');
+            showToast('请先点击 Check Shipping Info Confirm发货地址', 'warning');
             return;
         }
         
@@ -637,7 +637,7 @@
         const currentBalance = userData?.balance || 0;
         
         if (currentBalance < currentOrder.total_supply_price) {
-            showToast(`余额不足！需要 €${currentOrder.total_supply_price.toFixed(2)}，请先充值`, 'error');
+            showToast(`余额不足！需要 €${currentOrder.total_supply_price.toFixed(2)}，请先Top Up`, 'error');
             return;
         }
         
@@ -689,7 +689,7 @@
         }
         
         document.getElementById('orderModal').classList.remove('active');
-        showToast(`订单 ${currentOrder.order_no} 已确认发货！`, 'success');
+        showToast(`订单 ${currentOrder.order_no} 已Confirm发货！`, 'success');
         
         await loadOrders();
     });

@@ -40,8 +40,8 @@ function showConfirm(title, message, onConfirm, onCancel) {
             <div class="confirm-title">${escapeHtml(title)}</div>
             <div class="confirm-message">${escapeHtml(message)}</div>
             <div class="confirm-buttons">
-                <button class="confirm-btn confirm-cancel">取消</button>
-                <button class="confirm-btn confirm-ok">确认</button>
+                <button class="confirm-btn confirm-cancel">Cancel</button>
+                <button class="confirm-btn confirm-ok">Confirm</button>
             </div>
         </div>
     `;
@@ -77,8 +77,8 @@ function showPrompt(title, placeholder, callback) {
             <div class="prompt-title">${escapeHtml(title)}</div>
             <input type="text" class="prompt-input" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
             <div class="prompt-buttons">
-                <button class="prompt-btn prompt-cancel">取消</button>
-                <button class="prompt-btn prompt-ok">确认</button>
+                <button class="prompt-btn prompt-cancel">Cancel</button>
+                <button class="prompt-btn prompt-ok">Confirm</button>
             </div>
         </div>
     `;

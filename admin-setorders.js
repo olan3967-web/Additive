@@ -1,8 +1,210 @@
-// admin-setorders.js - 设置订单页面（支持从用户 my_products 选择产品）
+// admin-setorders.js - 设置订单页面（支持从用户 my_products 选择产品，生成真实欧洲/亚洲买家信息）
+
 let setordersSearchKeyword = '';
 let selectedUser = null;
 let userProductsList = [];
-let orderItems = []; // { product_id, product_name, price, margin_profit, quantity, image_url }
+let orderItems = [];
+
+// ========== 买家信息生成器（欧洲+亚洲，地址匹配电话号码） ==========
+
+const countries = [
+    { code: '44', name: 'United Kingdom', cities: ['London', 'Manchester', 'Birmingham', 'Liverpool', 'Leeds', 'Edinburgh', 'Glasgow', 'Bristol'], streetPattern: 'english', postalPattern: 'uk' },
+    { code: '49', name: 'Germany', cities: ['Berlin', 'Munich', 'Hamburg', 'Cologne', 'Frankfurt', 'Stuttgart', 'Düsseldorf', 'Leipzig'], streetPattern: 'german', postalPattern: 'de' },
+    { code: '33', name: 'France', cities: ['Paris', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier'], streetPattern: 'french', postalPattern: 'fr' },
+    { code: '34', name: 'Spain', cities: ['Madrid', 'Barcelona', 'Valencia', 'Seville', 'Zaragoza', 'Malaga', 'Murcia', 'Palma'], streetPattern: 'spanish', postalPattern: 'es' },
+    { code: '39', name: 'Italy', cities: ['Rome', 'Milan', 'Naples', 'Turin', 'Palermo', 'Genoa', 'Bologna', 'Florence'], streetPattern: 'italian', postalPattern: 'it' },
+    { code: '31', name: 'Netherlands', cities: ['Amsterdam', 'Rotterdam', 'The Hague', 'Utrecht', 'Eindhoven', 'Groningen', 'Tilburg', 'Almere'], streetPattern: 'dutch', postalPattern: 'nl' },
+    { code: '43', name: 'Austria', cities: ['Vienna', 'Graz', 'Linz', 'Salzburg', 'Innsbruck', 'Klagenfurt', 'Wels', 'Sankt Pölten'], streetPattern: 'german', postalPattern: 'at' },
+    { code: '32', name: 'Belgium', cities: ['Brussels', 'Antwerp', 'Ghent', 'Charleroi', 'Liège', 'Bruges', 'Namur', 'Leuven'], streetPattern: 'french', postalPattern: 'be' },
+    { code: '41', name: 'Switzerland', cities: ['Zurich', 'Geneva', 'Basel', 'Bern', 'Lausanne', 'Winterthur', 'Lucerne', 'St. Gallen'], streetPattern: 'german', postalPattern: 'ch' },
+    { code: '46', name: 'Sweden', cities: ['Stockholm', 'Gothenburg', 'Malmö', 'Uppsala', 'Västerås', 'Örebro', 'Linköping', 'Helsingborg'], streetPattern: 'nordic', postalPattern: 'se' },
+    { code: '47', name: 'Norway', cities: ['Oslo', 'Bergen', 'Trondheim', 'Stavanger', 'Drammen', 'Fredrikstad', 'Kristiansand', 'Sandnes'], streetPattern: 'nordic', postalPattern: 'no' },
+    { code: '45', name: 'Denmark', cities: ['Copenhagen', 'Aarhus', 'Odense', 'Aalborg', 'Esbjerg', 'Randers', 'Kolding', 'Horsens'], streetPattern: 'nordic', postalPattern: 'dk' },
+    { code: '358', name: 'Finland', cities: ['Helsinki', 'Espoo', 'Tampere', 'Vantaa', 'Oulu', 'Turku', 'Jyväskylä', 'Lahti'], streetPattern: 'nordic', postalPattern: 'fi' },
+    { code: '852', name: 'Hong Kong', cities: ['Central', 'Tsim Sha Tsui', 'Causeway Bay', 'Wan Chai', 'Mong Kok', 'Kwun Tong', 'Tsuen Wan', 'Sha Tin'], streetPattern: 'asian', postalPattern: 'hk' },
+    { code: '65', name: 'Singapore', cities: ['Orchard', 'Marina Bay', 'Bugis', 'Chinatown', 'Little India', 'Jurong', 'Woodlands', 'Tampines'], streetPattern: 'asian', postalPattern: 'sg' },
+    { code: '60', name: 'Malaysia', cities: ['Kuala Lumpur', 'Penang', 'Johor Bahru', 'Ipoh', 'Kuching', 'Kota Kinabalu', 'Petaling Jaya', 'Shah Alam'], streetPattern: 'asian', postalPattern: 'my' },
+    { code: '62', name: 'Indonesia', cities: ['Jakarta', 'Surabaya', 'Bandung', 'Medan', 'Semarang', 'Denpasar', 'Palembang', 'Makassar'], streetPattern: 'asian', postalPattern: 'id' },
+    { code: '66', name: 'Thailand', cities: ['Bangkok', 'Phuket', 'Chiang Mai', 'Pattaya', 'Hat Yai', 'Khon Kaen', 'Udon Thani', 'Nakhon Ratchasima'], streetPattern: 'asian', postalPattern: 'th' },
+    { code: '84', name: 'Vietnam', cities: ['Ho Chi Minh City', 'Hanoi', 'Da Nang', 'Hai Phong', 'Nha Trang', 'Can Tho', 'Bien Hoa', 'Hue'], streetPattern: 'asian', postalPattern: 'vn' },
+    { code: '63', name: 'Philippines', cities: ['Manila', 'Quezon City', 'Makati', 'Cebu City', 'Davao City', 'Baguio', 'Iloilo City', 'Angeles'], streetPattern: 'asian', postalPattern: 'ph' },
+    { code: '82', name: 'South Korea', cities: ['Seoul', 'Busan', 'Incheon', 'Daegu', 'Daejeon', 'Gwangju', 'Suwon', 'Ulsan'], streetPattern: 'korean', postalPattern: 'kr' },
+    { code: '81', name: 'Japan', cities: ['Tokyo', 'Osaka', 'Yokohama', 'Nagoya', 'Sapporo', 'Kobe', 'Kyoto', 'Fukuoka'], streetPattern: 'japanese', postalPattern: 'jp' },
+    { code: '86', name: 'China', cities: ['Shanghai', 'Beijing', 'Guangzhou', 'Shenzhen', 'Chengdu', 'Hangzhou', 'Wuhan', 'Xi\'an'], streetPattern: 'chinese', postalPattern: 'cn' },
+    { code: '886', name: 'Taiwan', cities: ['Taipei', 'Taichung', 'Kaohsiung', 'Tainan', 'Hsinchu', 'Taoyuan', 'Keelung', 'Chiayi'], streetPattern: 'chinese', postalPattern: 'tw' }
+];
+
+// 亚洲名字库
+const asianFirstNames = ['Wei', 'Ming', 'Jun', 'Li', 'Hao', 'Jia', 'Yi', 'Xin', 'Kai', 'Lin', 'Chen', 'Yang', 'Tao', 'Lei', 'Feng', 'Bin', 'Jie', 'Chao', 'Peng', 'Hui'];
+const asianLastNames = ['Wang', 'Li', 'Zhang', 'Liu', 'Chen', 'Yang', 'Huang', 'Zhao', 'Wu', 'Zhou', 'Xu', 'Sun', 'Ma', 'Zhu', 'Lin', 'Guo', 'He', 'Song', 'Tang', 'Feng'];
+
+// 欧洲名字库
+const euroFirstNames = ['Liam', 'Noah', 'Oliver', 'Elijah', 'James', 'William', 'Benjamin', 'Lucas', 'Henry', 'Alexander', 'Emma', 'Olivia', 'Ava', 'Isabella', 'Sophia', 'Mia', 'Charlotte', 'Amelia', 'Harper', 'Evelyn'];
+const euroLastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Wilson', 'Anderson', 'Taylor', 'Thomas', 'Moore', 'Jackson', 'Martin', 'Lee', 'White', 'Harris'];
+
+// 小名库
+const asianNicknames = ['Wei', 'Ming', 'Jun', 'Li', 'Hao', 'Jia', 'Yi', 'Kai', 'Lin', 'Chen', 'Yang', 'Tao', 'Lei', 'Feng', 'Bin', 'Jie'];
+const euroNicknames = ['Leo', 'Max', 'Alex', 'Sam', 'Tom', 'Ben', 'Jack', 'Anna', 'Mia', 'Lia', 'Zoe', 'Eli', 'Noa', 'Ian', 'Eva', 'Ivy', 'Ray', 'Jay'];
+
+function randomName(isAsian) {
+    if (isAsian) {
+        const first = asianFirstNames[Math.floor(Math.random() * asianFirstNames.length)];
+        const last = asianLastNames[Math.floor(Math.random() * asianLastNames.length)];
+        return `${first} ${last}`;
+    } else {
+        const first = euroFirstNames[Math.floor(Math.random() * euroFirstNames.length)];
+        const last = euroLastNames[Math.floor(Math.random() * euroLastNames.length)];
+        return `${first} ${last}`;
+    }
+}
+
+function randomNickname(isAsian) {
+    if (isAsian) {
+        return asianNicknames[Math.floor(Math.random() * asianNicknames.length)];
+    } else {
+        return euroNicknames[Math.floor(Math.random() * euroNicknames.length)];
+    }
+}
+
+function generateStreet(country, number) {
+    const pattern = country.streetPattern;
+    switch(pattern) {
+        case 'english':
+            const streetsEN = ['High Street', 'Station Road', 'Church Road', 'London Road', 'Victoria Street', 'Park Avenue', 'King Street', 'Queen Street', 'Oxford Street', 'Baker Street'];
+            return `${number} ${streetsEN[Math.floor(Math.random() * streetsEN.length)]}`;
+        case 'german':
+            const streetsDE = ['Hauptstraße', 'Bahnhofstraße', 'Schlossstraße', 'Gartenstraße', 'Bergstraße', 'Talstraße', 'Marktplatz', 'Rathausplatz', 'Kirchstraße', 'Brückenstraße'];
+            return `${streetsDE[Math.floor(Math.random() * streetsDE.length)]} ${number}`;
+        case 'french':
+            const streetsFR = ['Rue de la Paix', 'Rue du Commerce', 'Avenue des Champs', 'Boulevard Saint-Germain', 'Rue Victor Hugo', 'Place de la République', 'Rue de Rivoli', 'Avenue des Ternes'];
+            return `${number} ${streetsFR[Math.floor(Math.random() * streetsFR.length)]}`;
+        case 'spanish':
+            const streetsES = ['Calle Mayor', 'Gran Vía', 'Paseo de Gracia', 'Avenida de la Constitución', 'Calle de Alcalá', 'Plaza Mayor', 'Calle del Carmen', 'Avenida de América'];
+            return `${streetsES[Math.floor(Math.random() * streetsES.length)]} ${number}`;
+        case 'italian':
+            const streetsIT = ['Via Roma', 'Corso Vittorio Emanuele', 'Via del Corso', 'Piazza Navona', 'Via Garibaldi', 'Via Nazionale', 'Via Veneto', 'Via Manzoni'];
+            return `${streetsIT[Math.floor(Math.random() * streetsIT.length)]} ${number}`;
+        case 'dutch':
+            const streetsNL = ['Hoofdstraat', 'Kerkstraat', 'Dorpsstraat', 'Molenstraat', 'Schoolstraat', 'Parkstraat', 'Wilhelminastraat', 'Julianalaan'];
+            return `${streetsNL[Math.floor(Math.random() * streetsNL.length)]} ${number}`;
+        case 'nordic':
+            const streetsNO = ['Storgatan', 'Kungsgatan', 'Drottninggatan', 'Vasagatan', 'Järnvägsgatan', 'Södra Vägen', 'Nordenskiöldsgatan', 'Hagaesplanaden'];
+            return `${streetsNO[Math.floor(Math.random() * streetsNO.length)]} ${number}`;
+        case 'korean':
+            const streetsKR = ['Sejong-daero', 'Gangnam-daero', 'Teheran-ro', 'Jong-ro', 'Eulji-ro', 'Mapo-daero', 'Apgujeong-ro', 'Samseong-ro'];
+            return `${streetsKR[Math.floor(Math.random() * streetsKR.length)]} ${number}`;
+        case 'japanese':
+            const streetsJP = ['Chuo-dori', 'Omotesando', 'Shinjuku-dori', 'Shibuya-dori', 'Ginza-dori', 'Akihabara-dori', 'Roppongi-dori', 'Aoyama-dori'];
+            return `${streetsJP[Math.floor(Math.random() * streetsJP.length)]} ${number}`;
+        case 'chinese':
+            const streetsCN = ['Nanjing Road', 'Huaihai Road', 'Renmin Road', 'Zhongshan Road', 'Beijing Road', 'West Nanjing Road', 'East Chang\'an Avenue', 'Huaihai Middle Road'];
+            return `${number} ${streetsCN[Math.floor(Math.random() * streetsCN.length)]}`;
+        default:
+            return `${number} Main Street`;
+    }
+}
+
+function generatePostalCode(country, city) {
+    const pattern = country.postalPattern;
+    switch(pattern) {
+        case 'uk':
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            return `${Math.floor(Math.random() * 90 + 10)}${letters.charAt(Math.floor(Math.random() * 26))}${letters.charAt(Math.floor(Math.random() * 26))} ${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${letters.charAt(Math.floor(Math.random() * 26))}`;
+        case 'de':
+        case 'at':
+        case 'ch':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'fr':
+        case 'be':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'es':
+        case 'it':
+        case 'nl':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'se':
+        case 'no':
+        case 'dk':
+        case 'fi':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)} ${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'hk':
+            return '';
+        case 'sg':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'my':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'id':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'th':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'vn':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'ph':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'kr':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'jp':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}-${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        case 'cn':
+        case 'tw':
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+        default:
+            return `${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}${Math.floor(Math.random() * 9)}`;
+    }
+}
+
+function generateRandomBuyer() {
+    // 随机选择国家
+    const country = countries[Math.floor(Math.random() * countries.length)];
+    
+    // 随机决定是亚洲还是欧洲名字（根据国家判断）
+    const isAsianCountry = ['852', '65', '60', '62', '66', '84', '63', '82', '81', '86', '886'].includes(country.code);
+    
+    // 随机决定用全名还是小名（60%全名，40%小名）
+    const useFullName = Math.random() > 0.4;
+    let name;
+    if (useFullName) {
+        name = randomName(isAsianCountry);
+    } else {
+        name = randomNickname(isAsianCountry);
+    }
+    
+    // 生成电话（只显示后4位）
+    const numberPart = Math.floor(Math.random() * 90000000 + 10000000);
+    const phoneFull = `+${country.code}${numberPart}`;
+    const phoneDisplay = `+${country.code}****${numberPart.toString().slice(-4)}`;
+    
+    // 随机城市
+    const city = country.cities[Math.floor(Math.random() * country.cities.length)];
+    
+    // 门牌号
+    const streetNumber = Math.floor(Math.random() * 500) + 1;
+    
+    // 街道
+    const street = generateStreet(country, streetNumber);
+    
+    // 邮编
+    const postalCode = generatePostalCode(country, city);
+    
+    // 完整地址
+    let address;
+    if (postalCode) {
+        address = `${street}, ${postalCode} ${city}, ${country.name}`;
+    } else {
+        address = `${street}, ${city}, ${country.name}`;
+    }
+    
+    return {
+        name: name,
+        phone: phoneDisplay,
+        phoneFull: phoneFull,
+        address: address,
+        city: city,
+        countryCode: country.code,
+        countryName: country.name
+    };
+}
+
+// ========== 页面加载函数 ==========
 
 async function loadSetordersPage() {
     const container = document.getElementById('page_setorders');
@@ -11,50 +213,46 @@ async function loadSetordersPage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar" style="justify-content: space-between;">
-                <h3><i class="fas fa-cog"></i> 设置订单</h3>
-                <button id="backToUserList" class="btn-primary" style="display:none;"><i class="fas fa-arrow-left"></i> 返回用户列表</button>
+                <h3><i class="fas fa-cog"></i> Set Orders</h3>
+                <button id="backToUserList" class="btn-primary" style="display:none;"><i class="fas fa-arrow-left"></i> Back to Users</button>
             </div>
             
-            <!-- 用户选择区域 -->
             <div id="setordersUserSearch">
                 <div class="search-bar">
-                    <input type="text" id="setordersSearchUid" placeholder="🔍 输入 UID 或用户名" style="flex:1;" class="search-input">
-                    <button id="setordersSearchBtn" class="btn-primary"><i class="fas fa-search"></i> 搜索用户</button>
+                    <input type="text" id="setordersSearchUid" placeholder="🔍 Search UID or Username" style="flex:1;" class="search-input">
+                    <button id="setordersSearchBtn" class="btn-primary"><i class="fas fa-search"></i> Search</button>
                 </div>
                 <div id="setordersUserList" class="table-container" style="max-height: 300px;">
                     <table class="data-table">
-                        <thead><tr><th>UID</th><th>用户名</th><th>操作</th></tr></thead>
+                        <thead><tr><th>UID</th><th>Username</th><th>Action</th></tr></thead>
                         <tbody id="setordersUserTableBody"></tbody>
                     </table>
                 </div>
             </div>
             
-            <!-- 订单设置区域 -->
             <div id="setordersMain" style="display: none;">
                 <div class="uid-header" style="background: rgba(74,124,255,0.1); padding: 10px 16px; border-radius: 12px; margin-bottom: 20px;">
-                    当前用户：<span id="selectedUidDisplay" style="color:#4a7cff;"></span> - <span id="selectedUsernameDisplay"></span>
+                    Current User: <span id="selectedUidDisplay" style="color:#4a7cff;"></span> - <span id="selectedUsernameDisplay"></span>
                 </div>
                 
-                <!-- 产品列表 -->
                 <div id="userProductsList" style="max-height: 500px; overflow-y: auto; margin-bottom: 20px;"></div>
                 
-                <!-- 订单汇总 -->
                 <div id="orderSummary" style="background: #0f172a; border-radius: 16px; padding: 16px; margin-top: 20px; border: 1px solid rgba(74,124,255,0.2);">
-                    <h4 style="margin-bottom: 12px; color: #ffb84d;"><i class="fas fa-receipt"></i> 订单汇总</h4>
+                    <h4 style="margin-bottom: 12px; color: #ffb84d;"><i class="fas fa-receipt"></i> Order Summary</h4>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>总供应价：</span>
+                        <span>Total Supply Price:</span>
                         <span id="totalSupplyPrice" style="color: #ffb84d; font-weight: 700;">€0</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>总佣金：</span>
+                        <span>Total Commission:</span>
                         <span id="totalCommission" style="color: #2ed15a; font-weight: 700;">€0</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
-                        <span>完成后账户增加：</span>
+                        <span>Final Account Increase:</span>
                         <span id="totalIncrease" style="color: #4a7cff; font-weight: 700;">€0</span>
                     </div>
                     <button id="confirmSetOrderBtn" class="success" style="width: 100%; padding: 12px;">
-                        <i class="fas fa-check"></i> 确认设置订单
+                        <i class="fas fa-check"></i> Create Order
                     </button>
                 </div>
             </div>
@@ -92,7 +290,7 @@ async function loadSetordersUserList() {
             const row = tbody.insertRow();
             row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
             row.insertCell(1).innerText = u.username;
-            row.insertCell(2).innerHTML = `<button class="setorder-select-btn" data-uid="${u.uid}" data-name="${u.username}" class="btn-primary" style="padding:4px 12px; font-size:12px;"><i class="fas fa-cog"></i> 设置订单</button>`;
+            row.insertCell(2).innerHTML = `<button class="setorder-select-btn" data-uid="${u.uid}" data-name="${u.username}" style="background:#4a7cff; padding:4px 12px; border-radius:8px; border:none; color:white; cursor:pointer;"><i class="fas fa-cog"></i> Set Orders</button>`;
         }
         document.querySelectorAll('.setorder-select-btn').forEach(btn => {
             btn.addEventListener('click', () => selectUserForSetOrder(btn.dataset.uid, btn.dataset.name));
@@ -115,7 +313,7 @@ async function loadUserProductsForOrder(uid) {
     const container = document.getElementById('userProductsList');
     if (!container) return;
     
-    container.innerHTML = '<div style="text-align:center; padding:40px;">加载中...</div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px;">Loading...</div>';
     
     const { data: products, error } = await sb
         .from('user_products')
@@ -124,11 +322,10 @@ async function loadUserProductsForOrder(uid) {
         .order('added_at', { ascending: false });
     
     if (error || !products || products.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">该用户暂无已添加的产品</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">No products added by this user</div>';
         return;
     }
     
-    // 初始化 orderItems
     orderItems = products.map(p => ({
         product_id: p.product_id || p.id,
         product_name: p.product_name,
@@ -159,18 +356,17 @@ function renderProductSelectionList() {
             </div>
             <div style="flex:2;">
                 <div style="font-weight:600; color:#ffb84d;">${escapeHtml(item.product_name)}</div>
-                <div style="font-size:12px; color:#8a9abb;">供应价: €${item.price.toFixed(2)} | 佣金: €${item.margin_profit.toFixed(2)}</div>
+                <div style="font-size:12px; color:#8a9abb;">Supply Price: €${item.price.toFixed(2)} | Commission: €${item.margin_profit.toFixed(2)}</div>
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
-                <button class="qty-decr" data-index="${i}" style="background:#4a7cff; border:none; width:30px; height:30px; border-radius:8px; color:white; cursor:pointer;">-</button>
+                <button class="qty-decr" data-index="${i}" style="background:#4a7cff; border:none; width:32px; height:32px; border-radius:8px; color:white; cursor:pointer; font-size:16px;">-</button>
                 <span style="font-size:18px; font-weight:700; min-width:30px; text-align:center;" id="qty_${i}">${item.quantity}</span>
-                <button class="qty-incr" data-index="${i}" style="background:#4a7cff; border:none; width:30px; height:30px; border-radius:8px; color:white; cursor:pointer;">+</button>
+                <button class="qty-incr" data-index="${i}" style="background:#4a7cff; border:none; width:32px; height:32px; border-radius:8px; color:white; cursor:pointer; font-size:16px;">+</button>
             </div>
         `;
         container.appendChild(div);
     }
     
-    // 绑定增减按钮事件
     document.querySelectorAll('.qty-decr').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = parseInt(btn.dataset.index);
@@ -209,24 +405,18 @@ function updateOrderSummary() {
 }
 
 async function confirmSetOrder() {
-    // 筛选出数量 > 0 的产品
     const selectedItems = orderItems.filter(item => item.quantity > 0);
     
     if (selectedItems.length === 0) {
-        showToast('请至少选择一个产品', 'error');
+        showToast('Please select at least one product', 'error');
         return;
     }
     
-    // 生成订单号
     const orderNo = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
-    
-    // 生成随机买家地址
     const buyer = generateRandomBuyer();
     
-    // 批发商发货地址（固定）
-    const shippingAddress = "上海市浦东新区世纪大道100号环球金融中心 批发商仓库";
+    const shippingAddress = "Supplier Warehouse, 100 Century Avenue, Pudong, Shanghai, China";
     
-    // 计算总供应价和总佣金
     let totalSupplyPrice = 0;
     let totalCommission = 0;
     let productsList = [];
@@ -241,11 +431,11 @@ async function confirmSetOrder() {
             unit_price: item.price,
             total_price: item.price * item.quantity,
             commission: item.margin_profit * item.quantity,
+            commission_per_item: item.margin_profit,
             image_url: item.image_url
         });
     }
     
-    // 插入订单到 user_orders
     const { error } = await sb.from('user_orders').insert({
         uid: selectedUser.uid,
         order_no: orderNo,
@@ -261,35 +451,14 @@ async function confirmSetOrder() {
     });
     
     if (error) {
-        showToast('设置订单失败: ' + error.message, 'error');
+        showToast('Failed to create order: ' + error.message, 'error');
         return;
     }
     
-    showToast(`订单 ${orderNo} 设置成功！`, 'success');
+    showToast(`Order ${orderNo} created successfully!`, 'success');
     
-    // 重置
     orderItems = orderItems.map(item => ({ ...item, quantity: 0 }));
     renderProductSelectionList();
-}
-
-function generateRandomBuyer() {
-    const firstNames = ['张', '李', '王', '刘', '陈', '杨', '赵', '周', '吴', '郑'];
-    const lastNames = ['明伟', '芳', '强', '静', '涛', '丽', '军', '娟', '伟', '敏'];
-    const cities = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '成都市', '武汉市', '西安市'];
-    const streets = ['朝阳区建国路', '浦东新区世纪大道', '天河区天河路', '南山区科技园', '西湖区文三路', '武侯区天府大道', '江汉区建设大道', '雁塔区科技路'];
-    
-    const name = firstNames[Math.floor(Math.random() * firstNames.length)] + lastNames[Math.floor(Math.random() * lastNames.length)];
-    const phone = '1' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 100000000).toString().padStart(9, '0');
-    const phoneDisplay = phone.substring(0, 3) + '****' + phone.substring(7);
-    const city = cities[Math.floor(Math.random() * cities.length)];
-    const street = streets[Math.floor(Math.random() * streets.length)];
-    const building = Math.floor(Math.random() * 200) + 1;
-    
-    return {
-        name: name,
-        phone: phoneDisplay,
-        address: `${city}${street}${building}号`
-    };
 }
 
 function escapeHtml(str) {

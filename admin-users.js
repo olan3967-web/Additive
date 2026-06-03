@@ -1,4 +1,4 @@
-// admin-users.js - 完整版（含充值金额 + 奖励金额）
+// admin-users.js - 完整版（含Top UpAmount + 奖励Amount）
 
 let searchKeyword = '';
 
@@ -8,9 +8,9 @@ async function loadUsersPage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar">
-                <input type="text" id="searchUserInput" class="search-input" placeholder="🔍 搜索 UID 或用户名...">
-                <button id="searchUserBtn" class="btn-primary"><i class="fas fa-search"></i> 搜索</button>
-                <button id="refreshUserBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
+                <input type="text" id="searchUserInput" class="search-input" placeholder="🔍 Search UID 或用户名...">
+                <button id="searchUserBtn" class="btn-primary"><i class="fas fa-search"></i> Search</button>
+                <button id="refreshUserBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 <button id="addUserBtn" class="success"><i class="fas fa-user-plus"></i> 创建用户</button>
             </div>
             <div class="table-container">
@@ -53,7 +53,7 @@ async function loadUsers() {
             row.insertCell(6).innerHTML = `${userOrders}/${ordersLimit} <button class="reset-orders-btn" data-uid="${u.uid}" style="background:#7a5f2f; padding:2px 8px; font-size:10px; margin-left:8px;"><i class="fas fa-undo-alt"></i> 重置</button>`;
             row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px;"><option value="1" ${u.vip_level == 1 ? 'selected' : ''}>Normal</option><option value="2" ${u.vip_level == 2 ? 'selected' : ''}>VIP</option><option value="3" ${u.vip_level == 3 ? 'selected' : ''}>SVIP</option></select>`;
             row.insertCell(8).innerHTML = u.withdrawal_address ? u.withdrawal_address.substring(0, 12) + '...' : '-';
-            row.insertCell(9).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-plus-circle"></i> 充值</button><button class="cut-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-minus-circle"></i> 扣款</button><button class="edit-user-btn" data-uid="${u.uid}" data-phone="${u.phone || ''}" data-username="${u.username}" data-pin="${u.pin || ''}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-edit"></i> 修改</button><button class="delete-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;"><i class="fas fa-trash"></i> 删除</button>`;
+            row.insertCell(9).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-plus-circle"></i> Top Up</button><button class="cut-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-minus-circle"></i> 扣款</button><button class="edit-user-btn" data-uid="${u.uid}" data-phone="${u.phone || ''}" data-username="${u.username}" data-pin="${u.pin || ''}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-edit"></i> 修改</button><button class="delete-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;"><i class="fas fa-trash"></i> Delete</button>`;
         }
         document.querySelectorAll('.vip-select').forEach(sel => sel.addEventListener('change', () => updateVip(sel.dataset.uid, sel.value)));
         document.querySelectorAll('.deposit-btn').forEach(btn => btn.addEventListener('click', () => depositBalance(btn.dataset.uid)));
@@ -65,25 +65,25 @@ async function loadUsers() {
 }
 
 async function resetUserOrders(uid) {
-    showConfirm('确认重置', '重置后该用户订单数将归0，订单记录将被删除，是否继续？', async () => {
+    showConfirm('Confirm重置', '重置后该用户订单数将归0，订单记录将被Delete，是否继续？', async () => {
         await sb.from('order_history').delete().eq('uid', uid);
         showToast('订单已重置', 'success');
         loadUsers();
     });
 }
 
-// ========== 充值：输入充值金额 + 奖励金额 ==========
+// ========== Top Up：输入Top UpAmount + 奖励Amount ==========
 async function depositBalance(uid) {
-    // 第一步：输入充值金额
-    showPrompt('充值金额', '请输入充值金额 (€)', async (amount) => {
+    // 第一步：输入Top UpAmount
+    showPrompt('Top UpAmount', '请输入Top UpAmount (€)', async (amount) => {
         const depositAmount = parseFloat(amount);
         if (isNaN(depositAmount) || depositAmount <= 0) {
-            showToast('请输入有效的充值金额', 'error');
+            showToast('请输入有效的Top UpAmount', 'error');
             return;
         }
         
-        // 第二步：输入奖励金额（可选）
-        showPrompt('奖励金额', '请输入奖励金额 (€) - 可不填', async (bonus) => {
+        // 第二步：输入奖励Amount（可选）
+        showPrompt('奖励Amount', '请输入奖励Amount (€) - 可不填', async (bonus) => {
             const bonusAmount = parseFloat(bonus) || 0;
             
             // 获取用户信息
@@ -101,14 +101,14 @@ async function depositBalance(uid) {
             const currentBalance = user.balance || 0;
             const newBalance = currentBalance + depositAmount + bonusAmount;
             
-            // 第三步：二次确认
-            let confirmMessage = `用户：${user.username}\n充值金额：€${depositAmount.toFixed(2)}`;
+            // 第三步：二次Confirm
+            let confirmMessage = `用户：${user.username}\nTop UpAmount：€${depositAmount.toFixed(2)}`;
             if (bonusAmount > 0) {
-                confirmMessage += `\n奖励金额：€${bonusAmount.toFixed(2)}`;
+                confirmMessage += `\n奖励Amount：€${bonusAmount.toFixed(2)}`;
             }
-            confirmMessage += `\n充值后总余额：€${newBalance.toFixed(2)}`;
+            confirmMessage += `\nTop Up后总余额：€${newBalance.toFixed(2)}`;
             
-            showConfirm('确认充值', confirmMessage, async () => {
+            showConfirm('ConfirmTop Up', confirmMessage, async () => {
                 // 更新余额
                 const { error: updateError } = await sb
                     .from('users')
@@ -116,11 +116,11 @@ async function depositBalance(uid) {
                     .eq('uid', uid);
                 
                 if (updateError) {
-                    showToast('充值失败: ' + updateError.message, 'error');
+                    showToast('Top Up失败: ' + updateError.message, 'error');
                     return;
                 }
                 
-                // 记录充值记录
+                // 记录Top Up记录
                 await sb.from('deposits').insert([{
                     uid: uid,
                     username: user.username,
@@ -140,7 +140,7 @@ async function depositBalance(uid) {
                     }]);
                 }
                 
-                showToast(`✅ 充值成功！`, 'success');
+                showToast(`✅ Top Up成功！`, 'success');
                 loadUsers();
                 if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
             });
@@ -150,10 +150,10 @@ async function depositBalance(uid) {
 
 // ========== 扣款（无奖励） ==========
 async function cutBalance(uid) {
-    showPrompt('扣款金额', '请输入扣款金额 (€)', async (amt) => {
+    showPrompt('扣款Amount', '请输入扣款Amount (€)', async (amt) => {
         const amount = parseFloat(amt);
         if (!amount || amount <= 0) {
-            showToast('请输入有效金额', 'error');
+            showToast('请输入有效Amount', 'error');
             return;
         }
         
@@ -170,7 +170,7 @@ async function cutBalance(uid) {
         
         const newBalance = (user.balance || 0) - amount;
         
-        showConfirm('确认扣款', `用户: ${user.username}\n扣款金额: €${amount.toFixed(2)}\n扣款后余额: €${newBalance.toFixed(2)}`, async () => {
+        showConfirm('Confirm扣款', `用户: ${user.username}\n扣款Amount: €${amount.toFixed(2)}\n扣款后余额: €${newBalance.toFixed(2)}`, async () => {
             const { error } = await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
             if (error) {
                 showToast('扣款失败: ' + error.message, 'error');
@@ -193,8 +193,8 @@ function openEditUserModal(uid, phone, username, pin) {
                 <div><label>Login Password</label><input type="password" id="editPassword" placeholder="留空则不修改" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"><small>留空表示不修改密码</small></div>
                 <div><label>Withdrawal PIN (4 digits)</label><input type="password" id="editPin" maxlength="4" value="${escapeHtml(pin || '')}" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
                 <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button id="confirmEditBtn" class="success">保存修改</button>
-                    <button id="cancelEditBtn">取消</button>
+                    <button id="confirmEditBtn" class="success">Save修改</button>
+                    <button id="cancelEditBtn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -234,14 +234,14 @@ async function updateVip(uid, level) {
 }
 
 async function delUser(uid) {
-    showConfirm('确认删除', '永久删除用户？此操作不可恢复', async () => {
+    showConfirm('ConfirmDelete', '永久Delete用户？此操作不可恢复', async () => {
         await sb.from('users').delete().eq('uid', uid);
         await sb.from('order_history').delete().eq('uid', uid);
         await sb.from('deposits').delete().eq('uid', uid);
         await sb.from('withdrawals').delete().eq('uid', uid);
         loadUsers();
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        showToast('已删除', 'success');
+        showToast('已Delete', 'success');
     });
 }
 

@@ -1,4 +1,4 @@
-// admin-orders.js - 后台订单管理页面
+// admin-orders.js - Backend Order Management
 let adminOrderSearchKeyword = '';
 let adminOrdersList = [];
 let currentPage = 1;
@@ -11,30 +11,30 @@ async function loadAdminOrdersPage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar" style="justify-content: space-between;">
-                <h3 style="margin:0;"><i class="fas fa-box"></i> 订单管理</h3>
+                <h3 style="margin:0;"><i class="fas fa-box"></i> Order Management</h3>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="adminOrderSearch" placeholder="🔍 搜索订单号或UID" class="search-input" style="width: 200px;">
-                    <button id="adminOrderSearchBtn" class="btn-primary"><i class="fas fa-search"></i> 搜索</button>
-                    <button id="adminOrderRefreshBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
+                    <input type="text" id="adminOrderSearch" placeholder="🔍 Search Order No or UID" class="search-input" style="width: 200px;">
+                    <button id="adminOrderSearchBtn" class="btn-primary"><i class="fas fa-search"></i> Search</button>
+                    <button id="adminOrderRefreshBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
             <div class="table-container">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>订单号</th>
+                            <th>Order No</th>
                             <th>UID</th>
-                            <th>用户名</th>
-                            <th>产品</th>
-                            <th>总价</th>
-                            <th>佣金</th>
-                            <th>状态</th>
-                            <th>创建时间</th>
-                            <th>操作</th>
+                            <th>Username</th>
+                            <th>Products</th>
+                            <th>Total Price</th>
+                            <th>Commission</th>
+                            <th>Buyer</th>
+                            <th>Status</th>
+                            <th>Created</th>
                         </tr>
                     </thead>
                     <tbody id="adminOrdersTableBody">
-                        <tr><td colspan="9" class="loading">加载中... <i class="fas fa-spinner fa-spin"></i></td></tr>
+                        <tr><td colspan="9" class="loading">Loading... <i class="fas fa-spinner fa-spin"></i></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -68,7 +68,7 @@ async function loadAdminOrders() {
     const { data: orders, error } = await query;
     
     if (error) {
-        console.error('加载订单失败:', error);
+        console.error('Failed to load orders:', error);
         return;
     }
     
@@ -84,7 +84,7 @@ function renderAdminOrdersTable() {
     const pageOrders = adminOrdersList.slice(start, start + pageSize);
     
     if (pageOrders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">暂无订单</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No orders found</td></tr>';
         return;
     }
     
@@ -101,28 +101,21 @@ function renderAdminOrdersTable() {
         }
         
         const statusMap = {
-            'pending': '<span class="badge" style="background:#ffb84d; color:#1a1a2e;">待处理</span>',
-            'processing': '<span class="badge" style="background:#4a7cff;">处理中</span>',
-            'delivered': '<span class="badge" style="background:#2ed15a;">已完成</span>'
+            'pending': '<span class="badge" style="background:#ffb84d; color:#1a1a2e;">Pending</span>',
+            'processing': '<span class="badge" style="background:#4a7cff;">Processing</span>',
+            'delivered': '<span class="badge" style="background:#2ed15a;">Delivered</span>'
         };
         
-        row.insertCell(0).innerHTML = `<span class="badge">${order.order_no}</span>`;
+        row.insertCell(0).innerHTML = `<span class="badge" style="font-family:monospace;">${order.order_no}</span>`;
         row.insertCell(1).innerHTML = `<span class="badge">${order.uid}</span>`;
         row.insertCell(2).innerText = order.username || '-';
-        row.insertCell(3).innerHTML = productsText.substring(0, 50);
+        row.insertCell(3).innerHTML = productsText.substring(0, 60) + (productsText.length > 60 ? '...' : '');
         row.insertCell(4).innerHTML = `<span class="text-gold">€${(order.total_supply_price || 0).toFixed(2)}</span>`;
         row.insertCell(5).innerHTML = `<span class="text-green">€${(order.total_commission || 0).toFixed(2)}</span>`;
-        row.insertCell(6).innerHTML = statusMap[order.status] || order.status;
-        row.insertCell(7).innerText = new Date(order.created_at).toLocaleString();
-        row.insertCell(8).innerHTML = `<button class="view-order-detail" data-order="${order.order_no}" style="background:#4a7cff; padding:4px 12px;">查看</button>`;
+        row.insertCell(6).innerHTML = `${escapeHtml(order.buyer_name || '-')}<br><small style="color:#8a9abb;">${escapeHtml(order.buyer_phone || '')}</small>`;
+        row.insertCell(7).innerHTML = statusMap[order.status] || order.status;
+        row.insertCell(8).innerText = new Date(order.created_at).toLocaleString();
     }
-    
-    document.querySelectorAll('.view-order-detail').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const orderNo = btn.dataset.order;
-            alert(`订单详情功能开发中\n订单号: ${orderNo}`);
-        });
-    });
     
     renderAdminPagination();
 }
@@ -141,7 +134,7 @@ function renderAdminPagination() {
     
     if (currentPage > 1) {
         const prev = document.createElement('button');
-        prev.innerHTML = '上一页';
+        prev.innerHTML = 'Previous';
         prev.onclick = () => { currentPage--; renderAdminOrdersTable(); };
         container.appendChild(prev);
     }
@@ -156,10 +149,15 @@ function renderAdminPagination() {
     
     if (currentPage < totalPages) {
         const next = document.createElement('button');
-        next.innerHTML = '下一页';
+        next.innerHTML = 'Next';
         next.onclick = () => { currentPage++; renderAdminOrdersTable(); };
         container.appendChild(next);
     }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
 
 window.loadAdminOrdersPage = loadAdminOrdersPage;

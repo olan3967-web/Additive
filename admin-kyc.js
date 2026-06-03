@@ -11,7 +11,7 @@ async function loadKycPage() {
                 <div style="display: flex; gap: 12px;">
                     <button id="tabPending" class="tab-kyc-btn active" data-tab="pending">📋 待审核</button>
                     <button id="tabVerified" class="tab-kyc-btn" data-tab="verified">✅ 已验证记录</button>
-                    <button id="refreshKycBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
+                    <button id="refreshKycBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
             <div id="kycPendingContainer" class="kyc-container"></div>
@@ -68,7 +68,7 @@ async function getUsername(uid) {
 async function loadKycPending() {
     const container = document.getElementById('kycPendingContainer');
     if (!container) return;
-    container.innerHTML = '<div style="text-align:center; padding:40px;">加载中... <i class="fas fa-spinner fa-spin"></i></div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px;">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
     
     const { data: kycList } = await sb.from('kyc_verifications').select('*').in('status', ['pending', 'rejected']).order('uploaded_at', { ascending: false });
     
@@ -126,7 +126,7 @@ async function loadKycPending() {
                 <div>${statusHtml}</div>
             </div>
             ${imagesHtml}
-            <div class="kyc-time">提交时间: ${new Date(items[0].uploaded_at).toLocaleString()}</div>
+            <div class="kyc-time">Submit时间: ${new Date(items[0].uploaded_at).toLocaleString()}</div>
             <div style="margin-top: 16px;">
                 <button class="btn-sm success approve-kyc" data-uid="${uid}" style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;">✓ 批准</button>
                 <button class="btn-sm danger reject-kyc" data-uid="${uid}" style="background:#7a2f2f; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;">✗ 拒绝</button>
@@ -156,7 +156,7 @@ async function loadKycPending() {
 async function loadKycVerified() {
     const container = document.getElementById('kycVerifiedContainer');
     if (!container) return;
-    container.innerHTML = '<div style="text-align:center; padding:40px;">加载中... <i class="fas fa-spinner fa-spin"></i></div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px;">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
     
     const { data: kycList } = await sb.from('kyc_verifications').select('*').eq('status', 'approved').order('uploaded_at', { ascending: false });
     
@@ -213,7 +213,7 @@ async function loadKycVerified() {
             ${imagesHtml}
             <div class="kyc-time">验证时间: ${new Date(items[0].approved_at || items[0].uploaded_at).toLocaleString()}</div>
             <div style="margin-top: 16px;">
-                <button class="btn-sm delete-kyc" data-uid="${uid}" style="background:#7a2f2f; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;"><i class="fas fa-trash"></i> 删除记录</button>
+                <button class="btn-sm delete-kyc" data-uid="${uid}" style="background:#7a2f2f; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;"><i class="fas fa-trash"></i> Delete记录</button>
             </div>
         `;
         container.appendChild(card);
@@ -221,13 +221,13 @@ async function loadKycVerified() {
     
     document.querySelectorAll('.delete-kyc').forEach(btn => btn.addEventListener('click', async () => {
         const uid = btn.dataset.uid;
-        showConfirm('确认删除', `确定删除用户 ${uid} 的所有KYC记录吗？此操作不可恢复。`, async () => {
+        showConfirm('ConfirmDelete', `确定Delete用户 ${uid} 的所有KYC记录吗？此操作不可恢复。`, async () => {
             await sb.from('kyc_verifications').delete().eq('uid', uid);
             await sb.from('user_kyc_status').upsert({ uid: uid, is_verified: false });
             loadKycVerified();
             loadKycPending();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-            showToast(`已删除用户 ${uid} 的KYC记录`, 'success');
+            showToast(`已Delete用户 ${uid} 的KYC记录`, 'success');
         });
     }));
 }

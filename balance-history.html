@@ -219,7 +219,7 @@
     font-size: 11px;
     color: #9ca3af;
     cursor: pointer;
-    position: relative;  /* 👈 添加这一行 */
+    position: relative;  /* 👈 Add这一行 */
 }
 
         .nav-item i {
@@ -287,14 +287,14 @@
         container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading...</div></div></div>`;
 
         try {
-            // 获取充值/奖励记录
+            // 获取Top Up/奖励记录
             const { data: deposits } = await sb
                 .from('deposits')
                 .select('*')
                 .eq('uid', user.uid)
                 .order('created_at', { ascending: false });
 
-            // 获取提现记录
+            // 获取Withdraw记录
             const { data: withdrawals } = await sb
                 .from('withdrawals')
                 .select('*')
@@ -358,7 +358,7 @@
             // 按时间倒序排序
             records.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            // 计算总变动金额（入金 - 出金）
+            // 计算总变动Amount（入金 - 出金）
             const totalIn = records.filter(r => r.isPositive).reduce((sum, r) => sum + r.amount, 0);
             const totalOut = records.filter(r => !r.isPositive).reduce((sum, r) => sum + r.amount, 0);
             const totalChange = totalIn - totalOut;
