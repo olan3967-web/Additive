@@ -381,17 +381,29 @@
 <div id="shippingModal" class="shipping-modal">
     <div class="order-modal-content" style="max-width: 380px;">
         <h3><i class="fas fa-map-marker-alt"></i> 地址确认</h3>
+        
+        <!-- Supplier Shipping Info -->
         <div style="background: #fef3c7; border-radius: 16px; padding: 16px; margin: 16px 0;">
             <p style="font-weight: 600; color: #d97706; margin-bottom: 8px;">
-                <i class="fas fa-map-marker-alt"></i> 请确认发货地址
+                <i class="fas fa-warehouse"></i> Supplier Shipping Info
             </p>
-            <p id="shippingAddressText" style="font-size: 13px; line-height: 1.5; background: white; padding: 12px; border-radius: 12px;"></p>
+            <p id="supplierAddressText" style="font-size: 13px; line-height: 1.5; background: white; padding: 12px; border-radius: 12px;"></p>
         </div>
+        
+        <!-- Buyer Address -->
+        <div style="background: #f8fafc; border-radius: 16px; padding: 16px; margin: 0 0 16px 0;">
+            <p style="font-weight: 600; color: #1a1a2e; margin-bottom: 8px;">
+                <i class="fas fa-user"></i> Buyer Address
+            </p>
+            <p id="buyerAddressText" style="font-size: 13px; line-height: 1.5; background: white; padding: 12px; border-radius: 12px;"></p>
+        </div>
+        
         <div style="background: #e6f7ec; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
             <p style="font-size: 12px; color: #2e7d32;">
-                <i class="fas fa-check-circle"></i> 请确认地址无误后，返回点击"确认发货"
+                <i class="fas fa-check-circle"></i> 请确认两个地址一致后，返回点击"确认发货"
             </p>
         </div>
+        
         <button id="closeShippingBtn" class="btn-confirm" style="background:#475569;">我已确认，关闭</button>
     </div>
 </div>
@@ -587,20 +599,24 @@
     }
 
     document.getElementById('checkShippingBtn')?.addEventListener('click', () => {
-        if (!currentOrder) return;
-        
-        const buyerAddress = `${currentOrder.buyer_name || '未知'}，${currentOrder.buyer_phone || '未知'}，${currentOrder.buyer_address || '未知'}`;
-        document.getElementById('shippingAddressText').innerHTML = buyerAddress.replace(/\n/g, '<br>');
-        document.getElementById('shippingModal').classList.add('active');
-        
-        hasCheckedShipping = true;
-        const checkBtn = document.getElementById('checkShippingBtn');
-        const confirmBtn = document.getElementById('confirmOrderBtn');
-        checkBtn.classList.add('checked');
-        checkBtn.innerHTML = '<i class="fas fa-check-circle"></i> Shipping Info Checked';
-        confirmBtn.classList.remove('disabled');
-        confirmBtn.disabled = false;
-    });
+    if (!currentOrder) return;
+    
+    // 只显示地址，不显示姓名和电话
+    const address = currentOrder.buyer_address || '未知地址';
+    const formattedAddress = address.replace(/\n/g, '<br>');
+    
+    document.getElementById('supplierAddressText').innerHTML = formattedAddress;
+    document.getElementById('buyerAddressText').innerHTML = formattedAddress;
+    document.getElementById('shippingModal').classList.add('active');
+    
+    hasCheckedShipping = true;
+    const checkBtn = document.getElementById('checkShippingBtn');
+    const confirmBtn = document.getElementById('confirmOrderBtn');
+    checkBtn.classList.add('checked');
+    checkBtn.innerHTML = '<i class="fas fa-check-circle"></i> Shipping Info Checked';
+    confirmBtn.classList.remove('disabled');
+    confirmBtn.disabled = false;
+});
 
     document.getElementById('closeShippingBtn')?.addEventListener('click', () => {
         document.getElementById('shippingModal').classList.remove('active');
