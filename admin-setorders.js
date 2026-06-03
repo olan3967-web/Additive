@@ -1,78 +1,91 @@
-// admin-setorders.js - 设置订单页面（添加用户产品展示卡片，带图片）
+// admin-setorders.js - 设置订单页面（支持从用户 my_products 选择产品）
 let setordersSearchKeyword = '';
-let selectedAdvancedOrdersList = [];
-let currentSetUser = null;
+let selectedUser = null;
 let userProductsList = [];
+let orderItems = []; // { product_id, product_name, price, margin_profit, quantity, image_url }
 
 async function loadSetordersPage() {
     const container = document.getElementById('page_setorders');
     if (!container) return;
+    
     container.innerHTML = `
         <div class="card">
             <div class="search-bar" style="justify-content: space-between;">
                 <h3><i class="fas fa-cog"></i> 设置订单</h3>
                 <button id="backToUserList" class="btn-primary" style="display:none;"><i class="fas fa-arrow-left"></i> 返回用户列表</button>
             </div>
+            
+            <!-- 用户选择区域 -->
             <div id="setordersUserSearch">
                 <div class="search-bar">
                     <input type="text" id="setordersSearchUid" placeholder="🔍 输入 UID 或用户名" style="flex:1;" class="search-input">
                     <button id="setordersSearchBtn" class="btn-primary"><i class="fas fa-search"></i> 搜索用户</button>
                 </div>
                 <div id="setordersUserList" class="table-container" style="max-height: 300px;">
-                    <table class="data-table"><thead><tr><th>UID</th><th>用户名</th><th>操作</th></tr></thead><tbody id="setordersUserTableBody"></tbody></table>
+                    <table class="data-table">
+                        <thead><tr><th>UID</th><th>用户名</th><th>操作</th></tr></thead>
+                        <tbody id="setordersUserTableBody"></tbody>
+                    </table>
                 </div>
             </div>
+            
+            <!-- 订单设置区域 -->
             <div id="setordersMain" style="display: none;">
                 <div class="uid-header" style="background: rgba(74,124,255,0.1); padding: 10px 16px; border-radius: 12px; margin-bottom: 20px;">
                     当前用户：<span id="selectedUidDisplay" style="color:#4a7cff;"></span> - <span id="selectedUsernameDisplay"></span>
                 </div>
-                <div id="userTriggerOrdersList" style="margin-bottom: 20px;">
-                    <h4 style="margin-bottom: 12px; color: #4a7cff;"><i class="fas fa-list"></i> 已设置的订单</h4>
-                    <div id="triggerOrdersContainer" style="max-height: 300px; overflow-y: auto;"></div>
-                </div>
-                <!-- 用户已添加产品卡片（带图片） -->
-                <div id="userProductsCard" style="margin-bottom: 20px;">
-                    <h4 style="margin-bottom: 12px; color: #4a7cff;"><i class="fas fa-box"></i> 用户已添加的产品</h4>
-                    <div id="userProductsContainer" style="max-height: 400px; overflow-y: auto; background: #0f172a; border-radius: 16px; padding: 12px;">
-                        <div style="text-align:center; padding: 20px; color: #aaa;">点击用户后显示已添加产品</div>
+                
+                <!-- 产品列表 -->
+                <div id="userProductsList" style="max-height: 500px; overflow-y: auto; margin-bottom: 20px;"></div>
+                
+                <!-- 订单汇总 -->
+                <div id="orderSummary" style="background: #0f172a; border-radius: 16px; padding: 16px; margin-top: 20px; border: 1px solid rgba(74,124,255,0.2);">
+                    <h4 style="margin-bottom: 12px; color: #ffb84d;"><i class="fas fa-receipt"></i> 订单汇总</h4>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>总供应价：</span>
+                        <span id="totalSupplyPrice" style="color: #ffb84d; font-weight: 700;">€0</span>
                     </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>总佣金：</span>
+                        <span id="totalCommission" style="color: #2ed15a; font-weight: 700;">€0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                        <span>完成后账户增加：</span>
+                        <span id="totalIncrease" style="color: #4a7cff; font-weight: 700;">€0</span>
+                    </div>
+                    <button id="confirmSetOrderBtn" class="success" style="width: 100%; padding: 12px;">
+                        <i class="fas fa-check"></i> 确认设置订单
+                    </button>
                 </div>
-                <div class="history-tabs" style="display: flex; gap: 8px; margin-bottom: 20px;">
-                    <button class="tab-btn active" data-setorder-tab="advanced">高级订单</button>
-                    <button class="tab-btn" data-setorder-tab="card">卡牌奖励</button>
-                    <button class="tab-btn" data-setorder-tab="cardorder">卡牌订单</button>
-                </div>
-                <div id="advancedPanel"><div class="setorders-left"><input type="number" id="advancedOrderCount" value="1"><input type="number" id="advancedTargetPrice" step="0.01"><button id="advancedSearchOrderBtn" class="btn-primary">搜索订单</button></div><div id="advancedOrdersList"></div><div id="advancedActionBtns" style="display:none;"><button id="advancedConfirmBtn" class="success">确认触发</button><button id="advancedCancelBtn" class="danger">取消</button></div></div>
-                <div id="cardPanel" style="display:none;"><div><input type="number" id="cardOrderCount" placeholder="触发单数"><input type="number" id="cardTargetPrice" step="0.01" placeholder="奖励金额"><button id="addCardRewardBtn" class="success">确认添加卡牌奖励</button></div></div>
-                <div id="cardorderPanel" style="display:none;"><div><input type="number" id="cardorderOrderCount" placeholder="触发单数"><input type="number" id="cardorderTargetPrice" step="0.01" placeholder="订单价格"><button id="addCardOrderBtn" class="success">确认添加卡牌订单</button></div></div>
             </div>
         </div>
     `;
+    
     await loadSetordersUserList();
-    document.getElementById('setordersSearchBtn')?.addEventListener('click', () => { setordersSearchKeyword = document.getElementById('setordersSearchUid').value.trim(); loadSetordersUserList(); });
-    document.getElementById('backToUserList')?.addEventListener('click', () => { document.getElementById('setordersUserSearch').style.display = 'block'; document.getElementById('setordersMain').style.display = 'none'; currentSetUser = null; });
-    document.querySelectorAll('[data-setorder-tab]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('[data-setorder-tab]').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const tab = btn.dataset.setorderTab;
-            document.getElementById('advancedPanel').style.display = tab === 'advanced' ? 'flex' : 'none';
-            document.getElementById('cardPanel').style.display = tab === 'card' ? 'block' : 'none';
-            document.getElementById('cardorderPanel').style.display = tab === 'cardorder' ? 'block' : 'none';
-        });
+    
+    document.getElementById('setordersSearchBtn')?.addEventListener('click', () => {
+        setordersSearchKeyword = document.getElementById('setordersSearchUid').value.trim();
+        loadSetordersUserList();
     });
-    document.getElementById('advancedSearchOrderBtn')?.addEventListener('click', advancedSearchOrder);
-    document.getElementById('advancedConfirmBtn')?.addEventListener('click', confirmAdvancedOrder);
-    document.getElementById('advancedCancelBtn')?.addEventListener('click', () => { selectedAdvancedOrdersList = []; document.getElementById('advancedOrdersList').innerHTML = ''; document.getElementById('advancedActionBtns').style.display = 'none'; });
-    document.getElementById('addCardRewardBtn')?.addEventListener('click', addCardReward);
-    document.getElementById('addCardOrderBtn')?.addEventListener('click', addCardOrder);
+    
+    document.getElementById('backToUserList')?.addEventListener('click', () => {
+        document.getElementById('setordersUserSearch').style.display = 'block';
+        document.getElementById('setordersMain').style.display = 'none';
+        selectedUser = null;
+        orderItems = [];
+    });
+    
+    document.getElementById('confirmSetOrderBtn')?.addEventListener('click', confirmSetOrder);
 }
 
 async function loadSetordersUserList() {
     let query = sb.from('users').select('uid, username').order('created_at', { ascending: false });
-    if (setordersSearchKeyword) query = query.or(`uid.ilike.%${setordersSearchKeyword}%,username.ilike.%${setordersSearchKeyword}%`);
+    if (setordersSearchKeyword) {
+        query = query.or(`uid.ilike.%${setordersSearchKeyword}%,username.ilike.%${setordersSearchKeyword}%`);
+    }
     const { data: users } = await query;
     const tbody = document.getElementById('setordersUserTableBody');
+    
     if (tbody && users) {
         tbody.innerHTML = '';
         for (let u of users) {
@@ -81,207 +94,202 @@ async function loadSetordersUserList() {
             row.insertCell(1).innerText = u.username;
             row.insertCell(2).innerHTML = `<button class="setorder-select-btn" data-uid="${u.uid}" data-name="${u.username}" class="btn-primary" style="padding:4px 12px; font-size:12px;"><i class="fas fa-cog"></i> 设置订单</button>`;
         }
-        document.querySelectorAll('.setorder-select-btn').forEach(btn => btn.addEventListener('click', () => selectUserForSetOrder(btn.dataset.uid, btn.dataset.name)));
+        document.querySelectorAll('.setorder-select-btn').forEach(btn => {
+            btn.addEventListener('click', () => selectUserForSetOrder(btn.dataset.uid, btn.dataset.name));
+        });
     }
 }
 
 async function selectUserForSetOrder(uid, username) {
-    currentSetUser = { uid, username };
+    selectedUser = { uid, username };
     document.getElementById('selectedUidDisplay').innerText = uid;
     document.getElementById('selectedUsernameDisplay').innerText = username;
+    
+    await loadUserProductsForOrder(uid);
+    
     document.getElementById('setordersUserSearch').style.display = 'none';
     document.getElementById('setordersMain').style.display = 'block';
-    await Promise.all([
-        loadUserTriggerOrders(uid),
-        loadUserProducts(uid)
-    ]);
 }
 
-async function loadUserTriggerOrders(uid) {
-    const container = document.getElementById('triggerOrdersContainer');
+async function loadUserProductsForOrder(uid) {
+    const container = document.getElementById('userProductsList');
     if (!container) return;
-    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">加载中...</div>';
-    const { data: orders, error } = await sb.from('user_trigger_orders').select('*').eq('uid', uid).in('status', ['pending', 'deducted']).order('trigger_order_number', { ascending: true });
-    if (error || !orders || orders.length === 0) {
-        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">暂无已设置的订单</div>';
-        return;
-    }
-    container.innerHTML = '';
-    for (let order of orders) {
-        const orderDiv = document.createElement('div');
-        orderDiv.className = 'trigger-order-item';
-        orderDiv.style.cssText = 'background:#0f172a; border-radius:12px; padding:12px; margin-bottom:10px; border:1px solid rgba(74,124,255,0.2);';
-        let orderTypeText = '', extraInfo = '';
-        if (order.order_type === 'advanced') {
-            orderTypeText = '高级订单';
-            extraInfo = `匹配订单: ${order.matched_order_name || '-'} (€${parseFloat(order.matched_price || 0).toFixed(2)}) | 佣金: 5%`;
-        } else if (order.order_type === 'card_reward') {
-            orderTypeText = '卡牌奖励';
-            extraInfo = `奖励金额: €${parseFloat(order.target_price || 0).toFixed(2)} (直接加到余额)`;
-        } else if (order.order_type === 'card_order') {
-            orderTypeText = '卡牌订单';
-            extraInfo = `订单价格: €${parseFloat(order.target_price || 0).toFixed(2)} | 佣金: 15%`;
-        }
-        const statusText = order.status === 'deducted' ? '已扣款，等待充值' : '等待触发';
-        orderDiv.innerHTML = `<div style="display: flex; justify-content: space-between;"><div><strong style="color:#4a7cff;">${orderTypeText}</strong> <span class="badge">第 ${order.trigger_order_number} 单触发</span> <span style="background:#ffaa33; padding:2px 8px; border-radius:12px; font-size:10px;">${statusText}</span><div style="font-size: 12px; margin-top: 5px;">${extraInfo}</div><div style="font-size: 11px; color: #aaa;">创建时间: ${new Date(order.created_at).toLocaleString()}</div></div><button class="delete-trigger-btn" data-id="${order.id}" style="background:#7a2f2f; padding:5px 12px; border-radius:8px;"><i class="fas fa-trash"></i> 删除</button></div>`;
-        container.appendChild(orderDiv);
-    }
-    document.querySelectorAll('.delete-trigger-btn').forEach(btn => btn.addEventListener('click', async () => {
-        showConfirm('确认删除', '删除这个触发订单？', async () => {
-            await sb.from('user_trigger_orders').delete().eq('id', parseInt(btn.dataset.id));
-            loadUserTriggerOrders(currentSetUser.uid);
-            showToast('删除成功', 'success');
-        });
-    }));
-}
-
-// 加载用户已添加的产品（带图片）
-async function loadUserProducts(uid) {
-    const container = document.getElementById('userProductsContainer');
-    if (!container) return;
-    container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">加载中...</div>';
     
-    try {
-        const { data: products, error } = await sb
-            .from('user_products')
-            .select('*')
-            .eq('uid', uid)
-            .order('added_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        if (!products || products.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #aaa;">该用户暂无已添加的产品</div>';
-            return;
-        }
-        
-        container.innerHTML = '';
-        
-        for (let product of products) {
-            const productDiv = document.createElement('div');
-            productDiv.style.cssText = 'background:#0f172a; border-radius:12px; padding:12px; margin-bottom:10px; border:1px solid rgba(74,124,255,0.2); display:flex; gap:12px; align-items:center; flex-wrap:wrap;';
-            
-            const addedDate = new Date(product.added_at).toLocaleString();
-            const imageUrl = product.image_url || 'https://placehold.co/60x60/1e2a3a/4a7cff?text=No+Image';
-            
-            productDiv.innerHTML = `
-                <div style="flex-shrink:0;">
-                    <img src="${imageUrl}" style="width:60px; height:60px; border-radius:12px; object-fit:cover;" 
-                         onerror="this.src='https://placehold.co/60x60/1e2a3a/4a7cff?text=No+Image'">
-                </div>
-                <div style="flex:2;">
-                    <div style="font-weight:600; color:#ffb84d;">${escapeHtml(product.product_name)}</div>
-                    <div style="font-size:12px; color:#8a9abb; margin-top:4px;">价格: €${parseFloat(product.price).toFixed(2)} | Margin: +${product.margin_percent}% (€${product.margin_profit})</div>
-                    <div style="font-size:11px; color:#6a7a9a;">添加时间: ${addedDate}</div>
-                </div>
-                <div>
-                    <span style="display:inline-block; padding:4px 12px; border-radius:20px; font-size:11px; background:rgba(46,209,90,0.15); color:#2ed15a;">已添加</span>
-                </div>
-            `;
-            
-            container.appendChild(productDiv);
-        }
-        
-    } catch (e) {
-        console.error('加载用户产品失败:', e);
-        container.innerHTML = '<div style="text-align: center; padding: 20px; color: #ff8888;">加载失败: ' + e.message + '</div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px;">加载中...</div>';
+    
+    const { data: products, error } = await sb
+        .from('user_products')
+        .select('*')
+        .eq('uid', uid)
+        .order('added_at', { ascending: false });
+    
+    if (error || !products || products.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">该用户暂无已添加的产品</div>';
+        return;
     }
+    
+    // 初始化 orderItems
+    orderItems = products.map(p => ({
+        product_id: p.product_id || p.id,
+        product_name: p.product_name,
+        price: p.price,
+        margin_profit: p.margin_profit,
+        quantity: 0,
+        image_url: p.image_url
+    }));
+    
+    renderProductSelectionList();
 }
 
-async function advancedSearchOrder() {
-    const targetPrice = parseFloat(document.getElementById('advancedTargetPrice').value);
-    if (isNaN(targetPrice)) {
-        showToast('请输入有效价格', 'error');
-        return;
-    }
-    const priceNum = Math.floor(targetPrice);
-    const digitCount = priceNum.toString().length;
-    let minPrice = priceNum, maxPrice;
-    if (digitCount === 3) maxPrice = priceNum + 99;
-    else if (digitCount === 4) maxPrice = priceNum + 999;
-    else if (digitCount === 5) maxPrice = priceNum + 9999;
-    else maxPrice = priceNum;
-    const { data: matchedOrders } = await sb.from('orders_pool').select('*').eq('status', 'available').gte('price', minPrice).lte('price', maxPrice).order('price', { ascending: true });
-    const container = document.getElementById('advancedOrdersList');
+function renderProductSelectionList() {
+    const container = document.getElementById('userProductsList');
+    if (!container) return;
+    
     container.innerHTML = '';
-    selectedAdvancedOrdersList = [];
-    if (!matchedOrders || matchedOrders.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:20px;">未找到匹配订单</div>';
+    
+    for (let i = 0; i < orderItems.length; i++) {
+        const item = orderItems[i];
+        const div = document.createElement('div');
+        div.className = 'product-selection-item';
+        div.style.cssText = 'background:#0f172a; border-radius:16px; padding:15px; margin-bottom:12px; display:flex; gap:15px; align-items:center; flex-wrap:wrap; border:1px solid rgba(74,124,255,0.2);';
+        
+        div.innerHTML = `
+            <div style="flex-shrink:0;">
+                <img src="${item.image_url || 'https://placehold.co/60x60/1e2a3a/4a7cff?text=No+Image'}" style="width:60px; height:60px; border-radius:12px; object-fit:cover;" onerror="this.src='https://placehold.co/60x60/1e2a3a/4a7cff?text=No+Image'">
+            </div>
+            <div style="flex:2;">
+                <div style="font-weight:600; color:#ffb84d;">${escapeHtml(item.product_name)}</div>
+                <div style="font-size:12px; color:#8a9abb;">供应价: €${item.price.toFixed(2)} | 佣金: €${item.margin_profit.toFixed(2)}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="qty-decr" data-index="${i}" style="background:#4a7cff; border:none; width:30px; height:30px; border-radius:8px; color:white; cursor:pointer;">-</button>
+                <span style="font-size:18px; font-weight:700; min-width:30px; text-align:center;" id="qty_${i}">${item.quantity}</span>
+                <button class="qty-incr" data-index="${i}" style="background:#4a7cff; border:none; width:30px; height:30px; border-radius:8px; color:white; cursor:pointer;">+</button>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+    
+    // 绑定增减按钮事件
+    document.querySelectorAll('.qty-decr').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.index);
+            if (orderItems[idx].quantity > 0) {
+                orderItems[idx].quantity--;
+                document.getElementById(`qty_${idx}`).innerText = orderItems[idx].quantity;
+                updateOrderSummary();
+            }
+        });
+    });
+    
+    document.querySelectorAll('.qty-incr').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.index);
+            orderItems[idx].quantity++;
+            document.getElementById(`qty_${idx}`).innerText = orderItems[idx].quantity;
+            updateOrderSummary();
+        });
+    });
+    
+    updateOrderSummary();
+}
+
+function updateOrderSummary() {
+    let totalSupply = 0;
+    let totalCommission = 0;
+    
+    for (const item of orderItems) {
+        totalSupply += item.price * item.quantity;
+        totalCommission += item.margin_profit * item.quantity;
+    }
+    
+    document.getElementById('totalSupplyPrice').innerHTML = `€${totalSupply.toFixed(2)}`;
+    document.getElementById('totalCommission').innerHTML = `€${totalCommission.toFixed(2)}`;
+    document.getElementById('totalIncrease').innerHTML = `€${(totalSupply + totalCommission).toFixed(2)}`;
+}
+
+async function confirmSetOrder() {
+    // 筛选出数量 > 0 的产品
+    const selectedItems = orderItems.filter(item => item.quantity > 0);
+    
+    if (selectedItems.length === 0) {
+        showToast('请至少选择一个产品', 'error');
         return;
     }
-    for (let order of matchedOrders) {
-        const div = document.createElement('div');
-        div.className = 'order-item-card';
-        div.style.cssText = 'background:#0f172a; border-radius:12px; padding:12px; margin-bottom:8px; display:flex; gap:12px; align-items:center;';
-        div.innerHTML = `<input type="checkbox" class="order-checkbox" data-id="${order.id}" data-price="${order.price}"><div><div>${order.accommodation_name || 'Hotel Task'}</div><div>€${order.price.toFixed(2)}</div></div>`;
-        container.appendChild(div);
-        const checkbox = div.querySelector('.order-checkbox');
-        checkbox.addEventListener('change', (e) => {
-            const orderData = { id: order.id, price: order.price };
-            if (e.target.checked) selectedAdvancedOrdersList.push(orderData);
-            else selectedAdvancedOrdersList = selectedAdvancedOrdersList.filter(o => o.id !== order.id);
-            document.getElementById('advancedActionBtns').style.display = selectedAdvancedOrdersList.length > 0 ? 'flex' : 'none';
+    
+    // 生成订单号
+    const orderNo = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
+    
+    // 生成随机买家地址
+    const buyer = generateRandomBuyer();
+    
+    // 批发商发货地址（固定）
+    const shippingAddress = "上海市浦东新区世纪大道100号环球金融中心 批发商仓库";
+    
+    // 计算总供应价和总佣金
+    let totalSupplyPrice = 0;
+    let totalCommission = 0;
+    let productsList = [];
+    
+    for (const item of selectedItems) {
+        totalSupplyPrice += item.price * item.quantity;
+        totalCommission += item.margin_profit * item.quantity;
+        productsList.push({
+            product_id: item.product_id,
+            product_name: item.product_name,
+            quantity: item.quantity,
+            unit_price: item.price,
+            total_price: item.price * item.quantity,
+            commission: item.margin_profit * item.quantity,
+            image_url: item.image_url
         });
     }
+    
+    // 插入订单到 user_orders
+    const { error } = await sb.from('user_orders').insert({
+        uid: selectedUser.uid,
+        order_no: orderNo,
+        products: JSON.stringify(productsList),
+        total_supply_price: totalSupplyPrice,
+        total_commission: totalCommission,
+        buyer_name: buyer.name,
+        buyer_phone: buyer.phone,
+        buyer_address: buyer.address,
+        shipping_address: shippingAddress,
+        status: 'pending',
+        created_at: new Date().toISOString()
+    });
+    
+    if (error) {
+        showToast('设置订单失败: ' + error.message, 'error');
+        return;
+    }
+    
+    showToast(`订单 ${orderNo} 设置成功！`, 'success');
+    
+    // 重置
+    orderItems = orderItems.map(item => ({ ...item, quantity: 0 }));
+    renderProductSelectionList();
 }
 
-async function confirmAdvancedOrder() {
-    if (!currentSetUser) {
-        showToast('请先选择用户', 'error');
-        return;
-    }
-    const orderCount = parseInt(document.getElementById('advancedOrderCount').value) || 1;
-    if (selectedAdvancedOrdersList.length === 0) {
-        showToast('请至少选择一个订单', 'error');
-        return;
-    }
-    for (let order of selectedAdvancedOrdersList) {
-        const matchedPrice = order.price;
-        const commissionAmount = matchedPrice * 0.05;
-        await sb.from('user_trigger_orders').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_type: 'advanced', trigger_order_number: orderCount, target_price: parseFloat(document.getElementById('advancedTargetPrice').value), matched_order_id: order.id, matched_price: matchedPrice, commission_rate: 5.0, commission_amount: commissionAmount, status: 'pending' }]);
-    }
-    showToast(`成功为 ${currentSetUser.username} 设置高级订单`, 'success');
-    selectedAdvancedOrdersList = [];
-    document.getElementById('advancedOrdersList').innerHTML = '';
-    document.getElementById('advancedActionBtns').style.display = 'none';
-    await loadUserTriggerOrders(currentSetUser.uid);
-}
-
-async function addCardReward() {
-    if (!currentSetUser) {
-        showToast('请先选择用户', 'error');
-        return;
-    }
-    const orderCount = parseInt(document.getElementById('cardOrderCount').value) || 0;
-    const rewardAmount = parseFloat(document.getElementById('cardTargetPrice').value) || 0;
-    if (orderCount <= 0 || rewardAmount <= 0) {
-        showToast('请输入有效数值', 'error');
-        return;
-    }
-    await sb.from('user_trigger_orders').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_type: 'card_reward', trigger_order_number: orderCount, target_price: rewardAmount, status: 'pending' }]);
-    showToast(`卡牌奖励设置成功：第${orderCount}单触发 €${rewardAmount}`, 'success');
-    await loadUserTriggerOrders(currentSetUser.uid);
-    document.getElementById('cardOrderCount').value = '';
-    document.getElementById('cardTargetPrice').value = '';
-}
-
-async function addCardOrder() {
-    if (!currentSetUser) {
-        showToast('请先选择用户', 'error');
-        return;
-    }
-    const orderCount = parseInt(document.getElementById('cardorderOrderCount').value) || 0;
-    const targetPrice = parseFloat(document.getElementById('cardorderTargetPrice').value) || 0;
-    if (orderCount <= 0 || targetPrice <= 0) {
-        showToast('请输入有效数值', 'error');
-        return;
-    }
-    const commissionAmount = targetPrice * 0.15;
-    await sb.from('user_trigger_orders').insert([{ uid: currentSetUser.uid, username: currentSetUser.username, order_type: 'card_order', trigger_order_number: orderCount, target_price: targetPrice, matched_price: targetPrice, commission_rate: 15.0, commission_amount: commissionAmount, status: 'pending' }]);
-    showToast(`卡牌订单设置成功：第${orderCount}单触发 €${targetPrice} (15%佣金)`, 'success');
-    await loadUserTriggerOrders(currentSetUser.uid);
-    document.getElementById('cardorderOrderCount').value = '';
-    document.getElementById('cardorderTargetPrice').value = '';
+function generateRandomBuyer() {
+    const firstNames = ['张', '李', '王', '刘', '陈', '杨', '赵', '周', '吴', '郑'];
+    const lastNames = ['明伟', '芳', '强', '静', '涛', '丽', '军', '娟', '伟', '敏'];
+    const cities = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '成都市', '武汉市', '西安市'];
+    const streets = ['朝阳区建国路', '浦东新区世纪大道', '天河区天河路', '南山区科技园', '西湖区文三路', '武侯区天府大道', '江汉区建设大道', '雁塔区科技路'];
+    
+    const name = firstNames[Math.floor(Math.random() * firstNames.length)] + lastNames[Math.floor(Math.random() * lastNames.length)];
+    const phone = '1' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 100000000).toString().padStart(9, '0');
+    const phoneDisplay = phone.substring(0, 3) + '****' + phone.substring(7);
+    const city = cities[Math.floor(Math.random() * cities.length)];
+    const street = streets[Math.floor(Math.random() * streets.length)];
+    const building = Math.floor(Math.random() * 200) + 1;
+    
+    return {
+        name: name,
+        phone: phoneDisplay,
+        address: `${city}${street}${building}号`
+    };
 }
 
 function escapeHtml(str) {

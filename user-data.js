@@ -276,3 +276,151 @@ async function cancelTriggerOrder(triggerId) {
     });
     observer.observe(document.body, { childList: true, subtree: true });
 })();
+
+// ========== 订单相关函数 ==========
+
+// 获取用户待处理订单
+async function getUserPendingOrders(uid) {
+    const { data, error } = await sb
+        .from('user_orders')
+        .select('*')
+        .eq('uid', uid)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+    
+    if (error) return [];
+    return data;
+}
+
+// 获取用户处理中订单
+async function getUserProcessingOrders(uid) {
+    const { data, error } = await sb
+        .from('user_orders')
+        .select('*')
+        .eq('uid', uid)
+        .eq('status', 'processing')
+        .order('created_at', { ascending: false });
+    
+    if (error) return [];
+    return data;
+}
+
+// 获取用户已完成订单
+async function getUserCompletedOrders(uid) {
+    const { data, error } = await sb
+        .from('user_orders')
+        .select('*')
+        .eq('uid', uid)
+        .eq('status', 'delivered')
+        .order('completed_at', { ascending: false });
+    
+    if (error) return [];
+    return data;
+}
+
+// 确认订单（发货）
+async function confirmOrderShipment(orderNo, uid) {
+    const { data: order, error: fetchError } = await sb
+        .from('user_orders')
+        .select('*')
+        .eq('order_no', orderNo)
+        .eq('uid', uid)
+        .single();
+    
+    if (fetchError || !order) {
+        return { success: false, error: '订单不存在' };
+    }
+    
+    if (order.status !== 'pending') {
+        return { success: false, error: '订单状态错误' };
+    }
+    
+    // 检查余额
+    const { data: user } = await sb.from('users').select('balance').eq('uid', uid).single();
+    if ((user?.balance || 0) < order.total_supply_price) {
+        return { success: false, error: '余额不足' };
+    }
+    
+    // 扣除供应价
+    const newBalance = (user?.balance || 0) - order.total_supply_price;
+    await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
+    
+    // 返还供应价 + 佣金
+    const finalBalance = newBalance + order.total_supply_price + order.total_commission;
+    await sb.from('users').update({ balance: finalBalance }).eq('uid', uid);
+    
+    // 生成物流时间线
+    const timeline = generateTrackingTimeline();
+    
+    // 更新订单
+    await sb.from('user_orders').update({
+        status: 'processing',
+        tracking_status: 'processing',
+        tracking_timeline: JSON.stringify(timeline),
+        completed_at: new Date().toISOString()
+    }).eq('order_no', orderNo);
+    
+    // 记录订单历史
+    try {
+        const products = JSON.parse(order.products || '[]');
+        for (const product of products) {
+            for (let i = 0; i < product.quantity; i++) {
+                await sb.from('order_history').insert({
+                    uid: uid,
+                    username: user.username,
+                    order_code: orderNo,
+                    accommodation_name: product.product_name,
+                    price: product.unit_price,
+                    commission: product.commission / product.quantity,
+                    date: new Date().toISOString()
+                });
+            }
+        }
+    } catch(e) {
+        console.error('记录订单历史失败:', e);
+    }
+    
+    return { success: true };
+}
+
+function generateTrackingTimeline() {
+    const startTime = new Date();
+    const timeline = [];
+    
+    const totalDuration = (3 + Math.random() * 2) * 24 * 60 * 60 * 1000;
+    
+    const statuses = [
+        "Order is placed",
+        "Sender is preparing to ship your parcel",
+        "Courier assigned for your order, kindly wait for pickup",
+        "Your parcel has been picked up by our logistics partner",
+        "Your parcel has arrived at sorting facility",
+        "Your parcel has departed from sorting facility",
+        "Your parcel has arrived the delivery hub",
+        "Your parcel is out for delivery",
+        "Parcel has been delivered"
+    ];
+    
+    const intervals = [];
+    let remaining = totalDuration;
+    for (let i = 0; i < statuses.length - 1; i++) {
+        const maxGap = remaining / (statuses.length - i);
+        const gap = maxGap * (0.3 + Math.random() * 0.7);
+        intervals.push(gap);
+        remaining -= gap;
+    }
+    intervals.push(remaining);
+    
+    let currentTime = startTime;
+    for (let i = 0; i < statuses.length; i++) {
+        timeline.push({
+            status: statuses[i],
+            time: new Date(currentTime).toISOString()
+        });
+        if (i < intervals.length) {
+            currentTime = new Date(currentTime.getTime() + intervals[i]);
+        }
+    }
+    
+    return timeline;
+}
