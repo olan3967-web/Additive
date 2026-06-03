@@ -295,3 +295,11 @@ if (!document.getElementById('notification-animation-style')) {
 })();
 
 console.log('✅ user-data.js 加载完成');
+
+// 强制暴露到 window 对象
+window.playNotificationSound = playNotificationSound;
+window.showInAppNotification = showInAppNotification;
+window.showBrowserNotification = showBrowserNotification;
+window.updateOrderBadge = updateOrderBadge;
+window.clearOrderBadge = clearOrderBadge;
+window.startOrderSubscription = startOrderSubscription;
