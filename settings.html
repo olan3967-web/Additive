@@ -1,45 +1,553 @@
-// translate.js - 自动翻译为英文（无按钮）
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Settings - ADDITIVE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="toast.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
+    <script src="toast.js"></script>
+    <script src="translate.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-(function() {
-    // 创建 Google Translate 容器
-    const div = document.createElement('div');
-    div.id = 'google_translate_element';
-    div.style.display = 'none';
-    document.body.appendChild(div);
-    
-    // 获取用户保存的语言偏好
-    const preferredLang = localStorage.getItem('preferred_language') || 'en';
-    
-    // 初始化翻译
-    window.googleTranslateElementInit = function() {
-        new google.translate.TranslateElement({
-            pageLanguage: 'zh-CN',
-            includedLanguages: 'en,de,es,it',
-            autoDisplay: false
-        }, 'google_translate_element');
-        
-        // 切换到用户偏好的语言
-        setTimeout(() => {
-            const select = document.querySelector('.goog-te-combo');
-            if (select && select.value !== preferredLang) {
-                select.value = preferredLang;
-                select.dispatchEvent(new Event('change'));
+        body {
+            background: #f5f7fb;
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+        }
+
+        .phone {
+            width: 390px;
+            min-height: 100vh;
+            background: #f5f7fb;
+            padding-bottom: 80px;
+            position: relative;
+        }
+
+        .page-header {
+            padding: 20px 20px 10px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .page-header p {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: 24px;
+            margin: 16px 20px;
+            padding: 20px;
+            border: 1px solid #eef2f7;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .settings-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .settings-title i {
+            color: #ff7a00;
+            font-size: 16px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .copy-btn {
+            background: #fff3e8;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: #ff7a00;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #ff7a00;
+            color: white;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #eef2f7;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-item:hover {
+            transform: translateX(4px);
+        }
+
+        .setting-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .setting-icon {
+            width: 40px;
+            height: 40px;
+            background: #fff3e8;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .setting-icon i {
+            font-size: 18px;
+            color: #ff7a00;
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-title-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+        }
+
+        .setting-desc {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        .setting-arrow {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            background: #fff3e8;
+            border: none;
+            width: calc(100% - 40px);
+            margin: 20px 20px 0;
+            padding: 14px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 15px;
+            color: #ef4444;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: #fee2e2;
+            transform: scale(1.01);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid #eef2f7;
+            display: flex;
+            padding: 10px 0 14px;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item.active {
+            color: #ff7a00;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="phone">
+
+    <div class="page-header">
+        <h1>Settings</h1>
+        <p>Manage your account preferences</p>
+    </div>
+
+    <!-- Account Section -->
+    <div class="settings-card">
+        <div class="settings-title">
+            <i class="fas fa-user-circle"></i> Account
+        </div>
+        <div class="info-row">
+            <span class="info-label">UID</span>
+            <div class="info-value">
+                <span id="displayUid">---</span>
+                <button class="copy-btn" onclick="copyUID()">Copy</button>
+            </div>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Invitation Code</span>
+            <div class="info-value">
+                <span id="displayInviteCode">---</span>
+                <button class="copy-btn" onclick="copyInviteCode()">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Section -->
+    <div class="settings-card">
+        <div class="settings-title">
+            <i class="fas fa-shield-alt"></i> Security
+        </div>
+        <div class="setting-item" onclick="changePassword()">
+            <div class="setting-left">
+                <div class="setting-icon"><i class="fas fa-lock"></i></div>
+                <div class="setting-info">
+                    <div class="setting-title-text">Change Password</div>
+                    <div class="setting-desc">Update your login password</div>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right setting-arrow"></i>
+        </div>
+        <div class="setting-item" onclick="setWithdrawalPin()">
+            <div class="setting-left">
+                <div class="setting-icon"><i class="fas fa-key"></i></div>
+                <div class="setting-info">
+                    <div class="setting-title-text">Set Withdrawal PIN</div>
+                    <div class="setting-desc">Create a PIN to protect withdrawals</div>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right setting-arrow"></i>
+        </div>
+        <div class="setting-item" onclick="changeWithdrawalPin()">
+            <div class="setting-left">
+                <div class="setting-icon"><i class="fas fa-rotate-left"></i></div>
+                <div class="setting-info">
+                    <div class="setting-title-text">Change Withdrawal PIN</div>
+                    <div class="setting-desc">Update your withdrawal PIN</div>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right setting-arrow"></i>
+        </div>
+    </div>
+
+    <!-- Language Section -->
+    <div class="settings-card">
+        <div class="settings-title">
+            <i class="fas fa-language"></i> Language
+        </div>
+        <div class="setting-item" onclick="changeLanguage('en')">
+            <div class="setting-left">
+                <div class="setting-icon"><i class="fas fa-flag-usa"></i></div>
+                <div class="setting-info">
+                    <div class="setting-title-text">English</div>
+                    <div class="setting-desc">Switch to English</div>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right setting-arrow"></i>
+        </div>
+        <div class="setting-item" onclick="changeLanguage('de')">
+            <div class="setting-left">
+                <div class="setting-icon"><i class="fas fa-flag"></i></div>
+                <div class="setting-info">
+                    <div class="setting-title-text">Deutsch</div>
+                    <div class="setting-desc">Switch to German</div>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right setting-arrow"></i>
+        </div>
+        <div class="setting-item" onclick="changeLanguage('es')">
+            <div class="setting-left">
+                <div class="setting-icon"><i class="fas fa-flag"></i></div>
+                <div class="setting-info">
+                    <div class="setting-title-text">Español</div>
+                    <div class="setting-desc">Switch to Spanish</div>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right setting-arrow"></i>
+        </div>
+        <div class="setting-item" onclick="changeLanguage('it')">
+            <div class="setting-left">
+                <div class="setting-icon"><i class="fas fa-flag"></i></div>
+                <div class="setting-info">
+                    <div class="setting-title-text">Italiano</div>
+                    <div class="setting-desc">Switch to Italian</div>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right setting-arrow"></i>
+        </div>
+    </div>
+
+    <!-- Support Section -->
+    <div class="settings-card">
+        <div class="settings-title">
+            <i class="fas fa-headset"></i> Support
+        </div>
+        <div class="setting-item" onclick="contactSupport()">
+            <div class="setting-left">
+                <div class="setting-icon"><i class="fas fa-comment-dots"></i></div>
+                <div class="setting-info">
+                    <div class="setting-title-text">Contact Support</div>
+                    <div class="setting-desc">Chat with customer service</div>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right setting-arrow"></i>
+        </div>
+    </div>
+
+    <!-- Logout Button -->
+    <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
+    </div>
+
+</div>
+
+<script>
+    function getCurrentUser() {
+        const userStr = localStorage.getItem('currentUser');
+        if (!userStr) return null;
+        try { return JSON.parse(userStr); } catch(e) { return null; }
+    }
+
+    async function fetchUserData(uid) {
+        const { data, error } = await sb.from('users').select('*').eq('uid', uid).single();
+        if (error) return null;
+        return data;
+    }
+
+    async function syncUserData() {
+        const user = getCurrentUser();
+        if (!user) return null;
+        const freshData = await fetchUserData(user.uid);
+        if (freshData) {
+            user.balance = freshData.balance || 0;
+            user.trialBonusAmount = freshData.trial_bonus_amount || 0;
+            user.vipLevel = freshData.vip_level || 1;
+            user.username = freshData.username;
+            user.uid = freshData.uid;
+            user.pin = freshData.pin || '';
+            user.inviteCode = freshData.invite_code || '';
+            localStorage.setItem('currentUser', JSON.stringify(user));
+        }
+        return user;
+    }
+
+    async function loadSettings() {
+        const user = getCurrentUser();
+        if (!user) {
+            window.location.href = 'signin.html';
+            return;
+        }
+        const freshUser = await syncUserData();
+        if (freshUser) {
+            document.getElementById('displayUid').innerText = freshUser.uid;
+            document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
+        }
+    }
+
+    function logout() {
+        showConfirm('Logout', 'Are you sure you want to logout?', () => {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'signin.html';
+        });
+    }
+
+    function copyUID() {
+        const uid = document.getElementById('displayUid').innerText;
+        navigator.clipboard.writeText(uid);
+        showToast('UID copied: ' + uid, 'success');
+    }
+
+    function copyInviteCode() {
+        const inviteCode = document.getElementById('displayInviteCode').innerText;
+        navigator.clipboard.writeText(inviteCode);
+        showToast('Invitation code copied: ' + inviteCode, 'success');
+    }
+
+    async function changePassword() {
+        showPrompt('Change Password', 'Enter new password (min 4 characters):', async (newPwd) => {
+            if (!newPwd) {
+                showToast('Password change cancelled', 'info');
+                return;
             }
-        }, 300);
-    };
-    
-    // 加载 Google Translate 脚本
-    const script = document.createElement('script');
-    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-    document.head.appendChild(script);
-    
-    // 隐藏 Google 横幅
-    const translateStyles = document.createElement('style');
-    translateStyles.textContent = `
-        .goog-te-banner-frame { display: none !important; }
-        .goog-te-gadget { display: none !important; }
-        body { top: 0 !important; }
-        .goog-te-balloon-frame { display: none !important; }
-    `;
-    document.head.appendChild(translateStyles);
-})();
+            if (newPwd.length < 4) {
+                showToast('Password must be at least 4 characters', 'error');
+                return;
+            }
+            const user = getCurrentUser();
+            if (user) {
+                const { error } = await sb.from('users').update({ password: newPwd }).eq('uid', user.uid);
+                if (error) {
+                    showToast('Password change failed: ' + error.message, 'error');
+                    return;
+                }
+                showToast('Password changed! Please login again.', 'success');
+                setTimeout(() => { logout(); }, 1500);
+            }
+        });
+    }
+
+    async function setWithdrawalPin() {
+        const user = getCurrentUser();
+        if (user) {
+            const { data: userData } = await sb.from('users').select('pin').eq('uid', user.uid).single();
+            if (userData && userData.pin && userData.pin !== '0000' && userData.pin !== '') {
+                showToast('PIN already set. Use "Change Withdrawal PIN" instead.', 'warning');
+                return;
+            }
+            showPrompt('Set Withdrawal PIN', 'Enter 4-digit PIN:', (pin) => {
+                if (!pin) {
+                    showToast('PIN setup cancelled', 'info');
+                    return;
+                }
+                if (pin && pin.length === 4 && !isNaN(pin)) {
+                    sb.from('users').update({ pin: pin }).eq('uid', user.uid)
+                        .then(() => { showToast('PIN set successfully!', 'success'); })
+                        .catch(err => { showToast('Failed to set PIN: ' + err.message, 'error'); });
+                } else {
+                    showToast('PIN must be exactly 4 digits', 'error');
+                }
+            });
+        }
+    }
+
+    async function changeWithdrawalPin() {
+        const user = getCurrentUser();
+        if (user) {
+            showPrompt('Change Withdrawal PIN', 'Enter current PIN:', async (oldPin) => {
+                if (!oldPin) {
+                    showToast('PIN change cancelled', 'info');
+                    return;
+                }
+                const { data: userData } = await sb.from('users').select('pin').eq('uid', user.uid).single();
+                if (userData && userData.pin !== oldPin) {
+                    showToast('Wrong current PIN', 'error');
+                    return;
+                }
+                showPrompt('Change Withdrawal PIN', 'Enter new 4-digit PIN:', (newPin) => {
+                    if (!newPin) {
+                        showToast('PIN change cancelled', 'info');
+                        return;
+                    }
+                    if (newPin && newPin.length === 4 && !isNaN(newPin)) {
+                        sb.from('users').update({ pin: newPin }).eq('uid', user.uid)
+                            .then(() => { showToast('PIN changed successfully!', 'success'); })
+                            .catch(err => { showToast('Failed to change PIN: ' + err.message, 'error'); });
+                    } else {
+                        showToast('PIN must be exactly 4 digits', 'error');
+                    }
+                });
+            });
+        }
+    }
+
+    function contactSupport() {
+        window.location.href = 'chat.html';
+    }
+
+    // ========== Language Switching ==========
+    function changeLanguage(lang) {
+        if (typeof switchLanguage === 'function') {
+            switchLanguage(lang);
+        } else {
+            localStorage.setItem('preferred_language', lang);
+            showToast('Language changed to ' + lang.toUpperCase() + '. Refresh page to apply.', 'success');
+        }
+    }
+
+    function setupBottomNav() {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.dataset.page;
+                if (page === 'dashboard') window.location.href = 'start.html';
+                else if (page === 'products') window.location.href = 'products.html';
+                else if (page === 'orders') window.location.href = 'orders.html';
+                else if (page === 'profile') window.location.href = 'dashboard.html';
+            });
+        });
+    }
+
+    setupBottomNav();
+    loadSettings();
+</script>
+</body>
+</html>
