@@ -84,10 +84,7 @@ async function getUserPendingTriggerOrder(uid) {
         .order('trigger_order_number', { ascending: true })
         .limit(1);
     
-    if (error) {
-        console.error('获取触发订单失败:', error);
-        return null;
-    }
+    if (error) return null;
     return triggers?.[0] || null;
 }
 
@@ -126,10 +123,7 @@ async function completeTriggerOrder(uid, triggerOrder) {
         .update({ balance: newBalance })
         .eq('uid', uid);
     
-    if (balanceError) {
-        console.error('更新余额失败:', balanceError);
-        return false;
-    }
+    if (balanceError) return false;
     
     const { error: updateError } = await sb
         .from('user_trigger_orders')
@@ -139,10 +133,7 @@ async function completeTriggerOrder(uid, triggerOrder) {
         })
         .eq('id', triggerOrder.id);
     
-    if (updateError) {
-        console.error('更新触发订单状态失败:', updateError);
-        return false;
-    }
+    if (updateError) return false;
     
     const localUser = getCurrentUser();
     if (localUser && localUser.uid === uid) {
@@ -258,6 +249,7 @@ window.sb = sb;
     style.textContent = `
         * { -webkit-tap-highlight-color: transparent !important; }
         *:active { transform: none !important; opacity: 1 !important; background: transparent !important; box-shadow: none !important; }
+        .nav-item { position: relative; }
     `;
     document.head.appendChild(style);
 })();

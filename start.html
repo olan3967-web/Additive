@@ -9,520 +9,75 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #f5f7fb;
-            font-family: 'Inter', sans-serif;
-            color: #1f2937;
-            display: flex;
-            justify-content: center;
-        }
-
-        .phone {
-            width: 390px;
-            min-height: 100vh;
-            background: #f5f7fb;
-            padding-bottom: 80px;
-            position: relative;
-        }
-
-        .dashboard-header {
-            padding: 20px 20px 0;
-        }
-
-        .welcome-text {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 4px;
-        }
-
-        .welcome-name {
-            color: #ff7a00;
-        }
-
-        .notification-icon {
-            width: 44px;
-            height: 44px;
-            background: #fff3e8;
-            border-radius: 22px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-
-        .notification-icon i {
-            color: #ff7a00;
-            font-size: 20px;
-        }
-
-        .video-card {
-            width: calc(100% + 40px);
-            margin-left: -20px;
-            margin-right: -20px;
-            margin-top: 0;
-            margin-bottom: 0;
-            padding: 0;
-            position: relative;
-            background: #000;
-            overflow: hidden;
-            line-height: 0;
-        }
-
-        .video-card video {
-            width: 100%;
-            height: auto;
-            display: block;
-            object-fit: cover;
-        }
-
-        /* 新手引导进度条 */
-        .progress-container {
-            background: white;
-            border-radius: 20px;
-            padding: 20px 20px;
-            margin: 16px 20px 20px 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            border: 1px solid #eef2f7;
-            transition: all 0.3s ease;
-        }
-
-        .progress-container.hidden {
-            display: none;
-        }
-
-        .steps-row {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            position: relative;
-        }
-
-        .step-wrapper {
-            flex: 1;
-            text-align: center;
-            position: relative;
-            z-index: 2;
-        }
-
-        .step-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #eef2f7;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            font-weight: 700;
-            font-size: 16px;
-            color: #94a3b8;
-            transition: all 0.3s;
-        }
-
-        .step-circle.completed {
-            background: #10b981;
-            color: white;
-        }
-
-        .step-circle.active {
-            background: #ff7a00;
-            color: white;
-            box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.2);
-        }
-
-        .step-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #6b7280;
-            margin-bottom: 4px;
-        }
-
-        .step-label.completed {
-            color: #10b981;
-        }
-
-        .step-label.active {
-            color: #ff7a00;
-        }
-
-        .step-desc {
-            font-size: 10px;
-            color: #94a3b8;
-        }
-
-        .progress-track {
-            position: relative;
-            height: 4px;
-            background: #eef2f7;
-            border-radius: 4px;
-            margin: 8px 0 16px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #ff7a00, #ff9f43);
-            border-radius: 4px;
-            transition: width 0.3s ease;
-        }
-
-        .progress-fill.animated {
-            background: linear-gradient(90deg, #ff7a00, #ff9f43, #ff7a00);
-            background-size: 200% 100%;
-            animation: flow 1.5s linear infinite;
-        }
-
-        @keyframes flow {
-            0% { background-position: 0% 0%; }
-            100% { background-position: 200% 0%; }
-        }
-
-        .progress-text {
-            text-align: center;
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            padding: 0 20px;
-            margin-top: 20px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 20px;
-            padding: 16px;
-            border: 1px solid #eef2f7;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 8px;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 6px;
-        }
-
-        .trend-up {
-            color: #10b981;
-            font-size: 11px;
-        }
-
-        .chart-card {
-            background: white;
-            border-radius: 24px;
-            padding: 18px;
-            margin: 0 20px 20px;
-            border: 1px solid #eef2f7;
-        }
-
-        .chart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .chart-title {
-            font-weight: 600;
-            color: #1a1a2e;
-        }
-
-        .chart-period {
-            font-size: 11px;
-            color: #ff7a00;
-        }
-
-        canvas {
-            width: 100%;
-            height: 140px;
-        }
-
-        .overview-cards-container {
-            padding: 0 8px;
-            margin-bottom: 20px;
-        }
-
-        .cards-grid {
-            display: flex;
-            overflow-x: auto;
-            scroll-snap-type: x mandatory;
-            gap: 12px;
-            padding-bottom: 10px;
-        }
-
-        .overview-card {
-            flex: 0 0 270px;
-            scroll-snap-align: start;
-            position: relative;
-            border-radius: 24px;
-            overflow: hidden;
-            cursor: pointer;
-        }
-
-        .overview-card-content {
-            background: linear-gradient(145deg, #ff8c33, #e66a00);
-            border-radius: 24px;
-            padding: 20px 16px;
-            box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.4);
-            min-height: 180px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            z-index: 2;
-            overflow: hidden;
-            border: 1px solid rgba(255, 240, 180, 0.5);
-        }
-
-        .overview-card-content::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60%;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.15) 40%, transparent 100%);
-            pointer-events: none;
-            z-index: 1;
-            border-radius: 24px 24px 0 0;
-        }
-
-        .overview-title-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 12px;
-            position: relative;
-            z-index: 3;
-        }
-
-        .overview-label {
-            font-size: 18px;
-            font-weight: 800;
-            color: rgba(255, 245, 220, 1);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        .overview-value {
-            font-size: 34px;
-            font-weight: 800;
-            color: #ffffff;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            position: relative;
-            z-index: 3;
-        }
-
-        .overview-tag {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(4px);
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 600;
-            color: #fff5e0;
-            width: fit-content;
-            cursor: pointer;
-            border: 1px solid rgba(255, 230, 160, 0.4);
-            position: relative;
-            z-index: 3;
-        }
-
-        .coin-icon, .card-icon {
-            position: absolute;
-            bottom: 8px;
-            right: 12px;
-            font-size: 70px;
-            color: rgba(255, 230, 140, 0.3);
-            z-index: 1;
-            pointer-events: none;
-            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
-        }
-
-        .particle-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            border-radius: 24px;
-        }
-
-        .products-card {
-            background: white;
-            border-radius: 24px;
-            padding: 18px;
-            margin: 0 20px 20px;
-            border: 1px solid #eef2f7;
-        }
-
-        .products-title {
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 16px;
-        }
-
-        .product-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #eef2f7;
-        }
-
-        .product-row:last-child {
-            border-bottom: none;
-        }
-
-        .product-name {
-            font-size: 14px;
-            color: #4b5563;
-        }
-
-        .product-amount {
-            font-weight: 600;
-            color: #ff7a00;
-        }
-
-        .partners-section {
-            margin: 0 20px 20px;
-            overflow: hidden;
-        }
-
-        .partners-title {
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .partners-title i {
-            color: #ff7a00;
-        }
-
-        .marquee-container {
-            width: 100%;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .marquee-content {
-            display: inline-block;
-            animation: marqueeScroll 30s linear infinite;
-        }
-
-        .partner-item {
-            display: inline-block;
-            width: 180px;
-            height: 110px;
-            margin-right: 12px;
-            border-radius: 16px;
-            overflow: hidden;
-            background: white;
-            border: 1px solid #eef2f7;
-            transition: transform 0.2s;
-            vertical-align: top;
-        }
-
-        .partner-item:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        .partner-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            background: #f0f2f5;
-        }
-
-        .partner-item .no-image {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #f8f9fa, #eef2f7);
-            color: #94a3b8;
-            font-size: 12px;
-            text-align: center;
-            white-space: normal;
-            word-break: break-word;
-            padding: 8px;
-        }
-
-        @keyframes marqueeScroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid #eef2f7;
-            display: flex;
-            padding: 10px 0 14px;
-            z-index: 100;
-        }
-
-        .nav-item {
-    flex: 1;
-    text-align: center;
-    font-size: 11px;
-    color: #9ca3af;
-    cursor: pointer;
-    position: relative;  /* 👈 添加这一行 */
-}
-
-        .nav-item i {
-            display: block;
-            font-size: 20px;
-            margin-bottom: 4px;
-        }
-
-        .nav-item.active {
-            color: #ff7a00;
-            font-weight: 600;
-        }
-
-        @media (max-width: 390px) {
-            .phone { width: 100%; }
-            .partner-item { width: 160px; height: 98px; }
-        }
+        /* 你的所有 CSS 保持不变，这里省略... 请保留你原来的 CSS */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f5f7fb; font-family: 'Inter', sans-serif; color: #1f2937; display: flex; justify-content: center; }
+        .phone { width: 390px; min-height: 100vh; background: #f5f7fb; padding-bottom: 80px; position: relative; }
+        .dashboard-header { padding: 20px 20px 0; }
+        .welcome-text { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+        .welcome-name { color: #ff7a00; }
+        .notification-icon { width: 44px; height: 44px; background: #fff3e8; border-radius: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .notification-icon i { color: #ff7a00; font-size: 20px; }
+        .video-card { width: calc(100% + 40px); margin-left: -20px; margin-right: -20px; margin-top: 0; margin-bottom: 0; padding: 0; position: relative; background: #000; overflow: hidden; line-height: 0; }
+        .video-card video { width: 100%; height: auto; display: block; object-fit: cover; }
+        .progress-container { background: white; border-radius: 20px; padding: 20px 20px; margin: 16px 20px 20px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #eef2f7; transition: all 0.3s ease; }
+        .progress-container.hidden { display: none; }
+        .steps-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; position: relative; }
+        .step-wrapper { flex: 1; text-align: center; position: relative; z-index: 2; }
+        .step-circle { width: 40px; height: 40px; border-radius: 50%; background: #eef2f7; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 700; font-size: 16px; color: #94a3b8; transition: all 0.3s; }
+        .step-circle.completed { background: #10b981; color: white; }
+        .step-circle.active { background: #ff7a00; color: white; box-shadow: 0 0 0 3px rgba(255,122,0,0.2); }
+        .step-label { font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px; }
+        .step-label.completed { color: #10b981; }
+        .step-label.active { color: #ff7a00; }
+        .step-desc { font-size: 10px; color: #94a3b8; }
+        .progress-track { position: relative; height: 4px; background: #eef2f7; border-radius: 4px; margin: 8px 0 16px; overflow: hidden; }
+        .progress-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: linear-gradient(90deg,#ff7a00,#ff9f43); border-radius: 4px; transition: width 0.3s ease; }
+        .progress-fill.animated { background: linear-gradient(90deg,#ff7a00,#ff9f43,#ff7a00); background-size: 200% 100%; animation: flow 1.5s linear infinite; }
+        @keyframes flow { 0% { background-position: 0% 0%; } 100% { background-position: 200% 0%; } }
+        .progress-text { text-align: center; font-size: 12px; color: #6b7280; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; padding: 0 20px; margin-top: 20px; margin-bottom: 20px; }
+        .stat-card { background: white; border-radius: 20px; padding: 16px; border: 1px solid #eef2f7; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .stat-label { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+        .stat-value { font-size: 24px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+        .trend-up { color: #10b981; font-size: 11px; }
+        .chart-card { background: white; border-radius: 24px; padding: 18px; margin: 0 20px 20px; border: 1px solid #eef2f7; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .chart-title { font-weight: 600; color: #1a1a2e; }
+        .chart-period { font-size: 11px; color: #ff7a00; }
+        canvas { width: 100%; height: 140px; }
+        .overview-cards-container { padding: 0 8px; margin-bottom: 20px; }
+        .cards-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; padding-bottom: 10px; }
+        .overview-card { flex: 0 0 270px; scroll-snap-align: start; position: relative; border-radius: 24px; overflow: hidden; cursor: pointer; }
+        .overview-card-content { background: linear-gradient(145deg,#ff8c33,#e66a00); border-radius: 24px; padding: 20px 16px; box-shadow: 0 20px 30px -10px rgba(0,0,0,0.4); min-height: 180px; display: flex; flex-direction: column; position: relative; z-index: 2; overflow: hidden; border: 1px solid rgba(255,240,180,0.5); }
+        .overview-card-content::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 60%; background: linear-gradient(135deg,rgba(255,255,255,0.5) 0%,rgba(255,255,255,0.15) 40%,transparent 100%); pointer-events: none; z-index: 1; border-radius: 24px 24px 0 0; }
+        .overview-title-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; position: relative; z-index: 3; }
+        .overview-label { font-size: 18px; font-weight: 800; color: rgba(255,245,220,1); letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .overview-value { font-size: 34px; font-weight: 800; color: #ffffff; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); position: relative; z-index: 3; }
+        .overview-tag { background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; color: #fff5e0; width: fit-content; cursor: pointer; border: 1px solid rgba(255,230,160,0.4); position: relative; z-index: 3; }
+        .coin-icon, .card-icon { position: absolute; bottom: 8px; right: 12px; font-size: 70px; color: rgba(255,230,140,0.3); z-index: 1; pointer-events: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+        .particle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; border-radius: 24px; }
+        .products-card { background: white; border-radius: 24px; padding: 18px; margin: 0 20px 20px; border: 1px solid #eef2f7; }
+        .products-title { font-weight: 600; color: #1a1a2e; margin-bottom: 16px; }
+        .product-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eef2f7; }
+        .product-row:last-child { border-bottom: none; }
+        .product-name { font-size: 14px; color: #4b5563; }
+        .product-amount { font-weight: 600; color: #ff7a00; }
+        .partners-section { margin: 0 20px 20px; overflow: hidden; }
+        .partners-title { font-weight: 600; color: #1a1a2e; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+        .partners-title i { color: #ff7a00; }
+        .marquee-container { width: 100%; overflow: hidden; white-space: nowrap; }
+        .marquee-content { display: inline-block; animation: marqueeScroll 30s linear infinite; }
+        .partner-item { display: inline-block; width: 180px; height: 110px; margin-right: 12px; border-radius: 16px; overflow: hidden; background: white; border: 1px solid #eef2f7; transition: transform 0.2s; vertical-align: top; }
+        .partner-item:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .partner-item img { width: 100%; height: 100%; object-fit: cover; background: #f0f2f5; }
+        .partner-item .no-image { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg,#f8f9fa,#eef2f7); color: #94a3b8; font-size: 12px; text-align: center; white-space: normal; word-break: break-word; padding: 8px; }
+        @keyframes marqueeScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: rgba(255,255,255,0.96); backdrop-filter: blur(20px); border-top: 1px solid #eef2f7; display: flex; padding: 10px 0 14px; z-index: 100; }
+        .nav-item { flex: 1; text-align: center; font-size: 11px; color: #9ca3af; cursor: pointer; position: relative; }
+        .nav-item i { display: block; font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: #ff7a00; font-weight: 600; }
+        @media (max-width: 390px) { .phone { width: 100%; } .partner-item { width: 160px; height: 98px; } }
     </style>
 </head>
 <body>
@@ -570,110 +125,36 @@
     </div>
 
     <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-label">Total Sales</div>
-            <div class="stat-value" id="totalSales">€0</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +12.5%</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">ROI</div>
-            <div class="stat-value" id="roiValue">0%</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +5.1%</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Orders</div>
-            <div class="stat-value" id="ordersCount">0</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +8.3%</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Profit</div>
-            <div class="stat-value" id="profitValue">€0</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +15.2%</div>
-        </div>
+        <div class="stat-card"><div class="stat-label">Total Sales</div><div class="stat-value" id="totalSales">€0</div><div class="trend-up"><i class="fas fa-arrow-up"></i> +12.5%</div></div>
+        <div class="stat-card"><div class="stat-label">ROI</div><div class="stat-value" id="roiValue">0%</div><div class="trend-up"><i class="fas fa-arrow-up"></i> +5.1%</div></div>
+        <div class="stat-card"><div class="stat-label">Orders</div><div class="stat-value" id="ordersCount">0</div><div class="trend-up"><i class="fas fa-arrow-up"></i> +8.3%</div></div>
+        <div class="stat-card"><div class="stat-label">Profit</div><div class="stat-value" id="profitValue">€0</div><div class="trend-up"><i class="fas fa-arrow-up"></i> +15.2%</div></div>
     </div>
 
     <div class="chart-card">
-        <div class="chart-header">
-            <span class="chart-title">Revenue Trend</span>
-            <span class="chart-period">Last 7 days</span>
-        </div>
+        <div class="chart-header"><span class="chart-title">Revenue Trend</span><span class="chart-period">Last 7 days</span></div>
         <canvas id="revenueChart"></canvas>
     </div>
 
     <div class="overview-cards-container">
         <div class="cards-grid">
-            <div class="overview-card" id="card1">
-                <div class="overview-card-content">
-                    <canvas id="particleCanvas1" class="particle-canvas"></canvas>
-                    <i class="fas fa-coins coin-icon"></i>
-                    <div class="overview-title-row">
-                        <span class="overview-label">TOTAL EARNINGS</span>
-                    </div>
-                    <div class="overview-value" id="overviewEarnings">€0</div>
-                    <div class="overview-tag">Lifetime earnings</div>
-                </div>
-            </div>
-            <div class="overview-card" id="card2">
-                <div class="overview-card-content">
-                    <canvas id="particleCanvas2" class="particle-canvas"></canvas>
-                    <i class="fas fa-chart-simple card-icon"></i>
-                    <div class="overview-title-row">
-                        <span class="overview-label">CURRENT EVENT</span>
-                    </div>
-                    <div class="overview-value">+15%</div>
-                    <div class="overview-tag">VIP bonus active</div>
-                </div>
-            </div>
-            <div class="overview-card" id="card3">
-                <div class="overview-card-content">
-                    <canvas id="particleCanvas3" class="particle-canvas"></canvas>
-                    <i class="fas fa-gem card-icon"></i>
-                    <div class="overview-title-row">
-                        <span class="overview-label">PREMIUM STATUS</span>
-                    </div>
-                    <div class="overview-value" id="overviewPremium">Normal</div>
-                    <div class="overview-tag">Upgrade Now</div>
-                </div>
-            </div>
-            <div class="overview-card" id="card4" onclick="location.href='certificate.html'">
-                <div class="overview-card-content">
-                    <canvas id="particleCanvas4" class="particle-canvas"></canvas>
-                    <i class="fas fa-award card-icon"></i>
-                    <div class="overview-title-row">
-                        <span class="overview-label">CERTIFICATE</span>
-                    </div>
-                    <div class="overview-value" id="overviewCert">0/100</div>
-                    <div class="overview-tag" id="certTag">100 orders to go</div>
-                </div>
-            </div>
+            <div class="overview-card" id="card1"><div class="overview-card-content"><canvas id="particleCanvas1" class="particle-canvas"></canvas><i class="fas fa-coins coin-icon"></i><div class="overview-title-row"><span class="overview-label">TOTAL EARNINGS</span></div><div class="overview-value" id="overviewEarnings">€0</div><div class="overview-tag">Lifetime earnings</div></div></div>
+            <div class="overview-card" id="card2"><div class="overview-card-content"><canvas id="particleCanvas2" class="particle-canvas"></canvas><i class="fas fa-chart-simple card-icon"></i><div class="overview-title-row"><span class="overview-label">CURRENT EVENT</span></div><div class="overview-value">+15%</div><div class="overview-tag">VIP bonus active</div></div></div>
+            <div class="overview-card" id="card3"><div class="overview-card-content"><canvas id="particleCanvas3" class="particle-canvas"></canvas><i class="fas fa-gem card-icon"></i><div class="overview-title-row"><span class="overview-label">PREMIUM STATUS</span></div><div class="overview-value" id="overviewPremium">Normal</div><div class="overview-tag">Upgrade Now</div></div></div>
+            <div class="overview-card" id="card4" onclick="location.href='certificate.html'"><div class="overview-card-content"><canvas id="particleCanvas4" class="particle-canvas"></canvas><i class="fas fa-award card-icon"></i><div class="overview-title-row"><span class="overview-label">CERTIFICATE</span></div><div class="overview-value" id="overviewCert">0/100</div><div class="overview-tag" id="certTag">100 orders to go</div></div></div>
         </div>
     </div>
 
     <div class="products-card">
         <div class="products-title">🔥 Top Products</div>
-        <div class="product-row">
-            <span class="product-name">Wireless Earbuds</span>
-            <span class="product-amount">€2,340</span>
-        </div>
-        <div class="product-row">
-            <span class="product-name">Smart Watch Pro</span>
-            <span class="product-amount">€1,890</span>
-        </div>
-        <div class="product-row">
-            <span class="product-name">Portable Speaker</span>
-            <span class="product-amount">€1,245</span>
-        </div>
+        <div class="product-row"><span class="product-name">Wireless Earbuds</span><span class="product-amount">€2,340</span></div>
+        <div class="product-row"><span class="product-name">Smart Watch Pro</span><span class="product-amount">€1,890</span></div>
+        <div class="product-row"><span class="product-name">Portable Speaker</span><span class="product-amount">€1,245</span></div>
     </div>
 
     <div class="partners-section">
-        <div class="partners-title">
-            <i class="fa-solid fa-handshake"></i> CJ's Partners
-        </div>
-        <div class="marquee-container" id="partnersContainer">
-            <div class="marquee-content" id="partnersContent">
-                <div style="text-align: center; padding: 30px; color: #94a3b8;">加载中...</div>
-            </div>
-        </div>
+        <div class="partners-title"><i class="fa-solid fa-handshake"></i> CJ's Partners</div>
+        <div class="marquee-container" id="partnersContainer"><div class="marquee-content" id="partnersContent"><div style="text-align: center; padding: 30px; color: #94a3b8;">加载中...</div></div></div>
     </div>
 
     <div class="bottom-nav">
@@ -684,6 +165,10 @@
     </div>
 
 </div>
+
+<script src="user-data.js"></script>
+<script src="toast.js"></script>
+<script src="notification.js"></script>
 
 <script>
     let revenueChart = null;
@@ -759,78 +244,22 @@
         };
     }
 
-    // 使用全局 sb（来自 user-data.js）
-    async function loadUserData() {
-        const user = getCurrentUser();
-        if (!user) return;
-        currentUser = user;
-        
-        document.getElementById('displayUsername').innerText = user.username || 'User';
-        
-        const { data: orders } = await sb.from('order_history').select('commission, price').eq('uid', user.uid);
-        
-        const orderCount = orders?.length || 0;
-        const totalCommission = orders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
-        const totalSales = orders?.reduce((sum, o) => sum + (o.price || 0), 0) || 0;
-        
-        const roi = totalSales > 0 ? ((totalCommission / totalSales) * 100).toFixed(1) : 0;
-        const profit = (totalCommission * 0.7).toFixed(0);
-        
-        document.getElementById('totalSales').innerHTML = '€' + totalSales.toLocaleString();
-        document.getElementById('roiValue').innerHTML = roi + '%';
-        document.getElementById('ordersCount').innerHTML = orderCount;
-        document.getElementById('profitValue').innerHTML = '€' + parseFloat(profit).toLocaleString();
-        
-        document.getElementById('overviewEarnings').innerHTML = '€' + totalCommission.toLocaleString();
-        
-        const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
-        document.getElementById('overviewPremium').innerText = vipMap[user.vipLevel] || 'Normal';
-        
-        const certProgress = orderCount >= 100 ? 100 : orderCount;
-        document.getElementById('overviewCert').innerHTML = certProgress + '/100';
-        const remaining = orderCount >= 100 ? 0 : 100 - orderCount;
-        document.getElementById('certTag').innerHTML = remaining === 0 ? 'Completed!' : remaining + ' orders to go';
-        
-        // 加载进度（Step 2 会从 KYC 表读取）
-        const progress = await loadUserOnboardingProgress(user.uid);
-        updateProgressUI(progress);
-    }
-
     async function getUserKycStatus(uid) {
         try {
-            const { data, error } = await sb
-                .from('user_kyc_status')
-                .select('is_verified')
-                .eq('uid', uid)
-                .single();
+            const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
             if (error) return false;
             return data?.is_verified || false;
-        } catch (e) {
-            return false;
-        }
+        } catch (e) { return false; }
     }
 
     async function loadUserOnboardingProgress(uid) {
         try {
             const isKycVerified = await getUserKycStatus(uid);
-            
-            const { data, error } = await sb
-                .from('user_onboarding')
-                .select('step1_completed, step3_completed, products_added_count')
-                .eq('uid', uid)
-                .single();
-            
+            const { data, error } = await sb.from('user_onboarding').select('step1_completed, step3_completed, products_added_count').eq('uid', uid).single();
             if (error && error.code === 'PGRST116') {
-                await sb.from('user_onboarding').insert([{
-                    uid: uid,
-                    step1_completed: false,
-                    step2_completed: false,
-                    step3_completed: false,
-                    products_added_count: 0
-                }]);
+                await sb.from('user_onboarding').insert([{ uid: uid, step1_completed: false, step2_completed: false, step3_completed: false, products_added_count: 0 }]);
                 return { step1: false, step2: false, step3: false, productCount: 0 };
             }
-            
             return {
                 step1: data?.step1_completed || false,
                 step2: isKycVerified,
@@ -838,7 +267,6 @@
                 productCount: data?.products_added_count || 0
             };
         } catch (e) {
-            console.error('加载进度失败:', e);
             return { step1: false, step2: false, step3: false, productCount: 0 };
         }
     }
@@ -857,73 +285,67 @@
         const progressText = document.getElementById('progressText');
         
         if (steps[0]) {
-            step1Circle.classList.add('completed');
-            step1Circle.classList.remove('active');
-            step1Label.classList.add('completed');
-            step1Circle.textContent = '✓';
+            step1Circle.classList.add('completed'); step1Circle.classList.remove('active'); step1Label.classList.add('completed'); step1Circle.textContent = '✓';
         } else if (completedCount === 0) {
-            step1Circle.classList.remove('completed');
-            step1Circle.classList.add('active');
-            step1Label.classList.remove('completed');
-            step1Label.classList.add('active');
-            step1Circle.textContent = '1';
+            step1Circle.classList.remove('completed'); step1Circle.classList.add('active'); step1Label.classList.remove('completed'); step1Label.classList.add('active'); step1Circle.textContent = '1';
         } else {
-            step1Circle.classList.remove('active');
-            step1Label.classList.remove('active');
-            step1Circle.textContent = '1';
+            step1Circle.classList.remove('active'); step1Label.classList.remove('active'); step1Circle.textContent = '1';
         }
         
         if (steps[1]) {
-            step2Circle.classList.add('completed');
-            step2Circle.classList.remove('active');
-            step2Label.classList.add('completed');
-            step2Circle.textContent = '✓';
+            step2Circle.classList.add('completed'); step2Circle.classList.remove('active'); step2Label.classList.add('completed'); step2Circle.textContent = '✓';
         } else if (completedCount === 1) {
-            step2Circle.classList.remove('completed');
-            step2Circle.classList.add('active');
-            step2Label.classList.remove('completed');
-            step2Label.classList.add('active');
-            step2Circle.textContent = '2';
+            step2Circle.classList.remove('completed'); step2Circle.classList.add('active'); step2Label.classList.remove('completed'); step2Label.classList.add('active'); step2Circle.textContent = '2';
         } else {
-            step2Circle.classList.remove('completed', 'active');
-            step2Label.classList.remove('completed', 'active');
-            step2Circle.textContent = '2';
+            step2Circle.classList.remove('completed', 'active'); step2Label.classList.remove('completed', 'active'); step2Circle.textContent = '2';
         }
         
         if (steps[2]) {
-            step3Circle.classList.add('completed');
-            step3Circle.classList.remove('active');
-            step3Label.classList.add('completed');
-            step3Circle.textContent = '✓';
+            step3Circle.classList.add('completed'); step3Circle.classList.remove('active'); step3Label.classList.add('completed'); step3Circle.textContent = '✓';
         } else if (completedCount === 2) {
-            step3Circle.classList.remove('completed');
-            step3Circle.classList.add('active');
-            step3Label.classList.remove('completed');
-            step3Label.classList.add('active');
-            step3Circle.textContent = '3';
+            step3Circle.classList.remove('completed'); step3Circle.classList.add('active'); step3Label.classList.remove('completed'); step3Label.classList.add('active'); step3Circle.textContent = '3';
         } else {
-            step3Circle.classList.remove('completed', 'active');
-            step3Label.classList.remove('completed', 'active');
-            step3Circle.textContent = '3';
+            step3Circle.classList.remove('completed', 'active'); step3Label.classList.remove('completed', 'active'); step3Circle.textContent = '3';
         }
         
         const percent = (completedCount / 3) * 100;
         progressFill.style.width = percent + '%';
-        
-        if (completedCount < 3) {
-            progressFill.classList.add('animated');
-        } else {
-            progressFill.classList.remove('animated');
-        }
-        
+        if (completedCount < 3) progressFill.classList.add('animated');
+        else progressFill.classList.remove('animated');
         progressText.textContent = `${completedCount} of 3 completed`;
-        
         const progressContainer = document.getElementById('progressContainer');
-        if (completedCount === 3) {
-            progressContainer.classList.add('hidden');
-        } else {
-            progressContainer.classList.remove('hidden');
-        }
+        if (completedCount === 3) progressContainer.classList.add('hidden');
+        else progressContainer.classList.remove('hidden');
+    }
+
+    async function loadUserData() {
+        const user = getCurrentUser();
+        if (!user) return;
+        currentUser = user;
+        document.getElementById('displayUsername').innerText = user.username || 'User';
+        
+        const { data: orders } = await sb.from('order_history').select('commission, price').eq('uid', user.uid);
+        const orderCount = orders?.length || 0;
+        const totalCommission = orders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
+        const totalSales = orders?.reduce((sum, o) => sum + (o.price || 0), 0) || 0;
+        const roi = totalSales > 0 ? ((totalCommission / totalSales) * 100).toFixed(1) : 0;
+        const profit = (totalCommission * 0.7).toFixed(0);
+        
+        document.getElementById('totalSales').innerHTML = '€' + totalSales.toLocaleString();
+        document.getElementById('roiValue').innerHTML = roi + '%';
+        document.getElementById('ordersCount').innerHTML = orderCount;
+        document.getElementById('profitValue').innerHTML = '€' + parseFloat(profit).toLocaleString();
+        document.getElementById('overviewEarnings').innerHTML = '€' + totalCommission.toLocaleString();
+        
+        const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
+        document.getElementById('overviewPremium').innerText = vipMap[user.vipLevel] || 'Normal';
+        const certProgress = orderCount >= 100 ? 100 : orderCount;
+        document.getElementById('overviewCert').innerHTML = certProgress + '/100';
+        const remaining = orderCount >= 100 ? 0 : 100 - orderCount;
+        document.getElementById('certTag').innerHTML = remaining === 0 ? 'Completed!' : remaining + ' orders to go';
+        
+        const progress = await loadUserOnboardingProgress(user.uid);
+        updateProgressUI(progress);
     }
 
     async function loadVideoConfig() {
@@ -932,11 +354,7 @@
             if (error) return;
             if (data && data.video_url) {
                 const video = document.getElementById('heroVideo');
-                if (video) {
-                    video.src = data.video_url;
-                    video.load();
-                    video.play().catch(e => console.log('视频自动播放被阻止'));
-                }
+                if (video) { video.src = data.video_url; video.load(); video.play().catch(e => console.log('视频自动播放被阻止')); }
             }
         } catch (e) { console.error('加载视频失败:', e); }
     }
@@ -944,40 +362,15 @@
     async function loadPartners() {
         const container = document.getElementById('partnersContent');
         if (!container) return;
-        
         try {
-            const { data, error } = await sb
-                .from('animated_settings')
-                .select('featured_hotels')
-                .eq('id', 1)
-                .single();
-            
+            const { data, error } = await sb.from('animated_settings').select('featured_hotels').eq('id', 1).single();
             if (error) throw error;
-            
             let partners = data?.featured_hotels || [];
-            
             if (partners.length === 0) {
-                partners = [
-                    { name: 'Shopify', image: '' },
-                    { name: 'WooCommerce', image: '' },
-                    { name: 'TikTok Shop', image: '' },
-                    { name: 'eBay', image: '' },
-                    { name: 'Shopee', image: '' },
-                    { name: 'Lazada', image: '' }
-                ];
+                partners = [{ name: 'Shopify', image: '' }, { name: 'WooCommerce', image: '' }, { name: 'TikTok Shop', image: '' }, { name: 'eBay', image: '' }, { name: 'Shopee', image: '' }, { name: 'Lazada', image: '' }];
             }
-            
             const allPartners = [...partners, ...partners];
-            
-            const partnersHtml = allPartners.map(partner => `
-                <div class="partner-item">
-                    ${partner.image ? 
-                        `<img src="${partner.image}" onerror="this.src=''" alt="${partner.name}">` : 
-                        `<div class="no-image">${escapeHtml(partner.name)}</div>`
-                    }
-                </div>
-            `).join('');
-            
+            const partnersHtml = allPartners.map(partner => `<div class="partner-item">${partner.image ? `<img src="${partner.image}" onerror="this.src=''" alt="${partner.name}">` : `<div class="no-image">${escapeHtml(partner.name)}</div>`}</div>`).join('');
             container.innerHTML = partnersHtml;
         } catch (e) {
             console.error('加载合作伙伴失败:', e);
@@ -992,31 +385,13 @@
         if (revenueChart) revenueChart.destroy();
         revenueChart = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    data: [3200, 4100, 3800, 5200, 6100, 5800, 7200],
-                    borderColor: '#ff7a00',
-                    backgroundColor: 'rgba(255,122,0,0.05)',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#ff7a00',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false }, tooltip: { backgroundColor: 'white', borderColor: '#ff7a00', borderWidth: 1 } },
-                scales: { x: { grid: { display: false } }, y: { grid: { color: '#eef2f7' } } }
-            }
+            data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ data: [3200, 4100, 3800, 5200, 6100, 5800, 7200], borderColor: '#ff7a00', backgroundColor: 'rgba(255,122,0,0.05)', borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#ff7a00', fill: true, tension: 0.4 }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'white', borderColor: '#ff7a00', borderWidth: 1 } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#eef2f7' } } } }
         });
     }
 
     function setupBottomNav() {
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
+        document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const page = item.dataset.page;
                 if (page === 'dashboard') window.location.href = 'start.html';
@@ -1038,22 +413,17 @@
         initChart();
         setupBottomNav();
         await loadPartners();
-        
         startParticleEffect('particleCanvas1', 'card1');
         startParticleEffect('particleCanvas2', 'card2');
         startParticleEffect('particleCanvas3', 'card3');
         startParticleEffect('particleCanvas4', 'card4');
     }
     
-    // 检查登录
     if (!getCurrentUser()) {
         window.location.href = 'signin.html';
     } else {
         init();
     }
 </script>
-<script src="user-data.js"></script>
-<script src="toast.js"></script>
-<script src="notification.js"></script>
 </body>
 </html>
