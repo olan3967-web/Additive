@@ -424,3 +424,303 @@ function generateTrackingTimeline() {
     
     return timeline;
 }
+
+// ========== 订单实时通知系统 ==========
+
+let orderSubscription = null;
+let unreadOrderCount = 0;
+let notificationPermissionGranted = false;
+
+// 请求通知权限
+async function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+        console.log('浏览器不支持通知');
+        return false;
+    }
+    
+    if (Notification.permission === 'granted') {
+        notificationPermissionGranted = true;
+        return true;
+    }
+    
+    if (Notification.permission !== 'denied') {
+        const permission = await Notification.requestPermission();
+        notificationPermissionGranted = permission === 'granted';
+        return notificationPermissionGranted;
+    }
+    
+    return false;
+}
+
+// 播放提示音
+function playNotificationSound() {
+    try {
+        // 使用 Web Audio API 生成简单提示音（不依赖外部文件）
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 880; // 高音
+        gainNode.gain.value = 0.3;
+        
+        oscillator.start();
+        gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+        oscillator.stop(audioContext.currentTime + 0.5);
+        
+        audioContext.resume();
+    } catch(e) {
+        console.log('播放音效失败:', e);
+    }
+}
+
+// 显示浏览器通知
+function showBrowserNotification(order) {
+    if (!notificationPermissionGranted) return;
+    
+    let productsText = '';
+    try {
+        const products = JSON.parse(order.products || '[]');
+        productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
+    } catch(e) {
+        productsText = order.products || '订单';
+    }
+    
+    const notification = new Notification('📦 新订单通知', {
+        body: `订单号：${order.order_no}\n产品：${productsText}\n总价：€${(order.total_supply_price || 0).toFixed(2)}`,
+        icon: 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png',
+        tag: order.order_no,
+        requireInteraction: true
+    });
+    
+    notification.onclick = () => {
+        window.focus();
+        window.location.href = 'orders.html';
+        notification.close();
+    };
+    
+    setTimeout(() => notification.close(), 10000);
+}
+
+// 显示页面内弹窗通知
+function showInAppNotification(order) {
+    // 移除已有的通知
+    const existing = document.querySelector('.order-notification-toast');
+    if (existing) existing.remove();
+    
+    let productsText = '';
+    try {
+        const products = JSON.parse(order.products || '[]');
+        productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
+    } catch(e) {
+        productsText = order.products || '订单';
+    }
+    
+    const toast = document.createElement('div');
+    toast.className = 'order-notification-toast';
+    toast.innerHTML = `
+        <div style="background: linear-gradient(135deg, #ff7a00, #ff9f43); border-radius: 20px; padding: 16px; margin: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: slideInRight 0.4s ease forwards;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 48px; height: 48px; background: white; border-radius: 24px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-gift" style="color: #ff7a00; font-size: 24px;"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; color: white;">新订单通知</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.9);">${order.order_no}</div>
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.8);">${productsText.substring(0, 30)}</div>
+                </div>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">✕</button>
+            </div>
+            <div style="margin-top: 12px;">
+                <button onclick="window.location.href='orders.html'" style="width: 100%; background: white; border: none; padding: 8px; border-radius: 30px; color: #ff7a00; font-weight: 600; cursor: pointer;">查看订单 →</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // 5秒后自动移除
+    setTimeout(() => {
+        if (toast.parentNode) toast.remove();
+    }, 8000);
+}
+
+// 更新底部导航小红点
+function updateOrderBadge() {
+    const orderNavItems = document.querySelectorAll('.nav-item[data-page="orders"]');
+    orderNavItems.forEach(item => {
+        let badge = item.querySelector('.order-badge');
+        
+        if (unreadOrderCount > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'order-badge';
+                item.appendChild(badge);
+            }
+            badge.textContent = unreadOrderCount > 99 ? '99+' : unreadOrderCount;
+            badge.style.cssText = `
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background: #ef4444;
+                color: white;
+                font-size: 10px;
+                font-weight: 600;
+                padding: 2px 6px;
+                border-radius: 20px;
+                min-width: 18px;
+                text-align: center;
+            `;
+            item.style.position = 'relative';
+        } else if (badge) {
+            badge.remove();
+        }
+    });
+}
+
+// 清除小红点（进入订单页面时调用）
+function clearOrderBadge() {
+    unreadOrderCount = 0;
+    updateOrderBadge();
+    // 存储已读状态
+    localStorage.setItem('last_read_order_time', new Date().toISOString());
+}
+
+// 加载未读订单数量
+async function loadUnreadOrderCount() {
+    const user = getCurrentUserFromLocal();
+    if (!user) return;
+    
+    const lastReadTime = localStorage.getItem('last_read_order_time');
+    
+    let query = sb.from('user_orders').select('id', { count: 'exact' }).eq('uid', user.uid).eq('status', 'pending');
+    
+    if (lastReadTime) {
+        query = query.gt('created_at', lastReadTime);
+    }
+    
+    const { count, error } = await query;
+    
+    if (!error && count !== null) {
+        unreadOrderCount = count;
+        updateOrderBadge();
+    }
+}
+
+// 启动订单实时订阅
+async function startOrderSubscription() {
+    const user = getCurrentUserFromLocal();
+    if (!user) return;
+    
+    // 请求通知权限
+    requestNotificationPermission();
+    
+    // 加载未读数量
+    await loadUnreadOrderCount();
+    
+    // 取消已有订阅
+    if (orderSubscription) {
+        sb.removeChannel(orderSubscription);
+    }
+    
+    // 创建新订阅
+    orderSubscription = sb
+        .channel('orders-realtime')
+        .on(
+            'postgres_changes',
+            {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'user_orders',
+                filter: `uid=eq.${user.uid}`
+            },
+            (payload) => {
+                const newOrder = payload.new;
+                console.log('📦 收到新订单:', newOrder);
+                
+                // 只通知 pending 状态的订单
+                if (newOrder.status === 'pending') {
+                    // 增加未读计数
+                    unreadOrderCount++;
+                    updateOrderBadge();
+                    
+                    // 播放音效
+                    playNotificationSound();
+                    
+                    // 显示浏览器通知
+                    showBrowserNotification(newOrder);
+                    
+                    // 显示页面内弹窗
+                    showInAppNotification(newOrder);
+                    
+                    // 如果当前在 orders 页面，刷新列表
+                    if (window.location.pathname.includes('orders.html')) {
+                        if (window.refreshOrdersList) {
+                            window.refreshOrdersList();
+                        } else {
+                            window.location.reload();
+                        }
+                    }
+                }
+            }
+        )
+        .subscribe((status) => {
+            console.log('订单订阅状态:', status);
+        });
+}
+
+// 停止订单订阅
+function stopOrderSubscription() {
+    if (orderSubscription) {
+        sb.removeChannel(orderSubscription);
+        orderSubscription = null;
+    }
+}
+
+// 获取当前用户的辅助函数
+function getCurrentUserFromLocal() {
+    const userStr = localStorage.getItem('currentUser');
+    if (!userStr) return null;
+    try {
+        return JSON.parse(userStr);
+    } catch(e) { return null; }
+}
+
+// 添加动画样式
+const notificationStyle = document.createElement('style');
+notificationStyle.textContent = `
+    @keyframes slideInRight {
+        0% {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        100% {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    .order-notification-toast {
+        position: fixed;
+        top: 60px;
+        right: 0;
+        left: 0;
+        z-index: 10000;
+        pointer-events: auto;
+    }
+`;
+document.head.appendChild(notificationStyle);
+
+// 页面加载时启动订阅
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        if (getCurrentUserFromLocal()) {
+            startOrderSubscription();
+        }
+    });
+} else {
+    if (getCurrentUserFromLocal()) {
+        startOrderSubscription();
+    }
+}

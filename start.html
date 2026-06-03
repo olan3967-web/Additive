@@ -500,12 +500,13 @@
         }
 
         .nav-item {
-            flex: 1;
-            text-align: center;
-            font-size: 11px;
-            color: #9ca3af;
-            cursor: pointer;
-        }
+    flex: 1;
+    text-align: center;
+    font-size: 11px;
+    color: #9ca3af;
+    cursor: pointer;
+    position: relative;  /* 👈 添加这一行 */
+}
 
         .nav-item i {
             display: block;
@@ -1036,7 +1037,7 @@
                 const page = item.dataset.page;
                 if (page === 'dashboard') window.location.href = 'start.html';
                 else if (page === 'products') window.location.href = 'products.html';
-                else if (page === 'orders') window.location.href = 'orders-history.html';
+                else if (page === 'orders') window.location.href = 'orders.html';
                 else if (page === 'profile') window.location.href = 'dashboard.html';
             });
         });
