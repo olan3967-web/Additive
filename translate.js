@@ -109,12 +109,12 @@ if (document.readyState === 'loading') {
     createLanguageSwitcher();
 }
 
-// 隐藏 Google 横幅
-const style = document.createElement('style');
-style.textContent = `
+// 隐藏 Google 横幅（使用唯一变量名）
+const translateStyles = document.createElement('style');
+translateStyles.textContent = `
     .goog-te-banner-frame { display: none !important; }
     .goog-te-gadget { display: none !important; }
     body { top: 0 !important; }
     .goog-te-balloon-frame { display: none !important; }
 `;
-document.head.appendChild(style);
+document.head.appendChild(translateStyles);
