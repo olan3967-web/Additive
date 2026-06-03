@@ -683,58 +683,27 @@
         });
     }
 
-    // ========== 声音控制（顶部喇叭） ==========
+    // ========== 更新顶部喇叭图标状态（声音逻辑在 notification.js） ==========
+function updateSoundIconFromGlobal() {
     const soundBtn = document.querySelector('.notification-icon');
     const soundIcon = soundBtn ? soundBtn.querySelector('i') : null;
-    let audioEnabled = localStorage.getItem('audio_enabled') === 'true';
-
-    function updateSoundIcon() {
-        if (soundIcon) {
-            if (audioEnabled) {
-                soundIcon.className = 'fas fa-volume-up';
-            } else {
-                soundIcon.className = 'fas fa-volume-mute';
-            }
+    if (soundIcon) {
+        const audioEnabled = localStorage.getItem('audio_enabled') === 'true';
+        if (audioEnabled) {
+            soundIcon.className = 'fas fa-volume-up';
+        } else {
+            soundIcon.className = 'fas fa-volume-mute';
         }
     }
+}
 
-    function enableAudio() {
-        if (audioEnabled) return;
-        
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        oscillator.connect(gain);
-        gain.connect(audioContext.destination);
-        gain.gain.value = 0.01;
-        oscillator.start();
-        oscillator.stop(0.1);
-        audioContext.resume().then(() => {
-            audioEnabled = true;
-            localStorage.setItem('audio_enabled', 'true');
-            updateSoundIcon();
-            
-            // 播放测试音
-            setTimeout(() => {
-                const testCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = testCtx.createOscillator();
-                const g = testCtx.createGain();
-                osc.connect(g);
-                g.connect(testCtx.destination);
-                osc.frequency.value = 880;
-                g.gain.value = 0.2;
-                osc.start();
-                g.gain.exponentialRampToValueAtTime(0.00001, testCtx.currentTime + 0.3);
-                osc.stop(testCtx.currentTime + 0.3);
-                testCtx.resume();
-            }, 100);
-        }).catch(e => console.log('音频激活失败:', e));
-    }
+// 页面加载时更新图标
+updateSoundIconFromGlobal();
 
-    if (soundBtn) {
-        soundBtn.addEventListener('click', enableAudio);
-    }
-    updateSoundIcon();
+// 监听 storage 变化（其他页面修改时同步）
+window.addEventListener('storage', () => {
+    updateSoundIconFromGlobal();
+});
 
     document.getElementById('topUpBtn').addEventListener('click', topUp);
     document.getElementById('withdrawBtn').addEventListener('click', () => {
