@@ -1,8 +1,10 @@
-// user-data.js - 所有页面共享的用户数据管理
-
-const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// user-data.js
+if (!window.sb) {
+    const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+    window.sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
+const sb = window.sb;
 
 // ========== 基础用户函数 ==========
 
