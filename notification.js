@@ -1,93 +1,99 @@
-// notification.js - 独立订单通知系统（金属质感 + 流光溢彩 + 声音修复）
+// notification.js - 独立订单通知系统
 
 let lastCheckTime = localStorage.getItem('last_order_check_time') || new Date().toISOString();
 let unreadCount = 0;
 
-// ========== 音频预加载 ==========
-let audioContext = null;
-let audioEnabled = false;
+// 从 localStorage 读取声音状态
+let audioEnabled = localStorage.getItem('audio_enabled') === 'true';
 
-// 显示激活音频提示
-function showAudioHint() {
-    const hint = document.createElement('div');
-    hint.id = 'audio-hint';
-    hint.innerHTML = `
-        <div style="position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#ff7a00;color:white;padding:10px 20px;border-radius:40px;font-size:12px;z-index:100001;box-shadow:0 4px 12px rgba(0,0,0,0.2);animation:pulse 1s infinite;cursor:pointer;">
-            🔔 点击任意位置激活声音提醒
-        </div>
-    `;
-    document.body.appendChild(hint);
+// ========== 查找并使用顶部的喇叭按钮 ==========
+function initSoundButton() {
+    // 查找顶部喇叭按钮（通常是 .notification-icon 或包含 bell 图标的元素）
+    const soundBtn = document.querySelector('.notification-icon, [onclick*="chat"], .fa-bell, .fa-bell-slash')?.closest('div, a, button');
     
-    // 添加动画
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes pulse {
-            0%, 100% { opacity: 0.8; transform: translateX(-50%) scale(1); }
-            50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-function initAudio() {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => {
-            audioEnabled = true;
-            console.log('🔊 音频已激活');
-            // 移除提示
-            const hint = document.getElementById('audio-hint');
-            if (hint) hint.remove();
-        }).catch(e => console.log('音频激活失败:', e));
-    } else {
-        audioEnabled = true;
-        const hint = document.getElementById('audio-hint');
-        if (hint) hint.remove();
-    }
-}
-
-// 监听用户首次点击，激活音频
-document.addEventListener('click', function initAudioOnClick() {
-    initAudio();
-    document.removeEventListener('click', initAudioOnClick);
-}, { once: true });
-
-// 页面加载后显示提示
-setTimeout(() => {
-    if (!audioEnabled && !document.getElementById('audio-hint')) {
-        showAudioHint();
-    }
-}, 500);
-
-function playSound() {
-    if (!audioEnabled) {
-        console.log('🔊 音频未激活，跳过声音');
+    if (!soundBtn) {
+        console.log('未找到顶部喇叭按钮，声音功能需要手动激活');
         return;
     }
     
+    // 更新图标状态
+    updateSoundIcon(soundBtn);
+    
+    // 绑定点击事件
+    soundBtn.addEventListener('click', (e) => {
+        // 如果点击是跳转到 chat.html，阻止跳转，先激活声音
+        if (soundBtn.getAttribute('onclick')?.includes('chat.html')) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        enableAudio(soundBtn);
+        
+        // 激活后延迟跳转（如果需要）
+        setTimeout(() => {
+            if (soundBtn.getAttribute('onclick')?.includes('chat.html')) {
+                window.location.href = 'chat.html';
+            }
+        }, 300);
+    });
+}
+
+function updateSoundIcon(btn) {
+    const icon = btn.querySelector('i');
+    if (!icon) return;
+    
+    if (audioEnabled) {
+        icon.className = 'fas fa-volume-up';
+        icon.style.color = '#ff7a00';
+    } else {
+        icon.className = 'fas fa-volume-mute';
+        icon.style.color = '#ff7a00';
+    }
+}
+
+function enableAudio(btn) {
+    if (audioEnabled) return;
+    
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    gain.gain.value = 0.01;
+    oscillator.start();
+    oscillator.stop(0.1);
+    audioContext.resume().then(() => {
+        audioEnabled = true;
+        localStorage.setItem('audio_enabled', 'true');
+        updateSoundIcon(btn);
+        console.log('🔊 声音已启用（全局生效）');
+        
+        // 播放测试音
+        setTimeout(() => playSound(), 100);
+    }).catch(e => console.log('音频激活失败:', e));
+}
+
+function playSound() {
+    if (!audioEnabled) return;
+    
     try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
         oscillator.connect(gain);
         gain.connect(audioContext.destination);
         oscillator.frequency.value = 880;
-        gain.gain.value = 0.25;
+        gain.gain.value = 0.2;
         oscillator.start();
         gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
         oscillator.stop(audioContext.currentTime + 0.3);
-        console.log('🔊 声音播放成功');
-    } catch(e) {
-        console.log('🔊 声音播放失败:', e);
-    }
+        audioContext.resume();
+    } catch(e) {}
 }
 
 // ========== 弹窗函数 ==========
 function showPopup(order) {
-    const existingStack = document.querySelector('.toast-stack');
-    let stack = existingStack;
-    
+    let stack = document.querySelector('.toast-stack');
     if (!stack) {
         stack = document.createElement('div');
         stack.className = 'toast-stack';
@@ -110,18 +116,14 @@ function showPopup(order) {
     
     toast.innerHTML = `
         <div class="toast-metal-content">
-            <div class="toast-metal-icon">
-                <i class="fas fa-gift"></i>
-            </div>
+            <div class="toast-metal-icon"><i class="fas fa-gift"></i></div>
             <div class="toast-metal-info">
                 <div class="toast-metal-title">📦 新订单通知</div>
                 <div class="toast-metal-order">${order.order_no}</div>
                 <div class="toast-metal-product">${productsText.substring(0, 35)}</div>
             </div>
             <div class="toast-metal-amount">€${(order.total_supply_price || 0).toFixed(2)}</div>
-            <div class="toast-metal-close">
-                <i class="fas fa-times"></i>
-            </div>
+            <div class="toast-metal-close"><i class="fas fa-times"></i></div>
         </div>
         <div class="toast-metal-progress"></div>
         <div class="toast-metal-shimmer"></div>
@@ -144,8 +146,6 @@ function showPopup(order) {
         removeToast(toast);
         window.location.href = 'orders.html';
     });
-    
-    toast._timeoutId = timeoutId;
 }
 
 function removeToast(toast) {
@@ -181,7 +181,6 @@ function clearOrderBadge() {
         if (badge) badge.remove();
     }
     localStorage.setItem('last_order_check_time', new Date().toISOString());
-    console.log('🧹 小红点已清除');
 }
 
 async function checkOrders() {
@@ -189,10 +188,7 @@ async function checkOrders() {
     if (!userStr) return;
     const user = JSON.parse(userStr);
     
-    if (typeof sb === 'undefined') {
-        console.log('等待 sb 初始化...');
-        return;
-    }
+    if (typeof sb === 'undefined') return;
     
     try {
         const { data, error } = await sb
@@ -202,34 +198,25 @@ async function checkOrders() {
             .eq('status', 'pending')
             .gt('created_at', lastCheckTime);
         
-        if (error) {
-            console.error('检查订单失败:', error);
-            return;
+        if (error || !data || data.length === 0) return;
+        
+        for (const order of data) {
+            if (audioEnabled) playSound();
+            showPopup(order);
+            unreadCount++;
+            updateBadge();
+            
+            if (Notification.permission === 'granted') {
+                new Notification('📦 新订单', {
+                    body: `${order.order_no} - €${(order.total_supply_price || 0).toFixed(2)}`,
+                    icon: 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png'
+                });
+            }
         }
         
-        if (data && data.length > 0) {
-            console.log(`发现 ${data.length} 个新订单`);
-            
-            for (const order of data) {
-                playSound();
-                showPopup(order);
-                unreadCount++;
-                updateBadge();
-                
-                if (Notification.permission === 'granted') {
-                    new Notification('📦 新订单', {
-                        body: `${order.order_no} - €${(order.total_supply_price || 0).toFixed(2)}`,
-                        icon: 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png'
-                    });
-                }
-            }
-            
-            lastCheckTime = new Date().toISOString();
-            localStorage.setItem('last_order_check_time', lastCheckTime);
-        }
-    } catch(e) {
-        console.error('检查订单出错:', e);
-    }
+        lastCheckTime = new Date().toISOString();
+        localStorage.setItem('last_order_check_time', lastCheckTime);
+    } catch(e) {}
 }
 
 // ========== 样式 ==========
@@ -298,65 +285,15 @@ style.textContent = `
         box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.2);
     }
     
-    .toast-metal-icon i {
-        font-size: 22px;
-        color: #ff7a00;
-    }
-    
-    .toast-metal-info {
-        flex: 1;
-    }
-    
-    .toast-metal-title {
-        font-size: 13px;
-        font-weight: 700;
-        color: #e0e0f0;
-        letter-spacing: 0.5px;
-    }
-    
-    .toast-metal-order {
-        font-size: 11px;
-        color: #ff9f43;
-        font-family: monospace;
-        margin-top: 3px;
-    }
-    
-    .toast-metal-product {
-        font-size: 10px;
-        color: #a0a0c0;
-        margin-top: 2px;
-    }
-    
-    .toast-metal-amount {
-        font-size: 16px;
-        font-weight: 800;
-        background: linear-gradient(135deg, #ff9f43, #ffcc00);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-    }
-    
-    .toast-metal-close {
-        width: 28px;
-        height: 28px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .toast-metal-close:hover {
-        background: rgba(255,255,255,0.15);
-    }
-    
-    .toast-metal-close i {
-        font-size: 12px;
-        color: rgba(255,255,255,0.5);
-    }
-    
+    .toast-metal-icon i { font-size: 22px; color: #ff7a00; }
+    .toast-metal-info { flex: 1; }
+    .toast-metal-title { font-size: 13px; font-weight: 700; color: #e0e0f0; letter-spacing: 0.5px; }
+    .toast-metal-order { font-size: 11px; color: #ff9f43; font-family: monospace; margin-top: 3px; }
+    .toast-metal-product { font-size: 10px; color: #a0a0c0; margin-top: 2px; }
+    .toast-metal-amount { font-size: 16px; font-weight: 800; background: linear-gradient(135deg, #ff9f43, #ffcc00); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .toast-metal-close { width: 28px; height: 28px; background: rgba(255,255,255,0.05); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+    .toast-metal-close:hover { background: rgba(255,255,255,0.15); }
+    .toast-metal-close i { font-size: 12px; color: rgba(255,255,255,0.5); }
     .toast-metal-progress {
         position: absolute;
         bottom: 0;
@@ -379,13 +316,7 @@ style.textContent = `
         left: -100%;
         width: 100%;
         height: 3px;
-        background: linear-gradient(90deg, 
-            transparent,
-            rgba(255, 255, 255, 0.6),
-            rgba(255, 200, 100, 0.8),
-            rgba(255, 255, 255, 0.6),
-            transparent
-        );
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), rgba(255,200,100,0.8), rgba(255,255,255,0.6), transparent);
         animation: shimmerFlow 2.5s ease-in-out infinite;
         z-index: 3;
         pointer-events: none;
@@ -400,8 +331,14 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// ========== 启动轮询 ==========
-let interval = setInterval(checkOrders, 10000);
+// ========== 启动 ==========
+// 初始化声音按钮
+setTimeout(() => {
+    initSoundButton();
+}, 500);
+
+// 启动轮询（5秒）
+let interval = setInterval(checkOrders, 5000);
 checkOrders();
 
 if (Notification && Notification.permission !== 'denied') {
@@ -411,5 +348,5 @@ if (Notification && Notification.permission !== 'denied') {
 window.clearOrderBadge = clearOrderBadge;
 window.updateOrderBadge = updateBadge;
 
-console.log('✅ 通知系统已启动（金属质感 + 流光溢彩 + 声音）');
-console.log('🔔 请点击页面任意位置激活声音提醒');
+console.log('✅ 通知系统已启动');
+console.log('🔊 点击顶部喇叭按钮激活声音（只需激活一次，所有页面共用）');

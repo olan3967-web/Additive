@@ -10,7 +10,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
-<script src="notification.js"></script>
     <style>
         * {
             margin: 0;
@@ -380,27 +379,24 @@
     </div>
 </div>
 
-<!-- Shipping Info 弹窗 -->
+<!-- Shipping Info 弹窗 - 只显示一个地址 -->
 <div id="shippingModal" class="shipping-modal">
     <div class="order-modal-content" style="max-width: 380px;">
         <h3><i class="fas fa-map-marker-alt"></i> 地址确认</h3>
-        <div id="shippingAddressSection" style="background: #fef3c7; border-radius: 16px; padding: 16px; margin: 16px 0;">
+        
+        <div style="background: #fef3c7; border-radius: 16px; padding: 16px; margin: 16px 0;">
             <p style="font-weight: 600; color: #d97706; margin-bottom: 8px;">
-                <i class="fas fa-warehouse"></i> 供应商发货地址
+                <i class="fas fa-map-marker-alt"></i> 请确认发货地址
             </p>
-            <p id="shippingAddressText" style="font-size: 13px; line-height: 1.5;"></p>
+            <p id="shippingAddressText" style="font-size: 13px; line-height: 1.5; background: white; padding: 12px; border-radius: 12px;"></p>
         </div>
-        <div id="buyerAddressSection" style="background: #f8fafc; border-radius: 16px; padding: 16px; margin: 0 0 16px 0;">
-            <p style="font-weight: 600; color: #1a1a2e; margin-bottom: 8px;">
-                <i class="fas fa-user"></i> 买家收货地址
-            </p>
-            <p id="buyerAddressText" style="font-size: 13px; line-height: 1.5;"></p>
-        </div>
+        
         <div style="background: #e6f7ec; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
             <p style="font-size: 12px; color: #2e7d32;">
-                <i class="fas fa-check-circle"></i> 请确认两个地址无误后，返回点击"确认发货"
+                <i class="fas fa-check-circle"></i> 请确认地址无误后，返回点击"确认发货"
             </p>
         </div>
+        
         <button id="closeShippingBtn" class="btn-confirm" style="background:#475569;">我已确认，关闭</button>
     </div>
 </div>
@@ -600,15 +596,14 @@
         document.getElementById('orderModal').classList.add('active');
     }
 
-    // ========== Check Shipping Info ==========
+    // ========== Check Shipping Info（显示买家地址） ==========
     document.getElementById('checkShippingBtn')?.addEventListener('click', () => {
         if (!currentOrder) return;
         
-        const shippingAddress = currentOrder.shipping_address || '上海市浦东新区世纪大道100号环球金融中心 批发商仓库';
+        // 显示买家地址作为发货地址
         const buyerAddress = `${currentOrder.buyer_name || '未知'}，${currentOrder.buyer_phone || '未知'}，${currentOrder.buyer_address || '未知'}`;
         
-        document.getElementById('shippingAddressText').innerHTML = shippingAddress.replace(/\n/g, '<br>');
-        document.getElementById('buyerAddressText').innerHTML = buyerAddress;
+        document.getElementById('shippingAddressText').innerHTML = buyerAddress.replace(/\n/g, '<br>');
         
         document.getElementById('shippingModal').classList.add('active');
         
@@ -777,8 +772,13 @@
     // ========== 页面初始化 ==========
     initTabs();
     setupBottomNav();
+    
+    // 清除小红点（进入订单页面时）
     clearOrderBadge();
+    
+    // 暴露刷新函数供实时订阅调用
     window.refreshOrdersList = loadOrders;
+    
     loadOrders();
 </script>
 </body>
