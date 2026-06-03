@@ -11,53 +11,330 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #f5f7fb; font-family: 'Inter', sans-serif; color: #1f2937; display: flex; justify-content: center; }
-        .phone { width: 390px; min-height: 100vh; background: #f5f7fb; padding-bottom: 80px; position: relative; }
-        .page-header { padding: 20px 16px 10px; display: flex; justify-content: space-between; align-items: center; }
-        .page-header h1 { font-size: 28px; font-weight: 700; color: #1a1a2e; }
-        .back-btn { background: none; border: none; font-size: 24px; color: #ff7a00; cursor: pointer; }
-        .tabs { display: flex; margin: 0 16px 16px; background: white; border-radius: 40px; padding: 4px; border: 1px solid #eef2f7; }
-        .tab-btn { flex: 1; background: none; border: none; padding: 10px; border-radius: 36px; font-size: 14px; font-weight: 600; color: #94a3b8; cursor: pointer; transition: all 0.2s; }
-        .tab-btn.active { background: #ff7a00; color: white; }
-        .orders-list { margin: 0 16px; }
-        .order-card { background: white; border-radius: 20px; padding: 16px; margin-bottom: 12px; border: 1px solid #eef2f7; transition: all 0.2s; cursor: pointer; }
-        .order-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .order-no { font-size: 13px; font-weight: 600; color: #ff7a00; font-family: monospace; }
-        .order-date { font-size: 10px; color: #94a3b8; }
-        .order-products { font-size: 13px; color: #1f2937; margin-bottom: 8px; }
-        .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eef2f7; }
-        .order-total { font-size: 14px; font-weight: 700; color: #ff7a00; }
-        .order-commission { font-size: 12px; color: #10b981; }
-        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
-        .status-pending { background: #fef3c7; color: #d97706; }
-        .status-processing { background: #dbeafe; color: #2563eb; }
-        .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
-        .empty-state i { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; display: block; }
-        .order-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: all 0.3s; }
-        .order-modal.active { visibility: visible; opacity: 1; }
-        .order-modal-content { background: white; border-radius: 28px; width: 90%; max-width: 350px; max-height: 80vh; overflow-y: auto; padding: 24px; }
-        .product-item-modal { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eef2f7; }
-        .product-item-modal img { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; }
-        .buyer-info { background: #f8fafc; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
-        .btn-check-shipping { width: 100%; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 12px; border-radius: 40px; font-weight: 600; color: #475569; cursor: pointer; margin-bottom: 12px; }
-        .btn-check-shipping.checked { background: #ff7a00; color: white; border-color: #ff7a00; }
-        .btn-confirm { width: 100%; background: #ff7a00; border: none; padding: 14px; border-radius: 40px; color: white; font-weight: 700; font-size: 16px; cursor: pointer; }
-        .btn-confirm.disabled { background: #cbd5e1; cursor: not-allowed; }
-        .shipping-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1100; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: all 0.3s; }
-        .shipping-modal.active { visibility: visible; opacity: 1; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: rgba(255,255,255,0.96); backdrop-filter: blur(20px); border-top: 1px solid #eef2f7; display: flex; padding: 10px 0 14px; z-index: 100; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fb;
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+        }
+
+        .phone {
+            width: 390px;
+            min-height: 100vh;
+            background: #f5f7fb;
+            padding-bottom: 80px;
+            position: relative;
+        }
+
+        .page-header {
+            padding: 20px 16px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #ff7a00;
+            cursor: pointer;
+        }
+
+        .tabs {
+            display: flex;
+            margin: 0 16px 16px;
+            background: white;
+            border-radius: 40px;
+            padding: 4px;
+            border: 1px solid #eef2f7;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 10px;
+            border-radius: 36px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #ff7a00;
+            color: white;
+        }
+
+        .orders-list {
+            margin: 0 16px;
+        }
+
+        .order-card {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #eef2f7;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .order-no {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ff7a00;
+            font-family: monospace;
+        }
+
+        .order-date {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .order-products {
+            font-size: 13px;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .order-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #eef2f7;
+        }
+
+        .order-total {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ff7a00;
+        }
+
+        .order-commission {
+            font-size: 12px;
+            color: #10b981;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-processing {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #cbd5e1;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        /* 做单弹窗 */
+        .order-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .order-modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .order-modal-content {
+            background: white;
+            border-radius: 28px;
+            width: 90%;
+            max-width: 350px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .order-modal-content h3 {
+            margin-bottom: 16px;
+            color: #1a1a2e;
+        }
+
+        .product-list {
+            margin-bottom: 20px;
+        }
+
+        .product-item-modal {
+            display: flex;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .product-item-modal img {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .buyer-info {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .buyer-info p {
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .btn-check-shipping {
+            width: 100%;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
+        .btn-check-shipping.checked {
+            background: #ff7a00;
+            color: white;
+            border-color: #ff7a00;
+        }
+
+        .btn-confirm {
+            width: 100%;
+            background: #ff7a00;
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-confirm.disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        /* Shipping Info 弹窗 */
+        .shipping-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .shipping-modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid #eef2f7;
+            display: flex;
+            padding: 10px 0 14px;
+            z-index: 100;
+        }
+
         .nav-item {
-    flex: 1;
-    text-align: center;
-    font-size: 11px;
-    color: #9ca3af;
-    cursor: pointer;
-    position: relative;  /* 👈 添加这一行 */
-}
-        .nav-item i { display: block; font-size: 20px; margin-bottom: 4px; }
-        .nav-item.active { color: #ff7a00; font-weight: 600; }
+            flex: 1;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item.active {
+            color: #ff7a00;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -127,18 +404,29 @@
 </div>
 
 <script>
+    // ========== 工具函数 ==========
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    }
+
+    function formatDate(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function goBack() {
+        window.location.href = 'dashboard.html';
+    }
+
+    // ========== 页面状态 ==========
     let currentTab = 'new';
     let pendingOrders = [];
     let processingOrders = [];
     let currentOrder = null;
     let hasCheckedShipping = false;
 
-    function getCurrentUser() {
-        const userStr = localStorage.getItem('currentUser');
-        if (!userStr) return null;
-        try { return JSON.parse(userStr); } catch(e) { return null; }
-    }
-
+    // ========== 加载订单 ==========
     async function loadOrders() {
         const user = getCurrentUser();
         if (!user) {
@@ -163,6 +451,7 @@
         renderOrders();
     }
 
+    // ========== 渲染订单列表 ==========
     function renderOrders() {
         renderNewOrders();
         renderProcessingOrders();
@@ -252,11 +541,7 @@
         });
     }
 
-    function formatDate(dateStr) {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    }
-
+    // ========== 做单弹窗 ==========
     function openOrderModal(order) {
         currentOrder = order;
         hasCheckedShipping = false;
@@ -300,6 +585,7 @@
         document.getElementById('orderModal').classList.add('active');
     }
 
+    // ========== Check Shipping Info ==========
     document.getElementById('checkShippingBtn')?.addEventListener('click', () => {
         if (!currentOrder) return;
         
@@ -324,6 +610,7 @@
         document.getElementById('shippingModal').classList.remove('active');
     });
 
+    // ========== 确认发货 ==========
     document.getElementById('confirmOrderBtn')?.addEventListener('click', async () => {
         if (!hasCheckedShipping) {
             showToast('请先点击 Check Shipping Info 确认发货地址', 'warning');
@@ -345,14 +632,18 @@
         
         showToast('处理订单中...', 'info');
         
+        // 扣除供应价
         const newBalance = currentBalance - currentOrder.total_supply_price;
         await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
         
+        // 返还供应价 + 佣金
         const finalBalance = newBalance + currentOrder.total_supply_price + currentOrder.total_commission;
         await sb.from('users').update({ balance: finalBalance }).eq('uid', user.uid);
         
+        // 生成物流时间线
         const timeline = generateTrackingTimeline();
         
+        // 更新订单状态
         await sb.from('user_orders').update({
             status: 'processing',
             tracking_status: 'processing',
@@ -360,6 +651,7 @@
             completed_at: new Date().toISOString()
         }).eq('order_no', currentOrder.order_no);
         
+        // 记录订单历史
         try {
             const products = JSON.parse(currentOrder.products || '[]');
             for (const product of products) {
@@ -379,6 +671,7 @@
             console.error('记录订单历史失败:', e);
         }
         
+        // 更新本地用户数据
         const updatedUser = getCurrentUser();
         if (updatedUser) {
             updatedUser.balance = finalBalance;
@@ -388,43 +681,11 @@
         document.getElementById('orderModal').classList.remove('active');
         showToast(`订单 ${currentOrder.order_no} 已确认发货！`, 'success');
         
+        // 重新加载订单列表
         await loadOrders();
     });
 
-    function generateTrackingTimeline() {
-        const startTime = new Date();
-        const timeline = [];
-        const totalDuration = (3 + Math.random() * 2) * 24 * 60 * 60 * 1000;
-        const statuses = [
-            "Order is placed",
-            "Sender is preparing to ship your parcel",
-            "Courier assigned for your order, kindly wait for pickup",
-            "Your parcel has been picked up by our logistics partner",
-            "Your parcel has arrived at sorting facility",
-            "Your parcel has departed from sorting facility",
-            "Your parcel has arrived the delivery hub",
-            "Your parcel is out for delivery",
-            "Parcel has been delivered"
-        ];
-        const intervals = [];
-        let remaining = totalDuration;
-        for (let i = 0; i < statuses.length - 1; i++) {
-            const maxGap = remaining / (statuses.length - i);
-            const gap = maxGap * (0.3 + Math.random() * 0.7);
-            intervals.push(gap);
-            remaining -= gap;
-        }
-        intervals.push(remaining);
-        let currentTime = startTime;
-        for (let i = 0; i < statuses.length; i++) {
-            timeline.push({ status: statuses[i], time: new Date(currentTime).toISOString() });
-            if (i < intervals.length) {
-                currentTime = new Date(currentTime.getTime() + intervals[i]);
-            }
-        }
-        return timeline;
-    }
-
+    // ========== Tab 切换 ==========
     function initTabs() {
         const tabs = document.querySelectorAll('.tab-btn');
         tabs.forEach(tab => {
@@ -438,6 +699,7 @@
         });
     }
 
+    // ========== 底部导航 ==========
     function setupBottomNav() {
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -450,24 +712,59 @@
         });
     }
 
-    function goBack() {
-        window.location.href = 'dashboard.html';
+    // ========== 生成物流时间线 ==========
+    function generateTrackingTimeline() {
+        const startTime = new Date();
+        const timeline = [];
+        const totalDuration = (3 + Math.random() * 2) * 24 * 60 * 60 * 1000;
+        
+        const statuses = [
+            "Order is placed",
+            "Sender is preparing to ship your parcel",
+            "Courier assigned for your order, kindly wait for pickup",
+            "Your parcel has been picked up by our logistics partner",
+            "Your parcel has arrived at sorting facility",
+            "Your parcel has departed from sorting facility",
+            "Your parcel has arrived the delivery hub",
+            "Your parcel is out for delivery",
+            "Parcel has been delivered"
+        ];
+        
+        const intervals = [];
+        let remaining = totalDuration;
+        for (let i = 0; i < statuses.length - 1; i++) {
+            const maxGap = remaining / (statuses.length - i);
+            const gap = maxGap * (0.3 + Math.random() * 0.7);
+            intervals.push(gap);
+            remaining -= gap;
+        }
+        intervals.push(remaining);
+        
+        let currentTime = startTime;
+        for (let i = 0; i < statuses.length; i++) {
+            timeline.push({
+                status: statuses[i],
+                time: new Date(currentTime).toISOString()
+            });
+            if (i < intervals.length) {
+                currentTime = new Date(currentTime.getTime() + intervals[i]);
+            }
+        }
+        
+        return timeline;
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
-    }
-
+    // ========== 页面初始化 ==========
+    initTabs();
+    setupBottomNav();
+    
     // 清除小红点（进入订单页面时）
-clearOrderBadge();
-
-// 暴露刷新函数供实时订阅调用
-window.refreshOrdersList = loadOrders;
-
-initTabs();
-setupBottomNav();
-loadOrders();
+    clearOrderBadge();
+    
+    // 暴露刷新函数供实时订阅调用
+    window.refreshOrdersList = loadOrders;
+    
+    loadOrders();
 </script>
 </body>
 </html>

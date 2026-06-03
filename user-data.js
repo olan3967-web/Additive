@@ -4,7 +4,8 @@ const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 获取当前登录用户
+// ========== 基础用户函数 ==========
+
 function getCurrentUser() {
     const userStr = localStorage.getItem('currentUser');
     if (!userStr) return null;
@@ -13,7 +14,6 @@ function getCurrentUser() {
     } catch(e) { return null; }
 }
 
-// 从 Supabase 获取用户最新数据
 async function fetchUserData(uid) {
     const { data, error } = await sb
         .from('users')
@@ -28,7 +28,6 @@ async function fetchUserData(uid) {
     return data;
 }
 
-// 获取用户订单历史
 async function fetchUserOrders(uid, limit = 50) {
     const { data, error } = await sb
         .from('order_history')
@@ -41,7 +40,6 @@ async function fetchUserOrders(uid, limit = 50) {
     return data;
 }
 
-// 获取用户充值/奖励记录
 async function fetchUserDeposits(uid) {
     const { data, error } = await sb
         .from('deposits')
@@ -53,7 +51,6 @@ async function fetchUserDeposits(uid) {
     return data;
 }
 
-// 同步用户数据到 localStorage 并返回
 async function syncUserData() {
     const user = getCurrentUser();
     if (!user) return null;
@@ -72,7 +69,6 @@ async function syncUserData() {
     return user;
 }
 
-// 更新用户余额
 async function updateUserBalance(uid, newBalance, newTrialBonus = null) {
     const updateData = { balance: newBalance };
     if (newTrialBonus !== null) {
@@ -100,7 +96,6 @@ async function updateUserBalance(uid, newBalance, newTrialBonus = null) {
     return true;
 }
 
-// 检查登录状态
 function checkLogin() {
     const user = getCurrentUser();
     if (!user || !user.isLoggedIn) {
@@ -110,7 +105,6 @@ function checkLogin() {
     return user;
 }
 
-// 获取用户总订单数和总佣金
 async function fetchUserStats(uid) {
     const { data: orders } = await sb
         .from('order_history')
@@ -125,7 +119,6 @@ async function fetchUserStats(uid) {
 
 // ========== 触发订单相关函数 ==========
 
-// 获取用户待完成的触发订单（pending 且 trigger_order_number <= 当前订单数 + 1）
 async function getUserPendingTriggerOrder(uid) {
     const { data: orders } = await sb
         .from('order_history')
@@ -152,13 +145,11 @@ async function getUserPendingTriggerOrder(uid) {
     return triggers?.[0] || null;
 }
 
-// 检查用户是否有待完成的触发订单
 async function hasPendingTriggerOrder(uid) {
     const trigger = await getUserPendingTriggerOrder(uid);
     return trigger !== null;
 }
 
-// 获取触发订单的 Pending 金额
 async function getTriggerOrderPendingAmount(uid, currentBalance, triggerOrder) {
     if (!triggerOrder) {
         triggerOrder = await getUserPendingTriggerOrder(uid);
@@ -172,7 +163,6 @@ async function getTriggerOrderPendingAmount(uid, currentBalance, triggerOrder) {
     return currentBalance + matchedPrice + commission;
 }
 
-// 完成触发订单
 async function completeTriggerOrder(uid, triggerOrder) {
     if (!triggerOrder) return false;
     
@@ -220,7 +210,6 @@ async function completeTriggerOrder(uid, triggerOrder) {
     return true;
 }
 
-// 取消触发订单
 async function cancelTriggerOrder(triggerId) {
     const { error } = await sb
         .from('user_trigger_orders')
@@ -232,7 +221,6 @@ async function cancelTriggerOrder(triggerId) {
 
 // ========== 订单相关函数 ==========
 
-// 获取用户待处理订单
 async function getUserPendingOrders(uid) {
     const { data, error } = await sb
         .from('user_orders')
@@ -245,7 +233,6 @@ async function getUserPendingOrders(uid) {
     return data;
 }
 
-// 获取用户处理中订单
 async function getUserProcessingOrders(uid) {
     const { data, error } = await sb
         .from('user_orders')
@@ -258,7 +245,6 @@ async function getUserProcessingOrders(uid) {
     return data;
 }
 
-// 获取用户已完成订单
 async function getUserCompletedOrders(uid) {
     const { data, error } = await sb
         .from('user_orders')
@@ -271,7 +257,6 @@ async function getUserCompletedOrders(uid) {
     return data;
 }
 
-// 生成物流时间线
 function generateTrackingTimeline() {
     const startTime = new Date();
     const timeline = [];
@@ -319,7 +304,6 @@ let orderSubscription = null;
 let unreadOrderCount = 0;
 let notificationPermissionGranted = false;
 
-// 请求通知权限
 async function requestNotificationPermission() {
     if (!('Notification' in window)) {
         console.log('浏览器不支持通知');
@@ -328,19 +312,22 @@ async function requestNotificationPermission() {
     
     if (Notification.permission === 'granted') {
         notificationPermissionGranted = true;
+        console.log('通知权限已授权');
         return true;
     }
     
     if (Notification.permission !== 'denied') {
+        console.log('请求通知权限...');
         const permission = await Notification.requestPermission();
         notificationPermissionGranted = permission === 'granted';
+        console.log('通知权限结果:', permission);
         return notificationPermissionGranted;
     }
     
+    console.log('通知权限已被拒绝');
     return false;
 }
 
-// 播放提示音
 function playNotificationSound() {
     try {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -358,14 +345,17 @@ function playNotificationSound() {
         oscillator.stop(audioContext.currentTime + 0.5);
         
         audioContext.resume();
+        console.log('🔊 播放提示音');
     } catch(e) {
         console.log('播放音效失败:', e);
     }
 }
 
-// 显示浏览器通知
 function showBrowserNotification(order) {
-    if (!notificationPermissionGranted) return;
+    if (!notificationPermissionGranted) {
+        console.log('通知权限未授权，跳过浏览器通知');
+        return;
+    }
     
     let productsText = '';
     try {
@@ -374,6 +364,8 @@ function showBrowserNotification(order) {
     } catch(e) {
         productsText = order.products || '订单';
     }
+    
+    console.log('🔔 显示浏览器通知:', order.order_no);
     
     const notification = new Notification('📦 新订单通知', {
         body: `订单号：${order.order_no}\n产品：${productsText}\n总价：€${(order.total_supply_price || 0).toFixed(2)}`,
@@ -391,7 +383,6 @@ function showBrowserNotification(order) {
     setTimeout(() => notification.close(), 10000);
 }
 
-// 显示页面内弹窗通知
 function showInAppNotification(order) {
     const existing = document.querySelector('.order-notification-toast');
     if (existing) existing.remove();
@@ -403,6 +394,8 @@ function showInAppNotification(order) {
     } catch(e) {
         productsText = order.products || '订单';
     }
+    
+    console.log('📱 显示页面内弹窗:', order.order_no);
     
     const toast = document.createElement('div');
     toast.className = 'order-notification-toast';
@@ -432,7 +425,6 @@ function showInAppNotification(order) {
     }, 8000);
 }
 
-// 更新底部导航小红点
 function updateOrderBadge() {
     const orderNavItems = document.querySelectorAll('.nav-item[data-page="orders"]');
     orderNavItems.forEach(item => {
@@ -465,14 +457,13 @@ function updateOrderBadge() {
     });
 }
 
-// 清除小红点（进入订单页面时调用）
 function clearOrderBadge() {
     unreadOrderCount = 0;
     updateOrderBadge();
     localStorage.setItem('last_read_order_time', new Date().toISOString());
+    console.log('🧹 小红点已清除');
 }
 
-// 加载未读订单数量
 async function loadUnreadOrderCount() {
     const user = getCurrentUser();
     if (!user) return;
@@ -490,23 +481,31 @@ async function loadUnreadOrderCount() {
     if (!error && count !== null) {
         unreadOrderCount = count;
         updateOrderBadge();
+        console.log('📊 未读订单数:', unreadOrderCount);
     }
 }
 
-// 启动订单实时订阅
 async function startOrderSubscription() {
     const user = getCurrentUser();
-    if (!user) return;
+    if (!user) {
+        console.log('❌ 用户未登录，无法启动订单订阅');
+        return;
+    }
     
-    requestNotificationPermission();
+    console.log('✅ 用户已登录，启动订单订阅, UID:', user.uid);
+    
+    await requestNotificationPermission();
     await loadUnreadOrderCount();
     
     if (orderSubscription) {
+        console.log('🔄 取消已有订阅');
         sb.removeChannel(orderSubscription);
     }
     
+    console.log('📡 创建订单实时订阅...');
+    
     orderSubscription = sb
-        .channel('orders-realtime')
+        .channel('orders-realtime-' + user.uid)
         .on(
             'postgres_changes',
             {
@@ -517,9 +516,11 @@ async function startOrderSubscription() {
             },
             (payload) => {
                 const newOrder = payload.new;
-                console.log('📦 收到新订单:', newOrder);
+                console.log('🔔 收到新订单事件:', newOrder);
+                console.log('订单状态:', newOrder.status);
                 
                 if (newOrder.status === 'pending') {
+                    console.log('✅ 是新订单，触发通知');
                     unreadOrderCount++;
                     updateOrderBadge();
                     playNotificationSound();
@@ -533,21 +534,51 @@ async function startOrderSubscription() {
                             window.location.reload();
                         }
                     }
+                } else {
+                    console.log('⏭️ 订单状态不是 pending，跳过通知');
                 }
             }
         )
         .subscribe((status) => {
-            console.log('订单订阅状态:', status);
+            console.log('📡 订单订阅状态:', status);
+            if (status === 'SUBSCRIBED') {
+                console.log('✅ 订单实时订阅已成功连接！');
+            } else if (status === 'CHANNEL_ERROR') {
+                console.error('❌ 订单订阅失败，5秒后重试...');
+                setTimeout(() => startOrderSubscription(), 5000);
+            }
         });
 }
 
-// 停止订单订阅
 function stopOrderSubscription() {
     if (orderSubscription) {
         sb.removeChannel(orderSubscription);
         orderSubscription = null;
+        console.log('订单订阅已停止');
     }
 }
+
+// 测试通知函数
+window.testNotification = function() {
+    console.log('🔔 测试通知功能');
+    playNotificationSound();
+    
+    if (Notification.permission === 'granted') {
+        new Notification('测试通知', {
+            body: '如果你看到这条消息，通知功能正常',
+            icon: 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png'
+        });
+    } else {
+        console.log('通知权限未授权，正在请求...');
+        Notification.requestPermission();
+    }
+    
+    showInAppNotification({
+        order_no: 'TEST001',
+        products: '[{"product_name":"测试产品","quantity":1}]',
+        total_supply_price: 100
+    });
+};
 
 // 添加动画样式
 if (!document.getElementById('notification-animation-style')) {
