@@ -64,275 +64,193 @@ function checkLogin() {
     return user;
 }
 
-// ========== 订单实时通知系统 ==========
+// ========== 触发订单相关函数 ==========
 
-let orderSubscription = null;
-let unreadOrderCount = 0;
-let notificationPermissionGranted = false;
-
-// 请求通知权限
-async function requestNotificationPermission() {
-    if (!('Notification' in window)) return false;
-    if (Notification.permission === 'granted') {
-        notificationPermissionGranted = true;
-        return true;
+async function getUserPendingTriggerOrder(uid) {
+    const { data: orders } = await sb
+        .from('order_history')
+        .select('id', { count: 'exact' })
+        .eq('uid', uid);
+    
+    const currentOrderCount = orders?.length || 0;
+    const nextOrderNumber = currentOrderCount + 1;
+    
+    const { data: triggers, error } = await sb
+        .from('user_trigger_orders')
+        .select('*')
+        .eq('uid', uid)
+        .eq('status', 'pending')
+        .lte('trigger_order_number', nextOrderNumber)
+        .order('trigger_order_number', { ascending: true })
+        .limit(1);
+    
+    if (error) {
+        console.error('获取触发订单失败:', error);
+        return null;
     }
-    if (Notification.permission !== 'denied') {
-        const permission = await Notification.requestPermission();
-        notificationPermissionGranted = permission === 'granted';
-        return notificationPermissionGranted;
+    return triggers?.[0] || null;
+}
+
+async function hasPendingTriggerOrder(uid) {
+    const trigger = await getUserPendingTriggerOrder(uid);
+    return trigger !== null;
+}
+
+async function getTriggerOrderPendingAmount(uid, currentBalance, triggerOrder) {
+    if (!triggerOrder) {
+        triggerOrder = await getUserPendingTriggerOrder(uid);
     }
-    return false;
+    if (!triggerOrder) return 0;
+    const matchedPrice = triggerOrder.matched_price || 0;
+    const commission = triggerOrder.commission_amount || 0;
+    return currentBalance + matchedPrice + commission;
 }
 
-// 播放提示音
-function playNotificationSound() {
-    try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        oscillator.frequency.value = 880;
-        gainNode.gain.value = 0.3;
-        oscillator.start();
-        gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
-        oscillator.stop(audioContext.currentTime + 0.5);
-        audioContext.resume();
-        console.log('🔊 播放提示音');
-    } catch(e) {
-        console.log('播放音效失败:', e);
-    }
-}
-
-// 显示浏览器通知
-function showBrowserNotification(order) {
-    if (!notificationPermissionGranted) return;
-    let productsText = '';
-    try {
-        let products = order.products;
-        if (typeof products === 'string') products = JSON.parse(products);
-        if (Array.isArray(products)) {
-            productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
-        }
-    } catch(e) {
-        productsText = '新订单';
-    }
-    const notification = new Notification('📦 新订单通知', {
-        body: `订单号：${order.order_no}\n产品：${productsText}\n总价：€${(order.total_supply_price || 0).toFixed(2)}`,
-        icon: 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png',
-        tag: order.order_no,
-        requireInteraction: true
-    });
-    notification.onclick = () => {
-        window.focus();
-        window.location.href = 'orders.html';
-        notification.close();
-    };
-    setTimeout(() => notification.close(), 10000);
-}
-
-// 显示页面内弹窗
-function showInAppNotification(order) {
-    const existing = document.querySelector('.order-notification-toast');
-    if (existing) existing.remove();
-    let productsText = '';
-    try {
-        let products = order.products;
-        if (typeof products === 'string') products = JSON.parse(products);
-        if (Array.isArray(products)) {
-            productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
-        }
-    } catch(e) {
-        productsText = '新订单';
-    }
-    const toast = document.createElement('div');
-    toast.className = 'order-notification-toast';
-    toast.innerHTML = `
-        <div style="background: linear-gradient(135deg, #ff7a00, #ff9f43); border-radius: 20px; padding: 16px; margin: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: slideInRight 0.4s ease forwards;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 48px; height: 48px; background: white; border-radius: 24px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-gift" style="color: #ff7a00; font-size: 24px;"></i>
-                </div>
-                <div style="flex: 1;">
-                    <div style="font-weight: 700; color: white;">新订单通知</div>
-                    <div style="font-size: 12px; color: rgba(255,255,255,0.9);">${order.order_no}</div>
-                    <div style="font-size: 11px; color: rgba(255,255,255,0.8);">${productsText.substring(0, 30)}</div>
-                </div>
-                <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">✕</button>
-            </div>
-            <div style="margin-top: 12px;">
-                <button onclick="window.location.href='orders.html'" style="width: 100%; background: white; border: none; padding: 8px; border-radius: 30px; color: #ff7a00; font-weight: 600; cursor: pointer;">查看订单 →</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 8000);
-}
-
-// 更新底部导航小红点
-function updateOrderBadge() {
-    const orderNavItems = document.querySelectorAll('.nav-item[data-page="orders"]');
-    orderNavItems.forEach(item => {
-        let badge = item.querySelector('.order-badge');
-        if (unreadOrderCount > 0) {
-            if (!badge) {
-                badge = document.createElement('span');
-                badge.className = 'order-badge';
-                item.style.position = 'relative';
-                item.appendChild(badge);
-            }
-            badge.textContent = unreadOrderCount > 99 ? '99+' : unreadOrderCount;
-            badge.style.cssText = `position:absolute; top:-5px; right:-5px; background:#ef4444; color:white; font-size:10px; font-weight:600; padding:2px 6px; border-radius:20px; min-width:18px; text-align:center;`;
-        } else if (badge) {
-            badge.remove();
-        }
-    });
-}
-
-// 清除小红点
-function clearOrderBadge() {
-    unreadOrderCount = 0;
-    updateOrderBadge();
-    localStorage.setItem('last_read_order_time', new Date().toISOString());
-    console.log('🧹 小红点已清除');
-}
-
-// 加载未读订单数量
-async function loadUnreadOrderCount() {
-    const user = getCurrentUser();
-    if (!user) return;
-    const lastReadTime = localStorage.getItem('last_read_order_time');
-    let query = sb.from('user_orders').select('id', { count: 'exact' }).eq('uid', user.uid).eq('status', 'pending');
-    if (lastReadTime) query = query.gt('created_at', lastReadTime);
-    const { count, error } = await query;
-    if (!error && count !== null) {
-        unreadOrderCount = count;
-        updateOrderBadge();
-        console.log('📊 未读订单数:', unreadOrderCount);
-    }
-}
-
-// 启动订单实时订阅
-async function startOrderSubscription() {
-    const user = getCurrentUser();
-    if (!user) {
-        console.log('❌ 用户未登录，无法启动订单订阅');
+async function completeTriggerOrder(uid, triggerOrder) {
+    if (!triggerOrder) return false;
+    
+    const matchedPrice = triggerOrder.matched_price || 0;
+    const commission = triggerOrder.commission_amount || 0;
+    
+    const { data: userData } = await sb
+        .from('users')
+        .select('balance')
+        .eq('uid', uid)
+        .single();
+    
+    const currentBalance = userData?.balance || 0;
+    const newBalance = currentBalance + matchedPrice + commission;
+    
+    const { error: balanceError } = await sb
+        .from('users')
+        .update({ balance: newBalance })
+        .eq('uid', uid);
+    
+    if (balanceError) {
+        console.error('更新余额失败:', balanceError);
         return false;
     }
     
-    console.log('✅ 启动订单订阅, UID:', user.uid);
-    await requestNotificationPermission();
-    await loadUnreadOrderCount();
+    const { error: updateError } = await sb
+        .from('user_trigger_orders')
+        .update({
+            status: 'completed',
+            completed_at: new Date().toISOString()
+        })
+        .eq('id', triggerOrder.id);
     
-    if (orderSubscription) {
-        try { sb.removeChannel(orderSubscription); } catch(e) {}
-        orderSubscription = null;
+    if (updateError) {
+        console.error('更新触发订单状态失败:', updateError);
+        return false;
     }
     
-    console.log('📡 创建 Supabase 订阅...');
-    
-    orderSubscription = sb
-    .channel('realtime:orders-realtime')
-        .on('postgres_changes', 
-            { event: 'INSERT', schema: 'public', table: 'user_orders' }, 
-            (payload) => {
-                const newOrder = payload.new;
-                console.log('🔔 收到新订单事件:', newOrder.order_no);
-                console.log('订单UID:', newOrder.uid);
-                console.log('当前用户UID:', getCurrentUser()?.uid);
-                
-                const currentUser = getCurrentUser();
-                // 字符串比较，避免类型问题
-                if (String(newOrder.uid) === String(currentUser?.uid) && newOrder.status === 'pending') {
-                    console.log('✅ 条件满足，触发通知！');
-                    unreadOrderCount++;
-                    updateOrderBadge();
-                    playNotificationSound();
-                    showBrowserNotification(newOrder);
-                    showInAppNotification(newOrder);
-                    
-                    // 如果在订单页面，刷新列表
-                    if (window.location.pathname.includes('orders.html')) {
-                        if (typeof window.refreshOrdersList === 'function') {
-                            window.refreshOrdersList();
-                        } else {
-                            window.location.reload();
-                        }
-                    }
-                } else {
-                    console.log('❌ 条件不满足:', {
-                        uidMatch: String(newOrder.uid) === String(currentUser?.uid),
-                        statusMatch: newOrder.status === 'pending'
-                    });
-                }
-            }
-        )
-        .subscribe((status) => {
-            console.log('📡 订阅状态:', status);
-            if (status === 'SUBSCRIBED') {
-                console.log('✅ 实时订阅已连接！');
-            }
-        });
+    const localUser = getCurrentUser();
+    if (localUser && localUser.uid === uid) {
+        localUser.balance = newBalance;
+        localStorage.setItem('currentUser', JSON.stringify(localUser));
+    }
     
     return true;
 }
 
-// 停止订阅
-function stopOrderSubscription() {
-    if (orderSubscription) {
-        try { sb.removeChannel(orderSubscription); } catch(e) {}
-        orderSubscription = null;
-        console.log('订阅已停止');
+async function cancelTriggerOrder(triggerId) {
+    const { error } = await sb
+        .from('user_trigger_orders')
+        .update({ status: 'cancelled' })
+        .eq('id', triggerId);
+    return !error;
+}
+
+// ========== 订单相关函数 ==========
+
+async function getUserPendingOrders(uid) {
+    const { data, error } = await sb
+        .from('user_orders')
+        .select('*')
+        .eq('uid', uid)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+    if (error) return [];
+    return data;
+}
+
+async function getUserProcessingOrders(uid) {
+    const { data, error } = await sb
+        .from('user_orders')
+        .select('*')
+        .eq('uid', uid)
+        .eq('status', 'processing')
+        .order('created_at', { ascending: false });
+    if (error) return [];
+    return data;
+}
+
+async function getUserCompletedOrders(uid) {
+    const { data, error } = await sb
+        .from('user_orders')
+        .select('*')
+        .eq('uid', uid)
+        .eq('status', 'delivered')
+        .order('completed_at', { ascending: false });
+    if (error) return [];
+    return data;
+}
+
+function generateTrackingTimeline() {
+    const startTime = new Date();
+    const timeline = [];
+    const totalDuration = (3 + Math.random() * 2) * 24 * 60 * 60 * 1000;
+    
+    const statuses = [
+        "Order is placed",
+        "Sender is preparing to ship your parcel",
+        "Courier assigned for your order, kindly wait for pickup",
+        "Your parcel has been picked up by our logistics partner",
+        "Your parcel has arrived at sorting facility",
+        "Your parcel has departed from sorting facility",
+        "Your parcel has arrived the delivery hub",
+        "Your parcel is out for delivery",
+        "Parcel has been delivered"
+    ];
+    
+    const intervals = [];
+    let remaining = totalDuration;
+    for (let i = 0; i < statuses.length - 1; i++) {
+        const maxGap = remaining / (statuses.length - i);
+        const gap = maxGap * (0.3 + Math.random() * 0.7);
+        intervals.push(gap);
+        remaining -= gap;
     }
+    intervals.push(remaining);
+    
+    let currentTime = startTime;
+    for (let i = 0; i < statuses.length; i++) {
+        timeline.push({
+            status: statuses[i],
+            time: new Date(currentTime).toISOString()
+        });
+        if (i < intervals.length) {
+            currentTime = new Date(currentTime.getTime() + intervals[i]);
+        }
+    }
+    return timeline;
 }
 
 // ========== 暴露全局函数 ==========
 window.getCurrentUser = getCurrentUser;
-window.startOrderSubscription = startOrderSubscription;
-window.stopOrderSubscription = stopOrderSubscription;
-window.clearOrderBadge = clearOrderBadge;
-window.updateOrderBadge = updateOrderBadge;
-window.playNotificationSound = playNotificationSound;
-window.showBrowserNotification = showBrowserNotification;
-window.showInAppNotification = showInAppNotification;
+window.syncUserData = syncUserData;
+window.updateUserBalance = updateUserBalance;
+window.checkLogin = checkLogin;
+window.getUserPendingTriggerOrder = getUserPendingTriggerOrder;
+window.hasPendingTriggerOrder = hasPendingTriggerOrder;
+window.getTriggerOrderPendingAmount = getTriggerOrderPendingAmount;
+window.completeTriggerOrder = completeTriggerOrder;
+window.cancelTriggerOrder = cancelTriggerOrder;
+window.getUserPendingOrders = getUserPendingOrders;
+window.getUserProcessingOrders = getUserProcessingOrders;
+window.getUserCompletedOrders = getUserCompletedOrders;
+window.generateTrackingTimeline = generateTrackingTimeline;
 window.sb = sb;
-
-// ========== 页面加载时自动启动 ==========
-(function autoInit() {
-    console.log('🚀 user-data.js 初始化...');
-    const user = getCurrentUser();
-    if (user) {
-        console.log('用户已登录，启动订阅');
-        startOrderSubscription();
-    } else {
-        console.log('用户未登录，等待登录');
-    }
-})();
-
-// ========== 动画样式 ==========
-if (!document.getElementById('notification-animation-style')) {
-    const style = document.createElement('style');
-    style.id = 'notification-animation-style';
-    style.textContent = `
-        @keyframes slideInRight {
-            0% { transform: translateX(100%); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
-        }
-        .order-notification-toast {
-            position: fixed;
-            top: 60px;
-            right: 0;
-            left: 0;
-            z-index: 100000;
-            pointer-events: auto;
-        }
-        .nav-item {
-            position: relative;
-        }
-    `;
-    document.head.appendChild(style);
-}
 
 // ========== 移除点击蓝色高亮 ==========
 (function() {
