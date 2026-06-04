@@ -121,75 +121,6 @@
             font-size: 14px;
         }
 
-        /* 语言切换器 - 特殊样式 */
-        .language-section {
-            background: white;
-            border-radius: 24px;
-            margin: 16px;
-            padding: 20px;
-            border: 1px solid #eef2f7;
-        }
-
-        .language-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .language-title i {
-            font-size: 22px;
-            color: #ff7a00;
-        }
-
-        .language-title span {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        .lang-grid {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .lang-btn {
-            flex: 1;
-            min-width: 80px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 12px 16px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 13px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .lang-btn:hover {
-            border-color: #ff7a00;
-            background: #fff7ed;
-        }
-
-        .lang-btn.active {
-            background: #ff7a00;
-            color: white;
-            border-color: #ff7a00;
-        }
-
-        /* 版本信息 */
-        .version-info {
-            text-align: center;
-            padding: 20px;
-            font-size: 11px;
-            color: #94a3b8;
-        }
-
         /* 退出登录按钮 */
         .logout-btn {
             background: #fef2f2;
@@ -209,6 +140,14 @@
 
         .logout-btn:hover {
             background: #fee2e2;
+        }
+
+        /* 版本信息 */
+        .version-info {
+            text-align: center;
+            padding: 20px;
+            font-size: 11px;
+            color: #94a3b8;
         }
 
         /* 底部导航 */
@@ -252,32 +191,23 @@
 
     <div class="page-header">
         <button class="back-btn" onclick="goBack()">←</button>
-        <h1 data-i18n="settings">Settings</h1>
+        <h1>Settings</h1>
         <div style="width: 30px;"></div>
     </div>
 
-    <!-- 语言切换区域 -->
-    <div class="language-section">
-        <div class="language-title">
-            <i class="fas fa-globe"></i>
-            <span>Language / Sprache / Lingua / Idioma</span>
-        </div>
-        <div class="lang-grid">
-            <button class="lang-btn" data-lang="en">
-                🇬🇧 English
-            </button>
-            <button class="lang-btn" data-lang="de">
-                🇩🇪 Deutsch
-            </button>
-            <button class="lang-btn" data-lang="it">
-                🇮🇹 Italiano
-            </button>
-            <button class="lang-btn" data-lang="es">
-                🇪🇸 Español
-            </button>
-        </div>
-        <div style="font-size: 11px; color: #94a3b8; margin-top: 12px; text-align: center;">
-            ⚡ Change language, all text will update automatically
+    <!-- ========== 风格2：渐变卡片 语言切换器 ========== -->
+    <div class="settings-card" style="background: linear-gradient(135deg, #fff7ed, #ffe7cc); border-radius: 24px; margin: 16px; padding: 20px; border: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-language" style="color: #ff7a00; font-size: 24px;"></i>
+                <div>
+                    <div style="font-weight: 700; color: #1f2937;">Language</div>
+                    <div style="font-size: 11px; color: #6b7280;" id="currentLangName">English</div>
+                </div>
+            </div>
+            <div id="langSelectorBtn" style="background: white; padding: 8px 24px; border-radius: 40px; font-weight: 600; color: #ff7a00; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                <span id="currentLangCode">EN</span> <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+            </div>
         </div>
     </div>
 
@@ -289,8 +219,8 @@
                     <i class="fas fa-bell"></i>
                 </div>
                 <div class="settings-info">
-                    <div class="title" data-i18n="notifications">Notifications</div>
-                    <div class="subtitle" data-i18n="notifications_desc">Manage alert preferences</div>
+                    <div class="title">Notifications</div>
+                    <div class="subtitle">Manage alert preferences</div>
                 </div>
             </div>
             <div class="settings-right">
@@ -304,8 +234,8 @@
                     <i class="fas fa-lock"></i>
                 </div>
                 <div class="settings-info">
-                    <div class="title" data-i18n="privacy">Privacy & Security</div>
-                    <div class="subtitle" data-i18n="privacy_desc">Password, 2FA, data settings</div>
+                    <div class="title">Privacy & Security</div>
+                    <div class="subtitle">Password, 2FA, data settings</div>
                 </div>
             </div>
             <div class="settings-right">
@@ -319,8 +249,8 @@
                     <i class="fas fa-palette"></i>
                 </div>
                 <div class="settings-info">
-                    <div class="title" data-i18n="display">Display & Theme</div>
-                    <div class="subtitle" data-i18n="display_desc">Dark mode, font size</div>
+                    <div class="title">Display & Theme</div>
+                    <div class="subtitle">Dark mode, font size</div>
                 </div>
             </div>
             <div class="settings-right">
@@ -334,8 +264,8 @@
                     <i class="fas fa-info-circle"></i>
                 </div>
                 <div class="settings-info">
-                    <div class="title" data-i18n="about_us">About Us</div>
-                    <div class="subtitle" data-i18n="about_us_desc">Version, terms, contact</div>
+                    <div class="title">About Us</div>
+                    <div class="subtitle">Version, terms, contact</div>
                 </div>
             </div>
             <div class="settings-right">
@@ -347,7 +277,7 @@
     <!-- 退出登录按钮 -->
     <div class="logout-btn" onclick="logout()">
         <i class="fas fa-sign-out-alt"></i>
-        <span data-i18n="logout">Log Out</span>
+        <span>Log Out</span>
     </div>
 
     <div class="version-info" id="versionInfo">
@@ -358,22 +288,34 @@
     <div class="bottom-nav">
         <div class="nav-item" data-page="dashboard">
             <i class="fa-solid fa-house"></i>
-            <span data-i18n="nav_dashboard">Dashboard</span>
+            <span>Dashboard</span>
         </div>
         <div class="nav-item" data-page="products">
             <i class="fa-solid fa-box"></i>
-            <span data-i18n="nav_products">Products</span>
+            <span>Products</span>
         </div>
         <div class="nav-item" data-page="orders">
             <i class="fa-solid fa-list-check"></i>
-            <span data-i18n="nav_orders">Orders</span>
+            <span>Orders</span>
         </div>
         <div class="nav-item active" data-page="profile">
             <i class="fa-solid fa-user"></i>
-            <span data-i18n="nav_profile">My Profile</span>
+            <span>My Profile</span>
         </div>
     </div>
 
+</div>
+
+<!-- 语言选择弹窗 -->
+<div id="langModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: all 0.2s;">
+    <div style="background: white; border-radius: 32px; padding: 24px; width: 280px; text-align: center;">
+        <h3 style="margin-bottom: 16px; color: #1a1a2e;">Select Language</h3>
+        <div class="lang-opt" data-lang="en" data-name="English" data-code="EN" style="padding: 14px; border-radius: 60px; margin: 8px 0; cursor: pointer; font-weight: 500;">🇬🇧 English</div>
+        <div class="lang-opt" data-lang="de" data-name="Deutsch" data-code="DE" style="padding: 14px; border-radius: 60px; margin: 8px 0; cursor: pointer; font-weight: 500;">🇩🇪 Deutsch</div>
+        <div class="lang-opt" data-lang="it" data-name="Italiano" data-code="IT" style="padding: 14px; border-radius: 60px; margin: 8px 0; cursor: pointer; font-weight: 500;">🇮🇹 Italiano</div>
+        <div class="lang-opt" data-lang="es" data-name="Español" data-code="ES" style="padding: 14px; border-radius: 60px; margin: 8px 0; cursor: pointer; font-weight: 500;">🇪🇸 Español</div>
+        <button id="closeModalBtn" style="margin-top: 16px; background: #f1f5f9; border: none; padding: 12px; border-radius: 40px; width: 100%; cursor: pointer; font-weight: 600; color: #475569;">Cancel</button>
+    </div>
 </div>
 
 <script>
@@ -390,56 +332,73 @@
         window.location.href = 'signin.html';
     }
 
-    // 语言切换功能
-    function changeLanguage(lang) {
+    // ========== 语言切换功能（风格2） ==========
+    const langModal = document.getElementById('langModal');
+    const currentLangName = document.getElementById('currentLangName');
+    const currentLangCode = document.getElementById('currentLangCode');
+
+    function openLangModal() {
+        langModal.style.visibility = 'visible';
+        langModal.style.opacity = '1';
+    }
+
+    function closeLangModal() {
+        langModal.style.visibility = 'hidden';
+        langModal.style.opacity = '0';
+    }
+
+    function changeLanguage(lang, name, code) {
+        currentLangName.textContent = name;
+        currentLangCode.textContent = code;
+        localStorage.setItem('app_language', lang);
         if (typeof i18n !== 'undefined') {
             i18n.setLanguage(lang);
-            // 高亮当前选中的语言按钮
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                if (btn.dataset.lang === lang) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-            showToast(i18n.t('language_changed') || 'Language changed!', 'success');
-        } else {
-            console.error('i18n not loaded');
-            showToast('Language system not ready', 'error');
         }
+        closeLangModal();
+        // 可选：刷新页面重新加载所有翻译
+        // location.reload();
     }
 
-    // 绑定语言切换按钮事件
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const lang = btn.dataset.lang;
-            changeLanguage(lang);
+    document.getElementById('langSelectorBtn').addEventListener('click', openLangModal);
+    document.getElementById('closeModalBtn').addEventListener('click', closeLangModal);
+    
+    document.querySelectorAll('.lang-opt').forEach(opt => {
+        opt.addEventListener('click', () => {
+            const lang = opt.dataset.lang;
+            const name = opt.dataset.name;
+            const code = opt.dataset.code;
+            changeLanguage(lang, name, code);
         });
     });
+    
+    langModal.addEventListener('click', (e) => {
+        if (e.target === langModal) closeLangModal();
+    });
 
-    // 页面加载时高亮当前语言
-    function highlightCurrentLanguage() {
-        const currentLang = localStorage.getItem('app_language') || 'en';
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            if (btn.dataset.lang === currentLang) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
+    // 初始化语言显示
+    const savedLang = localStorage.getItem('app_language') || 'en';
+    const langMap = { 
+        en: ['English', 'EN'], 
+        de: ['Deutsch', 'DE'], 
+        it: ['Italiano', 'IT'], 
+        es: ['Español', 'ES'] 
+    };
+    if (currentLangName && currentLangCode && langMap[savedLang]) {
+        currentLangName.textContent = langMap[savedLang][0];
+        currentLangCode.textContent = langMap[savedLang][1];
     }
 
-    // 设置选项功能（暂未实现，可后续添加）
+    // ========== 设置选项功能 ==========
     function openNotificationSettings() {
-        showToast(i18n.t('coming_soon') || 'Coming soon', 'info');
+        showToast('Coming soon', 'info');
     }
 
     function openPrivacySettings() {
-        showToast(i18n.t('coming_soon') || 'Coming soon', 'info');
+        showToast('Coming soon', 'info');
     }
 
     function openDisplaySettings() {
-        showToast(i18n.t('coming_soon') || 'Coming soon', 'info');
+        showToast('Coming soon', 'info');
     }
 
     function openAboutUs() {
@@ -448,15 +407,11 @@
 
     // 退出登录
     function logout() {
-        showConfirm(
-            i18n.t('confirm') || 'Confirm',
-            i18n.t('logout_confirm') || 'Are you sure you want to log out?',
-            () => {
-                localStorage.removeItem('currentUser');
-                localStorage.removeItem('admin_logged_in');
-                window.location.href = 'signin.html';
-            }
-        );
+        showConfirm('Confirm', 'Are you sure you want to log out?', () => {
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('admin_logged_in');
+            window.location.href = 'signin.html';
+        });
     }
 
     // 返回上一页
@@ -477,46 +432,13 @@
         });
     }
 
-    // 更新页面所有带 data-i18n 的元素
-    function updatePageTexts() {
-        if (typeof i18n === 'undefined') return;
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const key = el.getAttribute('data-i18n');
-            const translation = i18n.t(key);
-            if (translation && translation !== key) {
-                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                    if (el.placeholder !== undefined) {
-                        el.placeholder = translation;
-                    }
-                } else {
-                    el.textContent = translation;
-                }
-            }
-        });
-    }
+    setupBottomNav();
 
-    // 监听语言变化事件
-    if (typeof document !== 'undefined') {
-        document.addEventListener('languageChanged', () => {
-            updatePageTexts();
-        });
+    // 更新版本号
+    const versionEl = document.getElementById('versionInfo');
+    if (versionEl) {
+        versionEl.textContent = `ADDITIVE v2.0.0`;
     }
-
-    // 初始化
-    document.addEventListener('DOMContentLoaded', () => {
-        if (typeof i18n !== 'undefined') {
-            i18n.init();
-        }
-        updatePageTexts();
-        highlightCurrentLanguage();
-        setupBottomNav();
-        
-        // 更新版本号显示
-        const versionEl = document.getElementById('versionInfo');
-        if (versionEl) {
-            versionEl.textContent = `ADDITIVE v2.0.0`;
-        }
-    });
 </script>
 </body>
 </html>
