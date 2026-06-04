@@ -304,52 +304,58 @@
             color: #ef4444;
         }
 
-        /* 升级卡片 */
-        .upgrade-card {
-            background: linear-gradient(135deg, #1a1a2e, #0f0f23);
+        /* 升级卡片 - 橙色渐变脉冲风格（与checkin.html一致） */
+        .upgrade-card-pulse {
+            margin: 20px;
+            background: linear-gradient(135deg, #fff7ed, #ffe7cc);
             border-radius: 24px;
-            margin: 16px;
             padding: 20px;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid rgba(255, 122, 0, 0.2);
+            animation: pulseGlow 2.5s ease-in-out infinite;
         }
-        .upgrade-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #ff7a00, #ff9f43);
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0.1); border-color: rgba(255, 122, 0, 0.2); }
+            50% { box-shadow: 0 0 0 8px rgba(255, 122, 0, 0); border-color: rgba(255, 122, 0, 0.4); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0); border-color: rgba(255, 122, 0, 0.2); }
         }
+
         .upgrade-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
-            color: #ff9f43;
+            color: #ff7a00;
             margin-bottom: 8px;
         }
+
         .upgrade-desc {
             font-size: 12px;
-            color: #94a3b8;
+            color: #6b7280;
             line-height: 1.5;
             margin-bottom: 16px;
         }
-        .upgrade-btn {
-            background: rgba(255,122,0,0.15);
-            border: 1px solid rgba(255,122,0,0.3);
+
+        .btn-upgrade {
+            background: #ff7a00;
+            border: none;
             padding: 10px 20px;
             border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: #ff7a00;
-            font-weight: 600;
-            font-size: 13px;
+            transition: all 0.2s;
             cursor: pointer;
-            text-decoration: none;
         }
 
-        /* 底部导航 */
+        .btn-upgrade:hover {
+            background: #ea580c;
+            transform: scale(1.02);
+        }
+
+        /* 底部导航栏 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -438,50 +444,6 @@
             font-weight: 600;
             color: #475569;
         }
-
-.upgrade-card-pulse {
-    margin-top: 20px;
-    background: linear-gradient(135deg, #1a1a2e, #0f0f23);
-    border-radius: 24px;
-    padding: 20px;
-    animation: pulseGlow 2.5s ease-in-out infinite;
-    border: 1px solid rgba(255, 122, 0, 0.3);
-}
-
-@keyframes pulseGlow {
-    0% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0.1); border-color: rgba(255, 122, 0, 0.2); }
-    50% { box-shadow: 0 0 0 8px rgba(255, 122, 0, 0); border-color: rgba(255, 122, 0, 0.5); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 122, 0, 0); border-color: rgba(255, 122, 0, 0.2); }
-}
-
-.upgrade-card-pulse .upgrade-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #ff7a00;
-    margin-bottom: 8px;
-}
-
-.upgrade-card-pulse .upgrade-desc {
-    font-size: 12px;
-    color: #94a3b8;
-    line-height: 1.5;
-    margin-bottom: 16px;
-}
-
-.btn-upgrade {
-    background: rgba(255, 122, 0, 0.15);
-    border: 1px solid rgba(255, 122, 0, 0.3);
-    padding: 10px 20px;
-    border-radius: 40px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: #ff7a00;
-    font-weight: 600;
-    font-size: 13px;
-    cursor: pointer;
-    text-decoration: none;
-}
     </style>
 </head>
 <body>
@@ -592,13 +554,11 @@
         </div>
     </div>
 
-        <!-- ========== 升级会员卡片（Premium Status 风格） ========== -->
-    <div class="glass-card" id="upgradeGlassCard">
-        <div class="card-inner">
-            <div class="upgrade-title">✨ Upgrade your membership</div>
-            <div class="upgrade-desc">Unlock higher rewards, priority support, and premium benefits.</div>
-            <a href="membership.html" class="btn-upgrade-premium">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-        </div>
+    <!-- ========== 升级会员卡片（橙色渐变脉冲风格） ========== -->
+    <div class="upgrade-card-pulse">
+        <div class="upgrade-title">✨ Upgrade your membership</div>
+        <div class="upgrade-desc">Unlock higher rewards, priority support, and premium benefits.</div>
+        <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
     </div>
 
     <!-- 底部导航栏 -->
