@@ -9,7 +9,7 @@ let audioEnabled = localStorage.getItem('audio_enabled') === 'true';
 // ========== 查找并使用顶部的喇叭按钮 ==========
 function initSoundButton() {
     // 查找顶部喇叭按钮（通常是 .notification-icon 或包含 bell 图标的元素）
-    const soundBtn = document.querySelector('.notification-icon, [onclick*="chat"], .fa-bell, .fa-bell-slash')?.closest('div, a, button');
+    const soundBtn = document.querySelector('.notification-icon')?.closest('div, a, button');
     
     if (!soundBtn) {
         console.log('未找到顶部喇叭按钮，声音功能需要手动激活');
