@@ -1,0 +1,91 @@
+/* user-common.css - 用户端页面共用样式
+   只修改了 body 背景色，其他样式完全保持原样 */
+
+/* 暖灰渐变背景 (Style 07) */
+body {
+    background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d5 100%);
+    font-family: 'Inter', sans-serif;
+    color: #1f2937;
+    display: flex;
+    justify-content: center;
+}
+
+/* 手机容器 */
+.phone {
+    width: 390px;
+    min-height: 100vh;
+    background: transparent;
+    padding-bottom: 80px;
+    position: relative;
+}
+
+@media (max-width: 390px) {
+    .phone {
+        width: 100%;
+    }
+}
+
+/* 卡片样式 - 白色背景保持不变 */
+.card, .stat-card, .chart-card, .products-card, .info-card, 
+.settings-card, .logout-card, .order-card, .product-item, 
+.kyc-card, .upload-card, .verified-card, .step-container, 
+.payment-item, .address-card, .chat-card, .tier-card, 
+.withdrawal-card, .membership-card, .progress-container, 
+.glass-card, .current-card, .upgrade-card-pulse, .wallet-card, 
+.balance-card, .stats-card, .overview-card-content, 
+.certificate-frame, .checkin-card, .rewards-card {
+    background: white;
+    border-radius: 24px;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* 底部导航栏 */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid #eef2f7;
+    display: flex;
+    padding: 10px 0 14px;
+    z-index: 100;
+}
+
+.nav-item {
+    flex: 1;
+    text-align: center;
+    font-size: 11px;
+    color: #9ca3af;
+    cursor: pointer;
+    position: relative;
+}
+
+.nav-item i {
+    display: block;
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.nav-item.active {
+    color: #ff7a00;
+    font-weight: 600;
+}
+
+/* 按钮样式保持原样 */
+.btn-primary, .claim-btn, .step-btn, .submit-btn, .save-btn, 
+.continue-btn, .login-btn, .register-btn, .confirm-btn, 
+.chat-btn, .btn-upgrade {
+    background: linear-gradient(135deg, #ff7a00, #ff9f43);
+    border: none;
+    border-radius: 40px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+/* 其他所有样式保持原样，不做任何修改 */
