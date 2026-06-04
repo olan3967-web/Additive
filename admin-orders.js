@@ -1,7 +1,7 @@
 // admin-orders.js - Backend Order Management
 let adminOrderSearchKeyword = '';
 let adminOrdersList = [];
-let currentPage = 1;
+let adminOrdersCurrentPage = 1;
 const pageSize = 50;
 
 async function loadAdminOrdersPage() {

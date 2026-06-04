@@ -1,7 +1,7 @@
 // admin-orderpool.js - 订单池页面（使用自定义弹窗）
 let poolSearchKeyword = '';
 let allOrders = [];
-let currentPage = 1;
+let orderPoolCurrentPage = 1;
 const pageSize = 50;
 
 async function loadOrderPoolPage() {
