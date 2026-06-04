@@ -412,7 +412,12 @@
     // ========== 工具函数 ==========
     function escapeHtml(str) {
         if (!str) return '';
-        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
     }
 
     function formatDate(dateStr) {
@@ -433,7 +438,7 @@
             if (!Array.isArray(products)) {
                 return '-';
             }
-            return products.map(p => `${p.product_name || '产品'} ×${p.quantity || 1}`).join(', ');
+            return products.map(function(p) { return (p.product_name || '产品') + ' ×' + (p.quantity || 1); }).join(', ');
         } catch(e) {
             return String(productsData || '-');
         }
@@ -463,8 +468,8 @@
             return;
         }
 
-        pendingOrders = orders.filter(o => o.status === 'pending');
-        processingOrders = orders.filter(o => o.status === 'processing');
+        pendingOrders = orders.filter(function(o) { return o.status === 'pending'; });
+        processingOrders = orders.filter(function(o) { return o.status === 'processing'; });
         
         renderOrders();
     }
@@ -479,33 +484,31 @@
         if (!container) return;
 
         if (pendingOrders.length === 0) {
-            container.innerHTML = `<div class="empty-state"><i class="fa-regular fa-inbox"></i>No new orders</div>`;
+            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-inbox"></i>No new orders</div>';
             return;
         }
 
-        container.innerHTML = pendingOrders.map(order => {
-            const productsText = parseProductsText(order.products);
-            const displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
+        container.innerHTML = pendingOrders.map(function(order) {
+            var productsText = parseProductsText(order.products);
+            var displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
             
-            return `
-                <div class="order-card" data-order='${JSON.stringify(order)}'>
-                    <div class="order-header">
-                        <span class="order-no">${order.order_no}</span>
-                        <span class="order-date">${formatDate(order.created_at)}</span>
-                    </div>
-                    <div class="order-products">${displayText}</div>
-                    <div class="order-footer">
-                        <span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span>
-                        <span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span>
-                        <span class="status-badge status-pending">Pending</span>
-                    </div>
-                </div>
-            `;
+            return '<div class="order-card" data-order=\'' + JSON.stringify(order) + '\'>' +
+                '<div class="order-header">' +
+                    '<span class="order-no">' + order.order_no + '</span>' +
+                    '<span class="order-date">' + formatDate(order.created_at) + '</span>' +
+                '</div>' +
+                '<div class="order-products">' + displayText + '</div>' +
+                '<div class="order-footer">' +
+                    '<span class="order-total">€' + (order.total_supply_price || 0).toFixed(2) + '</span>' +
+                    '<span class="order-commission">+€' + (order.total_commission || 0).toFixed(2) + '</span>' +
+                    '<span class="status-badge status-pending">Pending</span>' +
+                '</div>' +
+            '</div>';
         }).join('');
 
-        document.querySelectorAll('#newOrdersList .order-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const order = JSON.parse(card.dataset.order);
+        document.querySelectorAll('#newOrdersList .order-card').forEach(function(card) {
+            card.addEventListener('click', function() {
+                var order = JSON.parse(card.dataset.order);
                 openOrderModal(order);
             });
         });
@@ -516,34 +519,32 @@
         if (!container) return;
 
         if (processingOrders.length === 0) {
-            container.innerHTML = `<div class="empty-state"><i class="fa-regular fa-clock"></i>No orders in processing</div>`;
+            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-clock"></i>No orders in processing</div>';
             return;
         }
 
-        container.innerHTML = processingOrders.map(order => {
-            const productsText = parseProductsText(order.products);
-            const displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
+        container.innerHTML = processingOrders.map(function(order) {
+            var productsText = parseProductsText(order.products);
+            var displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
             
-            return `
-                <div class="order-card" data-order='${JSON.stringify(order)}'>
-                    <div class="order-header">
-                        <span class="order-no">${order.order_no}</span>
-                        <span class="order-date">${formatDate(order.created_at)}</span>
-                    </div>
-                    <div class="order-products">${displayText}</div>
-                    <div class="order-footer">
-                        <span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span>
-                        <span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span>
-                        <span class="status-badge status-processing">In Transit</span>
-                    </div>
-                </div>
-            `;
+            return '<div class="order-card" data-order=\'' + JSON.stringify(order) + '\'>' +
+                '<div class="order-header">' +
+                    '<span class="order-no">' + order.order_no + '</span>' +
+                    '<span class="order-date">' + formatDate(order.created_at) + '</span>' +
+                '</div>' +
+                '<div class="order-products">' + displayText + '</div>' +
+                '<div class="order-footer">' +
+                    '<span class="order-total">€' + (order.total_supply_price || 0).toFixed(2) + '</span>' +
+                    '<span class="order-commission">+€' + (order.total_commission || 0).toFixed(2) + '</span>' +
+                    '<span class="status-badge status-processing">In Transit</span>' +
+                '</div>' +
+            '</div>';
         }).join('');
 
-        document.querySelectorAll('#processingOrdersList .order-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const order = JSON.parse(card.dataset.order);
-                window.location.href = `order-tracking.html?order_no=${order.order_no}`;
+        document.querySelectorAll('#processingOrdersList .order-card').forEach(function(card) {
+            card.addEventListener('click', function() {
+                var order = JSON.parse(card.dataset.order);
+                window.location.href = 'order-tracking.html?order_no=' + order.order_no;
             });
         });
     }
@@ -552,27 +553,26 @@
         currentOrder = order;
         hasCheckedShipping = false;
         
-        document.getElementById('modalOrderNo').innerHTML = `订单 ${order.order_no}`;
+        document.getElementById('modalOrderNo').innerHTML = '订单 ' + order.order_no;
         
-        let productsHtml = '';
+        var productsHtml = '';
         try {
-            let products = order.products;
+            var products = order.products;
             if (typeof products === 'string') {
                 products = JSON.parse(products);
             }
             if (Array.isArray(products)) {
-                products.forEach(p => {
-                    productsHtml += `
-                        <div class="product-item-modal">
-                            <img src="${p.image_url || 'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'}" onerror="this.src='https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'">
-                            <div style="flex:1;">
-                                <div style="font-weight:600;">${escapeHtml(p.product_name)}</div>
-                                <div style="font-size:12px; color:#6b7280;">×${p.quantity} | €${p.unit_price.toFixed(2)}/each</div>
-                            </div>
-                            <div style="font-weight:700; color:#ff7a00;">€${(p.unit_price * p.quantity).toFixed(2)}</div>
-                        </div>
-                    `;
-                });
+                for (var i = 0; i < products.length; i++) {
+                    var p = products[i];
+                    productsHtml += '<div class="product-item-modal">' +
+                        '<img src="' + (p.image_url || 'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product') + '" onerror="this.src=\'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product\'">' +
+                        '<div style="flex:1;">' +
+                            '<div style="font-weight:600;">' + escapeHtml(p.product_name) + '</div>' +
+                            '<div style="font-size:12px; color:#6b7280;">×' + p.quantity + ' | €' + p.unit_price.toFixed(2) + '/each</div>' +
+                        '</div>' +
+                        '<div style="font-weight:700; color:#ff7a00;">€' + (p.unit_price * p.quantity).toFixed(2) + '</div>' +
+                    '</div>';
+                }
             } else {
                 productsHtml = '<div>产品信息加载失败</div>';
             }
@@ -581,15 +581,14 @@
         }
         document.getElementById('modalProductsList').innerHTML = productsHtml;
         
-        document.getElementById('modalBuyerInfo').innerHTML = `
-            <p><strong>👤 买家信息</strong></p>
-            <p>姓名：${escapeHtml(order.buyer_name || '未知')}</p>
-            <p>电话：${escapeHtml(order.buyer_phone || '未知')}</p>
-            <p>地址：${escapeHtml(order.buyer_address || '未知')}</p>
-        `;
+        document.getElementById('modalBuyerInfo').innerHTML = 
+            '<p><strong>👤 买家信息</strong></p>' +
+            '<p>姓名：' + escapeHtml(order.buyer_name || '未知') + '</p>' +
+            '<p>电话：' + escapeHtml(order.buyer_phone || '未知') + '</p>' +
+            '<p>地址：' + escapeHtml(order.buyer_address || '未知') + '</p>';
         
-        const checkBtn = document.getElementById('checkShippingBtn');
-        const confirmBtn = document.getElementById('confirmOrderBtn');
+        var checkBtn = document.getElementById('checkShippingBtn');
+        var confirmBtn = document.getElementById('confirmOrderBtn');
         checkBtn.classList.remove('checked');
         checkBtn.innerHTML = '<i class="fas fa-truck"></i> Check Shipping Info';
         confirmBtn.classList.add('disabled');
@@ -598,31 +597,30 @@
         document.getElementById('orderModal').classList.add('active');
     }
 
-    document.getElementById('checkShippingBtn')?.addEventListener('click', () => {
-    if (!currentOrder) return;
-    
-    // 只显示地址，不显示姓名和电话
-    const address = currentOrder.buyer_address || '未知地址';
-    const formattedAddress = address.replace(//g, '<br>');
-    
-    document.getElementById('supplierAddressText').innerHTML = formattedAddress;
-    document.getElementById('buyerAddressText').innerHTML = formattedAddress;
-    document.getElementById('shippingModal').classList.add('active');
-    
-    hasCheckedShipping = true;
-    const checkBtn = document.getElementById('checkShippingBtn');
-    const confirmBtn = document.getElementById('confirmOrderBtn');
-    checkBtn.classList.add('checked');
-    checkBtn.innerHTML = '<i class="fas fa-check-circle"></i> Shipping Info Checked';
-    confirmBtn.classList.remove('disabled');
-    confirmBtn.disabled = false;
-});
+    document.getElementById('checkShippingBtn').addEventListener('click', function() {
+        if (!currentOrder) return;
+        
+        var address = currentOrder.buyer_address || '未知地址';
+        var formattedAddress = address.replace(/\n/g, '<br>');
+        
+        document.getElementById('supplierAddressText').innerHTML = formattedAddress;
+        document.getElementById('buyerAddressText').innerHTML = formattedAddress;
+        document.getElementById('shippingModal').classList.add('active');
+        
+        hasCheckedShipping = true;
+        var checkBtn = document.getElementById('checkShippingBtn');
+        var confirmBtn = document.getElementById('confirmOrderBtn');
+        checkBtn.classList.add('checked');
+        checkBtn.innerHTML = '<i class="fas fa-check-circle"></i> Shipping Info Checked';
+        confirmBtn.classList.remove('disabled');
+        confirmBtn.disabled = false;
+    });
 
-    document.getElementById('closeShippingBtn')?.addEventListener('click', () => {
+    document.getElementById('closeShippingBtn').addEventListener('click', function() {
         document.getElementById('shippingModal').classList.remove('active');
     });
 
-    document.getElementById('confirmOrderBtn').addEventListener('click', async () => {
+    document.getElementById('confirmOrderBtn').addEventListener('click', async function() {
         if (!hasCheckedShipping) {
             showToast('请先点击 Check Shipping Info Confirm发货地址', 'warning');
             return;
@@ -630,26 +628,26 @@
         
         if (!currentOrder) return;
         
-        const user = getCurrentUser();
+        var user = getCurrentUser();
         if (!user) return;
         
-        const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
-        const currentBalance = userData?.balance || 0;
+        var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+        var currentBalance = userDataResult.data?.balance || 0;
         
         if (currentBalance < currentOrder.total_supply_price) {
-            showToast(`余额不足！需要 €${currentOrder.total_supply_price.toFixed(2)}，请先Top Up`, 'error');
+            showToast('余额不足！需要 €' + currentOrder.total_supply_price.toFixed(2) + '，请先Top Up', 'error');
             return;
         }
         
         showToast('处理订单中...', 'info');
         
-        const newBalance = currentBalance - currentOrder.total_supply_price;
+        var newBalance = currentBalance - currentOrder.total_supply_price;
         await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
         
-        const finalBalance = newBalance + currentOrder.total_supply_price + currentOrder.total_commission;
+        var finalBalance = newBalance + currentOrder.total_supply_price + currentOrder.total_commission;
         await sb.from('users').update({ balance: finalBalance }).eq('uid', user.uid);
         
-        const timeline = generateTrackingTimeline();
+        var timeline = generateTrackingTimeline();
         
         await sb.from('user_orders').update({
             status: 'processing',
@@ -659,13 +657,14 @@
         }).eq('order_no', currentOrder.order_no);
         
         try {
-            let products = currentOrder.products;
+            var products = currentOrder.products;
             if (typeof products === 'string') {
                 products = JSON.parse(products);
             }
             if (Array.isArray(products)) {
-                for (const product of products) {
-                    for (let i = 0; i < product.quantity; i++) {
+                for (var i = 0; i < products.length; i++) {
+                    var product = products[i];
+                    for (var j = 0; j < product.quantity; j++) {
                         await sb.from('order_history').insert({
                             uid: user.uid,
                             username: user.username,
@@ -682,23 +681,23 @@
             console.error('记录订单历史失败:', e);
         }
         
-        const updatedUser = getCurrentUser();
+        var updatedUser = getCurrentUser();
         if (updatedUser) {
             updatedUser.balance = finalBalance;
             localStorage.setItem('currentUser', JSON.stringify(updatedUser));
         }
         
         document.getElementById('orderModal').classList.remove('active');
-        showToast(`订单 ${currentOrder.order_no} 已Confirm发货！`, 'success');
+        showToast('订单 ' + currentOrder.order_no + ' 已Confirm发货！', 'success');
         
         await loadOrders();
     });
 
     function initTabs() {
-        const tabs = document.querySelectorAll('.tab-btn');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
+        var tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                tabs.forEach(function(t) { t.classList.remove('active'); });
                 tab.classList.add('active');
                 currentTab = tab.dataset.tab;
                 document.getElementById('newOrdersList').style.display = currentTab === 'new' ? 'block' : 'none';
@@ -708,9 +707,9 @@
     }
 
     function setupBottomNav() {
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const page = item.dataset.page;
+        document.querySelectorAll('.nav-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var page = item.dataset.page;
                 if (page === 'dashboard') window.location.href = 'start.html';
                 else if (page === 'products') window.location.href = 'products.html';
                 else if (page === 'orders') window.location.href = 'orders.html';
@@ -720,11 +719,11 @@
     }
 
     function generateTrackingTimeline() {
-        const startTime = new Date();
-        const timeline = [];
-        const totalDuration = (3 + Math.random() * 2) * 24 * 60 * 60 * 1000;
+        var startTime = new Date();
+        var timeline = [];
+        var totalDuration = (3 + Math.random() * 2) * 24 * 60 * 60 * 1000;
         
-        const statuses = [
+        var statuses = [
             "Order is placed",
             "Sender is preparing to ship your parcel",
             "Courier assigned for your order, kindly wait for pickup",
@@ -736,18 +735,18 @@
             "Parcel has been delivered"
         ];
         
-        const intervals = [];
-        let remaining = totalDuration;
-        for (let i = 0; i < statuses.length - 1; i++) {
-            const maxGap = remaining / (statuses.length - i);
-            const gap = maxGap * (0.3 + Math.random() * 0.7);
+        var intervals = [];
+        var remaining = totalDuration;
+        for (var i = 0; i < statuses.length - 1; i++) {
+            var maxGap = remaining / (statuses.length - i);
+            var gap = maxGap * (0.3 + Math.random() * 0.7);
             intervals.push(gap);
             remaining -= gap;
         }
         intervals.push(remaining);
         
-        let currentTime = startTime;
-        for (let i = 0; i < statuses.length; i++) {
+        var currentTime = startTime;
+        for (var i = 0; i < statuses.length; i++) {
             timeline.push({
                 status: statuses[i],
                 time: new Date(currentTime).toISOString()
@@ -762,7 +761,7 @@
 
     initTabs();
     setupBottomNav();
-    clearOrderBadge();
+    if (typeof clearOrderBadge === 'function') clearOrderBadge();
     window.refreshOrdersList = loadOrders;
     loadOrders();
 </script>
