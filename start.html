@@ -910,18 +910,18 @@
         // 查询所有订单（用于总佣金和总销售额，以及按日期筛选）
         const { data: allOrders } = await sb
             .from('order_history')
-            .select('commission, price, created_at')
+            .select('commission, price, date')
             .eq('uid', user.uid.toString());
         
         // 筛选今日订单
         const todayOrders = allOrders?.filter(o => {
-            const orderDate = new Date(o.created_at);
+            const orderDate = new Date(o.date);
             return orderDate >= today && orderDate < tomorrow;
         }) || [];
         
         // 筛选昨日订单
         const yesterdayOrders = allOrders?.filter(o => {
-            const orderDate = new Date(o.created_at);
+            const orderDate = new Date(o.date);
             return orderDate >= yesterday && orderDate < yesterdayEnd;
         }) || [];
         
