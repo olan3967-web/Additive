@@ -622,7 +622,7 @@
         document.getElementById('shippingModal').classList.remove('active');
     });
 
-    document.getElementById('confirmOrderBtn')?.addEventListener('click', async () => {
+    document.getElementById('confirmOrderBtn').addEventListener('click', async () => {
         if (!hasCheckedShipping) {
             showToast('请先点击 Check Shipping Info Confirm发货地址', 'warning');
             return;
