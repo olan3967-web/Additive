@@ -235,6 +235,11 @@
             font-size: 11px;
         }
 
+        .trend-down {
+            color: #ef4444;
+            font-size: 11px;
+        }
+
         .chart-card {
             background: white;
             border-radius: 24px;
@@ -578,22 +583,22 @@
         <div class="stat-card">
             <div class="stat-label">Total Sales</div>
             <div class="stat-value" id="totalSales">€0</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +12.5%</div>
+            <div class="trend-up" id="salesTrend"><i class="fas fa-arrow-up"></i> 0%</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">ROI</div>
             <div class="stat-value" id="roiValue">0%</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +5.1%</div>
+            <div class="trend-up" id="roiTrend"><i class="fas fa-arrow-up"></i> 0%</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Orders</div>
             <div class="stat-value" id="ordersCount">0</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +8.3%</div>
+            <div class="trend-up" id="ordersTrend"><i class="fas fa-arrow-up"></i> 0%</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Profit</div>
             <div class="stat-value" id="profitValue">€0</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +15.2%</div>
+            <div class="trend-up" id="profitTrend"><i class="fas fa-arrow-up"></i> 0%</div>
         </div>
     </div>
 
@@ -884,99 +889,103 @@
     }
 
     async function loadUserData() {
-    const user = getCurrentUser();
-    if (!user) return;
-    currentUser = user;
-    
-    document.getElementById('displayUsername').innerText = user.username || 'User';
-    
-    // 获取今天的日期范围
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0];
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    
-    // 获取昨天的日期范围
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    const todayYesterdayEnd = new Date(yesterday);
-    todayYesterdayEnd.setDate(todayYesterdayEnd.getDate() + 1);
-    const yesterdayEndStr = todayYesterdayEnd.toISOString().split('T')[0];
-    
-    // 查询所有订单（用于总佣金和总销售额，以及按日期筛选）
-    const { data: allOrders } = await sb.from('order_history').select('commission, price, created_at').eq('uid', user.uid.toString());
-    
-    // 筛选今日订单
-    const todayOrders = allOrders?.filter(o => {
-        const orderDate = new Date(o.created_at);
-        return orderDate >= today && orderDate < tomorrow;
-    }) || [];
-    
-    // 筛选昨日订单
-    const yesterdayOrders = allOrders?.filter(o => {
-        const orderDate = new Date(o.created_at);
-        return orderDate >= yesterday && orderDate < new Date(yesterday.setHours(24,0,0,0));
-    }) || [];
-    
-    // 今日数据
-    const todaySales = todayOrders.reduce((sum, o) => sum + (o.price || 0), 0);
-    const todayCommission = todayOrders.reduce((sum, o) => sum + (o.commission || 0), 0);
-    const todayOrderCount = todayOrders.length;
-    const todayRoi = todaySales > 0 ? (todayCommission / todaySales) * 100 : 0;
-    const todayProfit = todayCommission * 0.7;
-    
-    // 昨日数据
-    const yesterdaySales = yesterdayOrders.reduce((sum, o) => sum + (o.price || 0), 0);
-    const yesterdayCommission = yesterdayOrders.reduce((sum, o) => sum + (o.commission || 0), 0);
-    const yesterdayOrderCount = yesterdayOrders.length;
-    const yesterdayRoi = yesterdaySales > 0 ? (yesterdayCommission / yesterdaySales) * 100 : 0;
-    const yesterdayProfit = yesterdayCommission * 0.7;
-    
-    // 计算变化百分比
-    const salesChange = yesterdaySales === 0 ? 100 : ((todaySales / yesterdaySales) - 1) * 100;
-    const roiChange = yesterdayRoi === 0 ? todayRoi : todayRoi - yesterdayRoi;
-    const ordersChange = yesterdayOrderCount === 0 ? 100 : ((todayOrderCount / yesterdayOrderCount) - 1) * 100;
-    const profitChange = yesterdayProfit === 0 ? 100 : ((todayProfit / yesterdayProfit) - 1) * 100;
-    
-    // 总数据（用于显示主要数值）
-    const totalCommission = allOrders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
-    const totalSales = allOrders?.reduce((sum, o) => sum + (o.price || 0), 0) || 0;
-    const totalOrderCount = allOrders?.length || 0;
-    const totalRoi = totalSales > 0 ? (totalCommission / totalSales) * 100 : 0;
-    const totalProfit = totalCommission * 0.7;
-    
-    // 更新显示
-    document.getElementById('totalSales').innerHTML = '€' + totalSales.toLocaleString();
-    document.getElementById('roiValue').innerHTML = totalRoi.toFixed(1) + '%';
-    document.getElementById('ordersCount').innerHTML = totalOrderCount;
-    document.getElementById('profitValue').innerHTML = '€' + totalProfit.toLocaleString();
-    document.getElementById('overviewEarnings').innerHTML = '€' + totalCommission.toLocaleString();
-    
-    // 更新趋势箭头和百分比
-    document.querySelector('.stats-grid .stat-card:first-child .trend-up').innerHTML = 
-        (salesChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + salesChange.toFixed(1) + '%';
-    document.querySelector('.stats-grid .stat-card:nth-child(2) .trend-up').innerHTML = 
-        (roiChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + roiChange.toFixed(1) + '%';
-    document.querySelector('.stats-grid .stat-card:nth-child(3) .trend-up').innerHTML = 
-        (ordersChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + ordersChange.toFixed(1) + '%';
-    document.querySelector('.stats-grid .stat-card:nth-child(4) .trend-up').innerHTML = 
-        (profitChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + profitChange.toFixed(1) + '%';
-    
-    // VIP 等级和证书进度（保持不变）
-    const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
-    document.getElementById('overviewPremium').innerText = vipMap[user.vipLevel] || 'Normal';
-    const certProgress = totalOrderCount >= 100 ? 100 : totalOrderCount;
-    document.getElementById('overviewCert').innerHTML = certProgress + '/100';
-    const remaining = totalOrderCount >= 100 ? 0 : 100 - totalOrderCount;
-    document.getElementById('certTag').innerHTML = remaining === 0 ? 'Completed!' : remaining + ' orders to go';
-    
-    // 加载引导进度（保持不变）
-    const progress = await loadUserOnboardingProgress(user.uid);
-    updateProgressUI(progress);
-}
+        const user = getCurrentUser();
+        if (!user) return;
+        currentUser = user;
+        
+        document.getElementById('displayUsername').innerText = user.username || 'User';
+        
+        // 获取今天的日期范围
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        // 获取昨天的日期范围
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayEnd = new Date(yesterday);
+        yesterdayEnd.setDate(yesterdayEnd.getDate() + 1);
+        
+        // 查询所有订单（用于总佣金和总销售额，以及按日期筛选）
+        const { data: allOrders } = await sb
+            .from('order_history')
+            .select('commission, price, created_at')
+            .eq('uid', user.uid.toString());
+        
+        // 筛选今日订单
+        const todayOrders = allOrders?.filter(o => {
+            const orderDate = new Date(o.created_at);
+            return orderDate >= today && orderDate < tomorrow;
+        }) || [];
+        
+        // 筛选昨日订单
+        const yesterdayOrders = allOrders?.filter(o => {
+            const orderDate = new Date(o.created_at);
+            return orderDate >= yesterday && orderDate < yesterdayEnd;
+        }) || [];
+        
+        // 今日数据
+        const todaySales = todayOrders.reduce((sum, o) => sum + (o.price || 0), 0);
+        const todayCommission = todayOrders.reduce((sum, o) => sum + (o.commission || 0), 0);
+        const todayOrderCount = todayOrders.length;
+        const todayRoi = todaySales > 0 ? (todayCommission / todaySales) * 100 : 0;
+        const todayProfit = todayCommission * 0.7;
+        
+        // 昨日数据
+        const yesterdaySales = yesterdayOrders.reduce((sum, o) => sum + (o.price || 0), 0);
+        const yesterdayCommission = yesterdayOrders.reduce((sum, o) => sum + (o.commission || 0), 0);
+        const yesterdayOrderCount = yesterdayOrders.length;
+        const yesterdayRoi = yesterdaySales > 0 ? (yesterdayCommission / yesterdaySales) * 100 : 0;
+        const yesterdayProfit = yesterdayCommission * 0.7;
+        
+        // 计算变化百分比
+        const salesChange = yesterdaySales === 0 ? 100 : ((todaySales / yesterdaySales) - 1) * 100;
+        const roiChange = yesterdayRoi === 0 ? todayRoi : todayRoi - yesterdayRoi;
+        const ordersChange = yesterdayOrderCount === 0 ? 100 : ((todayOrderCount / yesterdayOrderCount) - 1) * 100;
+        const profitChange = yesterdayProfit === 0 ? 100 : ((todayProfit / yesterdayProfit) - 1) * 100;
+        
+        // 总数据（用于显示主要数值）
+        const totalCommission = allOrders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
+        const totalSales = allOrders?.reduce((sum, o) => sum + (o.price || 0), 0) || 0;
+        const totalOrderCount = allOrders?.length || 0;
+        const totalRoi = totalSales > 0 ? (totalCommission / totalSales) * 100 : 0;
+        const totalProfit = totalCommission * 0.7;
+        
+        // 更新显示
+        document.getElementById('totalSales').innerHTML = '€' + totalSales.toLocaleString();
+        document.getElementById('roiValue').innerHTML = totalRoi.toFixed(1) + '%';
+        document.getElementById('ordersCount').innerHTML = totalOrderCount;
+        document.getElementById('profitValue').innerHTML = '€' + totalProfit.toLocaleString();
+        document.getElementById('overviewEarnings').innerHTML = '€' + totalCommission.toLocaleString();
+        
+        // 更新趋势箭头和百分比
+        const salesTrendEl = document.getElementById('salesTrend');
+        salesTrendEl.innerHTML = (salesChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + salesChange.toFixed(1) + '%';
+        salesTrendEl.className = salesChange >= 0 ? 'trend-up' : 'trend-down';
+        
+        const roiTrendEl = document.getElementById('roiTrend');
+        roiTrendEl.innerHTML = (roiChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + roiChange.toFixed(1) + '%';
+        roiTrendEl.className = roiChange >= 0 ? 'trend-up' : 'trend-down';
+        
+        const ordersTrendEl = document.getElementById('ordersTrend');
+        ordersTrendEl.innerHTML = (ordersChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + ordersChange.toFixed(1) + '%';
+        ordersTrendEl.className = ordersChange >= 0 ? 'trend-up' : 'trend-down';
+        
+        const profitTrendEl = document.getElementById('profitTrend');
+        profitTrendEl.innerHTML = (profitChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + profitChange.toFixed(1) + '%';
+        profitTrendEl.className = profitChange >= 0 ? 'trend-up' : 'trend-down';
+        
+        const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
+        document.getElementById('overviewPremium').innerText = vipMap[user.vipLevel] || 'Normal';
+        const certProgress = totalOrderCount >= 100 ? 100 : totalOrderCount;
+        document.getElementById('overviewCert').innerHTML = certProgress + '/100';
+        const remaining = totalOrderCount >= 100 ? 0 : 100 - totalOrderCount;
+        document.getElementById('certTag').innerHTML = remaining === 0 ? 'Completed!' : remaining + ' orders to go';
+        
+        const progress = await loadUserOnboardingProgress(user.uid);
+        updateProgressUI(progress);
+    }
 
     async function loadVideoConfig() {
         try {
@@ -1091,7 +1100,6 @@
             if (window.enableAudio) {
                 window.enableAudio();
             } else {
-                // 如果 notification.js 还没加载，延迟重试
                 setTimeout(() => {
                     if (window.enableAudio) window.enableAudio();
                 }, 300);
