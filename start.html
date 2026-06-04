@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Dashboard - ADDITIVE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -36,7 +36,7 @@
         }
 
         .welcome-text {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 700;
             color: #1a1a2e;
             margin-bottom: 4px;
@@ -218,26 +218,30 @@
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 13px;
+            font-weight: 500;
             color: #6b7280;
             margin-bottom: 8px;
         }
 
         .stat-value {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 26px;
+            font-weight: 800;
             color: #1a1a2e;
             margin-bottom: 6px;
+            letter-spacing: -0.5px;
         }
 
         .trend-up {
             color: #10b981;
-            font-size: 11px;
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .trend-down {
             color: #ef4444;
-            font-size: 11px;
+            font-size: 12px;
+            font-weight: 600;
         }
 
         .chart-card {
@@ -258,39 +262,61 @@
         }
 
         .chart-title {
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 16px;
             color: #1a1a2e;
         }
 
         .chart-type-buttons {
             display: flex;
-            gap: 8px;
+            gap: 10px;
         }
 
+        /* Shimmer Premium 按钮样式 - 高清 */
         .chart-type-btn {
-            background: #f1f5f9;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 500;
-            color: #64748b;
+            background: linear-gradient(95deg, #1e2a3a, #0f172a);
+            border: 1px solid rgba(255, 122, 0, 0.5);
+            padding: 8px 18px;
+            border-radius: 40px;
+            color: #ffb84d;
+            font-weight: 600;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .chart-type-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 122, 0, 0.4), transparent);
+            transition: left 0.5s;
         }
 
         .chart-type-btn.active {
-            background: #ff7a00;
+            background: linear-gradient(95deg, #ff7a00, #ff9f43);
             color: white;
+            border-color: #ffcc00;
+        }
+
+        .chart-type-btn.active::before {
+            left: 100%;
         }
 
         .chart-type-btn:hover:not(.active) {
-            background: #e2e8f0;
+            border-color: #ff7a00;
+            color: #ffb84d;
         }
 
         canvas {
             width: 100%;
-            height: 180px;
+            height: 200px;
         }
 
         .overview-cards-container {
@@ -376,7 +402,7 @@
             display: inline-block;
             padding: 4px 10px;
             border-radius: 20px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
             color: #fff5e0;
             width: fit-content;
@@ -417,7 +443,8 @@
         }
 
         .products-title {
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 15px;
             color: #1a1a2e;
             margin-bottom: 16px;
         }
@@ -436,11 +463,13 @@
 
         .product-name {
             font-size: 14px;
+            font-weight: 500;
             color: #4b5563;
         }
 
         .product-amount {
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 15px;
             color: #ff7a00;
         }
 
@@ -450,7 +479,8 @@
         }
 
         .partners-title {
-            font-weight: 600;
+            font-weight: 700;
+            font-size: 15px;
             color: #1a1a2e;
             margin-bottom: 14px;
             display: flex;
@@ -535,7 +565,8 @@
         .nav-item {
             flex: 1;
             text-align: center;
-            font-size: 11px;
+            font-size: 12px;
+            font-weight: 500;
             color: #9ca3af;
             cursor: pointer;
             position: relative;
@@ -543,60 +574,21 @@
 
         .nav-item i {
             display: block;
-            font-size: 20px;
+            font-size: 22px;
             margin-bottom: 4px;
         }
 
         .nav-item.active {
             color: #ff7a00;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         @media (max-width: 390px) {
             .phone { width: 100%; }
             .partner-item { width: 160px; height: 98px; }
+            .stat-value { font-size: 22px; }
+            .overview-value { font-size: 28px; }
         }
-
-/* Shimmer Premium 按钮样式 */
-.chart-type-btn {
-    background: linear-gradient(95deg, #1e2a3a, #0f172a);
-    border: 1px solid rgba(255, 122, 0, 0.5);
-    padding: 8px 18px;
-    border-radius: 40px;
-    color: #ffb84d;
-    font-weight: 600;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    overflow: hidden;
-}
-
-.chart-type-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 122, 0, 0.4), transparent);
-    transition: left 0.5s;
-}
-
-.chart-type-btn.active {
-    background: linear-gradient(95deg, #ff7a00, #ff9f43);
-    color: white;
-    border-color: #ffcc00;
-}
-
-.chart-type-btn.active::before {
-    left: 100%;
-}
-
-.chart-type-btn:hover:not(.active) {
-    border-color: #ff7a00;
-    color: #ffb84d;
-}
     </style>
 </head>
 <body>
@@ -670,9 +662,9 @@
         <div class="chart-header">
             <span class="chart-title">Revenue Trend</span>
             <div class="chart-type-buttons">
-    <button class="chart-type-btn shimmer-btn" data-type="line">Line Chart</button>
-    <button class="chart-type-btn shimmer-btn" data-type="bar">Bar Chart</button>
-</div>
+                <button class="chart-type-btn shimmer-btn active" data-type="line">Line Chart</button>
+                <button class="chart-type-btn shimmer-btn" data-type="bar">Bar Chart</button>
+            </div>
         </div>
         <canvas id="revenueChart"></canvas>
     </div>
@@ -1018,27 +1010,33 @@
         }
     }
 
+    // Line Chart with gradient (有渐变色)
     function createLineChart(ctx, data) {
-    return new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartDates,
-            datasets: [{
-                label: 'Revenue (€)',
-                data: data,
-                borderColor: '#ff7a00',
-                borderWidth: 3,
-                backgroundColor: 'transparent',  // 无填充
-                fill: false,
-                tension: 0.3,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                pointBackgroundColor: '#ff7a00',
-                pointBorderColor: '#ffffff',
-                pointBorderWidth: 2
-            }]
-        },
-        options: {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+        gradient.addColorStop(0, 'rgba(255, 122, 0, 0.35)');
+        gradient.addColorStop(0.4, 'rgba(255, 122, 0, 0.15)');
+        gradient.addColorStop(1, 'rgba(255, 122, 0, 0.02)');
+        
+        return new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartDates,
+                datasets: [{
+                    label: 'Revenue (€)',
+                    data: data,
+                    borderColor: '#ff7a00',
+                    borderWidth: 3,
+                    backgroundColor: gradient,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: '#ff7a00',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
                 responsive: true,
                 maintainAspectRatio: true,
                 plugins: {
@@ -1049,22 +1047,27 @@
                         bodyColor: '#ffffff',
                         borderColor: '#ff7a00',
                         borderWidth: 1,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 11 },
                         callbacks: {
-                            label: (context) => `Commission: €${context.raw.toFixed(2)}`
+                            label: (context) => `Revenue: €${context.raw.toFixed(2)}`
                         }
                     }
                 },
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: 10 }, color: '#64748b' }
+                        ticks: { 
+                            font: { size: 12, weight: '500' }, 
+                            color: '#475569'
+                        }
                     },
                     y: {
-                        grid: { color: '#e2e8f0' },
+                        grid: { color: '#e2e8f0', drawBorder: false },
                         ticks: {
                             callback: (value) => '€' + value,
-                            font: { size: 10 },
-                            color: '#94a3b8'
+                            font: { size: 11, weight: '500' },
+                            color: '#64748b'
                         },
                         beginAtZero: true
                     }
@@ -1073,11 +1076,12 @@
         });
     }
 
+    // Bar Chart with metallic gradient (金属质感)
     function createBarChart(ctx, data) {
         const maxValue = Math.max(...data, 1);
         const barColors = data.map((value) => {
             const intensity = 0.5 + (value / maxValue) * 0.4;
-            const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
             gradient.addColorStop(0, `rgba(255, 140, 20, ${intensity + 0.2})`);
             gradient.addColorStop(0.3, `rgba(255, 110, 10, ${intensity + 0.1})`);
             gradient.addColorStop(0.7, `rgba(255, 90, 5, ${intensity})`);
@@ -1090,7 +1094,7 @@
             data: {
                 labels: chartDates,
                 datasets: [{
-                    label: 'Commission (€)',
+                    label: 'Revenue (€)',
                     data: data,
                     backgroundColor: barColors,
                     borderRadius: 8,
@@ -1110,22 +1114,27 @@
                         bodyColor: '#ffffff',
                         borderColor: '#ff7a00',
                         borderWidth: 1,
+                        titleFont: { size: 12, weight: 'bold' },
+                        bodyFont: { size: 11 },
                         callbacks: {
-                            label: (context) => `Commission: €${context.raw.toFixed(2)}`
+                            label: (context) => `Revenue: €${context.raw.toFixed(2)}`
                         }
                     }
                 },
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: 10 }, color: '#64748b' }
+                        ticks: { 
+                            font: { size: 12, weight: '500' }, 
+                            color: '#475569'
+                        }
                     },
                     y: {
-                        grid: { color: '#e2e8f0' },
+                        grid: { color: '#e2e8f0', drawBorder: false },
                         ticks: {
                             callback: (value) => '€' + value,
-                            font: { size: 10 },
-                            color: '#94a3b8'
+                            font: { size: 11, weight: '500' },
+                            color: '#64748b'
                         },
                         beginAtZero: true
                     }
@@ -1144,10 +1153,10 @@
         if (revenueChart) revenueChart.destroy();
         
         if (currentChartType === 'line') {
-    revenueChart = createLineChart(ctx, commissionData);
-} else {
-    revenueChart = createBarChart(ctx, commissionData);
-}
+            revenueChart = createLineChart(ctx, commissionData);
+        } else {
+            revenueChart = createBarChart(ctx, commissionData);
+        }
     }
 
     async function loadUserData() {
@@ -1332,14 +1341,14 @@
     window.addEventListener('storage', updateSoundIcon);
 
     // 图表类型切换
-document.querySelectorAll('.chart-type-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        document.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentChartType = btn.dataset.type; // 'line' 或 'bar'
-        await initChart();
+    document.querySelectorAll('.chart-type-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            document.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentChartType = btn.dataset.type;
+            await initChart();
+        });
     });
-});
 
     async function init() {
         await loadVideoConfig();
@@ -1361,7 +1370,7 @@ document.querySelectorAll('.chart-type-btn').forEach(btn => {
                 if (config.type === 'bar') {
                     currentChartType = 'bar';
                     document.querySelector('.chart-type-btn[data-type="bar"]').classList.add('active');
-                    document.querySelector('.chart-type-btn[data-type="area"]').classList.remove('active');
+                    document.querySelector('.chart-type-btn[data-type="line"]').classList.remove('active');
                     await initChart();
                 }
             } catch(e) {}
