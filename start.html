@@ -907,7 +907,7 @@
     const yesterdayEndStr = todayYesterdayEnd.toISOString().split('T')[0];
     
     // 查询所有订单（用于总佣金和总销售额，以及按日期筛选）
-    const { data: allOrders } = await sb.from('order_history').select('commission, price, created_at').eq('uid', user.uid);
+    const { data: allOrders } = await sb.from('order_history').select('commission, price, created_at').eq('uid', user.uid.toString());
     
     // 筛选今日订单
     const todayOrders = allOrders?.filter(o => {
