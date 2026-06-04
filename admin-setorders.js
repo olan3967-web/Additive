@@ -342,26 +342,22 @@ function renderProductSelectionList() {
     const container = document.getElementById('userProductsList');
     if (!container) return;
     
+    container.style.cssText = 'display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-start;';
     container.innerHTML = '';
     
     for (let i = 0; i < orderItems.length; i++) {
         const item = orderItems[i];
         const div = document.createElement('div');
-        div.className = 'product-selection-item';
-        div.style.cssText = 'background:#0f172a; border-radius:16px; padding:15px; margin-bottom:12px; display:flex; gap:15px; align-items:center; flex-wrap:wrap; border:1px solid rgba(74,124,255,0.2);';
+        div.style.cssText = 'background:#0f172a; border-radius:16px; padding:12px; width:calc(16.666% - 10px); min-width:140px; display:flex; flex-direction:column; align-items:center; text-align:center; border:1px solid rgba(74,124,255,0.2);';
         
         div.innerHTML = `
-            <div style="flex-shrink:0;">
-                <img src="${item.image_url || 'https://placehold.co/60x60/1e2a3a/4a7cff?text=No+Image'}" style="width:60px; height:60px; border-radius:12px; object-fit:cover;" onerror="this.src='https://placehold.co/60x60/1e2a3a/4a7cff?text=No+Image'">
-            </div>
-            <div style="flex:2;">
-                <div style="font-weight:600; color:#ffb84d;">${escapeHtml(item.product_name)}</div>
-                <div style="font-size:12px; color:#8a9abb;">Supply Price: €${item.price.toFixed(2)} | Commission: €${item.margin_profit.toFixed(2)}</div>
-            </div>
-            <div style="display:flex; align-items:center; gap:12px;">
-                <button class="qty-decr" data-index="${i}" style="background:#4a7cff; border:none; width:32px; height:32px; border-radius:8px; color:white; cursor:pointer; font-size:16px;">-</button>
-                <span style="font-size:18px; font-weight:700; min-width:30px; text-align:center;" id="qty_${i}">${item.quantity}</span>
-                <button class="qty-incr" data-index="${i}" style="background:#4a7cff; border:none; width:32px; height:32px; border-radius:8px; color:white; cursor:pointer; font-size:16px;">+</button>
+            <img src="${item.image_url || 'https://placehold.co/80x80/1e2a3a/4a7cff?text=No+Image'}" style="width:80px; height:80px; border-radius:12px; object-fit:cover; margin-bottom:10px;" onerror="this.src='https://placehold.co/80x80/1e2a3a/4a7cff?text=No+Image'">
+            <div style="font-weight:600; color:#ffb84d; font-size:13px; margin-bottom:6px;">${escapeHtml(item.product_name)}</div>
+            <div style="font-size:11px; color:#8a9abb;">€${item.price.toFixed(2)} | +€${item.margin_profit.toFixed(2)}</div>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                <button class="qty-decr" data-index="${i}" style="background:#4a7cff; border:none; width:28px; height:28px; border-radius:6px; color:white; cursor:pointer;">-</button>
+                <span style="font-size:16px; font-weight:700; min-width:30px; text-align:center;" id="qty_${i}">${item.quantity}</span>
+                <button class="qty-incr" data-index="${i}" style="background:#4a7cff; border:none; width:28px; height:28px; border-radius:6px; color:white; cursor:pointer;">+</button>
             </div>
         `;
         container.appendChild(div);
