@@ -14,7 +14,7 @@ function showToast(message, type = 'success') {
     
     toast.innerHTML = `
         <div class="toast-icon"><i class="fas ${icon}"></i></div>
-        <div class="toast-message"data-i18n="${escapeHtml(message)}">${escapeHtml(message)}</div>
+        <div class="toast-message"data-i18n="${escapeHtml(message)}"data-i18n="${escapeHtml(message)}">${escapeHtml(message)}</div>
     `;
     
     document.body.appendChild(toast);
@@ -37,11 +37,11 @@ function showConfirm(title, message, onConfirm, onCancel) {
     modal.className = 'custom-confirm';
     modal.innerHTML = `
         <div class="confirm-content">
-            <div class="confirm-title"data-i18n="${escapeHtml(title)}">${escapeHtml(title)}</div>
-            <div class="confirm-message"data-i18n="${escapeHtml(message)}">${escapeHtml(message)}</div>
+            <div class="confirm-title"data-i18n="${escapeHtml(title)}"data-i18n="${escapeHtml(title)}">${escapeHtml(title)}</div>
+            <div class="confirm-message"data-i18n="${escapeHtml(message)}"data-i18n="${escapeHtml(message)}">${escapeHtml(message)}</div>
             <div class="confirm-buttons">
-                <button class="confirm-btn confirm-cancel"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
-                <button class="confirm-btn confirm-ok"data-i18n="Confirm"data-i18n="Confirm">Confirm</button>
+                <button class="confirm-btn confirm-cancel"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
+                <button class="confirm-btn confirm-ok"data-i18n="Confirm"data-i18n="Confirm"data-i18n="Confirm"data-i18n="Confirm">Confirm</button>
             </div>
         </div>
     `;
@@ -74,11 +74,11 @@ function showPrompt(title, placeholder, callback) {
     modal.className = 'custom-prompt';
     modal.innerHTML = `
         <div class="prompt-content">
-            <div class="prompt-title"data-i18n="${escapeHtml(title)}">${escapeHtml(title)}</div>
+            <div class="prompt-title"data-i18n="${escapeHtml(title)}"data-i18n="${escapeHtml(title)}">${escapeHtml(title)}</div>
             <input type="text" class="prompt-input" placeholder="${escapeHtml(placeholder)}" autocomplete="off">
             <div class="prompt-buttons">
-                <button class="prompt-btn prompt-cancel"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
-                <button class="prompt-btn prompt-ok"data-i18n="Confirm"data-i18n="Confirm">Confirm</button>
+                <button class="prompt-btn prompt-cancel"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
+                <button class="prompt-btn prompt-ok"data-i18n="Confirm"data-i18n="Confirm"data-i18n="Confirm"data-i18n="Confirm">Confirm</button>
             </div>
         </div>
     `;

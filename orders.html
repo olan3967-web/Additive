@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <titledata-i18n="Orders - ADDITIVE">Orders - ADDITIVE</title>
+    <titledata-i18n="Orders - ADDITIVE"data-i18n="Orders - ADDITIVE">Orders - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
@@ -340,24 +340,24 @@
 <div class="phone">
 
     <div class="page-header">
-        <button class="back-btn" onclick="goBack()"data-i18n="←">←</button>
-        <h1data-i18n="Orders"data-i18n="Orders">Orders</h1>
+        <button class="back-btn" onclick="goBack()"data-i18n="←"data-i18n="←">←</button>
+        <h1data-i18n="Orders"data-i18n="Orders"data-i18n="Orders"data-i18n="Orders">Orders</h1>
         <div style="width: 30px;"></div>
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" data-tab="new"data-i18n="New"data-i18n="New">New</button>
-        <button class="tab-btn" data-tab="processing"data-i18n="Processing"data-i18n="Processing">Processing</button>
+        <button class="tab-btn active" data-tab="new"data-i18n="New"data-i18n="New"data-i18n="New"data-i18n="New">New</button>
+        <button class="tab-btn" data-tab="processing"data-i18n="Processing"data-i18n="Processing"data-i18n="Processing"data-i18n="Processing">Processing</button>
     </div>
 
     <div id="newOrdersList" class="orders-list"></div>
     <div id="processingOrdersList" class="orders-list" style="display: none;"></div>
 
     <div class="bottom-nav">
-        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
-        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products">Products</span></div>
-        <div class="nav-item active" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders">Orders</span></div>
-        <div class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products"data-i18n="Products"data-i18n="Products">Products</span></div>
+        <div class="nav-item active" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders"data-i18n="Orders"data-i18n="Orders">Orders</span></div>
+        <div class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
     </div>
 
 </div>
@@ -365,7 +365,7 @@
 <!-- 做单弹窗 -->
 <div id="orderModal" class="order-modal">
     <div class="order-modal-content">
-        <h3 id="modalOrderNo"data-i18n="订单详情">订单详情</h3>
+        <h3 id="modalOrderNo"data-i18n="订单详情"data-i18n="订单详情">订单详情</h3>
         <div id="modalProductsList" class="product-list"></div>
         <div id="modalBuyerInfo" class="buyer-info"></div>
         <button id="checkShippingBtn" class="btn-check-shipping">
@@ -380,7 +380,7 @@
 <!-- Shipping Info 弹窗 -->
 <div id="shippingModal" class="shipping-modal">
     <div class="order-modal-content" style="max-width: 380px;">
-        <h3><i class="fas fa-map-marker-alt"></idata-i18n=" 地址Confirm"> 地址Confirm</h3>
+        <h3><i class="fas fa-map-marker-alt"></idata-i18n=" 地址Confirm"data-i18n=" 地址Confirm"> 地址Confirm</h3>
         
         <!-- Supplier Shipping Info -->
         <div style="background: #fef3c7; border-radius: 16px; padding: 16px; margin: 16px 0;">
@@ -404,7 +404,7 @@
             </p>
         </div>
         
-        <button id="closeShippingBtn" class="btn-confirm" style="background:#475569;"data-i18n="我已Confirm，Close">我已Confirm，Close</button>
+        <button id="closeShippingBtn" class="btn-confirm" style="background:#475569;"data-i18n="我已Confirm，Close"data-i18n="我已Confirm，Close">我已Confirm，Close</button>
     </div>
 </div>
 
@@ -484,7 +484,7 @@
         if (!container) return;
 
         if (pendingOrders.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-inbox"></idata-i18n="No new orders"data-i18n="No new orders">No new orders</div>';
+            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-inbox"></idata-i18n="No new orders"data-i18n="No new orders"data-i18n="No new orders"data-i18n="No new orders">No new orders</div>';
             return;
         }
 
@@ -494,14 +494,14 @@
             
             return '<div class="order-card" data-order=\'' + JSON.stringify(order) + '\'>' +
                 '<div class="order-header">' +
-                    '<span class="order-no"data-i18n="' + order.order_no + '">' + order.order_no + '</span>' +
-                    '<span class="order-date"data-i18n="' + formatDate(order.created_at) + '">' + formatDate(order.created_at) + '</span>' +
+                    '<span class="order-no"data-i18n="' + order.order_no + '"data-i18n="' + order.order_no + '">' + order.order_no + '</span>' +
+                    '<span class="order-date"data-i18n="' + formatDate(order.created_at) + '"data-i18n="' + formatDate(order.created_at) + '">' + formatDate(order.created_at) + '</span>' +
                 '</div>' +
-                '<div class="order-products"data-i18n="' + displayText + '">' + displayText + '</div>' +
+                '<div class="order-products"data-i18n="' + displayText + '"data-i18n="' + displayText + '">' + displayText + '</div>' +
                 '<div class="order-footer">' +
-                    '<span class="order-total"data-i18n="€' + (order.total_supply_price || 0).toFixed(2) + '">€' + (order.total_supply_price || 0).toFixed(2) + '</span>' +
-                    '<span class="order-commission"data-i18n="+€' + (order.total_commission || 0).toFixed(2) + '">+€' + (order.total_commission || 0).toFixed(2) + '</span>' +
-                    '<span class="status-badge status-pending"data-i18n="Pending"data-i18n="Pending">Pending</span>' +
+                    '<span class="order-total"data-i18n="€' + (order.total_supply_price || 0).toFixed(2) + '"data-i18n="€' + (order.total_supply_price || 0).toFixed(2) + '">€' + (order.total_supply_price || 0).toFixed(2) + '</span>' +
+                    '<span class="order-commission"data-i18n="+€' + (order.total_commission || 0).toFixed(2) + '"data-i18n="+€' + (order.total_commission || 0).toFixed(2) + '">+€' + (order.total_commission || 0).toFixed(2) + '</span>' +
+                    '<span class="status-badge status-pending"data-i18n="Pending"data-i18n="Pending"data-i18n="Pending"data-i18n="Pending">Pending</span>' +
                 '</div>' +
             '</div>';
         }).join('');
@@ -519,7 +519,7 @@
         if (!container) return;
 
         if (processingOrders.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-clock"></idata-i18n="No orders in processing"data-i18n="No orders in processing">No orders in processing</div>';
+            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-clock"></idata-i18n="No orders in processing"data-i18n="No orders in processing"data-i18n="No orders in processing"data-i18n="No orders in processing">No orders in processing</div>';
             return;
         }
 
@@ -529,14 +529,14 @@
             
             return '<div class="order-card" data-order=\'' + JSON.stringify(order) + '\'>' +
                 '<div class="order-header">' +
-                    '<span class="order-no"data-i18n="' + order.order_no + '">' + order.order_no + '</span>' +
-                    '<span class="order-date"data-i18n="' + formatDate(order.created_at) + '">' + formatDate(order.created_at) + '</span>' +
+                    '<span class="order-no"data-i18n="' + order.order_no + '"data-i18n="' + order.order_no + '">' + order.order_no + '</span>' +
+                    '<span class="order-date"data-i18n="' + formatDate(order.created_at) + '"data-i18n="' + formatDate(order.created_at) + '">' + formatDate(order.created_at) + '</span>' +
                 '</div>' +
-                '<div class="order-products"data-i18n="' + displayText + '">' + displayText + '</div>' +
+                '<div class="order-products"data-i18n="' + displayText + '"data-i18n="' + displayText + '">' + displayText + '</div>' +
                 '<div class="order-footer">' +
-                    '<span class="order-total"data-i18n="€' + (order.total_supply_price || 0).toFixed(2) + '">€' + (order.total_supply_price || 0).toFixed(2) + '</span>' +
-                    '<span class="order-commission"data-i18n="+€' + (order.total_commission || 0).toFixed(2) + '">+€' + (order.total_commission || 0).toFixed(2) + '</span>' +
-                    '<span class="status-badge status-processing"data-i18n="In Transit"data-i18n="In Transit">In Transit</span>' +
+                    '<span class="order-total"data-i18n="€' + (order.total_supply_price || 0).toFixed(2) + '"data-i18n="€' + (order.total_supply_price || 0).toFixed(2) + '">€' + (order.total_supply_price || 0).toFixed(2) + '</span>' +
+                    '<span class="order-commission"data-i18n="+€' + (order.total_commission || 0).toFixed(2) + '"data-i18n="+€' + (order.total_commission || 0).toFixed(2) + '">+€' + (order.total_commission || 0).toFixed(2) + '</span>' +
+                    '<span class="status-badge status-processing"data-i18n="In Transit"data-i18n="In Transit"data-i18n="In Transit"data-i18n="In Transit">In Transit</span>' +
                 '</div>' +
             '</div>';
         }).join('');
@@ -567,25 +567,25 @@
                     productsHtml += '<div class="product-item-modal">' +
                         '<img src="' + (p.image_url || 'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product') + '" onerror="this.src=\'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product\'">' +
                         '<div style="flex:1;">' +
-                            '<div style="font-weight:600;"data-i18n="' + escapeHtml(p.product_name) + '">' + escapeHtml(p.product_name) + '</div>' +
-                            '<div style="font-size:12px; color:#6b7280;"data-i18n="×' + p.quantity + ' | €' + p.unit_price.toFixed(2) + '/each">×' + p.quantity + ' | €' + p.unit_price.toFixed(2) + '/each</div>' +
+                            '<div style="font-weight:600;"data-i18n="' + escapeHtml(p.product_name) + '"data-i18n="' + escapeHtml(p.product_name) + '">' + escapeHtml(p.product_name) + '</div>' +
+                            '<div style="font-size:12px; color:#6b7280;"data-i18n="×' + p.quantity + ' | €' + p.unit_price.toFixed(2) + '/each"data-i18n="×' + p.quantity + ' | €' + p.unit_price.toFixed(2) + '/each">×' + p.quantity + ' | €' + p.unit_price.toFixed(2) + '/each</div>' +
                         '</div>' +
-                        '<div style="font-weight:700; color:#ff7a00;"data-i18n="€' + (p.unit_price * p.quantity).toFixed(2) + '">€' + (p.unit_price * p.quantity).toFixed(2) + '</div>' +
+                        '<div style="font-weight:700; color:#ff7a00;"data-i18n="€' + (p.unit_price * p.quantity).toFixed(2) + '"data-i18n="€' + (p.unit_price * p.quantity).toFixed(2) + '">€' + (p.unit_price * p.quantity).toFixed(2) + '</div>' +
                     '</div>';
                 }
             } else {
-                productsHtml = '<divdata-i18n="产品信息加载失败">产品信息加载失败</div>';
+                productsHtml = '<divdata-i18n="产品信息加载失败"data-i18n="产品信息加载失败">产品信息加载失败</div>';
             }
         } catch(e) {
-            productsHtml = '<divdata-i18n="产品信息加载失败">产品信息加载失败</div>';
+            productsHtml = '<divdata-i18n="产品信息加载失败"data-i18n="产品信息加载失败">产品信息加载失败</div>';
         }
         document.getElementById('modalProductsList').innerHTML = productsHtml;
         
         document.getElementById('modalBuyerInfo').innerHTML = 
-            '<p><strongdata-i18n="👤 买家信息">👤 买家信息</strong></p>' +
-            '<pdata-i18n="姓名：' + escapeHtml(order.buyer_name || '未知') + '">姓名：' + escapeHtml(order.buyer_name || '未知') + '</p>' +
-            '<pdata-i18n="电话：' + escapeHtml(order.buyer_phone || '未知') + '">电话：' + escapeHtml(order.buyer_phone || '未知') + '</p>' +
-            '<pdata-i18n="地址：' + escapeHtml(order.buyer_address || '未知') + '">地址：' + escapeHtml(order.buyer_address || '未知') + '</p>';
+            '<p><strongdata-i18n="👤 买家信息"data-i18n="👤 买家信息">👤 买家信息</strong></p>' +
+            '<pdata-i18n="姓名：' + escapeHtml(order.buyer_name || '未知') + '"data-i18n="姓名：' + escapeHtml(order.buyer_name || '未知') + '">姓名：' + escapeHtml(order.buyer_name || '未知') + '</p>' +
+            '<pdata-i18n="电话：' + escapeHtml(order.buyer_phone || '未知') + '"data-i18n="电话：' + escapeHtml(order.buyer_phone || '未知') + '">电话：' + escapeHtml(order.buyer_phone || '未知') + '</p>' +
+            '<pdata-i18n="地址：' + escapeHtml(order.buyer_address || '未知') + '"data-i18n="地址：' + escapeHtml(order.buyer_address || '未知') + '">地址：' + escapeHtml(order.buyer_address || '未知') + '</p>';
         
         var checkBtn = document.getElementById('checkShippingBtn');
         var confirmBtn = document.getElementById('confirmOrderBtn');

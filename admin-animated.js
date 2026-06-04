@@ -9,55 +9,55 @@ async function loadAnimatedPage() {
     if (!container) return;
     container.innerHTML = `
         <div class="card">
-            <h3><i class="fas fa-video"></idata-i18n=" 动态视频设置"> 动态视频设置</h3>
-            <div><labeldata-i18n="视频 / GIF URL">视频 / GIF URL</label><input type="text" id="videoUrl" placeholder="https://example.com/video.mp4" class="search-input" style="width:100%;"></div>
+            <h3><i class="fas fa-video"></idata-i18n=" 动态视频设置"data-i18n=" 动态视频设置"> 动态视频设置</h3>
+            <div><labeldata-i18n="视频 / GIF URL"data-i18n="视频 / GIF URL">视频 / GIF URL</label><input type="text" id="videoUrl" placeholder="https://example.com/video.mp4" class="search-input" style="width:100%;"></div>
             <div style="display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
-                <button id="uploadVideoBtn" class="btn-primary"><i class="fas fa-upload"></idata-i18n=" 上传视频"> 上传视频</button>
-                <button id="saveVideoBtn" class="success"data-i18n="Save视频">Save视频</button>
-                <button id="previewVideoBtn" class="btn-primary"data-i18n="预览">预览</button>
+                <button id="uploadVideoBtn" class="btn-primary"><i class="fas fa-upload"></idata-i18n=" 上传视频"data-i18n=" 上传视频"> 上传视频</button>
+                <button id="saveVideoBtn" class="success"data-i18n="Save视频"data-i18n="Save视频">Save视频</button>
+                <button id="previewVideoBtn" class="btn-primary"data-i18n="预览"data-i18n="预览">预览</button>
             </div>
             <input type="file" id="videoFileInput" accept="video/*" style="display:none;">
             <div id="uploadProgress" style="display:none; margin-top: 10px;">
                 <div style="background:#1e2a3a; border-radius:10px; overflow:hidden; height:6px;">
                     <div id="progressBar" style="width:0%; height:100%; background:#4a7cff; transition:width 0.3s;"></div>
                 </div>
-                <div style="font-size:12px; color:#8a9abb; margin-top:5px;"data-i18n="上传中... ">上传中... <span id="progressPercent"data-i18n="0"data-i18n="0">0</spandata-i18n="%">%</div>
+                <div style="font-size:12px; color:#8a9abb; margin-top:5px;"data-i18n="上传中... "data-i18n="上传中... ">上传中... <span id="progressPercent"data-i18n="0"data-i18n="0"data-i18n="0"data-i18n="0">0</spandata-i18n="%"data-i18n="%">%</div>
             </div>
             <div id="videoPreview" style="margin-top: 20px; background:#0a0f1a; border-radius:12px; padding:20px; text-align:center; min-height:150px;">
-                <p style="color:#aaa;"data-i18n="点击预览查看效果">点击预览查看效果</p>
+                <p style="color:#aaa;"data-i18n="点击预览查看效果"data-i18n="点击预览查看效果">点击预览查看效果</p>
             </div>
         </div>
         <div class="card">
-            <h3><i class="fas fa-hotel"></idata-i18n=" 精选酒店轮播图"> 精选酒店轮播图</h3>
+            <h3><i class="fas fa-hotel"></idata-i18n=" 精选酒店轮播图"data-i18n=" 精选酒店轮播图"> 精选酒店轮播图</h3>
             <div class="search-bar">
                 <input type="text" id="hotelNameInput" class="search-input" placeholder="酒店名称">
                 <input type="text" id="hotelImageInput" class="search-input" placeholder="图片 URL">
-                <button id="uploadImageBtn" class="btn-primary"data-i18n="上传图片">上传图片</button>
+                <button id="uploadImageBtn" class="btn-primary"data-i18n="上传图片"data-i18n="上传图片">上传图片</button>
                 <input type="file" id="hotelImageFile" accept="image/*" style="display:none;">
-                <button id="addHotelBtn" class="success"data-i18n="Add酒店">Add酒店</button>
+                <button id="addHotelBtn" class="success"data-i18n="Add酒店"data-i18n="Add酒店">Add酒店</button>
             </div>
             <div id="hotelPreviewImg" style="display:none;"><img id="previewUploadImg" style="max-width:200px; border-radius:12px;"></div>
             <div id="hotelsListContainer" style="max-height:400px; overflow-y:auto;"></div>
-            <button id="saveHotelsBtn" class="btn-primary" style="margin-top:15px;"data-i18n="Save所有酒店">Save所有酒店</button>
+            <button id="saveHotelsBtn" class="btn-primary" style="margin-top:15px;"data-i18n="Save所有酒店"data-i18n="Save所有酒店">Save所有酒店</button>
         </div>
         <div class="card">
-            <h3><i class="fas fa-box-open"></idata-i18n=" Dashboard Product Sample"data-i18n=" Dashboard Product Sample"> Dashboard Product Sample</h3>
+            <h3><i class="fas fa-box-open"></idata-i18n=" Dashboard Product Sample"data-i18n=" Dashboard Product Sample"data-i18n=" Dashboard Product Sample"data-i18n=" Dashboard Product Sample"> Dashboard Product Sample</h3>
             <div class="search-bar">
                 <input type="text" id="productNameInput" class="search-input" placeholder="产品名称">
                 <input type="text" id="productPriceInput" class="search-input" placeholder="价格 (USD)" style="width:120px;">
                 <input type="text" id="productImageInput" class="search-input" placeholder="图片 URL">
-                <button id="uploadProductImageBtn" class="btn-primary"data-i18n="上传图片">上传图片</button>
+                <button id="uploadProductImageBtn" class="btn-primary"data-i18n="上传图片"data-i18n="上传图片">上传图片</button>
                 <input type="file" id="productImageFile" accept="image/*" style="display:none;">
             </div>
             <div class="search-bar">
                 <input type="text" id="productVideoInput" class="search-input" placeholder="视频 URL">
-                <select id="productStatusSelect" style="width:120px;"><option value="active"data-i18n="显示">显示</option><option value="inactive"data-i18n="隐藏">隐藏</option></select>
-                <button id="addProductBtn" class="success"data-i18n="Add产品">Add产品</button>
-                <button id="refreshProductsBtn" class="btn-primary"data-i18n="Refresh列表">Refresh列表</button>
+                <select id="productStatusSelect" style="width:120px;"><option value="active"data-i18n="显示"data-i18n="显示">显示</option><option value="inactive"data-i18n="隐藏"data-i18n="隐藏">隐藏</option></select>
+                <button id="addProductBtn" class="success"data-i18n="Add产品"data-i18n="Add产品">Add产品</button>
+                <button id="refreshProductsBtn" class="btn-primary"data-i18n="Refresh列表"data-i18n="Refresh列表">Refresh列表</button>
             </div>
             <div id="productPreviewImg" style="display:none;"><img id="previewProductImg" style="max-width:200px; border-radius:12px;"></div>
             <div id="productsListContainer" style="max-height:400px; overflow-y:auto;"></div>
-            <button id="saveProductsOrderBtn" class="btn-primary"data-i18n="Save排序">Save排序</button>
+            <button id="saveProductsOrderBtn" class="btn-primary"data-i18n="Save排序"data-i18n="Save排序">Save排序</button>
         </div>
     `;
     
@@ -212,7 +212,7 @@ function renderHotelsList() {
     const container = document.getElementById('hotelsListContainer');
     if (!container) return;
     if (featuredHotels.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;"data-i18n="暂无精选酒店，点击"Add酒店"开始">暂无精选酒店，点击"Add酒店"开始</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;"data-i18n="暂无精选酒店，点击"Add酒店"开始"data-i18n="暂无精选酒店，点击"Add酒店"开始">暂无精选酒店，点击"Add酒店"开始</div>';
         return;
     }
     container.innerHTML = '';
@@ -222,7 +222,7 @@ function renderHotelsList() {
         div.innerHTML = `<div><img src="${hotel.image || ''}" style="width:100px;height:70px;object-fit:cover;border-radius:12px;" onerror="this.src='https://placehold.co/100x70/0f172a/4a7cff?text=No+Image'"></div>
                         <div><input type="text" class="hotel-name-edit" data-index="${index}" value="${escapeHtml(hotel.name || '')}" placeholder="酒店名称" style="background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;width:200px;"></div>
                         <div><input type="text" class="hotel-image-edit" data-index="${index}" value="${escapeHtml(hotel.image || '')}" placeholder="图片 URL" style="background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;width:300px;"></div>
-                        <div><button class="delete-hotel-btn" data-index="${index}" style="background:#7a2f2f;padding:6px 12px;border-radius:8px;"data-i18n="Delete"data-i18n="Delete">Delete</button></div>`;
+                        <div><button class="delete-hotel-btn" data-index="${index}" style="background:#7a2f2f;padding:6px 12px;border-radius:8px;"data-i18n="Delete"data-i18n="Delete"data-i18n="Delete"data-i18n="Delete">Delete</button></div>`;
         container.appendChild(div);
     });
     document.querySelectorAll('.hotel-name-edit').forEach(input => input.addEventListener('change', () => { featuredHotels[parseInt(input.dataset.index)].name = input.value; }));
@@ -243,10 +243,10 @@ function previewVideo() {
         if (videoUrl.endsWith('.mp4') || videoUrl.includes('.mp4') || videoUrl.includes('video')) {
             previewDiv.innerHTML = `<video src="${videoUrl}" controls autoplay loop muted style="max-width:100%; border-radius:12px;"></video>`;
         } else {
-            previewDiv.innerHTML = `<img src="${videoUrl}" style="max-width:100%; border-radius:12px;" onerror="this.parentElement.innerHTML='<pdata-i18n="无法加载图片">无法加载图片</p>'">`;
+            previewDiv.innerHTML = `<img src="${videoUrl}" style="max-width:100%; border-radius:12px;" onerror="this.parentElement.innerHTML='<pdata-i18n="无法加载图片"data-i18n="无法加载图片">无法加载图片</p>'">`;
         }
     } else {
-        previewDiv.innerHTML = '<p style="color:#aaa;"data-i18n="暂无视频/图片">暂无视频/图片</p>';
+        previewDiv.innerHTML = '<p style="color:#aaa;"data-i18n="暂无视频/图片"data-i18n="暂无视频/图片">暂无视频/图片</p>';
     }
 }
 
@@ -281,7 +281,7 @@ function renderProductsList() {
     const container = document.getElementById('productsListContainer');
     if (!container) return;
     if (dashboardProducts.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;"data-i18n="暂无产品">暂无产品</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;"data-i18n="暂无产品"data-i18n="暂无产品">暂无产品</div>';
         return;
     }
     container.innerHTML = '';
@@ -294,8 +294,8 @@ function renderProductsList() {
                         <div><input type="number" step="0.01" class="product-price-edit" data-id="${product.id}" value="${product.price || 0}" placeholder="价格" style="width:100px;background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"></div>
                         <div><input type="text" class="product-image-edit" data-id="${product.id}" value="${escapeHtml(product.image_url || '')}" placeholder="图片 URL" style="width:200px;background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"></div>
                         <div><input type="text" class="product-video-edit" data-id="${product.id}" value="${escapeHtml(product.video_url || '')}" placeholder="视频 URL" style="width:200px;background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"></div>
-                        <div><select class="product-status-edit" data-id="${product.id}" style="background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"><option value="active" ${product.status === 'active' ? 'selected' : ''}data-i18n="显示">显示</option><option value="inactive" ${product.status === 'inactive' ? 'selected' : ''}data-i18n="隐藏">隐藏</option></select></div>
-                        <div><button class="delete-product-btn" data-id="${product.id}" style="background:#7a2f2f;padding:6px 12px;border-radius:8px;"data-i18n="Delete"data-i18n="Delete">Delete</button></div>`;
+                        <div><select class="product-status-edit" data-id="${product.id}" style="background:#0f172a;border:1px solid #1e2a3a;border-radius:8px;padding:8px;color:#fff;"><option value="active" ${product.status === 'active' ? 'selected' : ''}data-i18n="显示"data-i18n="显示">显示</option><option value="inactive" ${product.status === 'inactive' ? 'selected' : ''}data-i18n="隐藏"data-i18n="隐藏">隐藏</option></select></div>
+                        <div><button class="delete-product-btn" data-id="${product.id}" style="background:#7a2f2f;padding:6px 12px;border-radius:8px;"data-i18n="Delete"data-i18n="Delete"data-i18n="Delete"data-i18n="Delete">Delete</button></div>`;
         container.appendChild(div);
     });
     document.querySelectorAll('.product-name-edit').forEach(input => input.addEventListener('change', () => updateProductField(input.dataset.id, 'name', input.value)));

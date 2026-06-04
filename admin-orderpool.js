@@ -11,14 +11,14 @@ async function loadOrderPoolPage() {
         <div class="card">
             <div class="search-bar">
                 <input type="text" id="poolSearchInput" class="search-input" placeholder="🔍 SearchOrder No或酒店名...">
-                <button id="poolSearchBtn" class="btn-primary"><i class="fas fa-search"></idata-i18n=" Search"data-i18n=" Search"> Search</button>
-                <button id="poolRefreshBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
-                <button id="addOrderBtn" class="success"><i class="fas fa-plus"></idata-i18n=" Add订单"> Add订单</button>
+                <button id="poolSearchBtn" class="btn-primary"><i class="fas fa-search"></idata-i18n=" Search"data-i18n=" Search"data-i18n=" Search"data-i18n=" Search"> Search</button>
+                <button id="poolRefreshBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
+                <button id="addOrderBtn" class="success"><i class="fas fa-plus"></idata-i18n=" Add订单"data-i18n=" Add订单"> Add订单</button>
             </div>
             <div class="table-container">
                 <table class="data-table">
-                    <thead><tr><thdata-i18n="ID"data-i18n="ID">ID</th><thdata-i18n="Order No"data-i18n="Order No">Order No</th><thdata-i18n="酒店名称">酒店名称</th><thdata-i18n="价格">价格</th><thdata-i18n="图片">图片</th><thdata-i18n="状态">状态</th><thdata-i18n="操作">操作</th></tr></thead>
-                    <tbody id="orderPoolTableBody"><tr><td colspan="7" class="loading"data-i18n="Loading... "data-i18n="Loading... ">Loading... <i class="fas fa-spinner fa-spin"></i></td></tr></tbody>
+                    <thead><tr><thdata-i18n="ID"data-i18n="ID"data-i18n="ID"data-i18n="ID">ID</th><thdata-i18n="Order No"data-i18n="Order No"data-i18n="Order No"data-i18n="Order No">Order No</th><thdata-i18n="酒店名称"data-i18n="酒店名称">酒店名称</th><thdata-i18n="价格"data-i18n="价格">价格</th><thdata-i18n="图片"data-i18n="图片">图片</th><thdata-i18n="状态"data-i18n="状态">状态</th><thdata-i18n="操作"data-i18n="操作">操作</th></tr></thead>
+                    <tbody id="orderPoolTableBody"><tr><td colspan="7" class="loading"data-i18n="Loading... "data-i18n="Loading... "data-i18n="Loading... "data-i18n="Loading... ">Loading... <i class="fas fa-spinner fa-spin"></i></td></tr></tbody>
                 </table>
             </div>
             <div class="pagination" id="pagination"></div>
@@ -43,7 +43,7 @@ async function loadOrderPoolPage() {
 
 async function loadAllOrdersFromDB() {
     const tbody = document.getElementById('orderPoolTableBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="loading"data-i18n="Loading..."data-i18n="Loading...">Loading...</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="loading"data-i18n="Loading..."data-i18n="Loading..."data-i18n="Loading..."data-i18n="Loading...">Loading...</td></tr>';
     try {
         let allData = [];
         let from = 0;
@@ -62,7 +62,7 @@ async function loadAllOrdersFromDB() {
         renderOrderPoolPage();
     } catch (e) {
         console.error(e);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="7"data-i18n="错误: ${e.message}">错误: ${e.message}</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="7"data-i18n="错误: ${e.message}"data-i18n="错误: ${e.message}">错误: ${e.message}</td></tr>`;
     }
 }
 
@@ -79,18 +79,18 @@ function renderOrderPoolPage() {
     if (tbody) {
         tbody.innerHTML = '';
         if (pageOrders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7"data-i18n="No data"data-i18n="No data">No data</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7"data-i18n="No data"data-i18n="No data"data-i18n="No data"data-i18n="No data">No data</td></tr>';
             return;
         }
         for (let o of pageOrders) {
             const row = tbody.insertRow();
             row.insertCell(0).innerText = o.id;
-            row.insertCell(1).innerHTML = `<span class="badge"data-i18n="${o.order_code || '-'}">${o.order_code || '-'}</span>`;
+            row.insertCell(1).innerHTML = `<span class="badge"data-i18n="${o.order_code || '-'}"data-i18n="${o.order_code || '-'}">${o.order_code || '-'}</span>`;
             row.insertCell(2).innerText = o.accommodation_name || '-';
-            row.insertCell(3).innerHTML = `<span class="text-gold"data-i18n="€${(o.price || 0).toFixed(2)}">€${(o.price || 0).toFixed(2)}</span>`;
+            row.insertCell(3).innerHTML = `<span class="text-gold"data-i18n="€${(o.price || 0).toFixed(2)}"data-i18n="€${(o.price || 0).toFixed(2)}">€${(o.price || 0).toFixed(2)}</span>`;
             row.insertCell(4).innerHTML = o.image_url ? `<img src="${o.image_url}" style="width:60px;height:45px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="window.open('${o.image_url}','_blank')">` : '-';
-            row.insertCell(5).innerHTML = `<span class="${o.status === 'available' ? 'text-green' : 'text-red'}"data-i18n="${o.status || 'available'}">${o.status || 'available'}</span>`;
-            row.insertCell(6).innerHTML = `<button class="edit-order" data-id="${o.id}" style="background:#2f6b3a; padding:4px 8px; font-size:11px; margin-right:4px;"data-i18n="Edit"data-i18n="Edit">Edit</button><button class="delete-order" data-id="${o.id}" style="background:#7a2f2f; padding:4px 8px; font-size:11px;"data-i18n="Delete"data-i18n="Delete">Delete</button>`;
+            row.insertCell(5).innerHTML = `<span class="${o.status === 'available' ? 'text-green' : 'text-red'}"data-i18n="${o.status || 'available'}"data-i18n="${o.status || 'available'}">${o.status || 'available'}</span>`;
+            row.insertCell(6).innerHTML = `<button class="edit-order" data-id="${o.id}" style="background:#2f6b3a; padding:4px 8px; font-size:11px; margin-right:4px;"data-i18n="Edit"data-i18n="Edit"data-i18n="Edit"data-i18n="Edit">Edit</button><button class="delete-order" data-id="${o.id}" style="background:#7a2f2f; padding:4px 8px; font-size:11px;"data-i18n="Delete"data-i18n="Delete"data-i18n="Delete"data-i18n="Delete">Delete</button>`;
         }
         document.querySelectorAll('.edit-order').forEach(btn => btn.addEventListener('click', () => {
             const order = allOrders.find(o => o.id == btn.dataset.id);

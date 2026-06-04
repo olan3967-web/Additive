@@ -213,18 +213,18 @@ async function loadSetordersPage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar" style="justify-content: space-between;">
-                <h3><i class="fas fa-cog"></idata-i18n=" Set Orders"data-i18n=" Set Orders"> Set Orders</h3>
-                <button id="backToUserList" class="btn-primary" style="display:none;"><i class="fas fa-arrow-left"></idata-i18n=" Back to Users"data-i18n=" Back to Users"> Back to Users</button>
+                <h3><i class="fas fa-cog"></idata-i18n=" Set Orders"data-i18n=" Set Orders"data-i18n=" Set Orders"data-i18n=" Set Orders"> Set Orders</h3>
+                <button id="backToUserList" class="btn-primary" style="display:none;"><i class="fas fa-arrow-left"></idata-i18n=" Back to Users"data-i18n=" Back to Users"data-i18n=" Back to Users"data-i18n=" Back to Users"> Back to Users</button>
             </div>
             
             <div id="setordersUserSearch">
                 <div class="search-bar">
                     <input type="text" id="setordersSearchUid" placeholder="🔍 Search UID or Username" style="flex:1;" class="search-input">
-                    <button id="setordersSearchBtn" class="btn-primary"><i class="fas fa-search"></idata-i18n=" Search"data-i18n=" Search"> Search</button>
+                    <button id="setordersSearchBtn" class="btn-primary"><i class="fas fa-search"></idata-i18n=" Search"data-i18n=" Search"data-i18n=" Search"data-i18n=" Search"> Search</button>
                 </div>
                 <div id="setordersUserList" class="table-container" style="max-height: 300px;">
                     <table class="data-table">
-                        <thead><tr><thdata-i18n="UID"data-i18n="UID">UID</th><thdata-i18n="Username"data-i18n="Username">Username</th><thdata-i18n="Action"data-i18n="Action">Action</th></tr></thead>
+                        <thead><tr><thdata-i18n="UID"data-i18n="UID"data-i18n="UID"data-i18n="UID">UID</th><thdata-i18n="Username"data-i18n="Username"data-i18n="Username"data-i18n="Username">Username</th><thdata-i18n="Action"data-i18n="Action"data-i18n="Action"data-i18n="Action">Action</th></tr></thead>
                         <tbody id="setordersUserTableBody"></tbody>
                     </table>
                 </div>
@@ -232,24 +232,24 @@ async function loadSetordersPage() {
             
             <div id="setordersMain" style="display: none;">
                 <div class="uid-header" style="background: rgba(74,124,255,0.1); padding: 10px 16px; border-radius: 12px; margin-bottom: 20px;">
-                    Current User: <span id="selectedUidDisplay" style="color:#4a7cff;"></spandata-i18n=" - "> - <span id="selectedUsernameDisplay"></span>
+                    Current User: <span id="selectedUidDisplay" style="color:#4a7cff;"></spandata-i18n=" - "data-i18n=" - "> - <span id="selectedUsernameDisplay"></span>
                 </div>
                 
                 <div id="userProductsList" style="max-height: 500px; overflow-y: auto; margin-bottom: 20px;"></div>
                 
                 <div id="orderSummary" style="background: #0f172a; border-radius: 16px; padding: 16px; margin-top: 20px; border: 1px solid rgba(74,124,255,0.2);">
-                    <h4 style="margin-bottom: 12px; color: #ffb84d;"><i class="fas fa-receipt"></idata-i18n=" Order Summary"data-i18n=" Order Summary"> Order Summary</h4>
+                    <h4 style="margin-bottom: 12px; color: #ffb84d;"><i class="fas fa-receipt"></idata-i18n=" Order Summary"data-i18n=" Order Summary"data-i18n=" Order Summary"data-i18n=" Order Summary"> Order Summary</h4>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <spandata-i18n="Total Supply Price:">Total Supply Price:</span>
-                        <span id="totalSupplyPrice" style="color: #ffb84d; font-weight: 700;"data-i18n="€0">€0</span>
+                        <spandata-i18n="Total Supply Price:"data-i18n="Total Supply Price:">Total Supply Price:</span>
+                        <span id="totalSupplyPrice" style="color: #ffb84d; font-weight: 700;"data-i18n="€0"data-i18n="€0">€0</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <spandata-i18n="Total Commission:">Total Commission:</span>
-                        <span id="totalCommission" style="color: #2ed15a; font-weight: 700;"data-i18n="€0">€0</span>
+                        <spandata-i18n="Total Commission:"data-i18n="Total Commission:">Total Commission:</span>
+                        <span id="totalCommission" style="color: #2ed15a; font-weight: 700;"data-i18n="€0"data-i18n="€0">€0</span>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
-                        <spandata-i18n="Final Account Increase:">Final Account Increase:</span>
-                        <span id="totalIncrease" style="color: #4a7cff; font-weight: 700;"data-i18n="€0">€0</span>
+                        <spandata-i18n="Final Account Increase:"data-i18n="Final Account Increase:">Final Account Increase:</span>
+                        <span id="totalIncrease" style="color: #4a7cff; font-weight: 700;"data-i18n="€0"data-i18n="€0">€0</span>
                     </div>
                     <button id="confirmSetOrderBtn" class="success" style="width: 100%; padding: 12px;">
                         <i class="fas fa-check"></i> Create Order
@@ -288,9 +288,9 @@ async function loadSetordersUserList() {
         tbody.innerHTML = '';
         for (let u of users) {
             const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<span class="badge"data-i18n="${u.uid}">${u.uid}</span>`;
+            row.insertCell(0).innerHTML = `<span class="badge"data-i18n="${u.uid}"data-i18n="${u.uid}">${u.uid}</span>`;
             row.insertCell(1).innerText = u.username;
-            row.insertCell(2).innerHTML = `<button class="setorder-select-btn" data-uid="${u.uid}" data-name="${u.username}" style="background:#4a7cff; padding:4px 12px; border-radius:8px; border:none; color:white; cursor:pointer;"><i class="fas fa-cog"></idata-i18n=" Set Orders"data-i18n=" Set Orders"> Set Orders</button>`;
+            row.insertCell(2).innerHTML = `<button class="setorder-select-btn" data-uid="${u.uid}" data-name="${u.username}" style="background:#4a7cff; padding:4px 12px; border-radius:8px; border:none; color:white; cursor:pointer;"><i class="fas fa-cog"></idata-i18n=" Set Orders"data-i18n=" Set Orders"data-i18n=" Set Orders"data-i18n=" Set Orders"> Set Orders</button>`;
         }
         document.querySelectorAll('.setorder-select-btn').forEach(btn => {
             btn.addEventListener('click', () => selectUserForSetOrder(btn.dataset.uid, btn.dataset.name));
@@ -313,7 +313,7 @@ async function loadUserProductsForOrder(uid) {
     const container = document.getElementById('userProductsList');
     if (!container) return;
     
-    container.innerHTML = '<div style="text-align:center; padding:40px;"data-i18n="Loading..."data-i18n="Loading...">Loading...</div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px;"data-i18n="Loading..."data-i18n="Loading..."data-i18n="Loading..."data-i18n="Loading...">Loading...</div>';
     
     const { data: products, error } = await sb
         .from('user_products')
@@ -322,7 +322,7 @@ async function loadUserProductsForOrder(uid) {
         .order('added_at', { ascending: false });
     
     if (error || !products || products.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;"data-i18n="No products added by this user"data-i18n="No products added by this user">No products added by this user</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;"data-i18n="No products added by this user"data-i18n="No products added by this user"data-i18n="No products added by this user"data-i18n="No products added by this user">No products added by this user</div>';
         return;
     }
     
@@ -355,13 +355,13 @@ function renderProductSelectionList() {
                 <img src="${item.image_url || 'https://placehold.co/60x60/1e2a3a/4a7cff?text=No+Image'}" style="width:60px; height:60px; border-radius:12px; object-fit:cover;" onerror="this.src='https://placehold.co/60x60/1e2a3a/4a7cff?text=No+Image'">
             </div>
             <div style="flex:2;">
-                <div style="font-weight:600; color:#ffb84d;"data-i18n="${escapeHtml(item.product_name)}">${escapeHtml(item.product_name)}</div>
-                <div style="font-size:12px; color:#8a9abb;"data-i18n="Supply Price: €${item.price.toFixed(2)} | Commission: €${item.margin_profit.toFixed(2)}">Supply Price: €${item.price.toFixed(2)} | Commission: €${item.margin_profit.toFixed(2)}</div>
+                <div style="font-weight:600; color:#ffb84d;"data-i18n="${escapeHtml(item.product_name)}"data-i18n="${escapeHtml(item.product_name)}">${escapeHtml(item.product_name)}</div>
+                <div style="font-size:12px; color:#8a9abb;"data-i18n="Supply Price: €${item.price.toFixed(2)} | Commission: €${item.margin_profit.toFixed(2)}"data-i18n="Supply Price: €${item.price.toFixed(2)} | Commission: €${item.margin_profit.toFixed(2)}">Supply Price: €${item.price.toFixed(2)} | Commission: €${item.margin_profit.toFixed(2)}</div>
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
-                <button class="qty-decr" data-index="${i}" style="background:#4a7cff; border:none; width:32px; height:32px; border-radius:8px; color:white; cursor:pointer; font-size:16px;"data-i18n="-">-</button>
-                <span style="font-size:18px; font-weight:700; min-width:30px; text-align:center;" id="qty_${i}"data-i18n="${item.quantity}">${item.quantity}</span>
-                <button class="qty-incr" data-index="${i}" style="background:#4a7cff; border:none; width:32px; height:32px; border-radius:8px; color:white; cursor:pointer; font-size:16px;"data-i18n="+">+</button>
+                <button class="qty-decr" data-index="${i}" style="background:#4a7cff; border:none; width:32px; height:32px; border-radius:8px; color:white; cursor:pointer; font-size:16px;"data-i18n="-"data-i18n="-">-</button>
+                <span style="font-size:18px; font-weight:700; min-width:30px; text-align:center;" id="qty_${i}"data-i18n="${item.quantity}"data-i18n="${item.quantity}">${item.quantity}</span>
+                <button class="qty-incr" data-index="${i}" style="background:#4a7cff; border:none; width:32px; height:32px; border-radius:8px; color:white; cursor:pointer; font-size:16px;"data-i18n="+"data-i18n="+">+</button>
             </div>
         `;
         container.appendChild(div);
@@ -463,7 +463,7 @@ async function confirmSetOrder() {
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<data-i18n="]/g, m => m === '&' ? '&amp;' : m === '">]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    return str.replace(/[&<data-i18n="]/g, m =data-i18n=" m === '&' ? '&amp;' : m === '">]/g, m => m === '&' ? '&amp;' : m === '"> m === '&' ? '&amp;' : m === '">]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
 
 window.loadSetordersPage = loadSetordersPage;

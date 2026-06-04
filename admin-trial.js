@@ -8,12 +8,12 @@ async function loadTrialPage() {
         <div class="card">
             <div class="search-bar">
                 <input type="text" id="trialSearchUid" class="search-input" placeholder="🔍 Search UID">
-                <button id="trialSearchBtn" class="btn-primary"><i class="fas fa-search"></idata-i18n=" Search"data-i18n=" Search"> Search</button>
-                <button id="trialRefreshBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
+                <button id="trialSearchBtn" class="btn-primary"><i class="fas fa-search"></idata-i18n=" Search"data-i18n=" Search"data-i18n=" Search"data-i18n=" Search"> Search</button>
+                <button id="trialRefreshBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
             </div>
             <div class="table-container">
                 <table class="data-table">
-                    <thead><tr><thdata-i18n="UID"data-i18n="UID">UID</th><thdata-i18n="用户名">用户名</th><thdata-i18n="当前体验金 (€)">当前体验金 (€)</th><thdata-i18n="调整Amount (€)">调整Amount (€)</th><thdata-i18n="操作">操作</th></tr></thead>
+                    <thead><tr><thdata-i18n="UID"data-i18n="UID"data-i18n="UID"data-i18n="UID">UID</th><thdata-i18n="用户名"data-i18n="用户名">用户名</th><thdata-i18n="当前体验金 (€)"data-i18n="当前体验金 (€)">当前体验金 (€)</th><thdata-i18n="调整Amount (€)"data-i18n="调整Amount (€)">调整Amount (€)</th><thdata-i18n="操作"data-i18n="操作">操作</th></tr></thead>
                     <tbody id="trialTableBody"></tbody>
                 <tr>
             </div>
@@ -33,9 +33,9 @@ async function loadTrialUsers() {
         tbody.innerHTML = '';
         for (let u of users) {
             const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<span class="badge"data-i18n="${u.uid}">${u.uid}</span>`;
+            row.insertCell(0).innerHTML = `<span class="badge"data-i18n="${u.uid}"data-i18n="${u.uid}">${u.uid}</span>`;
             row.insertCell(1).innerText = u.username;
-            row.insertCell(2).innerHTML = `<span class="text-gold"data-i18n="€${(u.trial_bonus_amount || 0).toFixed(2)}">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
+            row.insertCell(2).innerHTML = `<span class="text-gold"data-i18n="€${(u.trial_bonus_amount || 0).toFixed(2)}"data-i18n="€${(u.trial_bonus_amount || 0).toFixed(2)}">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
             const amountInput = document.createElement('input');
             amountInput.type = 'number';
             amountInput.placeholder = 'Amount';

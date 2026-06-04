@@ -5,12 +5,12 @@ async function loadWithdrawalsPage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar" style="justify-content: space-between;">
-                <h3 style="margin:0;"><i class="fas fa-spinner fa-pulse"></idata-i18n=" 待处理Withdraw"> 待处理Withdraw</h3>
-                <button id="refreshWithdrawalsBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
+                <h3 style="margin:0;"><i class="fas fa-spinner fa-pulse"></idata-i18n=" 待处理Withdraw"data-i18n=" 待处理Withdraw"> 待处理Withdraw</h3>
+                <button id="refreshWithdrawalsBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
             </div>
             <div class="table-container">
                 <table class="data-table">
-                    <thead><tr><thdata-i18n="UID"data-i18n="UID">UID</th><thdata-i18n="用户名">用户名</th><thdata-i18n="Amount"data-i18n="Amount">Amount</th><thdata-i18n="钱包地址">钱包地址</th><thdata-i18n="申请时间">申请时间</th><thdata-i18n="操作">操作</th></tr></thead>
+                    <thead><tr><thdata-i18n="UID"data-i18n="UID"data-i18n="UID"data-i18n="UID">UID</th><thdata-i18n="用户名"data-i18n="用户名">用户名</th><thdata-i18n="Amount"data-i18n="Amount"data-i18n="Amount"data-i18n="Amount">Amount</th><thdata-i18n="钱包地址"data-i18n="钱包地址">钱包地址</th><thdata-i18n="申请时间"data-i18n="申请时间">申请时间</th><thdata-i18n="操作"data-i18n="操作">操作</th></tr></thead>
                     <tbody id="withdrawalsTableBody"></tbody>
                 </table>
             </div>
@@ -27,12 +27,12 @@ async function loadWithdrawals() {
         tbody.innerHTML = '';
         for (let w of wd || []) {
             const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<span class="badge"data-i18n="${w.uid}">${w.uid}</span>`;
+            row.insertCell(0).innerHTML = `<span class="badge"data-i18n="${w.uid}"data-i18n="${w.uid}">${w.uid}</span>`;
             row.insertCell(1).innerText = w.username;
-            row.insertCell(2).innerHTML = `<span class="text-gold"data-i18n="€${(w.amount || 0).toFixed(2)}">€${(w.amount || 0).toFixed(2)}</span>`;
+            row.insertCell(2).innerHTML = `<span class="text-gold"data-i18n="€${(w.amount || 0).toFixed(2)}"data-i18n="€${(w.amount || 0).toFixed(2)}">€${(w.amount || 0).toFixed(2)}</span>`;
             row.insertCell(3).innerText = w.wallet_address || '-';
             row.insertCell(4).innerText = new Date(w.request_date).toLocaleString();
-            row.insertCell(5).innerHTML = `<button class="approve-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"data-i18n="批准">批准</button><button class="reject-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;"data-i18n="拒绝">拒绝</button>`;
+            row.insertCell(5).innerHTML = `<button class="approve-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"data-i18n="批准"data-i18n="批准">批准</button><button class="reject-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;"data-i18n="拒绝"data-i18n="拒绝">拒绝</button>`;
         }
         document.querySelectorAll('.approve-withdraw').forEach(btn => btn.addEventListener('click', async () => {
             showConfirm('批准Withdraw', `批准 €${parseFloat(btn.dataset.amt)} Withdraw？`, async () => {

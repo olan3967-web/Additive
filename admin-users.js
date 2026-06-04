@@ -9,14 +9,14 @@ async function loadUsersPage() {
         <div class="card">
             <div class="search-bar">
                 <input type="text" id="searchUserInput" class="search-input" placeholder="🔍 Search UID 或用户名...">
-                <button id="searchUserBtn" class="btn-primary"><i class="fas fa-search"></idata-i18n=" Search"data-i18n=" Search"> Search</button>
-                <button id="refreshUserBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
-                <button id="addUserBtn" class="success"><i class="fas fa-user-plus"></idata-i18n=" 创建用户"> 创建用户</button>
+                <button id="searchUserBtn" class="btn-primary"><i class="fas fa-search"></idata-i18n=" Search"data-i18n=" Search"data-i18n=" Search"data-i18n=" Search"> Search</button>
+                <button id="refreshUserBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
+                <button id="addUserBtn" class="success"><i class="fas fa-user-plus"></idata-i18n=" 创建用户"data-i18n=" 创建用户"> 创建用户</button>
             </div>
             <div class="table-container">
                 <table class="data-table">
                     <thead>
-                        <tr><thdata-i18n="UID"data-i18n="UID">UID</th><thdata-i18n="用户名">用户名</th><thdata-i18n="邀请码">邀请码</th><thdata-i18n="推荐人">推荐人</th><thdata-i18n="余额">余额</th><thdata-i18n="体验金">体验金</th><thdata-i18n="订单数">订单数</th><thdata-i18n="VIP等级">VIP等级</th><thdata-i18n="钱包地址">钱包地址</th><thdata-i18n="操作">操作</th>
+                        <tr><thdata-i18n="UID"data-i18n="UID"data-i18n="UID"data-i18n="UID">UID</th><thdata-i18n="用户名"data-i18n="用户名">用户名</th><thdata-i18n="邀请码"data-i18n="邀请码">邀请码</th><thdata-i18n="推荐人"data-i18n="推荐人">推荐人</th><thdata-i18n="余额"data-i18n="余额">余额</th><thdata-i18n="体验金"data-i18n="体验金">体验金</th><thdata-i18n="订单数"data-i18n="订单数">订单数</th><thdata-i18n="VIP等级"data-i18n="VIP等级">VIP等级</th><thdata-i18n="钱包地址"data-i18n="钱包地址">钱包地址</th><thdata-i18n="操作"data-i18n="操作">操作</th>
                     </thead>
                     <tbody id="usersTableBody"></tbody>
                 </table>
@@ -44,16 +44,16 @@ async function loadUsers() {
             const userOrders = allOrders?.filter(o => o.uid === u.uid).length || 0;
             const ordersLimit = vipLimitMap[u.vip_level] || 30;
             const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<span class="badge"data-i18n="${u.uid}">${u.uid}</span>`;
+            row.insertCell(0).innerHTML = `<span class="badge"data-i18n="${u.uid}"data-i18n="${u.uid}">${u.uid}</span>`;
             row.insertCell(1).innerText = u.username;
-            row.insertCell(2).innerHTML = `<span class="badge"data-i18n="${u.invite_code || '-'}">${u.invite_code || '-'}</span>`;
+            row.insertCell(2).innerHTML = `<span class="badge"data-i18n="${u.invite_code || '-'}"data-i18n="${u.invite_code || '-'}">${u.invite_code || '-'}</span>`;
             row.insertCell(3).innerText = u.invited_by_username || '-';
-            row.insertCell(4).innerHTML = `<span class="text-green"data-i18n="€${(u.balance || 0).toFixed(2)}">€${(u.balance || 0).toFixed(2)}</span>`;
-            row.insertCell(5).innerHTML = `<span class="text-gold"data-i18n="€${(u.trial_bonus_amount || 0).toFixed(2)}">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
-            row.insertCell(6).innerHTML = `${userOrders}/${ordersLimit} <button class="reset-orders-btn" data-uid="${u.uid}" style="background:#7a5f2f; padding:2px 8px; font-size:10px; margin-left:8px;"><i class="fas fa-undo-alt"></idata-i18n=" 重置"> 重置</button>`;
-            row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px;"><option value="1" ${u.vip_level == 1 ? 'selected' : ''}data-i18n="Normal"data-i18n="Normal">Normal</option><option value="2" ${u.vip_level == 2 ? 'selected' : ''}data-i18n="VIP"data-i18n="VIP">VIP</option><option value="3" ${u.vip_level == 3 ? 'selected' : ''}data-i18n="SVIP"data-i18n="SVIP">SVIP</option></select>`;
+            row.insertCell(4).innerHTML = `<span class="text-green"data-i18n="€${(u.balance || 0).toFixed(2)}"data-i18n="€${(u.balance || 0).toFixed(2)}">€${(u.balance || 0).toFixed(2)}</span>`;
+            row.insertCell(5).innerHTML = `<span class="text-gold"data-i18n="€${(u.trial_bonus_amount || 0).toFixed(2)}"data-i18n="€${(u.trial_bonus_amount || 0).toFixed(2)}">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
+            row.insertCell(6).innerHTML = `${userOrders}/${ordersLimit} <button class="reset-orders-btn" data-uid="${u.uid}" style="background:#7a5f2f; padding:2px 8px; font-size:10px; margin-left:8px;"><i class="fas fa-undo-alt"></idata-i18n=" 重置"data-i18n=" 重置"> 重置</button>`;
+            row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px;"><option value="1" ${u.vip_level == 1 ? 'selected' : ''}data-i18n="Normal"data-i18n="Normal"data-i18n="Normal"data-i18n="Normal">Normal</option><option value="2" ${u.vip_level == 2 ? 'selected' : ''}data-i18n="VIP"data-i18n="VIP"data-i18n="VIP"data-i18n="VIP">VIP</option><option value="3" ${u.vip_level == 3 ? 'selected' : ''}data-i18n="SVIP"data-i18n="SVIP"data-i18n="SVIP"data-i18n="SVIP">SVIP</option></select>`;
             row.insertCell(8).innerHTML = u.withdrawal_address ? u.withdrawal_address.substring(0, 12) + '...' : '-';
-            row.insertCell(9).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-plus-circle"></idata-i18n=" Top Up"data-i18n=" Top Up"> Top Up</button><button class="cut-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-minus-circle"></idata-i18n=" 扣款"> 扣款</button><button class="edit-user-btn" data-uid="${u.uid}" data-phone="${u.phone || ''}" data-username="${u.username}" data-pin="${u.pin || ''}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-edit"></idata-i18n=" 修改"> 修改</button><button class="delete-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;"><i class="fas fa-trash"></idata-i18n=" Delete"data-i18n=" Delete"> Delete</button>`;
+            row.insertCell(9).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-plus-circle"></idata-i18n=" Top Up"data-i18n=" Top Up"data-i18n=" Top Up"data-i18n=" Top Up"> Top Up</button><button class="cut-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-minus-circle"></idata-i18n=" 扣款"data-i18n=" 扣款"> 扣款</button><button class="edit-user-btn" data-uid="${u.uid}" data-phone="${u.phone || ''}" data-username="${u.username}" data-pin="${u.pin || ''}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-edit"></idata-i18n=" 修改"data-i18n=" 修改"> 修改</button><button class="delete-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;"><i class="fas fa-trash"></idata-i18n=" Delete"data-i18n=" Delete"data-i18n=" Delete"data-i18n=" Delete"> Delete</button>`;
         }
         document.querySelectorAll('.vip-select').forEach(sel => sel.addEventListener('change', () => updateVip(sel.dataset.uid, sel.value)));
         document.querySelectorAll('.deposit-btn').forEach(btn => btn.addEventListener('click', () => depositBalance(btn.dataset.uid)));
@@ -188,13 +188,13 @@ function openEditUserModal(uid, phone, username, pin) {
     const modalHtml = `
         <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
             <div class="modal-card">
-                <h3><i class="fas fa-edit"></idata-i18n=" 修改用户信息 - ${escapeHtml(username)}"> 修改用户信息 - ${escapeHtml(username)}</h3>
-                <div><labeldata-i18n="Phone Number"data-i18n="Phone Number">Phone Number</label><input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
-                <div><labeldata-i18n="Login Password"data-i18n="Login Password">Login Password</label><input type="password" id="editPassword" placeholder="留空则不修改" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"><smalldata-i18n="留空表示不修改密码">留空表示不修改密码</small></div>
-                <div><labeldata-i18n="Withdrawal PIN (4 digits)">Withdrawal PIN (4 digits)</label><input type="password" id="editPin" maxlength="4" value="${escapeHtml(pin || '')}" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
+                <h3><i class="fas fa-edit"></idata-i18n=" 修改用户信息 - ${escapeHtml(username)}"data-i18n=" 修改用户信息 - ${escapeHtml(username)}"> 修改用户信息 - ${escapeHtml(username)}</h3>
+                <div><labeldata-i18n="Phone Number"data-i18n="Phone Number"data-i18n="Phone Number"data-i18n="Phone Number">Phone Number</label><input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
+                <div><labeldata-i18n="Login Password"data-i18n="Login Password"data-i18n="Login Password"data-i18n="Login Password">Login Password</label><input type="password" id="editPassword" placeholder="留空则不修改" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"><smalldata-i18n="留空表示不修改密码"data-i18n="留空表示不修改密码">留空表示不修改密码</small></div>
+                <div><labeldata-i18n="Withdrawal PIN (4 digits)"data-i18n="Withdrawal PIN (4 digits)">Withdrawal PIN (4 digits)</label><input type="password" id="editPin" maxlength="4" value="${escapeHtml(pin || '')}" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
                 <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button id="confirmEditBtn" class="success"data-i18n="Save修改">Save修改</button>
-                    <button id="cancelEditBtn"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
+                    <button id="confirmEditBtn" class="success"data-i18n="Save修改"data-i18n="Save修改">Save修改</button>
+                    <button id="cancelEditBtn"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
                 </div>
             </div>
         </div>
@@ -281,7 +281,7 @@ document.getElementById('closeUserModalBtn')?.addEventListener('click', () => do
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<data-i18n="]/g, m => m === '&' ? '&amp;' : m === '">]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    return str.replace(/[&<data-i18n="]/g, m =data-i18n=" m === '&' ? '&amp;' : m === '">]/g, m => m === '&' ? '&amp;' : m === '"> m === '&' ? '&amp;' : m === '">]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
 
 window.loadUsersPage = loadUsersPage;

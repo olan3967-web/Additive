@@ -7,11 +7,11 @@ async function loadKycPage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar" style="justify-content: space-between; flex-wrap: wrap;">
-                <h3 style="margin:0;"><i class="fas fa-id-card"></idata-i18n=" KYC Verification"data-i18n=" KYC Verification"> KYC Verification</h3>
+                <h3 style="margin:0;"><i class="fas fa-id-card"></idata-i18n=" KYC Verification"data-i18n=" KYC Verification"data-i18n=" KYC Verification"data-i18n=" KYC Verification"> KYC Verification</h3>
                 <div style="display: flex; gap: 12px;">
-                    <button id="tabPending" class="tab-kyc-btn active" data-tab="pending"data-i18n="📋 待审核">📋 待审核</button>
-                    <button id="tabVerified" class="tab-kyc-btn" data-tab="verified"data-i18n="✅ 已验证记录">✅ 已验证记录</button>
-                    <button id="refreshKycBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
+                    <button id="tabPending" class="tab-kyc-btn active" data-tab="pending"data-i18n="📋 待审核"data-i18n="📋 待审核">📋 待审核</button>
+                    <button id="tabVerified" class="tab-kyc-btn" data-tab="verified"data-i18n="✅ 已验证记录"data-i18n="✅ 已验证记录">✅ 已验证记录</button>
+                    <button id="refreshKycBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
                 </div>
             </div>
             <div id="kycPendingContainer" class="kyc-container"></div>
@@ -68,12 +68,12 @@ async function getUsername(uid) {
 async function loadKycPending() {
     const container = document.getElementById('kycPendingContainer');
     if (!container) return;
-    container.innerHTML = '<div style="text-align:center; padding:40px;"data-i18n="Loading... "data-i18n="Loading... ">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px;"data-i18n="Loading... "data-i18n="Loading... "data-i18n="Loading... "data-i18n="Loading... ">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
     
     const { data: kycList } = await sb.from('kyc_verifications').select('*').in('status', ['pending', 'rejected']).order('uploaded_at', { ascending: false });
     
     if (!kycList || kycList.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#6a7a9a;"data-i18n="暂无待审核KYC申请">暂无待审核KYC申请</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#6a7a9a;"data-i18n="暂无待审核KYC申请"data-i18n="暂无待审核KYC申请">暂无待审核KYC申请</div>';
         return;
     }
     
@@ -104,32 +104,32 @@ async function loadKycPending() {
         if (nationalIdFront || nationalIdBack) {
             imagesHtml += `<div class="kyc-images">`;
             if (nationalIdFront) {
-                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdFront.image_url}" onclick="window.open('${nationalIdFront.image_url}','_blank')"><div class="kyc-image-label"data-i18n="身份证正面">身份证正面</div></div>`;
+                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdFront.image_url}" onclick="window.open('${nationalIdFront.image_url}','_blank')"><div class="kyc-image-label"data-i18n="身份证正面"data-i18n="身份证正面">身份证正面</div></div>`;
             }
             if (nationalIdBack) {
-                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdBack.image_url}" onclick="window.open('${nationalIdBack.image_url}','_blank')"><div class="kyc-image-label"data-i18n="身份证背面">身份证背面</div></div>`;
+                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdBack.image_url}" onclick="window.open('${nationalIdBack.image_url}','_blank')"><div class="kyc-image-label"data-i18n="身份证背面"data-i18n="身份证背面">身份证背面</div></div>`;
             }
             imagesHtml += `</div>`;
         }
         
         for (const doc of otherDocs) {
             let docName = doc.document_type === 'passport' ? '护照' : doc.document_type === 'resident_permit' ? '居留证' : doc.document_type;
-            imagesHtml += `<div class="kyc-images"><div class="kyc-image-box"><img src="${doc.image_url}" onclick="window.open('${doc.image_url}','_blank')"><div class="kyc-image-label"data-i18n="${docName}">${docName}</div></div></div>`;
+            imagesHtml += `<div class="kyc-images"><div class="kyc-image-box"><img src="${doc.image_url}" onclick="window.open('${doc.image_url}','_blank')"><div class="kyc-image-label"data-i18n="${docName}"data-i18n="${docName}">${docName}</div></div></div>`;
         }
         
         const hasPending = items.some(i => i.status === 'pending');
-        const statusHtml = hasPending ? '<span class="kyc-status status-pending"data-i18n="⏳ 待审核">⏳ 待审核</spandata-i18n="' : '">' : '<span class="kyc-status status-rejected"data-i18n="❌ 已拒绝">❌ 已拒绝</span>';
+        const statusHtml = hasPending ? '<span class="kyc-status status-pending"data-i18n="⏳ 待审核"data-i18n="⏳ 待审核">⏳ 待审核</spandata-i18n="' : '"data-i18n="' : '">' : '<span class="kyc-status status-rejected"data-i18n="❌ 已拒绝"data-i18n="❌ 已拒绝">❌ 已拒绝</span>';
         
         card.innerHTML = `
             <div class="kyc-header">
-                <div><span class="kyc-user"data-i18n="${escapeHtml(username)}">${escapeHtml(username)}</span><span class="kyc-uid"data-i18n="UID: ${uid}">UID: ${uid}</span></div>
-                <divdata-i18n="${statusHtml}">${statusHtml}</div>
+                <div><span class="kyc-user"data-i18n="${escapeHtml(username)}"data-i18n="${escapeHtml(username)}">${escapeHtml(username)}</span><span class="kyc-uid"data-i18n="UID: ${uid}"data-i18n="UID: ${uid}">UID: ${uid}</span></div>
+                <divdata-i18n="${statusHtml}"data-i18n="${statusHtml}">${statusHtml}</div>
             </div>
             ${imagesHtml}
-            <div class="kyc-time"data-i18n="Submit时间: ${new Date(items[0].uploaded_at).toLocaleString()}">Submit时间: ${new Date(items[0].uploaded_at).toLocaleString()}</div>
+            <div class="kyc-time"data-i18n="Submit时间: ${new Date(items[0].uploaded_at).toLocaleString()}"data-i18n="Submit时间: ${new Date(items[0].uploaded_at).toLocaleString()}">Submit时间: ${new Date(items[0].uploaded_at).toLocaleString()}</div>
             <div style="margin-top: 16px;">
-                <button class="btn-sm success approve-kyc" data-uid="${uid}" style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;"data-i18n="✓ 批准">✓ 批准</button>
-                <button class="btn-sm danger reject-kyc" data-uid="${uid}" style="background:#7a2f2f; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;"data-i18n="✗ 拒绝">✗ 拒绝</button>
+                <button class="btn-sm success approve-kyc" data-uid="${uid}" style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;"data-i18n="✓ 批准"data-i18n="✓ 批准">✓ 批准</button>
+                <button class="btn-sm danger reject-kyc" data-uid="${uid}" style="background:#7a2f2f; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;"data-i18n="✗ 拒绝"data-i18n="✗ 拒绝">✗ 拒绝</button>
             </div>
         `;
         container.appendChild(card);
@@ -156,12 +156,12 @@ async function loadKycPending() {
 async function loadKycVerified() {
     const container = document.getElementById('kycVerifiedContainer');
     if (!container) return;
-    container.innerHTML = '<div style="text-align:center; padding:40px;"data-i18n="Loading... "data-i18n="Loading... ">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px;"data-i18n="Loading... "data-i18n="Loading... "data-i18n="Loading... "data-i18n="Loading... ">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
     
     const { data: kycList } = await sb.from('kyc_verifications').select('*').eq('status', 'approved').order('uploaded_at', { ascending: false });
     
     if (!kycList || kycList.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#6a7a9a;"data-i18n="暂无已验证的KYC记录">暂无已验证的KYC记录</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#6a7a9a;"data-i18n="暂无已验证的KYC记录"data-i18n="暂无已验证的KYC记录">暂无已验证的KYC记录</div>';
         return;
     }
     
@@ -192,28 +192,28 @@ async function loadKycVerified() {
         if (nationalIdFront || nationalIdBack) {
             imagesHtml += `<div class="kyc-images">`;
             if (nationalIdFront) {
-                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdFront.image_url}" onclick="window.open('${nationalIdFront.image_url}','_blank')"><div class="kyc-image-label"data-i18n="身份证正面">身份证正面</div></div>`;
+                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdFront.image_url}" onclick="window.open('${nationalIdFront.image_url}','_blank')"><div class="kyc-image-label"data-i18n="身份证正面"data-i18n="身份证正面">身份证正面</div></div>`;
             }
             if (nationalIdBack) {
-                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdBack.image_url}" onclick="window.open('${nationalIdBack.image_url}','_blank')"><div class="kyc-image-label"data-i18n="身份证背面">身份证背面</div></div>`;
+                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdBack.image_url}" onclick="window.open('${nationalIdBack.image_url}','_blank')"><div class="kyc-image-label"data-i18n="身份证背面"data-i18n="身份证背面">身份证背面</div></div>`;
             }
             imagesHtml += `</div>`;
         }
         
         for (const doc of otherDocs) {
             let docName = doc.document_type === 'passport' ? '护照' : doc.document_type === 'resident_permit' ? '居留证' : doc.document_type;
-            imagesHtml += `<div class="kyc-images"><div class="kyc-image-box"><img src="${doc.image_url}" onclick="window.open('${doc.image_url}','_blank')"><div class="kyc-image-label"data-i18n="${docName}">${docName}</div></div></div>`;
+            imagesHtml += `<div class="kyc-images"><div class="kyc-image-box"><img src="${doc.image_url}" onclick="window.open('${doc.image_url}','_blank')"><div class="kyc-image-label"data-i18n="${docName}"data-i18n="${docName}">${docName}</div></div></div>`;
         }
         
         card.innerHTML = `
             <div class="kyc-header">
-                <div><span class="kyc-user"data-i18n="${escapeHtml(username)}">${escapeHtml(username)}</span><span class="kyc-uid"data-i18n="UID: ${uid}">UID: ${uid}</span></div>
-                <div><span class="kyc-status status-approved"data-i18n="✅ 已验证">✅ 已验证</span></div>
+                <div><span class="kyc-user"data-i18n="${escapeHtml(username)}"data-i18n="${escapeHtml(username)}">${escapeHtml(username)}</span><span class="kyc-uid"data-i18n="UID: ${uid}"data-i18n="UID: ${uid}">UID: ${uid}</span></div>
+                <div><span class="kyc-status status-approved"data-i18n="✅ 已验证"data-i18n="✅ 已验证">✅ 已验证</span></div>
             </div>
             ${imagesHtml}
-            <div class="kyc-time"data-i18n="验证时间: ${new Date(items[0].approved_at || items[0].uploaded_at).toLocaleString()}">验证时间: ${new Date(items[0].approved_at || items[0].uploaded_at).toLocaleString()}</div>
+            <div class="kyc-time"data-i18n="验证时间: ${new Date(items[0].approved_at || items[0].uploaded_at).toLocaleString()}"data-i18n="验证时间: ${new Date(items[0].approved_at || items[0].uploaded_at).toLocaleString()}">验证时间: ${new Date(items[0].approved_at || items[0].uploaded_at).toLocaleString()}</div>
             <div style="margin-top: 16px;">
-                <button class="btn-sm delete-kyc" data-uid="${uid}" style="background:#7a2f2f; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;"><i class="fas fa-trash"></idata-i18n=" Delete记录"> Delete记录</button>
+                <button class="btn-sm delete-kyc" data-uid="${uid}" style="background:#7a2f2f; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;"><i class="fas fa-trash"></idata-i18n=" Delete记录"data-i18n=" Delete记录"> Delete记录</button>
             </div>
         `;
         container.appendChild(card);

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <titledata-i18n="ADDITIVE - Sign In">ADDITIVE - Sign In</title>
+    <titledata-i18n="ADDITIVE - Sign In"data-i18n="ADDITIVE - Sign In">ADDITIVE - Sign In</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -186,19 +186,19 @@
             <div class="login-logo">
                 <img src="https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png" alt="Logo" id="logoImg">
             </div>
-            <div class="subtitle"data-i18n="Sign in to your account"data-i18n="Sign in to your account">Sign in to your account</div>
+            <div class="subtitle"data-i18n="Sign in to your account"data-i18n="Sign in to your account"data-i18n="Sign in to your account"data-i18n="Sign in to your account">Sign in to your account</div>
             
             <div class="form-group">
-                <label><i class="fas fa-user"></idata-i18n=" Username"data-i18n=" Username"> Username</label>
+                <label><i class="fas fa-user"></idata-i18n=" Username"data-i18n=" Username"data-i18n=" Username"data-i18n=" Username"> Username</label>
                 <input type="text" id="loginUsername" placeholder="Enter your username">
             </div>
             <div class="form-group">
-                <label><i class="fas fa-lock"></idata-i18n=" Password"data-i18n=" Password"> Password</label>
+                <label><i class="fas fa-lock"></idata-i18n=" Password"data-i18n=" Password"data-i18n=" Password"data-i18n=" Password"> Password</label>
                 <input type="password" id="loginPassword" placeholder="Enter your password">
             </div>
             
-            <button class="login-btn" onclick="handleSignIn()"><i class="fas fa-sign-in-alt"></idata-i18n=" Sign In"data-i18n=" Sign In"> Sign In</button>
-            <div class="register-link"data-i18n="Don't have an account? ">Don't have an account? <a href="register.html"data-i18n="Register now "data-i18n="Register now ">Register now <i class="fas fa-arrow-right"></i></a></div>
+            <button class="login-btn" onclick="handleSignIn()"><i class="fas fa-sign-in-alt"></idata-i18n=" Sign In"data-i18n=" Sign In"data-i18n=" Sign In"data-i18n=" Sign In"> Sign In</button>
+            <div class="register-link"data-i18n="Don't have an account? "data-i18n="Don't have an account? ">Don't have an account? <a href="register.html"data-i18n="Register now "data-i18n="Register now "data-i18n="Register now "data-i18n="Register now ">Register now <i class="fas fa-arrow-right"></i></a></div>
             <div id="loginError" class="error-message"></div>
         </div>
     </div>
@@ -216,11 +216,11 @@
             const errorDiv = document.getElementById('loginError');
             
             if (!username || !password) {
-                errorDiv.innerHTML = '<span style="color: #ff5a5a;"data-i18n="Please enter username and password"data-i18n="Please enter username and password">Please enter username and password</span>';
+                errorDiv.innerHTML = '<span style="color: #ff5a5a;"data-i18n="Please enter username and password"data-i18n="Please enter username and password"data-i18n="Please enter username and password"data-i18n="Please enter username and password">Please enter username and password</span>';
                 return;
             }
             
-            errorDiv.innerHTML = '<span style="color: #f97316;"data-i18n="Checking..."data-i18n="Checking...">Checking...</span>';
+            errorDiv.innerHTML = '<span style="color: #f97316;"data-i18n="Checking..."data-i18n="Checking..."data-i18n="Checking..."data-i18n="Checking...">Checking...</span>';
             
             try {
                 const { data: users, error } = await sb
@@ -230,12 +230,12 @@
                     .eq('password', password);
                 
                 if (error) {
-                    errorDiv.innerHTML = '<span style="color: #ff5a5a;"data-i18n="Error: ' + error.message + '">Error: ' + error.message + '</span>';
+                    errorDiv.innerHTML = '<span style="color: #ff5a5a;"data-i18n="Error: ' + error.message + '"data-i18n="Error: ' + error.message + '">Error: ' + error.message + '</span>';
                     return;
                 }
                 
                 if (!users || users.length === 0) {
-                    errorDiv.innerHTML = '<span style="color: #ff5a5a;"data-i18n="Invalid username or password"data-i18n="Invalid username or password">Invalid username or password</span>';
+                    errorDiv.innerHTML = '<span style="color: #ff5a5a;"data-i18n="Invalid username or password"data-i18n="Invalid username or password"data-i18n="Invalid username or password"data-i18n="Invalid username or password">Invalid username or password</span>';
                     return;
                 }
                 
@@ -254,10 +254,10 @@
                     loginTime: Date.now()
                 }));
                 
-                errorDiv.innerHTML = '<span style="color: #2ed15a;"data-i18n="Login successful! Redirecting...">Login successful! Redirecting...</span>';
+                errorDiv.innerHTML = '<span style="color: #2ed15a;"data-i18n="Login successful! Redirecting..."data-i18n="Login successful! Redirecting...">Login successful! Redirecting...</span>';
                 setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
             } catch(err) {
-                errorDiv.innerHTML = '<span style="color: #ff5a5a;"data-i18n="Error: ' + err.message + '">Error: ' + err.message + '</span>';
+                errorDiv.innerHTML = '<span style="color: #ff5a5a;"data-i18n="Error: ' + err.message + '"data-i18n="Error: ' + err.message + '">Error: ' + err.message + '</span>';
             }
         }
         

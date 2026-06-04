@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <titledata-i18n="Order Tracking - ADDITIVE">Order Tracking - ADDITIVE</title>
+    <titledata-i18n="Order Tracking - ADDITIVE"data-i18n="Order Tracking - ADDITIVE">Order Tracking - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
@@ -237,8 +237,8 @@
 <div class="phone">
 
     <div class="page-header">
-        <button class="back-btn" onclick="goBack()"data-i18n="←">←</button>
-        <h1data-i18n="Order Tracking"data-i18n="Order Tracking">Order Tracking</h1>
+        <button class="back-btn" onclick="goBack()"data-i18n="←"data-i18n="←">←</button>
+        <h1data-i18n="Order Tracking"data-i18n="Order Tracking"data-i18n="Order Tracking"data-i18n="Order Tracking">Order Tracking</h1>
         <div style="width: 30px;"></div>
     </div>
 
@@ -249,10 +249,10 @@
     <div id="timelineContainer" class="timeline-container"></div>
 
     <div class="bottom-nav">
-        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
-        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products">Products</span></div>
-        <div class="nav-item active" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders">Orders</span></div>
-        <div class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products"data-i18n="Products"data-i18n="Products">Products</span></div>
+        <div class="nav-item active" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders"data-i18n="Orders"data-i18n="Orders">Orders</span></div>
+        <div class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
     </div>
 
 </div>
@@ -318,10 +318,10 @@
         }
 
         container.innerHTML = `
-            <div class="order-no"data-i18n="${orderData.order_no}">${orderData.order_no}</div>
-            <div class="order-date"data-i18n="下单时间：${formatDate(orderData.created_at)}">下单时间：${formatDate(orderData.created_at)}</div>
-            <div class="order-date" style="margin-top:8px;"data-i18n="产品：${productsText}">产品：${productsText}</div>
-            <div class="order-date"data-i18n="总Amount：€${(orderData.total_supply_price || 0).toFixed(2)}">总Amount：€${(orderData.total_supply_price || 0).toFixed(2)}</div>
+            <div class="order-no"data-i18n="${orderData.order_no}"data-i18n="${orderData.order_no}">${orderData.order_no}</div>
+            <div class="order-date"data-i18n="下单时间：${formatDate(orderData.created_at)}"data-i18n="下单时间：${formatDate(orderData.created_at)}">下单时间：${formatDate(orderData.created_at)}</div>
+            <div class="order-date" style="margin-top:8px;"data-i18n="产品：${productsText}"data-i18n="产品：${productsText}">产品：${productsText}</div>
+            <div class="order-date"data-i18n="总Amount：€${(orderData.total_supply_price || 0).toFixed(2)}"data-i18n="总Amount：€${(orderData.total_supply_price || 0).toFixed(2)}">总Amount：€${(orderData.total_supply_price || 0).toFixed(2)}</div>
         `;
     }
 
@@ -339,7 +339,7 @@
     }
 
     if (timeline.length === 0) {
-        timelineContainer.innerHTML = '<div style="text-align:center; padding:40px;"data-i18n="物流信息Loading...">物流信息Loading...</div>';
+        timelineContainer.innerHTML = '<div style="text-align:center; padding:40px;"data-i18n="物流信息Loading..."data-i18n="物流信息Loading...">物流信息Loading...</div>';
         return;
     }
 
@@ -363,14 +363,14 @@
     if (currentIndex >= 0 && timeline[currentIndex]) {
         const currentStatus = timeline[currentIndex];
         currentStatusCard.innerHTML = `
-            <div class="current-status-label"data-i18n="当前状态">当前状态</div>
-            <div class="current-status-text"><i class="fas fa-truck"></idata-i18n=" ${currentStatus.status}"> ${currentStatus.status}</div>
-            <div class="current-status-label" style="margin-top:8px;"data-i18n="更新时间：${formatDate(currentStatus.time)}">更新时间：${formatDate(currentStatus.time)}</div>
+            <div class="current-status-label"data-i18n="当前状态"data-i18n="当前状态">当前状态</div>
+            <div class="current-status-text"><i class="fas fa-truck"></idata-i18n=" ${currentStatus.status}"data-i18n=" ${currentStatus.status}"> ${currentStatus.status}</div>
+            <div class="current-status-label" style="margin-top:8px;"data-i18n="更新时间：${formatDate(currentStatus.time)}"data-i18n="更新时间：${formatDate(currentStatus.time)}">更新时间：${formatDate(currentStatus.time)}</div>
         `;
     } else {
         currentStatusCard.innerHTML = `
-            <div class="current-status-label"data-i18n="当前状态">当前状态</div>
-            <div class="current-status-text"data-i18n="等待物流更新...">等待物流更新...</div>
+            <div class="current-status-label"data-i18n="当前状态"data-i18n="当前状态">当前状态</div>
+            <div class="current-status-text"data-i18n="等待物流更新..."data-i18n="等待物流更新...">等待物流更新...</div>
         `;
     }
 
@@ -410,8 +410,8 @@
                             <i class="${icon}"></i>
                         </div>
                         <div class="timeline-content">
-                            <div class="timeline-status"data-i18n="${item.status}">${item.status}</div>
-                            ${showTime ? `<div class="timeline-time"data-i18n="${formatDate(item.time)}">${formatDate(item.time)}</divdata-i18n="` : '">` : '<div class="timeline-time" style="color:#e2e8f0;"data-i18n="⏳ 待更新">⏳ 待更新</div>'}
+                            <div class="timeline-status"data-i18n="${item.status}"data-i18n="${item.status}">${item.status}</div>
+                            ${showTime ? `<div class="timeline-time"data-i18n="${formatDate(item.time)}"data-i18n="${formatDate(item.time)}">${formatDate(item.time)}</divdata-i18n="` : '"data-i18n="` : '">` : '<div class="timeline-time" style="color:#e2e8f0;"data-i18n="⏳ 待更新"data-i18n="⏳ 待更新">⏳ 待更新</div>'}
                         </div>
                     </div>
                 `;
