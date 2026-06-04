@@ -660,7 +660,7 @@
                 const id = parseInt(card.dataset.id);
                 const product = allProducts.find(p => p.id === id);
                 if (product) {
-                    showToast(`📦 ${product.accommodation_name || 'Premium Task'}\nPrice: €${product.price}`, 'info');
+                    showToast(`📦 ${product.accommodation_name || 'Premium Task'}Price: €${product.price}`, 'info');
                 }
             });
         });
@@ -891,5 +891,5 @@
     initPullToRefresh();
     loadProducts();
 </script>
-\n</body>
+</body>
 </html>

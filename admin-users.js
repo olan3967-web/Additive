@@ -102,11 +102,11 @@ async function depositBalance(uid) {
             const newBalance = currentBalance + depositAmount + bonusAmount;
             
             // 第三步：二次Confirm
-            let confirmMessage = `用户：${user.username}\nTop UpAmount：€${depositAmount.toFixed(2)}`;
+            let confirmMessage = `用户：${user.username}Top UpAmount：€${depositAmount.toFixed(2)}`;
             if (bonusAmount > 0) {
-                confirmMessage += `\n奖励Amount：€${bonusAmount.toFixed(2)}`;
+                confirmMessage += `奖励Amount：€${bonusAmount.toFixed(2)}`;
             }
-            confirmMessage += `\nTop Up后总余额：€${newBalance.toFixed(2)}`;
+            confirmMessage += `Top Up后总余额：€${newBalance.toFixed(2)}`;
             
             showConfirm('ConfirmTop Up', confirmMessage, async () => {
                 // 更新余额
@@ -170,7 +170,7 @@ async function cutBalance(uid) {
         
         const newBalance = (user.balance || 0) - amount;
         
-        showConfirm('Confirm扣款', `用户: ${user.username}\n扣款Amount: €${amount.toFixed(2)}\n扣款后余额: €${newBalance.toFixed(2)}`, async () => {
+        showConfirm('Confirm扣款', `用户: ${user.username}扣款Amount: €${amount.toFixed(2)}扣款后余额: €${newBalance.toFixed(2)}`, async () => {
             const { error } = await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
             if (error) {
                 showToast('扣款失败: ' + error.message, 'error');

@@ -603,7 +603,7 @@
     
     // 只显示地址，不显示姓名和电话
     const address = currentOrder.buyer_address || '未知地址';
-    const formattedAddress = address.replace(/\n/g, '<br>');
+    const formattedAddress = address.replace(//g, '<br>');
     
     document.getElementById('supplierAddressText').innerHTML = formattedAddress;
     document.getElementById('buyerAddressText').innerHTML = formattedAddress;
@@ -766,5 +766,5 @@
     window.refreshOrdersList = loadOrders;
     loadOrders();
 </script>
-\n</body>
+</body>
 </html>
