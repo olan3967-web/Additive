@@ -2,7 +2,7 @@
 let adminOrderSearchKeyword = '';
 let adminOrdersList = [];
 let adminOrdersCurrentPage = 1;
-const pageSize = 50;
+const adminOrdersPageSize = 50;
 
 async function loadAdminOrdersPage() {
     const container = document.getElementById('page_orders');
@@ -80,8 +80,8 @@ function renderAdminOrdersTable() {
     const tbody = document.getElementById('adminOrdersTableBody');
     if (!tbody) return;
     
-    const start = (currentPage - 1) * pageSize;
-    const pageOrders = adminOrdersList.slice(start, start + pageSize);
+    const start = (currentPage - 1) * adminOrdersPageSize;
+    const pageOrders = adminOrdersList.slice(start, start + adminOrdersPageSize);
     
     if (pageOrders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No orders found</td></tr>';
@@ -124,7 +124,7 @@ function renderAdminPagination() {
     const container = document.getElementById('adminOrderPagination');
     if (!container) return;
     
-    const totalPages = Math.ceil(adminOrdersList.length / pageSize);
+    const totalPages = Math.ceil(adminOrdersList.length / adminOrderPageSize);
     if (totalPages <= 1) {
         container.innerHTML = '';
         return;

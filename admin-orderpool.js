@@ -2,7 +2,7 @@
 let poolSearchKeyword = '';
 let allOrders = [];
 let orderPoolCurrentPage = 1;
-const pageSize = 50;
+const orderPoolPageSize = 50;
 
 async function loadOrderPoolPage() {
     const container = document.getElementById('page_orderpool');
@@ -72,9 +72,9 @@ function renderOrderPoolPage() {
         const kw = poolSearchKeyword.toLowerCase();
         filtered = allOrders.filter(o => (o.order_code && o.order_code.toLowerCase().includes(kw)) || (o.accommodation_name && o.accommodation_name.toLowerCase().includes(kw)));
     }
-    const totalPages = Math.ceil(filtered.length / pageSize);
-    const start = (currentPage - 1) * pageSize;
-    const pageOrders = filtered.slice(start, start + pageSize);
+    const totalPages = Math.ceil(filtered.length / orderPoolPageSize);
+    const start = (currentPage - 1) * orderPoolPageSize;
+    const pageOrders = filtered.slice(start, start + orderPoolPageSize);
     const tbody = document.getElementById('orderPoolTableBody');
     if (tbody) {
         tbody.innerHTML = '';
