@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>My Profile - ADDITIVE</title>
+    <titledata-i18n="My Profile - ADDITIVE">My Profile - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -426,29 +426,29 @@
 
     <div class="profile-header">
         <div class="profile-row">
-            <div class="avatar" id="avatarInitial">O</div>
+            <div class="avatar" id="avatarInitial"data-i18n="O"data-i18n="O">O</div>
             <div class="profile-info">
-                <div class="username" id="displayUsername">Loading...</div>
+                <div class="username" id="displayUsername"data-i18n="Loading..."data-i18n="Loading...">Loading...</div>
                 <div class="user-badges">
-                    <span class="badge badge-normal" id="vipBadge">Normal</span>
-                    <span class="badge badge-kyc" id="kycBadge">KYC Pending</span>
+                    <span class="badge badge-normal" id="vipBadge"data-i18n="Normal"data-i18n="Normal">Normal</span>
+                    <span class="badge badge-kyc" id="kycBadge"data-i18n="KYC Pending"data-i18n="KYC Pending">KYC Pending</span>
                 </div>
-                <div class="user-uid">UID: <span id="displayUid">---</span></div>
+                <div class="user-uid"data-i18n="UID: ">UID: <span id="displayUid"data-i18n="---">---</span></div>
             </div>
         </div>
     </div>
 
     <div class="stats-card">
-        <div class="stat-label">Total Commissions Earned</div>
-        <div class="stat-value" id="totalCommissions">€0.00</div>
+        <div class="stat-label"data-i18n="Total Commissions Earned"data-i18n="Total Commissions Earned">Total Commissions Earned</div>
+        <div class="stat-value" id="totalCommissions"data-i18n="€0.00">€0.00</div>
     </div>
 
     <div class="wallet-card">
-        <div class="wallet-title">Account Balance</div>
-        <div class="wallet-balance" id="displayBalance">€0.00</div>
+        <div class="wallet-title"data-i18n="Account Balance"data-i18n="Account Balance">Account Balance</div>
+        <div class="wallet-balance" id="displayBalance"data-i18n="€0.00">€0.00</div>
         <div class="wallet-actions">
-            <button class="btn-topup" id="topUpBtn">Top Up</button>
-            <button class="btn-withdraw" id="withdrawBtn">Withdraw</button>
+            <button class="btn-topup" id="topUpBtn"data-i18n="Top Up"data-i18n="Top Up">Top Up</button>
+            <button class="btn-withdraw" id="withdrawBtn"data-i18n="Withdraw"data-i18n="Withdraw">Withdraw</button>
         </div>
     </div>
 
@@ -456,18 +456,18 @@
         <div class="half-card" onclick="location.href='history.html?tab=balance'">
             <div class="half-card-header">
                 <div class="half-card-icon"><i class="fa-solid fa-chart-line"></i></div>
-                <span class="view-link">View →</span>
+                <span class="view-link"data-i18n="View →">View →</span>
             </div>
-            <div class="half-card-title">My Sales</div>
-            <div style="font-size: 12px; color: #6b7280; margin-top: 6px;" id="salesAmount">€0.00 earned</div>
+            <div class="half-card-title"data-i18n="My Sales"data-i18n="My Sales">My Sales</div>
+            <div style="font-size: 12px; color: #6b7280; margin-top: 6px;" id="salesAmount"data-i18n="€0.00 earned">€0.00 earned</div>
         </div>
         <div class="half-card" onclick="location.href='start.html'">
             <div class="half-card-header">
                 <div class="half-card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-                <span class="view-link">View →</span>
+                <span class="view-link"data-i18n="View →">View →</span>
             </div>
-            <div class="half-card-title">Sourcing</div>
-            <div style="font-size: 12px; color: #6b7280; margin-top: 6px;">Find products</div>
+            <div class="half-card-title"data-i18n="Sourcing"data-i18n="Sourcing">Sourcing</div>
+            <div style="font-size: 12px; color: #6b7280; margin-top: 6px;"data-i18n="Find products"data-i18n="Find products">Find products</div>
         </div>
     </div>
 
@@ -480,37 +480,37 @@
             <div class="grid-4">
                 <div class="grid-item" onclick="location.href='store-settings.html'">
                     <div class="grid-icon"><i class="fa-solid fa-store"></i></div>
-                    <div class="grid-label">Store</div>
+                    <div class="grid-label"data-i18n="Store"data-i18n="Store">Store</div>
                 </div>
                 <div class="grid-item" onclick="location.href='my-products.html'">
                     <div class="grid-icon"><i class="fa-regular fa-bookmark"></i></div>
-                    <div class="grid-label">My Products</div>
+                    <div class="grid-label"data-i18n="My Products"data-i18n="My Products">My Products</div>
                 </div>
                 <div class="grid-item" onclick="location.href='certificate.html'">
                     <div class="grid-icon"><i class="fa-solid fa-certificate"></i></div>
-                    <div class="grid-label">Certificate</div>
+                    <div class="grid-label"data-i18n="Certificate"data-i18n="Certificate">Certificate</div>
                 </div>
                 <div class="grid-item" onclick="location.href='kyc.html'">
                     <div class="grid-icon"><i class="fa-solid fa-id-card"></i></div>
-                    <div class="grid-label">KYC Verification</div>
+                    <div class="grid-label"data-i18n="KYC Verification"data-i18n="KYC Verification">KYC Verification</div>
                 </div>
                 <div class="grid-item" onclick="location.href='orders-history.html'">
                     <div class="grid-icon"><i class="fa-solid fa-list-check"></i></div>
-                    <div class="grid-label">My Orders</div>
+                    <div class="grid-label"data-i18n="My Orders"data-i18n="My Orders">My Orders</div>
                 </div>
                 <div class="grid-item" onclick="location.href='withdrawal.html'">
                     <div class="grid-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
-                    <div class="grid-label">Withdrawal</div>
+                    <div class="grid-label"data-i18n="Withdrawal"data-i18n="Withdrawal">Withdrawal</div>
                 </div>
                 <div class="grid-item" onclick="location.href='membership.html'">
                     <div class="grid-icon"><i class="fa-solid fa-crown"></i></div>
-                    <div class="grid-label">Premium Status</div>
+                    <div class="grid-label"data-i18n="Premium Status"data-i18n="Premium Status">Premium Status</div>
                 </div>
                 <div class="grid-item" onclick="location.href='events.html'" style="text-align: center; cursor: pointer;">
     <div class="grid-icon" style="background: linear-gradient(135deg, #ff7a00, #ff9f43); border-radius: 16px; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
         <i class="fas fa-trophy" style="color: white; font-size: 24px;"></i>
     </div>
-    <div class="grid-label" style="font-size: 11px; font-weight: 500; color: #4b5563;">Event</div>
+    <div class="grid-label" style="font-size: 11px; font-weight: 500; color: #4b5563;"data-i18n="Event"data-i18n="Event">Event</div>
 </div>
             </div>
         </div>
@@ -527,25 +527,25 @@
     <div class="grid-icon" style="background: linear-gradient(135deg, #ff7a00, #ff9f43);">
         <i class="fas fa-headset"></i>
     </div>
-    <div class="grid-label">Contact Support</div>
+    <div class="grid-label"data-i18n="Contact Support"data-i18n="Contact Support">Contact Support</div>
 </div>
                 <div class="grid-item" onclick="location.href='balance-history.html'">
                     <div class="grid-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                    <div class="grid-label">Balance History</div>
+                    <div class="grid-label"data-i18n="Balance History"data-i18n="Balance History">Balance History</div>
                 </div>
                 <div class="grid-item" onclick="location.href='orders-history.html'">
                     <div class="grid-icon"><i class="fa-solid fa-cart-flatbed"></i></div>
-                    <div class="grid-label">Orders History</div>
+                    <div class="grid-label"data-i18n="Orders History"data-i18n="Orders History">Orders History</div>
                 </div>
                 <div class="grid-item" onclick="location.href='checkin.html'">
                     <div class="grid-icon"><i class="fa-regular fa-calendar-check"></i></div>
-                    <div class="grid-label">Check In</div>
+                    <div class="grid-label"data-i18n="Check In"data-i18n="Check In">Check In</div>
                 </div>
             </div>
             <div class="settings-row">
                 <div class="grid-item" onclick="location.href='settings.html'">
                     <div class="grid-icon"><i class="fa-solid fa-sliders-h"></i></div>
-                    <div class="grid-label">Settings</div>
+                    <div class="grid-label"data-i18n="Settings"data-i18n="Settings">Settings</div>
                 </div>
             </div>
         </div>
@@ -554,19 +554,19 @@
     <div class="bottom-nav">
         <div class="nav-item" data-page="dashboard">
             <i class="fa-solid fa-house"></i>
-            <span>Dashboard</span>
+            <spandata-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span>
         </div>
         <div class="nav-item" data-page="products">
             <i class="fa-solid fa-box"></i>
-            <span>Products</span>
+            <spandata-i18n="Products"data-i18n="Products">Products</span>
         </div>
         <div class="nav-item" data-page="orders">
             <i class="fa-solid fa-list-check"></i>
-            <span>Orders</span>
+            <spandata-i18n="Orders"data-i18n="Orders">Orders</span>
         </div>
         <div class="nav-item active" data-page="profile">
             <i class="fa-solid fa-user"></i>
-            <span>My Profile</span>
+            <spandata-i18n="My Profile"data-i18n="My Profile">My Profile</span>
         </div>
     </div>
 

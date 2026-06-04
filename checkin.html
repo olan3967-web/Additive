@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Check In - ADDITIVE</title>
+    <titledata-i18n="Check In - ADDITIVE">Check In - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
@@ -595,13 +595,13 @@
 <div class="phone">
 
     <div class="page-header">
-        <h1>Sign In</h1>
-        <p>Build your daily reward streak and unlock exclusive member bonuses</p>
+        <h1data-i18n="Sign In"data-i18n="Sign In">Sign In</h1>
+        <pdata-i18n="Build your daily reward streak and unlock exclusive member bonuses"data-i18n="Build your daily reward streak and unlock exclusive member bonuses">Build your daily reward streak and unlock exclusive member bonuses</p>
     </div>
 
     <div class="stats-card">
-        <span class="stats-label">TOTAL CLAIMED</span>
-        <span class="stats-value" id="totalClaimed">€0</span>
+        <span class="stats-label"data-i18n="TOTAL CLAIMED"data-i18n="TOTAL CLAIMED">TOTAL CLAIMED</span>
+        <span class="stats-value" id="totalClaimed"data-i18n="€0">€0</span>
     </div>
 
     <div class="checkin-grid" id="daysGrid"></div>
@@ -622,7 +622,7 @@
             <div class="streak-bar" id="streakBar"></div>
         </div>
         <div class="streak-text">
-            <span id="streakCount">0</span>/<span id="totalDays">7</span> <span class="streak-fire">🔥</span>
+            <span id="streakCount"data-i18n="0"data-i18n="0">0</spandata-i18n="/">/<span id="totalDays"data-i18n="7"data-i18n="7">7</spandata-i18n=" "data-i18n=" "> <span class="streak-fire"data-i18n="🔥">🔥</span>
         </div>
     </div>
 
@@ -632,31 +632,31 @@
         </div>
         <div class="rules-list">
             <div class="rule-item">
-                <div class="rule-title">🎁 REWARDS</div>
-                <div class="rule-desc" id="rewardsDesc">Loading...</div>
+                <div class="rule-title"data-i18n="🎁 REWARDS">🎁 REWARDS</div>
+                <div class="rule-desc" id="rewardsDesc"data-i18n="Loading..."data-i18n="Loading...">Loading...</div>
             </div>
             <div class="rule-item">
-                <div class="rule-title">✅ ELIGIBILITY</div>
-                <div class="rule-desc">Complete <strong>30 orders</strong> to unlock reward claims.</div>
+                <div class="rule-title"data-i18n="✅ ELIGIBILITY">✅ ELIGIBILITY</div>
+                <div class="rule-desc"data-i18n="Complete "data-i18n="Complete ">Complete <strongdata-i18n="30 orders"data-i18n="30 orders">30 orders</strongdata-i18n=" to unlock reward claims."data-i18n=" to unlock reward claims."> to unlock reward claims.</div>
             </div>
             <div class="rule-item">
-                <div class="rule-title">⚠️ MISS A DAY</div>
-                <div class="rule-desc">Your streak resets to Day 1, but you can start again!</div>
+                <div class="rule-title"data-i18n="⚠️ MISS A DAY">⚠️ MISS A DAY</div>
+                <div class="rule-desc"data-i18n="Your streak resets to Day 1, but you can start again!">Your streak resets to Day 1, but you can start again!</div>
             </div>
         </div>
     </div>
 
     <div class="upgrade-card-pulse">
-        <div class="upgrade-title">✨ Upgrade your membership</div>
-        <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
-        <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+        <div class="upgrade-title"data-i18n="✨ Upgrade your membership">✨ Upgrade your membership</div>
+        <div class="upgrade-desc"data-i18n="Unlock higher rewards, priority support, and premium hotel discovery benefits.">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+        <a href="membership.html" class="btn-upgrade"data-i18n="Upgrade Now "data-i18n="Upgrade Now ">Upgrade Now <i class="fas fa-arrow-right"></i></a>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
-        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
-        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
-        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products">Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders">Orders</span></div>
+        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
     </div>
 
 </div>
@@ -948,9 +948,9 @@
             }
             
             div.innerHTML = `
-                <div class="day-num">Day ${dayNum}</div>
-                <div class="day-reward">€${reward.amount}</div>
-                ${isClaimed ? '<i class="fas fa-check-circle check-icon"></i>' : '<div style="height: 20px;"></div>'}
+                <div class="day-num"data-i18n="Day ${dayNum}">Day ${dayNum}</div>
+                <div class="day-reward"data-i18n="€${reward.amount}">€${reward.amount}</div>
+                ${isClaimed ? '<i class="fas fa-check-circle check-icon"></idata-i18n="' : '">' : '<div style="height: 20px;"></div>'}
             `;
             grid.appendChild(div);
         }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Orders History - ADDITIVE</title>
+    <titledata-i18n="Orders History - ADDITIVE">Orders History - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
@@ -48,18 +48,18 @@
 <div class="phone">
 
     <div class="page-header">
-        <button class="back-btn" onclick="goBack()">←</button>
-        <h1>Orders History</h1>
+        <button class="back-btn" onclick="goBack()"data-i18n="←">←</button>
+        <h1data-i18n="Orders History"data-i18n="Orders History">Orders History</h1>
         <div style="width: 30px;"></div>
     </div>
 
     <div id="completedOrdersList" class="orders-list"></div>
 
     <div class="bottom-nav">
-        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
-        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
-        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
-        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products">Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders">Orders</span></div>
+        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
     </div>
 
 </div>
@@ -101,7 +101,7 @@
         if (!container) return;
 
         if (completedOrders.length === 0) {
-            container.innerHTML = `<div class="empty-state"><i class="fa-regular fa-inbox"></i>No completed orders</div>`;
+            container.innerHTML = `<div class="empty-state"><i class="fa-regular fa-inbox"></idata-i18n="No completed orders"data-i18n="No completed orders">No completed orders</div>`;
             return;
         }
 
@@ -117,14 +117,14 @@
             return `
                 <div class="order-card" onclick="viewTracking('${order.order_no}')">
                     <div class="order-header">
-                        <span class="order-no">${order.order_no}</span>
-                        <span class="order-date">${formatDate(order.completed_at || order.created_at)}</span>
+                        <span class="order-no"data-i18n="${order.order_no}">${order.order_no}</span>
+                        <span class="order-date"data-i18n="${formatDate(order.completed_at || order.created_at)}">${formatDate(order.completed_at || order.created_at)}</span>
                     </div>
-                    <div class="order-products">${productsText.substring(0, 60)}${productsText.length > 60 ? '...' : ''}</div>
+                    <div class="order-products"data-i18n="${productsText.substring(0, 60)}${productsText.length > 60 ? '...' : ''}">${productsText.substring(0, 60)}${productsText.length > 60 ? '...' : ''}</div>
                     <div class="order-footer">
-                        <span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span>
-                        <span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span>
-                        <span class="status-badge">Delivered ✅</span>
+                        <span class="order-total"data-i18n="€${(order.total_supply_price || 0).toFixed(2)}">€${(order.total_supply_price || 0).toFixed(2)}</span>
+                        <span class="order-commission"data-i18n="+€${(order.total_commission || 0).toFixed(2)}">+€${(order.total_commission || 0).toFixed(2)}</span>
+                        <span class="status-badge"data-i18n="Delivered ✅">Delivered ✅</span>
                     </div>
                 </div>
             `;

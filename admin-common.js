@@ -8,7 +8,7 @@ let currentDays = 1;
 function toggleSidebar() { document.getElementById('sidebar')?.classList.toggle('open'); }
 window.toggleSidebar = toggleSidebar;
 
-function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m); }
+function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<data-i18n="]/g, m => m === '&' ? '&amp;' : m === '">]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m); }
 
 function formatTime(dateStr) {
     if (!dateStr) return '刚刚';
@@ -38,11 +38,11 @@ function animateNumber(element, target, prefix = '', suffix = '') {
 }
 
 function getTrendHtml(current, previous) {
-    if (previous === 0) return current > 0 ? '<span class="trend-up">↑ +100%</span>' : '<span class="trend-up">→ 0%</span>';
+    if (previous === 0) return current data-i18n=" 0 ? '"> 0 ? '<span class="trend-up"data-i18n="↑ +100%">↑ +100%</spandata-i18n="' : '">' : '<span class="trend-up"data-i18n="→ 0%">→ 0%</span>';
     const percent = ((current - previous) / previous * 100).toFixed(1);
-    if (percent > 0) return `<span class="trend-up">↑ +${percent}%</span>`;
-    if (percent < 0) return `<span class="trend-down">↓ ${percent}%</span>`;
-    return '<span>→ 0%</span>';
+    if (percent data-i18n=" 0) return `"> 0) return `<span class="trend-up"data-i18n="↑ +${percent}%">↑ +${percent}%</span>`;
+    if (percent < 0) return `<span class="trend-down"data-i18n="↓ ${percent}%">↓ ${percent}%</span>`;
+    return '<spandata-i18n="→ 0%">→ 0%</span>';
 }
 
 // ========== 自定义 Toast 提示 ==========
@@ -83,7 +83,7 @@ function showToast(message, type = 'success') {
     
     toast.innerHTML = `
         <div><i class="fas ${icon}" style="color: ${bgColor}; font-size: 18px;"></i></div>
-        <div style="font-size: 14px;">${message}</div>
+        <div style="font-size: 14px;"data-i18n="${message}">${message}</div>
         <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: ${bgColor}; width: 100%; border-radius: 0 0 50px 50px; animation: toastProgress 3s linear forwards;"></div>
     `;
     
@@ -121,11 +121,11 @@ function showConfirm(title, message, onConfirm, onCancel) {
     modal.innerHTML = `
         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);"></div>
         <div style="position: relative; background: linear-gradient(145deg, #1a1508, #0f0c06); border-radius: 24px; padding: 24px; width: 340px; max-width: 90%; text-align: center; border: 1px solid rgba(255,184,77,0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.4); transform: scale(0.9); transition: transform 0.2s ease;">
-            <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 12px;">${title}</div>
-            <div style="font-size: 14px; color: #d4c8a0; margin-bottom: 24px; line-height: 1.5;">${message}</div>
+            <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 12px;"data-i18n="${title}">${title}</div>
+            <div style="font-size: 14px; color: #d4c8a0; margin-bottom: 24px; line-height: 1.5;"data-i18n="${message}">${message}</div>
             <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="confirm-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">Cancel</button>
-                <button id="confirm-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">Confirm</button>
+                <button id="confirm-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
+                <button id="confirm-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;"data-i18n="Confirm"data-i18n="Confirm">Confirm</button>
             </div>
         </div>
     `;
@@ -184,11 +184,11 @@ function showPrompt(title, placeholder, callback) {
     modal.innerHTML = `
         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);"></div>
         <div style="position: relative; background: linear-gradient(145deg, #1a1508, #0f0c06); border-radius: 24px; padding: 24px; width: 340px; max-width: 90%; text-align: center; border: 1px solid rgba(255,184,77,0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.4); transform: scale(0.9); transition: transform 0.2s ease;">
-            <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 20px;">${title}</div>
+            <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 20px;"data-i18n="${title}">${title}</div>
             <input type="text" id="prompt-input" placeholder="${placeholder}" style="width: 100%; padding: 12px 16px; background: #0a0806; border: 1px solid rgba(255,184,77,0.3); border-radius: 12px; color: #fff; font-size: 14px; outline: none; margin-bottom: 20px;">
             <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="prompt-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">Cancel</button>
-                <button id="prompt-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">Confirm</button>
+                <button id="prompt-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
+                <button id="prompt-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;"data-i18n="Confirm"data-i18n="Confirm">Confirm</button>
             </div>
         </div>
     `;
@@ -285,9 +285,9 @@ window.showAmberNotification = function(title, message, type) {
             <i class="fas ${icon}" style="color: ${iconColor}; font-size: 22px;"></i>
         </div>
         <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 700; font-size: 15px; color: #ffb84d; margin-bottom: 6px;">${escapeHtml(title)}</div>
-            <div style="font-size: 12px; color: #d4c8a0; opacity: 0.95; line-height: 1.4;">${escapeHtml(message)}</div>
-            <div style="font-size: 10px; color: #8a7a5a; margin-top: 6px;">刚刚收到</div>
+            <div style="font-weight: 700; font-size: 15px; color: #ffb84d; margin-bottom: 6px;"data-i18n="${escapeHtml(title)}">${escapeHtml(title)}</div>
+            <div style="font-size: 12px; color: #d4c8a0; opacity: 0.95; line-height: 1.4;"data-i18n="${escapeHtml(message)}">${escapeHtml(message)}</div>
+            <div style="font-size: 10px; color: #8a7a5a; margin-top: 6px;"data-i18n="刚刚收到">刚刚收到</div>
         </div>
         <div style="cursor: pointer; opacity: 0.6; padding: 6px; flex-shrink: 0;" class="notification-close">
             <i class="fas fa-times" style="color: #d4c8a0; font-size: 14px;"></i>

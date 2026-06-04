@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Dashboard - ADDITIVE</title>
+    <titledata-i18n="Dashboard - ADDITIVE">Dashboard - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -536,7 +536,7 @@
     <div class="dashboard-header">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <div class="welcome-text">Welcome back,<br><span class="welcome-name" id="displayUsername">Loading...</span> <span>👋</span></div>
+                <div class="welcome-text"data-i18n="Welcome back,">Welcome back,<br><span class="welcome-name" id="displayUsername"data-i18n="Loading..."data-i18n="Loading...">Loading...</spandata-i18n=" "data-i18n=" "> <spandata-i18n="👋">👋</span></div>
             </div>
             <div class="notification-icon" id="soundControlBtn">
                 <i id="soundIcon" class="fas fa-volume-mute"></i>
@@ -553,54 +553,54 @@
     <div class="progress-container" id="progressContainer">
         <div class="steps-row">
             <div class="step-wrapper" id="step1Wrapper">
-                <div class="step-circle" id="step1Circle">1</div>
-                <div class="step-label" id="step1Label">Set Up Store</div>
-                <div class="step-desc">Store information</div>
+                <div class="step-circle" id="step1Circle"data-i18n="1"data-i18n="1">1</div>
+                <div class="step-label" id="step1Label"data-i18n="Set Up Store"data-i18n="Set Up Store">Set Up Store</div>
+                <div class="step-desc"data-i18n="Store information"data-i18n="Store information">Store information</div>
             </div>
             <div class="step-wrapper" id="step2Wrapper">
-                <div class="step-circle" id="step2Circle">2</div>
-                <div class="step-label" id="step2Label">KYC Verification</div>
-                <div class="step-desc">Verify identity</div>
+                <div class="step-circle" id="step2Circle"data-i18n="2"data-i18n="2">2</div>
+                <div class="step-label" id="step2Label"data-i18n="KYC Verification"data-i18n="KYC Verification">KYC Verification</div>
+                <div class="step-desc"data-i18n="Verify identity"data-i18n="Verify identity">Verify identity</div>
             </div>
             <div class="step-wrapper" id="step3Wrapper">
-                <div class="step-circle" id="step3Circle">3</div>
-                <div class="step-label" id="step3Label">Add Products</div>
-                <div class="step-desc">Add 10 products</div>
+                <div class="step-circle" id="step3Circle"data-i18n="3"data-i18n="3">3</div>
+                <div class="step-label" id="step3Label"data-i18n="Add Products"data-i18n="Add Products">Add Products</div>
+                <div class="step-desc"data-i18n="Add 10 products"data-i18n="Add 10 products">Add 10 products</div>
             </div>
         </div>
         <div class="progress-track">
             <div class="progress-fill" id="progressFill"></div>
         </div>
-        <div class="progress-text" id="progressText">0 of 3 completed</div>
+        <div class="progress-text" id="progressText"data-i18n="0 of 3 completed"data-i18n="0 of 3 completed">0 of 3 completed</div>
     </div>
 
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-label">Total Sales</div>
-            <div class="stat-value" id="totalSales">€0</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +12.5%</div>
+            <div class="stat-label"data-i18n="Total Sales"data-i18n="Total Sales">Total Sales</div>
+            <div class="stat-value" id="totalSales"data-i18n="€0">€0</div>
+            <div class="trend-up"><i class="fas fa-arrow-up"></idata-i18n=" +12.5%"> +12.5%</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">ROI</div>
-            <div class="stat-value" id="roiValue">0%</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +5.1%</div>
+            <div class="stat-label"data-i18n="ROI"data-i18n="ROI">ROI</div>
+            <div class="stat-value" id="roiValue"data-i18n="0%">0%</div>
+            <div class="trend-up"><i class="fas fa-arrow-up"></idata-i18n=" +5.1%"> +5.1%</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Orders</div>
-            <div class="stat-value" id="ordersCount">0</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +8.3%</div>
+            <div class="stat-label"data-i18n="Orders"data-i18n="Orders">Orders</div>
+            <div class="stat-value" id="ordersCount"data-i18n="0"data-i18n="0">0</div>
+            <div class="trend-up"><i class="fas fa-arrow-up"></idata-i18n=" +8.3%"> +8.3%</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Profit</div>
-            <div class="stat-value" id="profitValue">€0</div>
-            <div class="trend-up"><i class="fas fa-arrow-up"></i> +15.2%</div>
+            <div class="stat-label"data-i18n="Profit"data-i18n="Profit">Profit</div>
+            <div class="stat-value" id="profitValue"data-i18n="€0">€0</div>
+            <div class="trend-up"><i class="fas fa-arrow-up"></idata-i18n=" +15.2%"> +15.2%</div>
         </div>
     </div>
 
     <div class="chart-card">
         <div class="chart-header">
-            <span class="chart-title">Revenue Trend</span>
-            <span class="chart-period">Last 7 days</span>
+            <span class="chart-title"data-i18n="Revenue Trend"data-i18n="Revenue Trend">Revenue Trend</span>
+            <span class="chart-period"data-i18n="Last 7 days"data-i18n="Last 7 days">Last 7 days</span>
         </div>
         <canvas id="revenueChart"></canvas>
     </div>
@@ -612,10 +612,10 @@
                     <canvas id="particleCanvas1" class="particle-canvas"></canvas>
                     <i class="fas fa-coins coin-icon"></i>
                     <div class="overview-title-row">
-                        <span class="overview-label">TOTAL EARNINGS</span>
+                        <span class="overview-label"data-i18n="TOTAL EARNINGS"data-i18n="TOTAL EARNINGS">TOTAL EARNINGS</span>
                     </div>
-                    <div class="overview-value" id="overviewEarnings">€0</div>
-                    <div class="overview-tag">Lifetime earnings</div>
+                    <div class="overview-value" id="overviewEarnings"data-i18n="€0">€0</div>
+                    <div class="overview-tag"data-i18n="Lifetime earnings"data-i18n="Lifetime earnings">Lifetime earnings</div>
                 </div>
             </div>
             <div class="overview-card" id="card2">
@@ -623,10 +623,10 @@
                     <canvas id="particleCanvas2" class="particle-canvas"></canvas>
                     <i class="fas fa-chart-simple card-icon"></i>
                     <div class="overview-title-row">
-                        <span class="overview-label">CURRENT EVENT</span>
+                        <span class="overview-label"data-i18n="CURRENT EVENT"data-i18n="CURRENT EVENT">CURRENT EVENT</span>
                     </div>
-                    <div class="overview-value">+15%</div>
-                    <div class="overview-tag">VIP bonus active</div>
+                    <div class="overview-value"data-i18n="+15%">+15%</div>
+                    <div class="overview-tag"data-i18n="VIP bonus active"data-i18n="VIP bonus active">VIP bonus active</div>
                 </div>
             </div>
             <div class="overview-card" id="card3">
@@ -634,10 +634,10 @@
                     <canvas id="particleCanvas3" class="particle-canvas"></canvas>
                     <i class="fas fa-gem card-icon"></i>
                     <div class="overview-title-row">
-                        <span class="overview-label">PREMIUM STATUS</span>
+                        <span class="overview-label"data-i18n="PREMIUM STATUS"data-i18n="PREMIUM STATUS">PREMIUM STATUS</span>
                     </div>
-                    <div class="overview-value" id="overviewPremium">Normal</div>
-                    <div class="overview-tag">Upgrade Now</div>
+                    <div class="overview-value" id="overviewPremium"data-i18n="Normal"data-i18n="Normal">Normal</div>
+                    <div class="overview-tag"data-i18n="Upgrade Now"data-i18n="Upgrade Now">Upgrade Now</div>
                 </div>
             </div>
             <div class="overview-card" id="card4" onclick="location.href='certificate.html'">
@@ -645,28 +645,28 @@
                     <canvas id="particleCanvas4" class="particle-canvas"></canvas>
                     <i class="fas fa-award card-icon"></i>
                     <div class="overview-title-row">
-                        <span class="overview-label">CERTIFICATE</span>
+                        <span class="overview-label"data-i18n="CERTIFICATE"data-i18n="CERTIFICATE">CERTIFICATE</span>
                     </div>
-                    <div class="overview-value" id="overviewCert">0/100</div>
-                    <div class="overview-tag" id="certTag">100 orders to go</div>
+                    <div class="overview-value" id="overviewCert"data-i18n="0/100">0/100</div>
+                    <div class="overview-tag" id="certTag"data-i18n="100 orders to go"data-i18n="100 orders to go">100 orders to go</div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="products-card">
-        <div class="products-title">🔥 Top Products</div>
+        <div class="products-title"data-i18n="🔥 Top Products">🔥 Top Products</div>
         <div class="product-row">
-            <span class="product-name">Wireless Earbuds</span>
-            <span class="product-amount">€2,340</span>
+            <span class="product-name"data-i18n="Wireless Earbuds"data-i18n="Wireless Earbuds">Wireless Earbuds</span>
+            <span class="product-amount"data-i18n="€2,340">€2,340</span>
         </div>
         <div class="product-row">
-            <span class="product-name">Smart Watch Pro</span>
-            <span class="product-amount">€1,890</span>
+            <span class="product-name"data-i18n="Smart Watch Pro"data-i18n="Smart Watch Pro">Smart Watch Pro</span>
+            <span class="product-amount"data-i18n="€1,890">€1,890</span>
         </div>
         <div class="product-row">
-            <span class="product-name">Portable Speaker</span>
-            <span class="product-amount">€1,245</span>
+            <span class="product-name"data-i18n="Portable Speaker"data-i18n="Portable Speaker">Portable Speaker</span>
+            <span class="product-amount"data-i18n="€1,245">€1,245</span>
         </div>
     </div>
 
@@ -676,16 +676,16 @@
         </div>
         <div class="marquee-container" id="partnersContainer">
             <div class="marquee-content" id="partnersContent">
-                <div style="text-align: center; padding: 30px; color: #94a3b8;">Loading...</div>
+                <div style="text-align: center; padding: 30px; color: #94a3b8;"data-i18n="Loading..."data-i18n="Loading...">Loading...</div>
             </div>
         </div>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item active" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
-        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
-        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
-        <div class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
+        <div class="nav-item active" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products">Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders">Orders</span></div>
+        <div class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
     </div>
 
 </div>
@@ -955,14 +955,14 @@
                 <div class="partner-item">
                     ${partner.image ? 
                         `<img src="${partner.image}" onerror="this.src=''" alt="${partner.name}">` : 
-                        `<div class="no-image">${escapeHtml(partner.name)}</div>`
+                        `<div class="no-image"data-i18n="${escapeHtml(partner.name)}">${escapeHtml(partner.name)}</div>`
                     }
                 </div>
             `).join('');
             container.innerHTML = partnersHtml;
         } catch (e) {
             console.error('加载合作伙伴失败:', e);
-            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;">No data</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 20px; color: #94a3b8;"data-i18n="No data"data-i18n="No data">No data</div>';
         }
     }
 
@@ -1009,7 +1009,7 @@
 
     function escapeHtml(str) {
         if (!str) return '';
-        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+        return str.replace(/[&<data-i18n="]/g, m => m === '&' ? '&amp;' : m === '">]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
     // ========== 声音控制（顶部喇叭） ==========

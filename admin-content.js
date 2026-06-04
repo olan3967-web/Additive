@@ -7,8 +7,8 @@ async function loadContentPage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar" style="justify-content: space-between;">
-                <h3><i class="fas fa-file-contract"></i> 法律内容管理</h3>
-                <button id="addContentBtn" class="success"><i class="fas fa-plus"></i> Add内容</button>
+                <h3><i class="fas fa-file-contract"></idata-i18n=" 法律内容管理"> 法律内容管理</h3>
+                <button id="addContentBtn" class="success"><i class="fas fa-plus"></idata-i18n=" Add内容"> Add内容</button>
             </div>
             <div id="contentListContainer"></div>
         </div>
@@ -27,7 +27,7 @@ function renderContentList() {
     const container = document.getElementById('contentListContainer');
     if (!container) return;
     if (systemContents.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无内容，点击"Add内容"开始</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;"data-i18n="暂无内容，点击"Add内容"开始">暂无内容，点击"Add内容"开始</div>';
         return;
     }
     container.innerHTML = '';
@@ -36,10 +36,10 @@ function renderContentList() {
         div.className = 'content-item';
         div.innerHTML = `
             <input type="text" class="content-title-input" data-id="${content.id}" value="${escapeHtml(content.title || '')}" placeholder="标题" style="width:100%; margin-bottom:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:10px; color:#fff;">
-            <textarea rows="4" class="content-body-textarea" data-id="${content.id}" placeholder="内容" style="width:100%; margin-bottom:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:10px; color:#fff;">${escapeHtml(content.content || '')}</textarea>
+            <textarea rows="4" class="content-body-textarea" data-id="${content.id}" placeholder="内容" style="width:100%; margin-bottom:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:10px; color:#fff;"data-i18n="${escapeHtml(content.content || '')}">${escapeHtml(content.content || '')}</textarea>
             <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button class="save-content-btn" data-id="${content.id}" style="background:#2f6b3a; padding:8px 20px; border-radius:8px;">Save</button>
-                <button class="delete-content-btn" data-id="${content.id}" style="background:#7a2f2f; padding:8px 20px; border-radius:8px;">Delete</button>
+                <button class="save-content-btn" data-id="${content.id}" style="background:#2f6b3a; padding:8px 20px; border-radius:8px;"data-i18n="Save"data-i18n="Save">Save</button>
+                <button class="delete-content-btn" data-id="${content.id}" style="background:#7a2f2f; padding:8px 20px; border-radius:8px;"data-i18n="Delete"data-i18n="Delete">Delete</button>
             </div>
         `;
         container.appendChild(div);
@@ -68,12 +68,12 @@ function openAddContentModal() {
     const modalHtml = `
         <div id="addContentModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
             <div class="modal-card">
-                <h3><i class="fas fa-plus"></i> Add内容</h3>
+                <h3><i class="fas fa-plus"></idata-i18n=" Add内容"> Add内容</h3>
                 <input type="text" id="contentTitle" placeholder="标题" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;">
                 <textarea id="contentBody" rows="5" placeholder="内容" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></textarea>
                 <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button id="saveContentItemBtn" class="success">Save</button>
-                    <button id="closeContentModalBtn">Cancel</button>
+                    <button id="saveContentItemBtn" class="success"data-i18n="Save"data-i18n="Save">Save</button>
+                    <button id="closeContentModalBtn"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
                 </div>
             </div>
         </div>

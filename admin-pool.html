@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADDITIVE - Order Pool Manager</title>
+    <titledata-i18n="ADDITIVE - Order Pool Manager">ADDITIVE - Order Pool Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,24 +38,24 @@
 </head>
 <body>
 <div class="container">
-    <h1>🏨 Order Pool Manager</h1>
+    <h1data-i18n="🏨 Order Pool Manager">🏨 Order Pool Manager</h1>
     
     <div class="stats">
-        📊 Total Orders: <span id="totalCount">0</span>
+        📊 Total Orders: <span id="totalCount"data-i18n="0"data-i18n="0">0</span>
     </div>
     
     <div class="search-bar">
         <input type="text" id="searchInput" placeholder="Search by Order Code or Hotel Name...">
-        <button id="searchBtn">🔍 Search</button>
-        <button id="clearBtn">🗑️ Clear</button>
-        <button id="addBtn" class="success">➕ Add New Order</button>
-        <button id="refreshBtn">🔄 Refresh</button>
+        <button id="searchBtn"data-i18n="🔍 Search">🔍 Search</button>
+        <button id="clearBtn"data-i18n="🗑️ Clear">🗑️ Clear</button>
+        <button id="addBtn" class="success"data-i18n="➕ Add New Order">➕ Add New Order</button>
+        <button id="refreshBtn"data-i18n="🔄 Refresh">🔄 Refresh</button>
     </div>
     
     <div style="overflow-x: auto;">
         <table id="ordersTable">
             <thead>
-                <tr><th>ID</th><th>Order Code</th><th>Hotel Name</th><th>Price (€)</th><th>Image</th><th>Status</th><th>Actions</th>
+                <tr><thdata-i18n="ID"data-i18n="ID">ID</th><thdata-i18n="Order Code"data-i18n="Order Code">Order Code</th><thdata-i18n="Hotel Name"data-i18n="Hotel Name">Hotel Name</th><thdata-i18n="Price (€)">Price (€)</th><thdata-i18n="Image"data-i18n="Image">Image</th><thdata-i18n="Status"data-i18n="Status">Status</th><thdata-i18n="Actions"data-i18n="Actions">Actions</th>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
@@ -67,16 +67,16 @@
 <!-- Add/Edit Modal -->
 <div id="orderModal" class="modal">
     <div class="modal-content">
-        <h3 id="modalTitle">Add New Order</h3>
-        <div class="form-group"><label>Order Code *</label><input type="text" id="orderCode" placeholder="e.g., ORD-1234"></div>
-        <div class="form-group"><label>Hotel Name *</label><input type="text" id="hotelName" placeholder="Hotel Name"></div>
-        <div class="form-group"><label>Price (€) *</label><input type="number" id="price" step="0.01" placeholder="0.00"></div>
-        <div class="form-group"><label>Image URL</label><textarea id="imageUrl" rows="2" placeholder="https://..."></textarea></div>
-        <div class="form-group"><label>Status</label><select id="status"><option value="available">Available</option><option value="unavailable">Unavailable</option></select></div>
+        <h3 id="modalTitle"data-i18n="Add New Order"data-i18n="Add New Order">Add New Order</h3>
+        <div class="form-group"><labeldata-i18n="Order Code *">Order Code *</label><input type="text" id="orderCode" placeholder="e.g., ORD-1234"></div>
+        <div class="form-group"><labeldata-i18n="Hotel Name *">Hotel Name *</label><input type="text" id="hotelName" placeholder="Hotel Name"></div>
+        <div class="form-group"><labeldata-i18n="Price (€) *">Price (€) *</label><input type="number" id="price" step="0.01" placeholder="0.00"></div>
+        <div class="form-group"><labeldata-i18n="Image URL"data-i18n="Image URL">Image URL</label><textarea id="imageUrl" rows="2" placeholder="https://..."></textarea></div>
+        <div class="form-group"><labeldata-i18n="Status"data-i18n="Status">Status</label><select id="status"><option value="available"data-i18n="Available"data-i18n="Available">Available</option><option value="unavailable"data-i18n="Unavailable"data-i18n="Unavailable">Unavailable</option></select></div>
         <input type="hidden" id="editId" value="">
         <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <button id="saveBtn" class="success">Save</button>
-            <button id="cancelBtn">Cancel</button>
+            <button id="saveBtn" class="success"data-i18n="Save"data-i18n="Save">Save</button>
+            <button id="cancelBtn"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
         </div>
     </div>
 </div>
@@ -112,7 +112,7 @@
             tbody.innerHTML = '';
             
             if(!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No orders found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;"data-i18n="No orders found"data-i18n="No orders found">No orders found</td></tr>';
                 return;
             }
             
@@ -122,9 +122,9 @@
                 row.insertCell(1).innerText = order.order_code || '-';
                 row.insertCell(2).innerText = order.accommodation_name || '-';
                 row.insertCell(3).innerHTML = `€${(order.price || 0).toFixed(2)}`;
-                row.insertCell(4).innerHTML = order.image_url ? `<a href="${order.image_url}" target="_blank">View</a>` : '-';
-                row.insertCell(5).innerHTML = `<span style="color:${order.status === 'available' ? '#4ade80' : '#ff8888'}">${order.status || 'available'}</span>`;
-                row.insertCell(6).innerHTML = `<button class="edit-btn" data-id="${order.id}" data-code="${order.order_code || ''}" data-name="${order.accommodation_name || ''}" data-price="${order.price || 0}" data-image="${order.image_url || ''}" data-status="${order.status || 'available'}" style="background:#2f7a3e;">✏️ Edit</button> <button class="delete-btn" data-id="${order.id}" class="danger">🗑️ Delete</button>`;
+                row.insertCell(4).innerHTML = order.image_url ? `<a href="${order.image_url}" target="_blank"data-i18n="View"data-i18n="View">View</a>` : '-';
+                row.insertCell(5).innerHTML = `<span style="color:${order.status === 'available' ? '#4ade80' : '#ff8888'}"data-i18n="${order.status || 'available'}">${order.status || 'available'}</span>`;
+                row.insertCell(6).innerHTML = `<button class="edit-btn" data-id="${order.id}" data-code="${order.order_code || ''}" data-name="${order.accommodation_name || ''}" data-price="${order.price || 0}" data-image="${order.image_url || ''}" data-status="${order.status || 'available'}" style="background:#2f7a3e;"data-i18n="✏️ Edit">✏️ Edit</buttondata-i18n=" "data-i18n=" "> <button class="delete-btn" data-id="${order.id}" class="danger"data-i18n="🗑️ Delete">🗑️ Delete</button>`;
             }
             
             document.querySelectorAll('.edit-btn').forEach(btn => {

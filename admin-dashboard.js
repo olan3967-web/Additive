@@ -73,13 +73,13 @@ async function loadStatsData(days, force = false) {
         const lastPeriodStr = lastPeriodStart.toISOString().split('T')[0];
         
         const newUsers = users.filter(u => u.created_at && u.created_at.split('T')[0] >= startStr).length;
-        const prevNewUsers = users.filter(u => u.created_at && u.created_at.split('T')[0] >= lastPeriodStr && u.created_at.split('T')[0] < startStr).length;
+        const prevNewUsers = users.filter(u =data-i18n=" u.created_at && u.created_at.split('T')[0] >= lastPeriodStr && u.created_at.split('T')[0] "> u.created_at && u.created_at.split('T')[0] >= lastPeriodStr && u.created_at.split('T')[0] < startStr).length;
         const totalDeposit = deposits.reduce((s, d) => s + (d.amount || 0), 0);
         const periodDeposit = deposits.filter(d => d.created_at && d.created_at.split('T')[0] >= startStr).reduce((s, d) => s + (d.amount || 0), 0);
-        const prevPeriodDeposit = deposits.filter(d => d.created_at && d.created_at.split('T')[0] >= lastPeriodStr && d.created_at.split('T')[0] < startStr).reduce((s, d) => s + (d.amount || 0), 0);
+        const prevPeriodDeposit = deposits.filter(d =data-i18n=" d.created_at && d.created_at.split('T')[0] >= lastPeriodStr && d.created_at.split('T')[0] "> d.created_at && d.created_at.split('T')[0] >= lastPeriodStr && d.created_at.split('T')[0] < startStr).reduce((s, d) => s + (d.amount || 0), 0);
         const totalWithdraw = withdrawals.filter(w => w.status === 'approved').reduce((s, w) => s + (w.amount || 0), 0);
         const periodWithdraw = withdrawals.filter(w => w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= startStr).reduce((s, w) => s + (w.amount || 0), 0);
-        const prevPeriodWithdraw = withdrawals.filter(w => w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= lastPeriodStr && w.request_date.split('T')[0] < startStr).reduce((s, w) => s + (w.amount || 0), 0);
+        const prevPeriodWithdraw = withdrawals.filter(w =data-i18n=" w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= lastPeriodStr && w.request_date.split('T')[0] "> w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= lastPeriodStr && w.request_date.split('T')[0] < startStr).reduce((s, w) => s + (w.amount || 0), 0);
         
         const statsData = { newUsers, prevNewUsers, totalUsers: users.length, totalDeposit, periodDeposit, prevPeriodDeposit, totalWithdraw, periodWithdraw, prevPeriodWithdraw };
         cachedData.stats = statsData;
@@ -283,14 +283,14 @@ function renderActivityList(activities) {
     if (!activityList) return;
     
     if (!activities || activities.length === 0) {
-        activityList.innerHTML = '<div style="text-align: center; padding: 20px; color: #6a7a9a;">暂无活动</div>';
+        activityList.innerHTML = '<div style="text-align: center; padding: 20px; color: #6a7a9a;"data-i18n="暂无活动">暂无活动</div>';
         return;
     }
     
     activityList.innerHTML = activities.map(a => {
         let amountHtml = '';
         if (a.amount) {
-            amountHtml = `<div style="font-size: 11px; color: #2ed15a;">${a.amount}</div>`;
+            amountHtml = `<div style="font-size: 11px; color: #2ed15a;"data-i18n="${a.amount}">${a.amount}</div>`;
         }
         
         return `
@@ -299,11 +299,11 @@ function renderActivityList(activities) {
                     <i class="${a.icon}" style="color: ${a.color};"></i>
                 </div>
                 <div style="flex: 1;">
-                    <div style="font-size: 13px; font-weight: 500;">${escapeHtml(a.title)}</div>
-                    <div style="font-size: 11px; color: #8a9abb;">${escapeHtml(a.user)}</div>
+                    <div style="font-size: 13px; font-weight: 500;"data-i18n="${escapeHtml(a.title)}">${escapeHtml(a.title)}</div>
+                    <div style="font-size: 11px; color: #8a9abb;"data-i18n="${escapeHtml(a.user)}">${escapeHtml(a.user)}</div>
                     ${amountHtml}
                 </div>
-                <div style="font-size: 10px; color: #6a7a9a;">${formatTime(a.time)}</div>
+                <div style="font-size: 10px; color: #6a7a9a;"data-i18n="${formatTime(a.time)}">${formatTime(a.time)}</div>
             </div>
         `;
     }).join('');
@@ -474,63 +474,63 @@ function loadDashboardPage(days = 1) {
     
     container.innerHTML = `
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 24px;">
-            <button class="date-filter-btn active" data-days="1">今日</button>
-            <button class="date-filter-btn" data-days="7">7天</button>
-            <button class="date-filter-btn" data-days="30">30天</button>
+            <button class="date-filter-btn active" data-days="1"data-i18n="今日">今日</button>
+            <button class="date-filter-btn" data-days="7"data-i18n="7天">7天</button>
+            <button class="date-filter-btn" data-days="30"data-i18n="30天">30天</button>
         </div>
         <div class="quick-actions-grid">
             <div class="quick-card" onclick="showPage('kyc')">
                 <i class="fas fa-id-card"></i>
-                <div class="count" id="kycPendingCount">0</div>
-                <div class="label">待审核KYC</div>
+                <div class="count" id="kycPendingCount"data-i18n="0"data-i18n="0">0</div>
+                <div class="label"data-i18n="待审核KYC">待审核KYC</div>
             </div>
             <div class="quick-card" onclick="showPage('withdrawals')">
                 <i class="fas fa-money-bill-wave"></i>
-                <div class="count" id="withdrawalPendingCount">0</div>
-                <div class="label">待处理Withdraw</div>
+                <div class="count" id="withdrawalPendingCount"data-i18n="0"data-i18n="0">0</div>
+                <div class="label"data-i18n="待处理Withdraw">待处理Withdraw</div>
             </div>
             <div class="quick-card" onclick="showPage('emailverify')">
                 <i class="fas fa-envelope"></i>
-                <div class="count" id="emailPendingCount">0</div>
-                <div class="label">待发送Email验证</div>
+                <div class="count" id="emailPendingCount"data-i18n="0"data-i18n="0">0</div>
+                <div class="label"data-i18n="待发送Email验证">待发送Email验证</div>
             </div>
             <div class="quick-card" onclick="showPage('orderpool')">
                 <i class="fas fa-hotel"></i>
-                <div class="count" id="orderPoolCount">0</div>
-                <div class="label">订单池总数</div>
+                <div class="count" id="orderPoolCount"data-i18n="0"data-i18n="0">0</div>
+                <div class="label"data-i18n="订单池总数">订单池总数</div>
             </div>
         </div>
         <div class="stats-grid">
-            <div class="stat-card"><i class="fas fa-user-plus"></i><div class="stat-number" id="newUsersCount">0</div><div class="stat-label">今日新增用户</div><div class="stat-trend" id="newUsersTrend"></div></div>
-            <div class="stat-card"><i class="fas fa-users"></i><div class="stat-number" id="totalUsersCount">0</div><div class="stat-label">总用户</div><div class="stat-trend" id="totalUsersTrend"></div></div>
-            <div class="stat-card"><i class="fas fa-arrow-down"></i><div class="stat-number" id="totalDepositCount">€0</div><div class="stat-label">总入金</div><div class="stat-trend" id="totalDepositTrend"></div></div>
-            <div class="stat-card"><i class="fas fa-arrow-up"></i><div class="stat-number" id="totalWithdrawCount">€0</div><div class="stat-label">总出金</div><div class="stat-trend" id="totalWithdrawTrend"></div></div>
+            <div class="stat-card"><i class="fas fa-user-plus"></i><div class="stat-number" id="newUsersCount"data-i18n="0"data-i18n="0">0</div><div class="stat-label"data-i18n="今日新增用户">今日新增用户</div><div class="stat-trend" id="newUsersTrend"></div></div>
+            <div class="stat-card"><i class="fas fa-users"></i><div class="stat-number" id="totalUsersCount"data-i18n="0"data-i18n="0">0</div><div class="stat-label"data-i18n="总用户">总用户</div><div class="stat-trend" id="totalUsersTrend"></div></div>
+            <div class="stat-card"><i class="fas fa-arrow-down"></i><div class="stat-number" id="totalDepositCount"data-i18n="€0">€0</div><div class="stat-label"data-i18n="总入金">总入金</div><div class="stat-trend" id="totalDepositTrend"></div></div>
+            <div class="stat-card"><i class="fas fa-arrow-up"></i><div class="stat-number" id="totalWithdrawCount"data-i18n="€0">€0</div><div class="stat-label"data-i18n="总出金">总出金</div><div class="stat-trend" id="totalWithdrawTrend"></div></div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
             <div class="card" style="padding: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;">💰 入金 & 出金趋势</div>
-                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #2ed15a; border-radius: 2px; margin-right: 6px;"></span>入金</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #ff5a5a; border-radius: 2px; margin-right: 6px;"></span>出金</span></div>
+                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;"data-i18n="💰 入金 & 出金趋势">💰 入金 & 出金趋势</div>
+                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #2ed15a; border-radius: 2px; margin-right: 6px;"></spandata-i18n="入金">入金</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #ff5a5a; border-radius: 2px; margin-right: 6px;"></spandata-i18n="出金">出金</span></div>
                 </div>
                 <div id="trendChart" style="height: 320px; width: 100%;"></div>
             </div>
             <div class="card" style="padding: 20px; text-align: center;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;">📊 用户行为分析</div>
-                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #4a7cff; border-radius: 2px; margin-right: 6px;"></span>做单率</span></div>
+                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;"data-i18n="📊 用户行为分析">📊 用户行为分析</div>
+                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #4a7cff; border-radius: 2px; margin-right: 6px;"></spandata-i18n="做单率">做单率</span></div>
                 </div>
                 <div id="ringChart" style="height: 220px; width: 100%;"></div>
-                <div id="ringPercent" style="font-size: 24px; font-weight: 700; color: #fff; margin-top: 8px;">0%</div>
-                <div style="font-size: 11px; color: #6a7a9a;">完成30单以上用户占比</div>
+                <div id="ringPercent" style="font-size: 24px; font-weight: 700; color: #fff; margin-top: 8px;"data-i18n="0%">0%</div>
+                <div style="font-size: 11px; color: #6a7a9a;"data-i18n="完成30单以上用户占比">完成30单以上用户占比</div>
             </div>
         </div>
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <div style="font-size: 16px; font-weight: 600; color: #4a7cff;"><i class="fas fa-history"></i> 实时活动</div>
-                <div style="font-size: 11px; color: #2ed15a;"><i class="fas fa-circle" style="font-size: 8px;"></i> 实时更新</div>
+                <div style="font-size: 16px; font-weight: 600; color: #4a7cff;"><i class="fas fa-history"></idata-i18n=" 实时活动"> 实时活动</div>
+                <div style="font-size: 11px; color: #2ed15a;"><i class="fas fa-circle" style="font-size: 8px;"></idata-i18n=" 实时更新"> 实时更新</div>
             </div>
             <div id="activityList" style="max-height: 350px; overflow-y: auto;">
-                <div style="text-align: center; padding: 20px; color: #6a7a9a;">Loading...</div>
+                <div style="text-align: center; padding: 20px; color: #6a7a9a;"data-i18n="Loading..."data-i18n="Loading...">Loading...</div>
             </div>
         </div>
     `;

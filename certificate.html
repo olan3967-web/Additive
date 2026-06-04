@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Certificate - ADDITIVE</title>
+    <titledata-i18n="Certificate - ADDITIVE">Certificate - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
@@ -234,8 +234,8 @@
 <div class="phone">
 
     <div class="page-header">
-        <button class="back-btn" onclick="goBack()">←</button>
-        <h1>Certificate</h1>
+        <button class="back-btn" onclick="goBack()"data-i18n="←">←</button>
+        <h1data-i18n="Certificate"data-i18n="Certificate">Certificate</h1>
         <div style="width: 30px;"></div>
     </div>
 
@@ -243,23 +243,23 @@
         <div class="loading-container">
             <div class="loading-spinner">
                 <i class="fas fa-spinner"></i>
-                <div style="margin-top: 10px;">Loading...</div>
+                <div style="margin-top: 10px;"data-i18n="Loading..."data-i18n="Loading...">Loading...</div>
             </div>
         </div>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
-        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
-        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
-        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products">Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders">Orders</span></div>
+        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
     </div>
 
 </div>
 
 <div id="zoomModal" class="zoom-modal">
     <div class="zoom-content">
-        <button class="zoom-close" id="zoomCloseBtn">&times;</button>
+        <button class="zoom-close" id="zoomCloseBtn"data-i18n="&times;">&times;</button>
         <img id="zoomImage" class="zoom-image" src="" alt="Certificate">
     </div>
 </div>
@@ -279,7 +279,7 @@
         }
 
         const container = document.getElementById('certificateContainer');
-        container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading...</div></div></div>`;
+        container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><divdata-i18n="Loading..."data-i18n="Loading...">Loading...</div></div></div>`;
 
         try {
             const { data: certificates, error } = await sb
@@ -295,7 +295,7 @@
                     <div class="empty-state">
                         <i class="fa-regular fa-certificate"></i>
                         No certificate yet
-                        <div style="margin-top: 12px; font-size: 12px;">Complete 100 orders to earn your certificate</div>
+                        <div style="margin-top: 12px; font-size: 12px;"data-i18n="Complete 100 orders to earn your certificate"data-i18n="Complete 100 orders to earn your certificate">Complete 100 orders to earn your certificate</div>
                     </div>
                 `;
                 return;
@@ -325,7 +325,7 @@
 
         } catch (e) {
             console.error('加载证书失败:', e);
-            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-circle-xmark"></i>Failed to load certificate</div>';
+            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-circle-xmark"></idata-i18n="Failed to load certificate"data-i18n="Failed to load certificate">Failed to load certificate</div>';
         }
     }
 
