@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Settings - ADDITIVE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
-    <script src="translate.js"></script>
+    <script src="notification.js"></script>
+    <script src="i18n.js"></script>
     <style>
         * {
             margin: 0;
@@ -36,171 +37,181 @@
 
         .page-header {
             padding: 20px 20px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .page-header h1 {
             font-size: 28px;
             font-weight: 700;
             color: #1a1a2e;
-            margin-bottom: 4px;
         }
 
-        .page-header p {
-            font-size: 13px;
-            color: #6b7280;
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #ff7a00;
+            cursor: pointer;
         }
 
+        /* 设置卡片 */
         .settings-card {
             background: white;
             border-radius: 24px;
-            margin: 16px 20px;
-            padding: 20px;
+            margin: 16px;
+            overflow: hidden;
             border: 1px solid #eef2f7;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
         }
 
-        .settings-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin-bottom: 16px;
+        .settings-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #eef2f7;
-        }
-
-        .settings-title i {
-            color: #ff7a00;
-            font-size: 16px;
-        }
-
-        .info-row {
-            display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
+            padding: 16px 20px;
             border-bottom: 1px solid #eef2f7;
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
-        .info-row:last-child {
+        .settings-item:last-child {
             border-bottom: none;
         }
 
-        .info-label {
-            font-size: 13px;
-            color: #6b7280;
+        .settings-item:hover {
+            background: #f8fafc;
         }
 
-        .info-value {
-            font-size: 14px;
+        .settings-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .settings-icon {
+            width: 44px;
+            height: 44px;
+            background: #fff7ed;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-icon i {
+            font-size: 20px;
+            color: #ff7a00;
+        }
+
+        .settings-info .title {
+            font-size: 15px;
             font-weight: 600;
             color: #1f2937;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            margin-bottom: 4px;
         }
 
-        .copy-btn {
-            background: #fff3e8;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 20px;
+        .settings-info .subtitle {
             font-size: 11px;
-            color: #ff7a00;
-            cursor: pointer;
-            transition: all 0.2s;
+            color: #94a3b8;
         }
 
-        .copy-btn:hover {
-            background: #ff7a00;
-            color: white;
+        .settings-right {
+            color: #94a3b8;
+            font-size: 14px;
         }
 
-        .setting-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 0;
-            border-bottom: 1px solid #eef2f7;
-            cursor: pointer;
-            transition: all 0.2s;
+        /* 语言切换器 - 特殊样式 */
+        .language-section {
+            background: white;
+            border-radius: 24px;
+            margin: 16px;
+            padding: 20px;
+            border: 1px solid #eef2f7;
         }
 
-        .setting-item:last-child {
-            border-bottom: none;
-        }
-
-        .setting-item:hover {
-            transform: translateX(4px);
-        }
-
-        .setting-left {
+        .language-title {
             display: flex;
             align-items: center;
             gap: 12px;
+            margin-bottom: 16px;
         }
 
-        .setting-icon {
-            width: 40px;
-            height: 40px;
-            background: #fff3e8;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .setting-icon i {
-            font-size: 18px;
+        .language-title i {
+            font-size: 22px;
             color: #ff7a00;
         }
 
-        .setting-info {
-            flex: 1;
-        }
-
-        .setting-title-text {
-            font-size: 14px;
+        .language-title span {
+            font-size: 16px;
             font-weight: 600;
             color: #1f2937;
-            margin-bottom: 2px;
         }
 
-        .setting-desc {
-            font-size: 11px;
-            color: #94a3b8;
+        .lang-grid {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
-        .setting-arrow {
-            color: #94a3b8;
-            font-size: 14px;
-        }
-
-        .logout-btn {
-            background: #fff3e8;
-            border: none;
-            width: calc(100% - 40px);
-            margin: 20px 20px 0;
-            padding: 14px;
+        .lang-btn {
+            flex: 1;
+            min-width: 80px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 12px 16px;
             border-radius: 40px;
-            font-weight: 600;
-            font-size: 15px;
-            color: #ef4444;
             cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+        }
+
+        .lang-btn:hover {
+            border-color: #ff7a00;
+            background: #fff7ed;
+        }
+
+        .lang-btn.active {
+            background: #ff7a00;
+            color: white;
+            border-color: #ff7a00;
+        }
+
+        /* 版本信息 */
+        .version-info {
+            text-align: center;
+            padding: 20px;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        /* 退出登录按钮 */
+        .logout-btn {
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: #ef4444;
+            margin: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
         .logout-btn:hover {
             background: #fee2e2;
-            transform: scale(1.01);
         }
 
+        /* 底部导航 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -240,300 +251,220 @@
 <div class="phone">
 
     <div class="page-header">
-        <h1>Settings</h1>
-        <p>Manage your account preferences</p>
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h1 data-i18n="settings">Settings</h1>
+        <div style="width: 30px;"></div>
     </div>
 
-    <!-- Account Section -->
+    <!-- 语言切换区域 -->
+    <div class="language-section">
+        <div class="language-title">
+            <i class="fas fa-globe"></i>
+            <span>Language / Sprache / Lingua / Idioma</span>
+        </div>
+        <div class="lang-grid">
+            <button class="lang-btn" data-lang="en">
+                🇬🇧 English
+            </button>
+            <button class="lang-btn" data-lang="de">
+                🇩🇪 Deutsch
+            </button>
+            <button class="lang-btn" data-lang="it">
+                🇮🇹 Italiano
+            </button>
+            <button class="lang-btn" data-lang="es">
+                🇪🇸 Español
+            </button>
+        </div>
+        <div style="font-size: 11px; color: #94a3b8; margin-top: 12px; text-align: center;">
+            ⚡ Change language, all text will update automatically
+        </div>
+    </div>
+
+    <!-- 设置选项列表 -->
     <div class="settings-card">
-        <div class="settings-title">
-            <i class="fas fa-user-circle"></i> Account
-        </div>
-        <div class="info-row">
-            <span class="info-label">UID</span>
-            <div class="info-value">
-                <span id="displayUid">---</span>
-                <button class="copy-btn" onclick="copyUID()">Copy</button>
+        <div class="settings-item" onclick="openNotificationSettings()">
+            <div class="settings-left">
+                <div class="settings-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div class="settings-info">
+                    <div class="title" data-i18n="notifications">Notifications</div>
+                    <div class="subtitle" data-i18n="notifications_desc">Manage alert preferences</div>
+                </div>
+            </div>
+            <div class="settings-right">
+                <i class="fas fa-chevron-right"></i>
             </div>
         </div>
-        <div class="info-row">
-            <span class="info-label">Invitation Code</span>
-            <div class="info-value">
-                <span id="displayInviteCode">---</span>
-                <button class="copy-btn" onclick="copyInviteCode()">Copy</button>
+
+        <div class="settings-item" onclick="openPrivacySettings()">
+            <div class="settings-left">
+                <div class="settings-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="settings-info">
+                    <div class="title" data-i18n="privacy">Privacy & Security</div>
+                    <div class="subtitle" data-i18n="privacy_desc">Password, 2FA, data settings</div>
+                </div>
+            </div>
+            <div class="settings-right">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+
+        <div class="settings-item" onclick="openDisplaySettings()">
+            <div class="settings-left">
+                <div class="settings-icon">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <div class="settings-info">
+                    <div class="title" data-i18n="display">Display & Theme</div>
+                    <div class="subtitle" data-i18n="display_desc">Dark mode, font size</div>
+                </div>
+            </div>
+            <div class="settings-right">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+
+        <div class="settings-item" onclick="openAboutUs()">
+            <div class="settings-left">
+                <div class="settings-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="settings-info">
+                    <div class="title" data-i18n="about_us">About Us</div>
+                    <div class="subtitle" data-i18n="about_us_desc">Version, terms, contact</div>
+                </div>
+            </div>
+            <div class="settings-right">
+                <i class="fas fa-chevron-right"></i>
             </div>
         </div>
     </div>
 
-    <!-- Security Section -->
-    <div class="settings-card">
-        <div class="settings-title">
-            <i class="fas fa-shield-alt"></i> Security
-        </div>
-        <div class="setting-item" onclick="changePassword()">
-            <div class="setting-left">
-                <div class="setting-icon"><i class="fas fa-lock"></i></div>
-                <div class="setting-info">
-                    <div class="setting-title-text">Change Password</div>
-                    <div class="setting-desc">Update your login password</div>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right setting-arrow"></i>
-        </div>
-        <div class="setting-item" onclick="setWithdrawalPin()">
-            <div class="setting-left">
-                <div class="setting-icon"><i class="fas fa-key"></i></div>
-                <div class="setting-info">
-                    <div class="setting-title-text">Set Withdrawal PIN</div>
-                    <div class="setting-desc">Create a PIN to protect withdrawals</div>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right setting-arrow"></i>
-        </div>
-        <div class="setting-item" onclick="changeWithdrawalPin()">
-            <div class="setting-left">
-                <div class="setting-icon"><i class="fas fa-rotate-left"></i></div>
-                <div class="setting-info">
-                    <div class="setting-title-text">Change Withdrawal PIN</div>
-                    <div class="setting-desc">Update your withdrawal PIN</div>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right setting-arrow"></i>
-        </div>
+    <!-- 退出登录按钮 -->
+    <div class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i>
+        <span data-i18n="logout">Log Out</span>
     </div>
 
-    <!-- Language Section -->
-    <div class="settings-card">
-        <div class="settings-title">
-            <i class="fas fa-language"></i> Language
-        </div>
-        <div class="setting-item" onclick="changeLanguage('en')">
-            <div class="setting-left">
-                <div class="setting-icon"><i class="fas fa-flag-usa"></i></div>
-                <div class="setting-info">
-                    <div class="setting-title-text">English</div>
-                    <div class="setting-desc">Switch to English</div>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right setting-arrow"></i>
-        </div>
-        <div class="setting-item" onclick="changeLanguage('de')">
-            <div class="setting-left">
-                <div class="setting-icon"><i class="fas fa-flag"></i></div>
-                <div class="setting-info">
-                    <div class="setting-title-text">Deutsch</div>
-                    <div class="setting-desc">Switch to German</div>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right setting-arrow"></i>
-        </div>
-        <div class="setting-item" onclick="changeLanguage('es')">
-            <div class="setting-left">
-                <div class="setting-icon"><i class="fas fa-flag"></i></div>
-                <div class="setting-info">
-                    <div class="setting-title-text">Español</div>
-                    <div class="setting-desc">Switch to Spanish</div>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right setting-arrow"></i>
-        </div>
-        <div class="setting-item" onclick="changeLanguage('it')">
-            <div class="setting-left">
-                <div class="setting-icon"><i class="fas fa-flag"></i></div>
-                <div class="setting-info">
-                    <div class="setting-title-text">Italiano</div>
-                    <div class="setting-desc">Switch to Italian</div>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right setting-arrow"></i>
-        </div>
+    <div class="version-info" id="versionInfo">
+        ADDITIVE v2.0.0
     </div>
 
-    <!-- Support Section -->
-    <div class="settings-card">
-        <div class="settings-title">
-            <i class="fas fa-headset"></i> Support
-        </div>
-        <div class="setting-item" onclick="contactSupport()">
-            <div class="setting-left">
-                <div class="setting-icon"><i class="fas fa-comment-dots"></i></div>
-                <div class="setting-info">
-                    <div class="setting-title-text">Contact Support</div>
-                    <div class="setting-desc">Chat with customer service</div>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right setting-arrow"></i>
-        </div>
-    </div>
-
-    <!-- Logout Button -->
-    <button class="logout-btn" onclick="logout()">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </button>
-
-    <!-- Bottom Navigation -->
+    <!-- 底部导航 -->
     <div class="bottom-nav">
-        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
-        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
-        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
-        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
+        <div class="nav-item" data-page="dashboard">
+            <i class="fa-solid fa-house"></i>
+            <span data-i18n="nav_dashboard">Dashboard</span>
+        </div>
+        <div class="nav-item" data-page="products">
+            <i class="fa-solid fa-box"></i>
+            <span data-i18n="nav_products">Products</span>
+        </div>
+        <div class="nav-item" data-page="orders">
+            <i class="fa-solid fa-list-check"></i>
+            <span data-i18n="nav_orders">Orders</span>
+        </div>
+        <div class="nav-item active" data-page="profile">
+            <i class="fa-solid fa-user"></i>
+            <span data-i18n="nav_profile">My Profile</span>
+        </div>
     </div>
 
 </div>
 
 <script>
+    // 获取当前用户
     function getCurrentUser() {
         const userStr = localStorage.getItem('currentUser');
         if (!userStr) return null;
         try { return JSON.parse(userStr); } catch(e) { return null; }
     }
 
-    async function fetchUserData(uid) {
-        const { data, error } = await sb.from('users').select('*').eq('uid', uid).single();
-        if (error) return null;
-        return data;
+    // 页面加载时检查登录
+    const user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
     }
 
-    async function syncUserData() {
-        const user = getCurrentUser();
-        if (!user) return null;
-        const freshData = await fetchUserData(user.uid);
-        if (freshData) {
-            user.balance = freshData.balance || 0;
-            user.trialBonusAmount = freshData.trial_bonus_amount || 0;
-            user.vipLevel = freshData.vip_level || 1;
-            user.username = freshData.username;
-            user.uid = freshData.uid;
-            user.pin = freshData.pin || '';
-            user.inviteCode = freshData.invite_code || '';
-            localStorage.setItem('currentUser', JSON.stringify(user));
-        }
-        return user;
-    }
-
-    async function loadSettings() {
-        const user = getCurrentUser();
-        if (!user) {
-            window.location.href = 'signin.html';
-            return;
-        }
-        const freshUser = await syncUserData();
-        if (freshUser) {
-            document.getElementById('displayUid').innerText = freshUser.uid;
-            document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
-        }
-    }
-
-    function logout() {
-        showConfirm('Logout', 'Are you sure you want to logout?', () => {
-            localStorage.removeItem('currentUser');
-            window.location.href = 'signin.html';
-        });
-    }
-
-    function copyUID() {
-        const uid = document.getElementById('displayUid').innerText;
-        navigator.clipboard.writeText(uid);
-        showToast('UID copied: ' + uid, 'success');
-    }
-
-    function copyInviteCode() {
-        const inviteCode = document.getElementById('displayInviteCode').innerText;
-        navigator.clipboard.writeText(inviteCode);
-        showToast('Invitation code copied: ' + inviteCode, 'success');
-    }
-
-    async function changePassword() {
-        showPrompt('Change Password', 'Enter new password (min 4 characters):', async (newPwd) => {
-            if (!newPwd) {
-                showToast('Password change cancelled', 'info');
-                return;
-            }
-            if (newPwd.length < 4) {
-                showToast('Password must be at least 4 characters', 'error');
-                return;
-            }
-            const user = getCurrentUser();
-            if (user) {
-                const { error } = await sb.from('users').update({ password: newPwd }).eq('uid', user.uid);
-                if (error) {
-                    showToast('Password change failed: ' + error.message, 'error');
-                    return;
-                }
-                showToast('Password changed! Please login again.', 'success');
-                setTimeout(() => { logout(); }, 1500);
-            }
-        });
-    }
-
-    async function setWithdrawalPin() {
-        const user = getCurrentUser();
-        if (user) {
-            const { data: userData } = await sb.from('users').select('pin').eq('uid', user.uid).single();
-            if (userData && userData.pin && userData.pin !== '0000' && userData.pin !== '') {
-                showToast('PIN already set. Use "Change Withdrawal PIN" instead.', 'warning');
-                return;
-            }
-            showPrompt('Set Withdrawal PIN', 'Enter 4-digit PIN:', (pin) => {
-                if (!pin) {
-                    showToast('PIN setup cancelled', 'info');
-                    return;
-                }
-                if (pin && pin.length === 4 && !isNaN(pin)) {
-                    sb.from('users').update({ pin: pin }).eq('uid', user.uid)
-                        .then(() => { showToast('PIN set successfully!', 'success'); })
-                        .catch(err => { showToast('Failed to set PIN: ' + err.message, 'error'); });
-                } else {
-                    showToast('PIN must be exactly 4 digits', 'error');
-                }
-            });
-        }
-    }
-
-    async function changeWithdrawalPin() {
-        const user = getCurrentUser();
-        if (user) {
-            showPrompt('Change Withdrawal PIN', 'Enter current PIN:', async (oldPin) => {
-                if (!oldPin) {
-                    showToast('PIN change cancelled', 'info');
-                    return;
-                }
-                const { data: userData } = await sb.from('users').select('pin').eq('uid', user.uid).single();
-                if (userData && userData.pin !== oldPin) {
-                    showToast('Wrong current PIN', 'error');
-                    return;
-                }
-                showPrompt('Change Withdrawal PIN', 'Enter new 4-digit PIN:', (newPin) => {
-                    if (!newPin) {
-                        showToast('PIN change cancelled', 'info');
-                        return;
-                    }
-                    if (newPin && newPin.length === 4 && !isNaN(newPin)) {
-                        sb.from('users').update({ pin: newPin }).eq('uid', user.uid)
-                            .then(() => { showToast('PIN changed successfully!', 'success'); })
-                            .catch(err => { showToast('Failed to change PIN: ' + err.message, 'error'); });
-                    } else {
-                        showToast('PIN must be exactly 4 digits', 'error');
-                    }
-                });
-            });
-        }
-    }
-
-    function contactSupport() {
-        window.location.href = 'chat.html';
-    }
-
-    // ========== Language Switching ==========
+    // 语言切换功能
     function changeLanguage(lang) {
-        if (typeof switchLanguage === 'function') {
-            switchLanguage(lang);
+        if (typeof i18n !== 'undefined') {
+            i18n.setLanguage(lang);
+            // 高亮当前选中的语言按钮
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                if (btn.dataset.lang === lang) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            showToast(i18n.t('language_changed') || 'Language changed!', 'success');
         } else {
-            localStorage.setItem('preferred_language', lang);
-            showToast('Language changed to ' + lang.toUpperCase() + '. Refresh page to apply.', 'success');
+            console.error('i18n not loaded');
+            showToast('Language system not ready', 'error');
         }
     }
 
+    // 绑定语言切换按钮事件
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const lang = btn.dataset.lang;
+            changeLanguage(lang);
+        });
+    });
+
+    // 页面加载时高亮当前语言
+    function highlightCurrentLanguage() {
+        const currentLang = localStorage.getItem('app_language') || 'en';
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            if (btn.dataset.lang === currentLang) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    // 设置选项功能（暂未实现，可后续添加）
+    function openNotificationSettings() {
+        showToast(i18n.t('coming_soon') || 'Coming soon', 'info');
+    }
+
+    function openPrivacySettings() {
+        showToast(i18n.t('coming_soon') || 'Coming soon', 'info');
+    }
+
+    function openDisplaySettings() {
+        showToast(i18n.t('coming_soon') || 'Coming soon', 'info');
+    }
+
+    function openAboutUs() {
+        showToast('ADDITIVE v2.0.0\n© 2024 ADDITIVE Platform', 'info');
+    }
+
+    // 退出登录
+    function logout() {
+        showConfirm(
+            i18n.t('confirm') || 'Confirm',
+            i18n.t('logout_confirm') || 'Are you sure you want to log out?',
+            () => {
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('admin_logged_in');
+                window.location.href = 'signin.html';
+            }
+        );
+    }
+
+    // 返回上一页
+    function goBack() {
+        window.location.href = 'dashboard.html';
+    }
+
+    // 底部导航
     function setupBottomNav() {
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -546,8 +477,46 @@
         });
     }
 
-    setupBottomNav();
-    loadSettings();
+    // 更新页面所有带 data-i18n 的元素
+    function updatePageTexts() {
+        if (typeof i18n === 'undefined') return;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            const translation = i18n.t(key);
+            if (translation && translation !== key) {
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                    if (el.placeholder !== undefined) {
+                        el.placeholder = translation;
+                    }
+                } else {
+                    el.textContent = translation;
+                }
+            }
+        });
+    }
+
+    // 监听语言变化事件
+    if (typeof document !== 'undefined') {
+        document.addEventListener('languageChanged', () => {
+            updatePageTexts();
+        });
+    }
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof i18n !== 'undefined') {
+            i18n.init();
+        }
+        updatePageTexts();
+        highlightCurrentLanguage();
+        setupBottomNav();
+        
+        // 更新版本号显示
+        const versionEl = document.getElementById('versionInfo');
+        if (versionEl) {
+            versionEl.textContent = `ADDITIVE v2.0.0`;
+        }
+    });
 </script>
 </body>
 </html>
