@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <titledata-i18n="Let's Get Started - ADDITIVE"data-i18n="Let's Get Started - ADDITIVE">Let's Get Started - ADDITIVE</title>
+    <title>Let's Get Started - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -408,7 +408,7 @@
         <!-- 引导步骤页面 -->
         <div id="stepsContainer" style="display: flex; flex-direction: column; min-height: 100vh;">
             <div style="padding: 20px 24px 0; display: flex; justify-content: flex-start; align-items: center;">
-                <button class="back-btn" id="backBtn" style="visibility: hidden;"data-i18n="←"data-i18n="←">←</button>
+                <button class="back-btn" id="backBtn" style="visibility: hidden;">←</button>
             </div>
             
             <div class="progress-container" id="progressContainer"></div>
@@ -418,7 +418,7 @@
             </div>
             
             <div style="padding: 20px 24px 40px;">
-                <button class="continue-btn" id="continueBtn"data-i18n="Continue"data-i18n="Continue"data-i18n="Continue"data-i18n="Continue">Continue</button>
+                <button class="continue-btn" id="continueBtn">Continue</button>
             </div>
         </div>
 
@@ -427,7 +427,7 @@
             <div class="content-area" id="animationContentArea">
                 <div class="progress-wrapper" id="progressWrapper">
                     <div class="status-text" id="statusText">
-                        <span class="status-label"data-i18n="Setting Up Your Account"data-i18n="Setting Up Your Account"data-i18n="Setting Up Your Account"data-i18n="Setting Up Your Account">Setting Up Your Account</span>
+                        <span class="status-label">Setting Up Your Account</span>
                         <span class="status-dots" id="statusDots"></span>
                     </div>
                     
@@ -439,7 +439,7 @@
                         <div class="main-text">
                             <i class="fas fa-check-circle"></i> Congratulations!
                         </div>
-                        <div class="sub-text"data-i18n="Log in and choose your product now"data-i18n="Log in and choose your product now"data-i18n="Log in and choose your product now"data-i18n="Log in and choose your product now">Log in and choose your product now</div>
+                        <div class="sub-text">Log in and choose your product now</div>
                     </div>
                 </div>
             </div>
@@ -558,8 +558,8 @@
             
             let html = `
                 <div class="step-container">
-                    <h1 class="step-title"data-i18n="${step.title}"data-i18n="${step.title}">${step.title}</h1>
-                    <p class="step-subtitle"data-i18n="${step.subtitle}"data-i18n="${step.subtitle}">${step.subtitle}</p>
+                    <h1 class="step-title">${step.title}</h1>
+                    <p class="step-subtitle">${step.subtitle}</p>
             `;
 
             if (step.type === 'options') {
@@ -606,7 +606,7 @@
                         <div class="checkbox">
                             ${isSelected ? '<i class="fas fa-check"></i>' : ''}
                         </div>
-                        <span class="item-label"data-i18n="${escapeHtml(option)}"data-i18n="${escapeHtml(option)}">${escapeHtml(option)}</span>
+                        <span class="item-label">${escapeHtml(option)}</span>
                     `;
                     listContainer.appendChild(item);
                 });

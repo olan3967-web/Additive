@@ -15,8 +15,8 @@ async function loadEmailVerifyPage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar" style="justify-content: space-between;">
-                <h3><i class="fas fa-envelope"></idata-i18n=" 邮箱验证码管理"data-i18n=" 邮箱验证码管理"> 邮箱验证码管理</h3>
-                <button id="refreshEmailRequestsBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
+                <h3><i class="fas fa-envelope"></i> 邮箱验证码管理</h3>
+                <button id="refreshEmailRequestsBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
             </div>
             <div style="margin-bottom: 16px; padding: 12px; background: rgba(74,124,255,0.1); border-radius: 12px;">
                 <i class="fas fa-info-circle" style="color: #4a7cff;"></i> 
@@ -40,7 +40,7 @@ async function loadEmailRequests() {
     const container = document.getElementById('emailRequestsList');
     if (!container) return;
     
-    container.innerHTML = '<div style="text-align:center; padding:40px;"data-i18n="Loading... "data-i18n="Loading... "data-i18n="Loading... "data-i18n="Loading... ">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px;">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
     
     try {
         const { data: requests, error } = await sb
@@ -53,12 +53,12 @@ async function loadEmailRequests() {
         
         if (error) {
             console.error('查询错误:', error);
-            container.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;"data-i18n="查询失败: ' + error.message + '"data-i18n="查询失败: ' + error.message + '">查询失败: ' + error.message + '</div>';
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;">查询失败: ' + error.message + '</div>';
             return;
         }
         
         if (!requests || requests.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;"data-i18n="暂无邮箱验证请求。"data-i18n="暂无邮箱验证请求。">暂无邮箱验证请求。<brdata-i18n="请让用户在注册页面点击"Send"按钮Submit邮箱。"data-i18n="请让用户在注册页面点击"Send"按钮Submit邮箱。">请让用户在注册页面点击"Send"按钮Submit邮箱。</div>';
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无邮箱验证请求。<br>请让用户在注册页面点击"Send"按钮Submit邮箱。</div>';
             return;
         }
         
@@ -81,7 +81,7 @@ async function loadEmailRequests() {
                     <div style="font-size:11px; color:#8a9abb; margin-top:4px;">
                         请求时间: ${requestTime} | 过期时间: ${expiresTime}
                     </div>
-                    ${hasCode ? `<div style="font-size:11px; color:#2ed15a; margin-top:2px;"data-i18n="✅ 已设置验证码: ${req.code}"data-i18n="✅ 已设置验证码: ${req.code}">✅ 已设置验证码: ${req.code}</divdata-i18n="` : '"data-i18n="` : '">` : '<div style="font-size:11px; color:#ffb84d; margin-top:2px;"data-i18n="⏳ 等待设置验证码"data-i18n="⏳ 等待设置验证码">⏳ 等待设置验证码</div>'}
+                    ${hasCode ? `<div style="font-size:11px; color:#2ed15a; margin-top:2px;">✅ 已设置验证码: ${req.code}</div>` : '<div style="font-size:11px; color:#ffb84d; margin-top:2px;">⏳ 等待设置验证码</div>'}
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <input type="text" id="code_${req.id}" placeholder="6位数字" maxlength="6" value="${req.code || ''}" 
@@ -140,7 +140,7 @@ async function loadEmailRequests() {
         
     } catch (e) {
         console.error('加载邮箱请求失败:', e);
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;"data-i18n="加载失败: ' + e.message + '"data-i18n="加载失败: ' + e.message + '">加载失败: ' + e.message + '</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;">加载失败: ' + e.message + '</div>';
     }
 }
 

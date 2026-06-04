@@ -118,11 +118,11 @@ function showPopup(order) {
         <div class="toast-metal-content">
             <div class="toast-metal-icon"><i class="fas fa-gift"></i></div>
             <div class="toast-metal-info">
-                <div class="toast-metal-title"data-i18n="📦 新订单通知"data-i18n="📦 新订单通知">📦 新订单通知</div>
-                <div class="toast-metal-order"data-i18n="${order.order_no}"data-i18n="${order.order_no}">${order.order_no}</div>
-                <div class="toast-metal-product"data-i18n="${productsText.substring(0, 35)}"data-i18n="${productsText.substring(0, 35)}">${productsText.substring(0, 35)}</div>
+                <div class="toast-metal-title">📦 新订单通知</div>
+                <div class="toast-metal-order">${order.order_no}</div>
+                <div class="toast-metal-product">${productsText.substring(0, 35)}</div>
             </div>
-            <div class="toast-metal-amount"data-i18n="€${(order.total_supply_price || 0).toFixed(2)}"data-i18n="€${(order.total_supply_price || 0).toFixed(2)}">€${(order.total_supply_price || 0).toFixed(2)}</div>
+            <div class="toast-metal-amount">€${(order.total_supply_price || 0).toFixed(2)}</div>
             <div class="toast-metal-close"><i class="fas fa-times"></i></div>
         </div>
         <div class="toast-metal-progress"></div>

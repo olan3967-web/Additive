@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <titledata-i18n="Store Settings - ADDITIVE"data-i18n="Store Settings - ADDITIVE">Store Settings - ADDITIVE</title>
+    <title>Store Settings - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
@@ -340,15 +340,15 @@
 <body>
     <div class="phone">
         <div class="header">
-            <h1data-i18n="Store Settings"data-i18n="Store Settings"data-i18n="Store Settings"data-i18n="Store Settings">Store Settings</h1>
-            <pdata-i18n="Manage your store information"data-i18n="Manage your store information"data-i18n="Manage your store information"data-i18n="Manage your store information">Manage your store information</p>
+            <h1>Store Settings</h1>
+            <p>Manage your store information</p>
         </div>
 
         <div class="form-container">
             <div class="form-group">
                 <div class="form-label">
                     <i class="fa-regular fa-building"></i> Store Name
-                    <span class="required"data-i18n="*"data-i18n="*">*</span>
+                    <span class="required">*</span>
                 </div>
                 <input type="text" id="storeName" placeholder="Enter store name">
                 <div class="error-message" id="storeNameError"></div>
@@ -357,12 +357,12 @@
             <div class="form-group">
                 <div class="form-label">
                     <i class="fa-regular fa-image"></i> Store Logo
-                    <span class="optional"data-i18n="(optional)"data-i18n="(optional)">(optional)</span>
+                    <span class="optional">(optional)</span>
                 </div>
                 <div class="upload-area">
                     <div class="logo-preview" id="logoPreview">
                         <i class="fa-regular fa-store"></i>
-                        <div class="edit-overlay"data-i18n="Edit"data-i18n="Edit"data-i18n="Edit"data-i18n="Edit">Edit</div>
+                        <div class="edit-overlay">Edit</div>
                     </div>
                     <button class="upload-btn" id="uploadLogoBtn">
                         <i class="fa-solid fa-upload"></i> Upload Logo
@@ -374,7 +374,7 @@
             <div class="form-group">
                 <div class="form-label">
                     <i class="fa-regular fa-file-lines"></i> Store Description
-                    <span class="required"data-i18n="*"data-i18n="*">*</span>
+                    <span class="required">*</span>
                 </div>
                 <textarea id="storeDesc" placeholder="Describe your store..."></textarea>
                 <div class="error-message" id="storeDescError"></div>
@@ -383,20 +383,20 @@
             <div class="form-group">
                 <div class="form-label">
                     <i class="fa-regular fa-tag"></i> Store Category
-                    <span class="required"data-i18n="*"data-i18n="*">*</span>
+                    <span class="required">*</span>
                 </div>
                 <div class="categories-preview" id="categoriesContainer"></div>
                 <div class="error-message" id="categoryError"></div>
                 <select id="categorySelect" style="display: none; margin-top: 10px;">
-                    <option value=""data-i18n="Select category"data-i18n="Select category"data-i18n="Select category"data-i18n="Select category">Select category</option>
-                    <option value="Electronics"data-i18n="Electronics"data-i18n="Electronics"data-i18n="Electronics"data-i18n="Electronics">Electronics</option>
-                    <option value="Fashion"data-i18n="Fashion"data-i18n="Fashion"data-i18n="Fashion"data-i18n="Fashion">Fashion</option>
-                    <option value="Home & Kitchen"data-i18n="Home & Kitchen"data-i18n="Home & Kitchen">Home & Kitchen</option>
-                    <option value="Beauty & Personal Care"data-i18n="Beauty & Personal Care"data-i18n="Beauty & Personal Care">Beauty & Personal Care</option>
-                    <option value="Sports & Outdoors"data-i18n="Sports & Outdoors"data-i18n="Sports & Outdoors">Sports & Outdoors</option>
-                    <option value="Toys & Games"data-i18n="Toys & Games"data-i18n="Toys & Games">Toys & Games</option>
-                    <option value="Automotive"data-i18n="Automotive"data-i18n="Automotive"data-i18n="Automotive"data-i18n="Automotive">Automotive</option>
-                    <option value="Pet Supplies"data-i18n="Pet Supplies"data-i18n="Pet Supplies"data-i18n="Pet Supplies"data-i18n="Pet Supplies">Pet Supplies</option>
+                    <option value="">Select category</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Home & Kitchen">Home & Kitchen</option>
+                    <option value="Beauty & Personal Care">Beauty & Personal Care</option>
+                    <option value="Sports & Outdoors">Sports & Outdoors</option>
+                    <option value="Toys & Games">Toys & Games</option>
+                    <option value="Automotive">Automotive</option>
+                    <option value="Pet Supplies">Pet Supplies</option>
                 </select>
             </div>
 
@@ -412,17 +412,17 @@
         <div class="crop-container">
             <img id="cropImage" class="crop-image">
             <div class="crop-buttons">
-                <button class="crop-btn crop-cancel" id="cropCancel"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
-                <button class="crop-btn crop-confirm" id="cropConfirm"data-i18n="Apply"data-i18n="Apply"data-i18n="Apply"data-i18n="Apply">Apply</button>
+                <button class="crop-btn crop-cancel" id="cropCancel">Cancel</button>
+                <button class="crop-btn crop-confirm" id="cropConfirm">Apply</button>
             </div>
         </div>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
-        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products"data-i18n="Products"data-i18n="Products">Products</span></div>
-        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders"data-i18n="Orders"data-i18n="Orders">Orders</span></div>
-        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
@@ -465,7 +465,7 @@
                 if (storeData.store_logo) {
                     logoImageUrl = storeData.store_logo;
                     const preview = document.getElementById('logoPreview');
-                    preview.innerHTML = `<img src="${logoImageUrl}" style="width:100%; height:100%; object-fit:cover;"><div class="edit-overlay"data-i18n="Edit"data-i18n="Edit"data-i18n="Edit"data-i18n="Edit">Edit</div>`;
+                    preview.innerHTML = `<img src="${logoImageUrl}" style="width:100%; height:100%; object-fit:cover;"><div class="edit-overlay">Edit</div>`;
                 }
             } else {
                 const savedOnboarding = localStorage.getItem('onboarding_data');
@@ -605,7 +605,7 @@
                 });
                 logoImageUrl = canvas.toDataURL('image/jpeg', 0.9);
                 const preview = document.getElementById('logoPreview');
-                preview.innerHTML = `<img src="${logoImageUrl}" style="width:100%; height:100%; object-fit:cover;"><div class="edit-overlay"data-i18n="Edit"data-i18n="Edit"data-i18n="Edit"data-i18n="Edit">Edit</div>`;
+                preview.innerHTML = `<img src="${logoImageUrl}" style="width:100%; height:100%; object-fit:cover;"><div class="edit-overlay">Edit</div>`;
                 cropper.destroy();
                 cropper = null;
                 document.getElementById('cropModal').classList.remove('active');

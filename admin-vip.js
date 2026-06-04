@@ -4,7 +4,7 @@ async function loadVipPage() {
     if (!container) return;
     container.innerHTML = `
         <div class="card">
-            <h3><i class="fas fa-crown text-gold"></idata-i18n=" VIP 等级配置"data-i18n=" VIP 等级配置"> VIP 等级配置</h3>
+            <h3><i class="fas fa-crown text-gold"></i> VIP 等级配置</h3>
             <div id="vipSettingsDiv"></div>
         </div>
     `;
@@ -18,11 +18,11 @@ async function loadVipSettings() {
         div.innerHTML = '';
         for (let v of vips || []) {
             div.innerHTML += `<div style="background:#0f172a; border-radius:20px; padding:20px; margin-bottom:20px;">
-                <h3data-i18n="${v.rank_name} "data-i18n="${v.rank_name} ">${v.rank_name} <span class="badge"data-i18n="Lv.${v.level}"data-i18n="Lv.${v.level}">Lv.${v.level}</span></h3>
-                <divdata-i18n="每日订单上限: "data-i18n="每日订单上限: ">每日订单上限: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:130px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px; color:#fff;"></div>
-                <divdata-i18n="Commission比率(%): "data-i18n="Commission比率(%): ">Commission比率(%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:110px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px; color:#fff;"></div>
-                <divdata-i18n="需Top UpAmount(€): "data-i18n="需Top UpAmount(€): ">需Top UpAmount(€): <input type="number" id="deposit_${v.level}" value="${v.required_deposit || 0}" step="0.01" style="width:130px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px; color:#fff;"></div>
-                <button class="save-vip" data-level="${v.level}" style="margin-top:10px; background:#4a7cff; padding:6px 16px; border-radius:20px;"data-i18n="Save配置"data-i18n="Save配置">Save配置</button>
+                <h3>${v.rank_name} <span class="badge">Lv.${v.level}</span></h3>
+                <div>每日订单上限: <input type="number" id="limit_${v.level}" value="${v.orders_limit}" style="width:130px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px; color:#fff;"></div>
+                <div>Commission比率(%): <input type="number" id="rate_${v.level}" value="${v.commission_rate}" step="0.01" style="width:110px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px; color:#fff;"></div>
+                <div>需Top UpAmount(€): <input type="number" id="deposit_${v.level}" value="${v.required_deposit || 0}" step="0.01" style="width:130px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px; color:#fff;"></div>
+                <button class="save-vip" data-level="${v.level}" style="margin-top:10px; background:#4a7cff; padding:6px 16px; border-radius:20px;">Save配置</button>
             </div>`;
         }
         document.querySelectorAll('.save-vip').forEach(btn => btn.addEventListener('click', () => saveVip(btn.dataset.level)));

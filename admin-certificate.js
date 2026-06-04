@@ -7,14 +7,14 @@ async function loadCertificatePage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar" style="justify-content: space-between;">
-                <h3><i class="fas fa-certificate"></idata-i18n=" Certificate 管理"data-i18n=" Certificate 管理"> Certificate 管理</h3>
+                <h3><i class="fas fa-certificate"></i> Certificate 管理</h3>
                 <div style="display: flex; gap: 12px;">
-                    <button id="uploadCertificateBtn" class="btn-primary"><i class="fas fa-upload"></idata-i18n=" 上传证书"data-i18n=" 上传证书"> 上传证书</button>
-                    <button id="refreshCertificateBtn" class="btn-primary"><i class="fas fa-sync-alt"></idata-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"data-i18n=" Refresh"> Refresh</button>
+                    <button id="uploadCertificateBtn" class="btn-primary"><i class="fas fa-upload"></i> 上传证书</button>
+                    <button id="refreshCertificateBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
             <div id="certificateListContainer" class="table-container">
-                <div style="text-align:center; padding:40px; color:#aaa;"data-i18n="Loading..."data-i18n="Loading..."data-i18n="Loading..."data-i18n="Loading...">Loading...</div>
+                <div style="text-align:center; padding:40px; color:#aaa;">Loading...</div>
             </div>
         </div>
     `;
@@ -38,14 +38,14 @@ async function loadCertificates() {
         if (error) throw error;
         
         if (!certificates || certificates.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;"data-i18n="暂无证书，点击"上传证书"Add"data-i18n="暂无证书，点击"上传证书"Add">暂无证书，点击"上传证书"Add</div>';
+            container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">暂无证书，点击"上传证书"Add</div>';
             return;
         }
         
         container.innerHTML = `
             <table class="data-table">
                 <thead>
-                    <tr><thdata-i18n="证书图片"data-i18n="证书图片">证书图片</th><thdata-i18n="上传时间"data-i18n="上传时间">上传时间</th><thdata-i18n="状态"data-i18n="状态">状态</th><thdata-i18n="操作"data-i18n="操作">操作</th></tr>
+                    <tr><th>证书图片</th><th>上传时间</th><th>状态</th><th>操作</th></tr>
                 </thead>
                 <tbody id="certificateTableBody"></tbody>
             </table>
@@ -56,10 +56,10 @@ async function loadCertificates() {
             const row = tbody.insertRow();
             row.insertCell(0).innerHTML = `<img src="${cert.image_url}" style="width:60px; height:86px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="window.open('${cert.image_url}','_blank')">`;
             row.insertCell(1).innerHTML = new Date(cert.created_at).toLocaleString();
-            row.insertCell(2).innerHTML = cert.is_active ? '<span class="badge" style="background:#2f6b3a;"data-i18n="✓ 启用"data-i18n="✓ 启用">✓ 启用</spandata-i18n="' : '"data-i18n="' : '">' : '<span class="badge" style="background:#7a2f2f;"data-i18n="禁用"data-i18n="禁用">禁用</span>';
+            row.insertCell(2).innerHTML = cert.is_active ? '<span class="badge" style="background:#2f6b3a;">✓ 启用</span>' : '<span class="badge" style="background:#7a2f2f;">禁用</span>';
             row.insertCell(3).innerHTML = `
-                <button class="toggle-cert-btn" data-id="${cert.id}" data-status="${cert.is_active}" style="background:#2f6b3a; padding:4px 12px; margin-right:4px;"data-i18n="${cert.is_active ? '禁用' : '启用'}"data-i18n="${cert.is_active ? '禁用' : '启用'}">${cert.is_active ? '禁用' : '启用'}</button>
-                <button class="delete-cert-btn" data-id="${cert.id}" style="background:#7a2f2f; padding:4px 12px;"data-i18n="Delete"data-i18n="Delete"data-i18n="Delete"data-i18n="Delete">Delete</button>
+                <button class="toggle-cert-btn" data-id="${cert.id}" data-status="${cert.is_active}" style="background:#2f6b3a; padding:4px 12px; margin-right:4px;">${cert.is_active ? '禁用' : '启用'}</button>
+                <button class="delete-cert-btn" data-id="${cert.id}" style="background:#7a2f2f; padding:4px 12px;">Delete</button>
             `;
         }
         
@@ -85,7 +85,7 @@ async function loadCertificates() {
         
     } catch (e) {
         console.error('加载证书失败:', e);
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;"data-i18n="加载失败: ' + e.message + '"data-i18n="加载失败: ' + e.message + '">加载失败: ' + e.message + '</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;">加载失败: ' + e.message + '</div>';
     }
 }
 
@@ -93,21 +93,21 @@ function openUploadModal() {
     const modalHtml = `
         <div id="uploadCertModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
             <div class="modal-card" style="max-width: 500px;">
-                <h3><i class="fas fa-upload"></idata-i18n=" 上传证书"data-i18n=" 上传证书"> 上传证书</h3>
+                <h3><i class="fas fa-upload"></i> 上传证书</h3>
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <labeldata-i18n="选择证书图片 (推荐 900x1288)"data-i18n="选择证书图片 (推荐 900x1288)">选择证书图片 (推荐 900x1288)</label>
+                    <label>选择证书图片 (推荐 900x1288)</label>
                     <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                        <button id="chooseImageBtn" class="btn-primary"><i class="fas fa-folder-open"></idata-i18n=" 选择图片"data-i18n=" 选择图片"> 选择图片</button>
+                        <button id="chooseImageBtn" class="btn-primary"><i class="fas fa-folder-open"></i> 选择图片</button>
                         <input type="file" id="certImageFile" accept="image/*" style="display:none;">
-                        <div id="uploadProgress" style="display:none; font-size:12px; color:#ff7a00;"data-i18n="上传中..."data-i18n="上传中...">上传中...</div>
+                        <div id="uploadProgress" style="display:none; font-size:12px; color:#ff7a00;">上传中...</div>
                     </div>
                     <div id="certImagePreview" style="margin-top:10px; width:100%; max-width:200px; background:#0f172a; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#666; overflow:hidden; min-height:100px;">
                         点击选择图片预览
                     </div>
                 </div>
                 <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button id="confirmUploadCertBtn" class="success"data-i18n="Save证书"data-i18n="Save证书">Save证书</button>
-                    <button id="cancelUploadCertBtn"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
+                    <button id="confirmUploadCertBtn" class="success">Save证书</button>
+                    <button id="cancelUploadCertBtn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -145,7 +145,7 @@ function openUploadModal() {
         const previewDiv = document.getElementById('certImagePreview');
         
         progressDiv.style.display = 'block';
-        previewDiv.innerHTML = '<div style="padding:20px;"data-i18n="上传中..."data-i18n="上传中...">上传中...</div>';
+        previewDiv.innerHTML = '<div style="padding:20px;">上传中...</div>';
         
         // 生成唯一文件名
         const fileExt = file.name.split('.').pop();
@@ -176,7 +176,7 @@ function openUploadModal() {
             
         } catch (err) {
             console.error('上传失败:', err);
-            previewDiv.innerHTML = '<div style="padding:20px; color:#ff8888;"data-i18n="上传失败，请重试"data-i18n="上传失败，请重试">上传失败，请重试</div>';
+            previewDiv.innerHTML = '<div style="padding:20px; color:#ff8888;">上传失败，请重试</div>';
             progressDiv.style.display = 'none';
             showToast('上传失败: ' + err.message, 'error');
         }
@@ -214,7 +214,7 @@ document.getElementById('confirmUploadCertBtn')?.addEventListener('click', async
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<data-i18n="]/g, m =data-i18n=" m === '&' ? '&amp;' : m === '">]/g, m => m === '&' ? '&amp;' : m === '"> m === '&' ? '&amp;' : m === '">]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
 
 window.loadCertificatePage = loadCertificatePage;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <titledata-i18n="Settings - ADDITIVE"data-i18n="Settings - ADDITIVE">Settings - ADDITIVE</title>
+    <title>Settings - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
@@ -488,39 +488,39 @@
 <div class="phone">
 
     <div class="page-header">
-        <button class="back-btn" onclick="goBack()"data-i18n="←"data-i18n="←">←</button>
-        <h1data-i18n="Settings"data-i18n="Settings"data-i18n="Settings"data-i18n="Settings">Settings</h1>
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h1>Settings</h1>
         <div style="width: 30px;"></div>
     </div>
 
     <!-- ========== 账号信息卡片 ========== -->
     <div class="info-card">
         <div class="info-row">
-            <span class="info-label"data-i18n="UID"data-i18n="UID"data-i18n="UID"data-i18n="UID">UID</span>
+            <span class="info-label">UID</span>
             <div class="info-value">
-                <span id="displayUid"data-i18n="---"data-i18n="---">---</span>
-                <button class="copy-btn" onclick="copyUID()"><i class="fas fa-copy"></idata-i18n=" Copy"data-i18n=" Copy"data-i18n=" Copy"data-i18n=" Copy"> Copy</button>
+                <span id="displayUid">---</span>
+                <button class="copy-btn" onclick="copyUID()"><i class="fas fa-copy"></i> Copy</button>
             </div>
         </div>
         <div class="info-row">
-            <span class="info-label"data-i18n="Invitation Code"data-i18n="Invitation Code"data-i18n="Invitation Code"data-i18n="Invitation Code">Invitation Code</span>
+            <span class="info-label">Invitation Code</span>
             <div class="info-value">
-                <span id="displayInviteCode"data-i18n="---"data-i18n="---">---</span>
-                <button class="copy-btn" onclick="copyInviteCode()"><i class="fas fa-copy"></idata-i18n=" Copy"data-i18n=" Copy"data-i18n=" Copy"data-i18n=" Copy"> Copy</button>
+                <span id="displayInviteCode">---</span>
+                <button class="copy-btn" onclick="copyInviteCode()"><i class="fas fa-copy"></i> Copy</button>
             </div>
         </div>
     </div>
 
     <!-- ========== 账号安全卡片 ========== -->
     <div class="settings-card">
-        <div class="card-header"data-i18n="ACCOUNT SECURITY"data-i18n="ACCOUNT SECURITY"data-i18n="ACCOUNT SECURITY"data-i18n="ACCOUNT SECURITY">ACCOUNT SECURITY</div>
+        <div class="card-header">ACCOUNT SECURITY</div>
         
         <div class="settings-item" onclick="changePassword()">
             <div class="settings-left">
                 <div class="settings-icon"><i class="fas fa-lock"></i></div>
                 <div class="settings-info">
-                    <div class="title"data-i18n="Change Password"data-i18n="Change Password"data-i18n="Change Password"data-i18n="Change Password">Change Password</div>
-                    <div class="subtitle"data-i18n="Update your login password"data-i18n="Update your login password"data-i18n="Update your login password"data-i18n="Update your login password">Update your login password</div>
+                    <div class="title">Change Password</div>
+                    <div class="subtitle">Update your login password</div>
                 </div>
             </div>
             <div class="settings-right"><i class="fas fa-chevron-right"></i></div>
@@ -530,8 +530,8 @@
             <div class="settings-left">
                 <div class="settings-icon"><i class="fas fa-key"></i></div>
                 <div class="settings-info">
-                    <div class="title"data-i18n="Set Withdrawal PIN"data-i18n="Set Withdrawal PIN"data-i18n="Set Withdrawal PIN"data-i18n="Set Withdrawal PIN">Set Withdrawal PIN</div>
-                    <div class="subtitle"data-i18n="Create a PIN to protect withdrawals"data-i18n="Create a PIN to protect withdrawals"data-i18n="Create a PIN to protect withdrawals"data-i18n="Create a PIN to protect withdrawals">Create a PIN to protect withdrawals</div>
+                    <div class="title">Set Withdrawal PIN</div>
+                    <div class="subtitle">Create a PIN to protect withdrawals</div>
                 </div>
             </div>
             <div class="settings-right"><i class="fas fa-chevron-right"></i></div>
@@ -541,8 +541,8 @@
             <div class="settings-left">
                 <div class="settings-icon"><i class="fas fa-key"></i></div>
                 <div class="settings-info">
-                    <div class="title"data-i18n="Change Withdrawal PIN"data-i18n="Change Withdrawal PIN"data-i18n="Change Withdrawal PIN"data-i18n="Change Withdrawal PIN">Change Withdrawal PIN</div>
-                    <div class="subtitle"data-i18n="Update your withdrawal PIN"data-i18n="Update your withdrawal PIN"data-i18n="Update your withdrawal PIN"data-i18n="Update your withdrawal PIN">Update your withdrawal PIN</div>
+                    <div class="title">Change Withdrawal PIN</div>
+                    <div class="subtitle">Update your withdrawal PIN</div>
                 </div>
             </div>
             <div class="settings-right"><i class="fas fa-chevron-right"></i></div>
@@ -551,17 +551,17 @@
 
     <!-- ========== 偏好设置卡片 ========== -->
     <div class="settings-card">
-        <div class="card-header"data-i18n="PREFERENCES"data-i18n="PREFERENCES"data-i18n="PREFERENCES"data-i18n="PREFERENCES">PREFERENCES</div>
+        <div class="card-header">PREFERENCES</div>
 
         <!-- 语言切换器 -->
         <div class="lang-card" style="margin: 0 0 12px 0; border-radius: 0;">
             <div class="lang-row">
                 <div class="lang-left">
                     <i class="fas fa-globe"></i>
-                    <divdata-i18n="Language "data-i18n="Language "data-i18n="Language "data-i18n="Language ">Language <span id="currentLangName"data-i18n="English"data-i18n="English"data-i18n="English"data-i18n="English">English</span></div>
+                    <div>Language <span id="currentLangName">English</span></div>
                 </div>
                 <button class="lang-selector-btn" id="langSelectorBtn">
-                    <span id="currentLangCode"data-i18n="EN"data-i18n="EN"data-i18n="EN"data-i18n="EN">EN</spandata-i18n=" "data-i18n=" "data-i18n=" "data-i18n=" "> <i class="fas fa-chevron-down"></i>
+                    <span id="currentLangCode">EN</span> <i class="fas fa-chevron-down"></i>
                 </button>
             </div>
         </div>
@@ -570,8 +570,8 @@
             <div class="settings-left">
                 <div class="settings-icon"><i class="fas fa-headset"></i></div>
                 <div class="settings-info">
-                    <div class="title"data-i18n="Contact Support"data-i18n="Contact Support"data-i18n="Contact Support"data-i18n="Contact Support">Contact Support</div>
-                    <div class="subtitle"data-i18n="Chat with customer service"data-i18n="Chat with customer service"data-i18n="Chat with customer service"data-i18n="Chat with customer service">Chat with customer service</div>
+                    <div class="title">Contact Support</div>
+                    <div class="subtitle">Chat with customer service</div>
                 </div>
             </div>
             <div class="settings-right"><i class="fas fa-chevron-right"></i></div>
@@ -584,8 +584,8 @@
             <div class="logout-left">
                 <div class="logout-icon"><i class="fas fa-sign-out-alt"></i></div>
                 <div class="logout-text">
-                    <div class="title"data-i18n="Log Out"data-i18n="Log Out"data-i18n="Log Out"data-i18n="Log Out">Log Out</div>
-                    <div class="subtitle"data-i18n="Sign out from this device"data-i18n="Sign out from this device"data-i18n="Sign out from this device"data-i18n="Sign out from this device">Sign out from this device</div>
+                    <div class="title">Log Out</div>
+                    <div class="subtitle">Sign out from this device</div>
                 </div>
             </div>
             <div class="logout-arrow"><i class="fas fa-chevron-right"></i></div>
@@ -594,28 +594,28 @@
 
     <!-- ========== 升级会员卡片 ========== -->
 <div class="upgrade-card-pulse">
-    <div class="upgrade-title"data-i18n="✨ Upgrade your membership"data-i18n="✨ Upgrade your membership">✨ Upgrade your membership</div>
-    <div class="upgrade-desc"data-i18n="Unlock higher rewards, priority support, and premium benefits."data-i18n="Unlock higher rewards, priority support, and premium benefits.">Unlock higher rewards, priority support, and premium benefits.</div>
-    <a href="membership.html" class="btn-upgrade"data-i18n="Upgrade Now "data-i18n="Upgrade Now "data-i18n="Upgrade Now "data-i18n="Upgrade Now ">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+    <div class="upgrade-title">✨ Upgrade your membership</div>
+    <div class="upgrade-desc">Unlock higher rewards, priority support, and premium benefits.</div>
+    <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
 </div>
 
     <!-- 底部导航栏 -->
     <div class="bottom-nav">
         <div class="nav-item" data-page="dashboard">
             <i class="fa-solid fa-house"></i>
-            <spandata-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span>
+            <span>Dashboard</span>
         </div>
         <div class="nav-item" data-page="products">
             <i class="fa-solid fa-box"></i>
-            <spandata-i18n="Products"data-i18n="Products"data-i18n="Products"data-i18n="Products">Products</span>
+            <span>Products</span>
         </div>
         <div class="nav-item" data-page="orders">
             <i class="fa-solid fa-list-check"></i>
-            <spandata-i18n="Orders"data-i18n="Orders"data-i18n="Orders"data-i18n="Orders">Orders</span>
+            <span>Orders</span>
         </div>
         <div class="nav-item active" data-page="profile">
             <i class="fa-solid fa-user"></i>
-            <spandata-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile">My Profile</span>
+            <span>My Profile</span>
         </div>
     </div>
 
@@ -624,12 +624,12 @@
 <!-- 语言选择弹窗 -->
 <div id="langModal" class="lang-modal">
     <div class="lang-modal-content">
-        <h3data-i18n="Select Language"data-i18n="Select Language"data-i18n="Select Language"data-i18n="Select Language">Select Language</h3>
-        <div class="lang-opt" data-lang="en" data-name="English" data-code="EN"data-i18n="🇬🇧 English"data-i18n="🇬🇧 English">🇬🇧 English</div>
-        <div class="lang-opt" data-lang="de" data-name="Deutsch" data-code="DE"data-i18n="🇩🇪 Deutsch"data-i18n="🇩🇪 Deutsch">🇩🇪 Deutsch</div>
-        <div class="lang-opt" data-lang="it" data-name="Italiano" data-code="IT"data-i18n="🇮🇹 Italiano"data-i18n="🇮🇹 Italiano">🇮🇹 Italiano</div>
-        <div class="lang-opt" data-lang="es" data-name="Español" data-code="ES"data-i18n="🇪🇸 Español"data-i18n="🇪🇸 Español">🇪🇸 Español</div>
-        <button class="lang-modal-cancel" id="closeModalBtn"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel"data-i18n="Cancel">Cancel</button>
+        <h3>Select Language</h3>
+        <div class="lang-opt" data-lang="en" data-name="English" data-code="EN">🇬🇧 English</div>
+        <div class="lang-opt" data-lang="de" data-name="Deutsch" data-code="DE">🇩🇪 Deutsch</div>
+        <div class="lang-opt" data-lang="it" data-name="Italiano" data-code="IT">🇮🇹 Italiano</div>
+        <div class="lang-opt" data-lang="es" data-name="Español" data-code="ES">🇪🇸 Español</div>
+        <button class="lang-modal-cancel" id="closeModalBtn">Cancel</button>
     </div>
 </div>
 

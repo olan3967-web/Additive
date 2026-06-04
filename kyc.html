@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <titledata-i18n="KYC Verification - ADDITIVE"data-i18n="KYC Verification - ADDITIVE">KYC Verification - ADDITIVE</title>
+    <title>KYC Verification - ADDITIVE</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
@@ -349,46 +349,46 @@
         const container = document.getElementById('kycPage');
         container.innerHTML = `
             <div class="header">
-                <h1data-i18n="KYC Verification"data-i18n="KYC Verification"data-i18n="KYC Verification"data-i18n="KYC Verification">KYC Verification</h1>
-                <pdata-i18n="Verify your identity to unlock benefits"data-i18n="Verify your identity to unlock benefits"data-i18n="Verify your identity to unlock benefits"data-i18n="Verify your identity to unlock benefits">Verify your identity to unlock benefits</p>
+                <h1>KYC Verification</h1>
+                <p>Verify your identity to unlock benefits</p>
             </div>
 
             <div class="upload-card">
-                <div class="upload-title"data-i18n="Identity Verification"data-i18n="Identity Verification"data-i18n="Identity Verification"data-i18n="Identity Verification">Identity Verification</div>
-                <div class="upload-subtitle"data-i18n="Please select document type and upload"data-i18n="Please select document type and upload"data-i18n="Please select document type and upload"data-i18n="Please select document type and upload">Please select document type and upload</div>
+                <div class="upload-title">Identity Verification</div>
+                <div class="upload-subtitle">Please select document type and upload</div>
 
                 <div class="doc-selector">
                     <div class="doc-btn ${selectedDocType === 'passport' ? 'active' : ''}" data-doc="passport">
                         <i class="fas fa-passport"></i>
-                        <spandata-i18n="Passport"data-i18n="Passport"data-i18n="Passport"data-i18n="Passport">Passport</span>
+                        <span>Passport</span>
                     </div>
                     <div class="doc-btn ${selectedDocType === 'id_card' ? 'active' : ''}" data-doc="id_card">
                         <i class="fas fa-id-card"></i>
-                        <spandata-i18n="ID Card"data-i18n="ID Card"data-i18n="ID Card"data-i18n="ID Card">ID Card</span>
+                        <span>ID Card</span>
                     </div>
                     <div class="doc-btn ${selectedDocType === 'residence_permit' ? 'active' : ''}" data-doc="residence_permit">
                         <i class="fas fa-address-card"></i>
-                        <spandata-i18n="Residence Permit"data-i18n="Residence Permit"data-i18n="Residence Permit"data-i18n="Residence Permit">Residence Permit</span>
+                        <span>Residence Permit</span>
                     </div>
                 </div>
 
                 <div class="upload-area" id="uploadArea">
                     <i class="fas fa-cloud-upload-alt"></i>
-                    <divdata-i18n="Click to upload or drag and drop"data-i18n="Click to upload or drag and drop"data-i18n="Click to upload or drag and drop"data-i18n="Click to upload or drag and drop">Click to upload or drag and drop</div>
-                    <div class="hint"data-i18n="Supported: JPG, PNG, PDF (Max 10MB)"data-i18n="Supported: JPG, PNG, PDF (Max 10MB)">Supported: JPG, PNG, PDF (Max 10MB)</div>
+                    <div>Click to upload or drag and drop</div>
+                    <div class="hint">Supported: JPG, PNG, PDF (Max 10MB)</div>
                 </div>
                 <input type="file" id="fileInput" accept="image/*,application/pdf" style="display: none;">
 
-                <button class="submit-btn" id="submitKycBtn"data-i18n="Submit Verification"data-i18n="Submit Verification"data-i18n="Submit Verification"data-i18n="Submit Verification">Submit Verification</button>
+                <button class="submit-btn" id="submitKycBtn">Submit Verification</button>
             </div>
 
-            <button class="back-btn" id="backBtn"data-i18n="← Back to Profile"data-i18n="← Back to Profile">← Back to Profile</button>
+            <button class="back-btn" id="backBtn">← Back to Profile</button>
 
             <div class="bottom-nav">
-                <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
-                <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products"data-i18n="Products"data-i18n="Products">Products</span></div>
-                <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders"data-i18n="Orders"data-i18n="Orders">Orders</span></div>
-                <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
+                <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+                <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+                <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+                <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
             </div>
         `;
 
@@ -412,8 +412,8 @@
                     uploadedImages.front = event.target.result;
                     uploadArea.innerHTML = `
                         <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                        <divdata-i18n="File uploaded: ${file.name}"data-i18n="File uploaded: ${file.name}">File uploaded: ${file.name}</div>
-                        <div class="hint"data-i18n="Click to change"data-i18n="Click to change"data-i18n="Click to change"data-i18n="Click to change">Click to change</div>
+                        <div>File uploaded: ${file.name}</div>
+                        <div class="hint">Click to change</div>
                     `;
                 };
                 reader.readAsDataURL(file);
@@ -432,47 +432,47 @@
         const container = document.getElementById('kycPage');
         container.innerHTML = `
             <div class="header">
-                <h1data-i18n="KYC Verification"data-i18n="KYC Verification"data-i18n="KYC Verification"data-i18n="KYC Verification">KYC Verification</h1>
-                <pdata-i18n="Verification in progress"data-i18n="Verification in progress"data-i18n="Verification in progress"data-i18n="Verification in progress">Verification in progress</p>
+                <h1>KYC Verification</h1>
+                <p>Verification in progress</p>
             </div>
 
             <div class="pending-status">
                 <i class="fas fa-clock"></i> Your documents are being reviewed
-                <div style="font-size: 12px; margin-top: 6px;"data-i18n="Less than 30 minutes"data-i18n="Less than 30 minutes"data-i18n="Less than 30 minutes"data-i18n="Less than 30 minutes">Less than 30 minutes</div>
+                <div style="font-size: 12px; margin-top: 6px;">Less than 30 minutes</div>
             </div>
 
             <div class="verified-card" style="opacity: 0.6;">
                 <div class="verified-icon">
                     <i class="fas fa-hourglass-half"></i>
                 </div>
-                <div class="verified-title"data-i18n="Verification Pending"data-i18n="Verification Pending"data-i18n="Verification Pending"data-i18n="Verification Pending">Verification Pending</div>
-                <div class="verified-sub"data-i18n="Please wait while we review your documents"data-i18n="Please wait while we review your documents"data-i18n="Please wait while we review your documents"data-i18n="Please wait while we review your documents">Please wait while we review your documents</div>
+                <div class="verified-title">Verification Pending</div>
+                <div class="verified-sub">Please wait while we review your documents</div>
 
                 <div class="benefits-list">
                     <div class="benefit-item">
                         <div class="benefit-icon"><i class="fas fa-clock"></i></div>
                         <div class="benefit-info">
-                            <div class="benefit-title"data-i18n="Estimated Time"data-i18n="Estimated Time"data-i18n="Estimated Time"data-i18n="Estimated Time">Estimated Time</div>
-                            <div class="benefit-desc"data-i18n="Less than 30 minutes"data-i18n="Less than 30 minutes"data-i18n="Less than 30 minutes"data-i18n="Less than 30 minutes">Less than 30 minutes</div>
+                            <div class="benefit-title">Estimated Time</div>
+                            <div class="benefit-desc">Less than 30 minutes</div>
                         </div>
                     </div>
                     <div class="benefit-item">
                         <div class="benefit-icon"><i class="fas fa-bell"></i></div>
                         <div class="benefit-info">
-                            <div class="benefit-title"data-i18n="Notification"data-i18n="Notification"data-i18n="Notification"data-i18n="Notification">Notification</div>
-                            <div class="benefit-desc"data-i18n="Check your notification status"data-i18n="Check your notification status"data-i18n="Check your notification status"data-i18n="Check your notification status">Check your notification status</div>
+                            <div class="benefit-title">Notification</div>
+                            <div class="benefit-desc">Check your notification status</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <button class="back-btn" id="backBtn"data-i18n="← Back to Profile"data-i18n="← Back to Profile">← Back to Profile</button>
+            <button class="back-btn" id="backBtn">← Back to Profile</button>
 
             <div class="bottom-nav">
-                <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
-                <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products"data-i18n="Products"data-i18n="Products">Products</span></div>
-                <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders"data-i18n="Orders"data-i18n="Orders">Orders</span></div>
-                <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
+                <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+                <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+                <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+                <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
             </div>
         `;
         document.getElementById('backBtn').addEventListener('click', () => {
@@ -485,64 +485,64 @@
         const container = document.getElementById('kycPage');
         container.innerHTML = `
             <div class="header">
-                <h1data-i18n="KYC Verification"data-i18n="KYC Verification"data-i18n="KYC Verification"data-i18n="KYC Verification">KYC Verification</h1>
-                <pdata-i18n="Your identity is verified"data-i18n="Your identity is verified"data-i18n="Your identity is verified"data-i18n="Your identity is verified">Your identity is verified</p>
+                <h1>KYC Verification</h1>
+                <p>Your identity is verified</p>
             </div>
 
             <div class="verified-card">
                 <div class="verified-icon">
                     <i class="fas fa-check-circle"></i>
                 </div>
-                <div class="verified-title"data-i18n="Your Account Is Verified"data-i18n="Your Account Is Verified"data-i18n="Your Account Is Verified"data-i18n="Your Account Is Verified">Your Account Is Verified</div>
-                <div class="verified-sub"data-i18n="Enjoy full access to all platform features"data-i18n="Enjoy full access to all platform features"data-i18n="Enjoy full access to all platform features"data-i18n="Enjoy full access to all platform features">Enjoy full access to all platform features</div>
-                <div class="status-badge"><i class="fas fa-check"></idata-i18n=" Verified Account"data-i18n=" Verified Account"data-i18n=" Verified Account"data-i18n=" Verified Account"> Verified Account</div>
+                <div class="verified-title">Your Account Is Verified</div>
+                <div class="verified-sub">Enjoy full access to all platform features</div>
+                <div class="status-badge"><i class="fas fa-check"></i> Verified Account</div>
 
                 <div class="benefits-list">
                     <div class="benefit-item">
                         <div class="benefit-icon"><i class="fas fa-infinity"></i></div>
                         <div class="benefit-info">
-                            <div class="benefit-title"data-i18n="No Withdrawal Limit"data-i18n="No Withdrawal Limit"data-i18n="No Withdrawal Limit"data-i18n="No Withdrawal Limit">No Withdrawal Limit</div>
-                            <div class="benefit-desc"data-i18n="Withdraw unlimited amount anytime"data-i18n="Withdraw unlimited amount anytime"data-i18n="Withdraw unlimited amount anytime"data-i18n="Withdraw unlimited amount anytime">Withdraw unlimited amount anytime</div>
+                            <div class="benefit-title">No Withdrawal Limit</div>
+                            <div class="benefit-desc">Withdraw unlimited amount anytime</div>
                         </div>
                     </div>
                     <div class="benefit-item">
                         <div class="benefit-icon"><i class="fas fa-rocket"></i></div>
                         <div class="benefit-info">
-                            <div class="benefit-title"data-i18n="Priority Task Access"data-i18n="Priority Task Access"data-i18n="Priority Task Access"data-i18n="Priority Task Access">Priority Task Access</div>
-                            <div class="benefit-desc"data-i18n="Get exclusive high-value tasks first"data-i18n="Get exclusive high-value tasks first">Get exclusive high-value tasks first</div>
+                            <div class="benefit-title">Priority Task Access</div>
+                            <div class="benefit-desc">Get exclusive high-value tasks first</div>
                         </div>
                     </div>
                     <div class="benefit-item">
                         <div class="benefit-icon"><i class="fas fa-headset"></i></div>
                         <div class="benefit-info">
-                            <div class="benefit-title"data-i18n="User Support"data-i18n="User Support"data-i18n="User Support"data-i18n="User Support">User Support</div>
-                            <div class="benefit-desc"data-i18n="Dedicated customer support"data-i18n="Dedicated customer support"data-i18n="Dedicated customer support"data-i18n="Dedicated customer support">Dedicated customer support</div>
+                            <div class="benefit-title">User Support</div>
+                            <div class="benefit-desc">Dedicated customer support</div>
                         </div>
                     </div>
                     <div class="benefit-item">
                         <div class="benefit-icon"><i class="fas fa-gem"></i></div>
                         <div class="benefit-info">
-                            <div class="benefit-title"data-i18n="Verified Badge"data-i18n="Verified Badge"data-i18n="Verified Badge"data-i18n="Verified Badge">Verified Badge</div>
-                            <div class="benefit-desc"data-i18n="Show verified status on your profile"data-i18n="Show verified status on your profile"data-i18n="Show verified status on your profile"data-i18n="Show verified status on your profile">Show verified status on your profile</div>
+                            <div class="benefit-title">Verified Badge</div>
+                            <div class="benefit-desc">Show verified status on your profile</div>
                         </div>
                     </div>
                     <div class="benefit-item">
                         <div class="benefit-icon"><i class="fas fa-shield-alt"></i></div>
                         <div class="benefit-info">
-                            <div class="benefit-title"data-i18n="Enhanced Security"data-i18n="Enhanced Security"data-i18n="Enhanced Security"data-i18n="Enhanced Security">Enhanced Security</div>
-                            <div class="benefit-desc"data-i18n="Additional protection for your account"data-i18n="Additional protection for your account"data-i18n="Additional protection for your account"data-i18n="Additional protection for your account">Additional protection for your account</div>
+                            <div class="benefit-title">Enhanced Security</div>
+                            <div class="benefit-desc">Additional protection for your account</div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <button class="back-btn" id="backBtn"data-i18n="← Back to Profile"data-i18n="← Back to Profile">← Back to Profile</button>
+            <button class="back-btn" id="backBtn">← Back to Profile</button>
 
             <div class="bottom-nav">
-                <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><spandata-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard"data-i18n="Dashboard">Dashboard</span></div>
-                <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><spandata-i18n="Products"data-i18n="Products"data-i18n="Products"data-i18n="Products">Products</span></div>
-                <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><spandata-i18n="Orders"data-i18n="Orders"data-i18n="Orders"data-i18n="Orders">Orders</span></div>
-                <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><spandata-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile"data-i18n="My Profile">My Profile</span></div>
+                <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+                <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+                <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+                <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
             </div>
         `;
         document.getElementById('backBtn').addEventListener('click', () => {

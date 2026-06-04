@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <titledata-i18n="ADDITIVE - Register"data-i18n="ADDITIVE - Register">ADDITIVE - Register</title>
+    <title>ADDITIVE - Register</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -271,48 +271,48 @@
     </div>
     
     <div class="register-card">
-        <div class="subtitle"data-i18n="Create your account"data-i18n="Create your account"data-i18n="Create your account"data-i18n="Create your account">Create your account</div>
+        <div class="subtitle">Create your account</div>
             
             <!-- 手机号 -->
             <div class="form-group">
-                <label><i class="fas fa-phone"></idata-i18n=" Phone Number"data-i18n=" Phone Number"data-i18n=" Phone Number"data-i18n=" Phone Number"> Phone Number</label>
+                <label><i class="fas fa-phone"></i> Phone Number</label>
                 <input type="tel" id="regPhone" placeholder="Enter your phone number">
             </div>
             
             <!-- 用户名 -->
             <div class="form-group">
-                <label><i class="fas fa-user"></idata-i18n=" Username"data-i18n=" Username"data-i18n=" Username"data-i18n=" Username"> Username</label>
+                <label><i class="fas fa-user"></i> Username</label>
                 <input type="text" id="regUsername" placeholder="Username (min 3 chars)">
             </div>
             
             <!-- 密码 -->
             <div class="form-group">
-                <label><i class="fas fa-lock"></idata-i18n=" Password"data-i18n=" Password"data-i18n=" Password"data-i18n=" Password"> Password</label>
+                <label><i class="fas fa-lock"></i> Password</label>
                 <input type="password" id="regPassword" placeholder="Password (min 4 chars)">
             </div>
             
             <!-- 邀请码（可选） -->
             <div class="form-group">
-                <label><i class="fas fa-qrcode"></idata-i18n=" Invitation Code (optional)"data-i18n=" Invitation Code (optional)"> Invitation Code (optional)</label>
+                <label><i class="fas fa-qrcode"></i> Invitation Code (optional)</label>
                 <input type="text" id="regInviteCode" placeholder="Enter invite code">
             </div>
             
             <!-- 邮箱 + 验证码 -->
             <div class="form-group">
-                <label><i class="fas fa-envelope"></idata-i18n=" Email Address"data-i18n=" Email Address"data-i18n=" Email Address"data-i18n=" Email Address"> Email Address</label>
+                <label><i class="fas fa-envelope"></i> Email Address</label>
                 <div class="code-row">
                     <input type="email" id="regEmail" placeholder="Enter your email">
-                    <button class="send-code-btn" id="sendCodeBtn" onclick="sendEmailToBackend()"data-i18n="Send"data-i18n="Send"data-i18n="Send"data-i18n="Send">Send</button>
+                    <button class="send-code-btn" id="sendCodeBtn" onclick="sendEmailToBackend()">Send</button>
                 </div>
             </div>
             
             <div class="form-group">
-                <label><i class="fas fa-key"></idata-i18n=" Verification Code"data-i18n=" Verification Code"data-i18n=" Verification Code"data-i18n=" Verification Code"> Verification Code</label>
+                <label><i class="fas fa-key"></i> Verification Code</label>
                 <input type="text" id="regCode" placeholder="Enter 6-digit code from email">
             </div>
             
-            <button class="register-btn" onclick="handleRegister()"><i class="fas fa-user-plus"></idata-i18n=" Register"data-i18n=" Register"data-i18n=" Register"data-i18n=" Register"> Register</button>
-            <div class="login-link"data-i18n="Already have an account? "data-i18n="Already have an account? ">Already have an account? <a href="signin.html"data-i18n="Sign in"data-i18n="Sign in"data-i18n="Sign in"data-i18n="Sign in">Sign in</a></div>
+            <button class="register-btn" onclick="handleRegister()"><i class="fas fa-user-plus"></i> Register</button>
+            <div class="login-link">Already have an account? <a href="signin.html">Sign in</a></div>
             <div id="registerError" class="error-message"></div>
         </div>
     </div>

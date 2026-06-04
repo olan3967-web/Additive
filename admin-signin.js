@@ -4,8 +4,8 @@ async function loadSigninPage() {
     if (!container) return;
     container.innerHTML = `
         <div class="card">
-            <h3><i class="fas fa-calendar-alt"></idata-i18n=" 每日签到奖励"data-i18n=" 每日签到奖励"> 每日签到奖励</h3>
-            <button id="addSigninDayBtn" class="success" style="margin-bottom: 20px;"><i class="fas fa-plus"></idata-i18n=" Add签到日"data-i18n=" Add签到日"> Add签到日</button>
+            <h3><i class="fas fa-calendar-alt"></i> 每日签到奖励</h3>
+            <button id="addSigninDayBtn" class="success" style="margin-bottom: 20px;"><i class="fas fa-plus"></i> Add签到日</button>
             <div id="signinRewardsDiv"></div>
         </div>
     `;
@@ -21,8 +21,8 @@ async function loadSigninRewards() {
         for (let r of rewards || []) {
             div.innerHTML += `<div style="background:#0f172a; border-radius:16px; padding:15px; margin-bottom:12px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                 Day ${r.day}: <input type="number" id="reward_${r.day}" value="${r.amount}" style="width:120px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;"> €
-                <button class="saveReward" data-day="${r.day}" style="background:#2f6b3a; padding:6px 16px; border-radius:8px;"data-i18n="Save"data-i18n="Save"data-i18n="Save"data-i18n="Save">Save</button>
-                <button class="deleteReward" data-day="${r.day}" style="background:#7a2f2f; padding:6px 16px; border-radius:8px;"data-i18n="Delete"data-i18n="Delete"data-i18n="Delete"data-i18n="Delete">Delete</button>
+                <button class="saveReward" data-day="${r.day}" style="background:#2f6b3a; padding:6px 16px; border-radius:8px;">Save</button>
+                <button class="deleteReward" data-day="${r.day}" style="background:#7a2f2f; padding:6px 16px; border-radius:8px;">Delete</button>
             </div>`;
         }
         document.querySelectorAll('.saveReward').forEach(btn => btn.addEventListener('click', () => saveReward(btn.dataset.day)));
