@@ -1,3 +1,14 @@
+// 删除 body 开头的空白文本节点
+(function() {
+    if (document.body) {
+        while (document.body.firstChild && 
+               document.body.firstChild.nodeType === 3 && 
+               document.body.firstChild.textContent.trim() === '') {
+            document.body.removeChild(document.body.firstChild);
+        }
+    }
+})();
+
 // user-data.js - 所有页面共享的用户数据管理
 
 const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
