@@ -253,6 +253,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .chart-title {
@@ -260,9 +262,25 @@
             color: #1a1a2e;
         }
 
-        .chart-period {
+        .chart-type-btn {
+            background: #f1f5f9;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
             font-size: 11px;
-            color: #ff7a00;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chart-type-btn.active {
+            background: #ff7a00;
+            color: white;
+        }
+
+        .chart-type-btn:hover:not(.active) {
+            background: #e2e8f0;
         }
 
         canvas {
@@ -604,8 +622,12 @@
 
     <div class="chart-card">
         <div class="chart-header">
-            <span class="chart-title">Revenue Trend</span>
-            <span class="chart-period">Last 7 days</span>
+            <span class="chart-title">Commission Trend</span>
+            <div style="display: flex; gap: 8px;">
+                <button class="chart-type-btn active" data-type="line">折线图</button>
+                <button class="chart-type-btn" data-type="bar">柱状图</button>
+                <button class="chart-type-btn" data-type="area">面积图</button>
+            </div>
         </div>
         <canvas id="revenueChart"></canvas>
     </div>
@@ -701,6 +723,7 @@
 
 <script>
     let revenueChart = null;
+    let currentChartType = 'line';
     let currentUser = null;
 
     function startParticleEffect(canvasId, wrapperId) {
@@ -907,7 +930,7 @@
         const yesterdayEnd = new Date(yesterday);
         yesterdayEnd.setDate(yesterdayEnd.getDate() + 1);
         
-        // 查询所有订单（用于总佣金和总销售额，以及按日期筛选）
+        // 查询所有订单
         const { data: allOrders } = await sb
             .from('order_history')
             .select('commission, price, date')
@@ -945,7 +968,7 @@
         const ordersChange = yesterdayOrderCount === 0 ? 100 : ((todayOrderCount / yesterdayOrderCount) - 1) * 100;
         const profitChange = yesterdayProfit === 0 ? 100 : ((todayProfit / yesterdayProfit) - 1) * 100;
         
-        // 总数据（用于显示主要数值）
+        // 总数据
         const totalCommission = allOrders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
         const totalSales = allOrders?.reduce((sum, o) => sum + (o.price || 0), 0) || 0;
         const totalOrderCount = allOrders?.length || 0;
@@ -959,7 +982,7 @@
         document.getElementById('profitValue').innerHTML = '€' + totalProfit.toLocaleString();
         document.getElementById('overviewEarnings').innerHTML = '€' + totalCommission.toLocaleString();
         
-        // 更新趋势箭头和百分比
+        // 更新趋势箭头
         const salesTrendEl = document.getElementById('salesTrend');
         salesTrendEl.innerHTML = (salesChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + salesChange.toFixed(1) + '%';
         salesTrendEl.className = salesChange >= 0 ? 'trend-up' : 'trend-down';
@@ -985,6 +1008,102 @@
         
         const progress = await loadUserOnboardingProgress(user.uid);
         updateProgressUI(progress);
+    }
+
+    async function initChart() {
+        const canvas = document.getElementById('revenueChart');
+        if (!canvas) return;
+        
+        const user = getCurrentUser();
+        if (!user) return;
+        
+        // 获取最近7天的日期范围
+        const dates = [];
+        const commissionData = [];
+        const today = new Date();
+        
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+            const nextDate = new Date(date);
+            nextDate.setDate(date.getDate() + 1);
+            
+            dates.push(`${date.getMonth() + 1}/${date.getDate()}`);
+            
+            // 查询当天的订单
+            const { data: dayOrders } = await sb
+                .from('order_history')
+                .select('commission')
+                .eq('uid', user.uid.toString())
+                .gte('date', date.toISOString())
+                .lt('date', nextDate.toISOString());
+            
+            const dayCommission = dayOrders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
+            commissionData.push(dayCommission);
+        }
+        
+        const ctx = canvas.getContext('2d');
+        if (revenueChart) revenueChart.destroy();
+        
+        let chartConfig = {
+            type: currentChartType === 'area' ? 'line' : currentChartType,
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Commission (€)',
+                    data: commissionData,
+                    borderColor: '#ff7a00',
+                    backgroundColor: currentChartType === 'area' ? 'rgba(255, 122, 0, 0.1)' : 
+                                    currentChartType === 'bar' ? '#ff7a00' : 'rgba(255, 122, 0, 0.05)',
+                    borderWidth: 2,
+                    pointRadius: currentChartType === 'line' ? 3 : 0,
+                    pointBackgroundColor: '#ff7a00',
+                    fill: currentChartType === 'area',
+                    tension: 0.4,
+                    barPercentage: 0.6,
+                    categoryPercentage: 0.8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { 
+                    legend: { display: false }, 
+                    tooltip: { 
+                        callbacks: {
+                            label: function(context) {
+                                return '€' + context.raw.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: { 
+                    x: { grid: { display: false } }, 
+                    y: { 
+                        grid: { color: '#eef2f7' },
+                        ticks: {
+                            callback: function(value) {
+                                return '€' + value.toFixed(0);
+                            }
+                        }
+                    } 
+                }
+            }
+        };
+        
+        revenueChart = new Chart(ctx, chartConfig);
+        
+        // 绑定按钮事件
+        document.querySelectorAll('.chart-type-btn').forEach(btn => {
+            btn.removeEventListener('click', () => {});
+            btn.addEventListener('click', async () => {
+                document.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentChartType = btn.dataset.type;
+                await initChart();
+            });
+        });
     }
 
     async function loadVideoConfig() {
@@ -1039,35 +1158,6 @@
         }
     }
 
-    function initChart() {
-        const canvas = document.getElementById('revenueChart');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (revenueChart) revenueChart.destroy();
-        revenueChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    data: [3200, 4100, 3800, 5200, 6100, 5800, 7200],
-                    borderColor: '#ff7a00',
-                    backgroundColor: 'rgba(255,122,0,0.05)',
-                    borderWidth: 2,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#ff7a00',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false }, tooltip: { backgroundColor: 'white', borderColor: '#ff7a00', borderWidth: 1 } },
-                scales: { x: { grid: { display: false } }, y: { grid: { color: '#eef2f7' } } }
-            }
-        });
-    }
-
     function setupBottomNav() {
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
@@ -1085,7 +1175,7 @@
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
-    // ========== 声音控制（顶部喇叭） ==========
+    // 声音控制
     const soundBtn = document.getElementById('soundControlBtn');
     const soundIcon = document.getElementById('soundIcon');
 
@@ -1113,7 +1203,7 @@
     async function init() {
         await loadVideoConfig();
         await loadUserData();
-        initChart();
+        await initChart();
         setupBottomNav();
         await loadPartners();
         
