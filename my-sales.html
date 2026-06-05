@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>My Sales - ADDITIVE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
+    <script src="toast.js"></script>
+    <script src="notification.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d5 100%);
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+        }
+
+        .phone {
+            width: 390px;
+            min-height: 100vh;
+            background: transparent;
+            padding-bottom: 80px;
+            position: relative;
+        }
+
+        /* 头部 */
+        .page-header {
+            padding: 20px 16px 10px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            flex: 1;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #ff7a00;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-btn:hover {
+            background: rgba(0,0,0,0.05);
+        }
+
+        /* 统计卡片网格 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 0 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid #eef2f7;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1a1a2e;
+        }
+
+        .stat-sub {
+            font-size: 11px;
+            color: #10b981;
+            margin-top: 6px;
+        }
+
+        /* 产品列表容器 */
+        .products-container {
+            padding: 0 16px;
+            margin-bottom: 20px;
+        }
+
+        /* 产品卡片 - 专业面板 */
+        .product-card {
+            background: white;
+            border-radius: 24px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            border: 1px solid #eef2f7;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        }
+
+        /* 产品头部 */
+        .product-header {
+            display: flex;
+            gap: 14px;
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .product-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #f5f0e8, #e8e0d5);
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .product-meta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .product-price {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ff7a00;
+        }
+
+        .product-margin {
+            font-size: 11px;
+            color: #10b981;
+            background: #e8f5e9;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        /* 销售数据网格 */
+        .sales-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 14px 16px;
+            background: #fafaf8;
+            gap: 8px;
+        }
+
+        .sales-item {
+            text-align: center;
+        }
+
+        .sales-label {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sales-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .sales-value.orange {
+            color: #ff7a00;
+        }
+
+        .sales-value.green {
+            color: #10b981;
+        }
+
+        .sales-value.blue {
+            color: #3b82f6;
+        }
+
+        /* 进度条区域 */
+        .progress-section {
+            padding: 12px 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        .progress-bar-container {
+            background: #eef2f7;
+            border-radius: 10px;
+            height: 6px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #ff7a00, #ff9f43);
+            height: 100%;
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* 排名标识 */
+        .rank-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #ff7a00;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+
+        .product-card {
+            position: relative;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #cbd5e1;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        /* 加载状态 */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        .loading-spinner {
+            text-align: center;
+        }
+
+        .loading-spinner i {
+            font-size: 40px;
+            color: #ff7a00;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid #eef2f7;
+            display: flex;
+            padding: 10px 0 14px;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item.active {
+            color: #ff7a00;
+            font-weight: 600;
+        }
+
+        @media (max-width: 390px) {
+            .phone { width: 100%; }
+            .sales-grid { gap: 4px; }
+            .sales-value { font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
+<div class="phone">
+
+    <div class="page-header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h1>My Sales</h1>
+        <div style="width: 30px;"></div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+            <div class="stat-label"><i class="fas fa-box"></i> Total Products</div>
+            <div class="stat-value" id="totalProducts">0</div>
+            <div class="stat-sub">Active in store</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label"><i class="fas fa-shopping-cart"></i> Total Orders</div>
+            <div class="stat-value" id="totalOrders">0</div>
+            <div class="stat-sub">All time</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label"><i class="fas fa-euro-sign"></i> Total Revenue</div>
+            <div class="stat-value" id="totalRevenue">€0</div>
+            <div class="stat-sub">Gross sales</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label"><i class="fas fa-coins"></i> Total Profit</div>
+            <div class="stat-value" id="totalProfit">€0</div>
+            <div class="stat-sub">Commission earned</div>
+        </div>
+    </div>
+
+    <!-- 产品列表 -->
+    <div class="products-container" id="productsList">
+        <div class="loading-container">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner"></i>
+                <div style="margin-top: 10px;">Loading sales data...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
+    </div>
+
+</div>
+
+<script>
+    let userProducts = [];
+    let productSalesMap = {};
+
+    // 生成模拟销售数据（没有真实订单时用于预览）
+    function generateMockSalesData(products) {
+        const mockMap = {};
+        products.forEach((product, index) => {
+            const isTopSeller = index < 2;
+            const quantity = isTopSeller 
+                ? Math.floor(Math.random() * 80) + 30 
+                : Math.floor(Math.random() * 25) + 2;
+            const revenue = quantity * product.price;
+            const profit = quantity * (product.margin_profit || product.price * 0.1);
+            mockMap[product.product_id] = {
+                product: product,
+                quantity: quantity,
+                revenue: revenue,
+                profit: profit
+            };
+        });
+        return mockMap;
+    }
+
+    async function loadSalesData() {
+        const user = getCurrentUser();
+        if (!user) {
+            window.location.href = 'signin.html';
+            return;
+        }
+
+        const container = document.getElementById('productsList');
+        container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading sales data...</div></div></div>`;
+
+        try {
+            // 获取用户添加的产品
+            const { data: products, error: productsError } = await sb
+                .from('user_products')
+                .select('*')
+                .eq('uid', user.uid)
+                .order('added_at', { ascending: false });
+
+            if (productsError) throw productsError;
+            userProducts = products || [];
+
+            if (userProducts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-regular fa-folder-open"></i>
+                        No products added yet
+                        <div style="margin-top: 12px; font-size: 12px;">Go to Products page to add your first product</div>
+                    </div>
+                `;
+                updateStats(0, 0, 0, 0);
+                return;
+            }
+
+            // 获取订单历史
+            const { data: orders, error: ordersError } = await sb
+                .from('order_history')
+                .select('accommodation_name, price, commission')
+                .eq('uid', user.uid);
+
+            if (ordersError) throw ordersError;
+
+            // 初始化销售映射
+            productSalesMap = {};
+            userProducts.forEach(p => {
+                productSalesMap[p.product_id] = {
+                    product: p,
+                    quantity: 0,
+                    revenue: 0,
+                    profit: 0
+                };
+            });
+
+            // 统计真实订单
+            if (orders && orders.length > 0) {
+                for (const order of orders) {
+                    const matchedProduct = userProducts.find(p => 
+                        p.product_name && order.accommodation_name && 
+                        p.product_name.toLowerCase().includes(order.accommodation_name.toLowerCase())
+                    );
+                    if (matchedProduct) {
+                        productSalesMap[matchedProduct.product_id].quantity += 1;
+                        productSalesMap[matchedProduct.product_id].revenue += (order.price || 0);
+                        productSalesMap[matchedProduct.product_id].profit += (order.commission || 0);
+                    }
+                }
+            }
+
+            // 检查是否有真实数据
+            const hasRealData = Object.values(productSalesMap).some(v => v.quantity > 0);
+            if (!hasRealData && userProducts.length > 0) {
+                productSalesMap = generateMockSalesData(userProducts);
+            }
+
+            // 计算总统计
+            const totalProducts = userProducts.length;
+            const totalOrders = Object.values(productSalesMap).reduce((sum, v) => sum + v.quantity, 0);
+            const totalRevenue = Object.values(productSalesMap).reduce((sum, v) => sum + v.revenue, 0);
+            const totalProfit = Object.values(productSalesMap).reduce((sum, v) => sum + v.profit, 0);
+
+            updateStats(totalProducts, totalOrders, totalRevenue, totalProfit);
+            renderProductsList();
+
+        } catch (err) {
+            console.error('加载失败:', err);
+            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-circle-xmark"></i>Failed to load sales data</div>';
+        }
+    }
+
+    function updateStats(totalProducts, totalOrders, totalRevenue, totalProfit) {
+        document.getElementById('totalProducts').innerText = totalProducts;
+        document.getElementById('totalOrders').innerText = totalOrders;
+        document.getElementById('totalRevenue').innerHTML = '€' + totalRevenue.toLocaleString();
+        document.getElementById('totalProfit').innerHTML = '€' + totalProfit.toLocaleString();
+    }
+
+    function renderProductsList() {
+        const container = document.getElementById('productsList');
+        if (!container) return;
+
+        // 按销量排序
+        const sortedProducts = Object.values(productSalesMap).sort((a, b) => b.quantity - a.quantity);
+        const maxQuantity = sortedProducts[0]?.quantity || 1;
+        const maxRevenue = Math.max(...sortedProducts.map(p => p.revenue), 1);
+
+        container.innerHTML = sortedProducts.map((item, idx) => {
+            const product = item.product;
+            const quantity = item.quantity;
+            const revenue = item.revenue;
+            const profit = item.profit;
+            
+            // 计算百分比
+            const quantityPercent = (quantity / maxQuantity) * 100;
+            const revenuePercent = (revenue / maxRevenue) * 100;
+            
+            // 平均订单价值
+            const avgOrderValue = quantity > 0 ? revenue / quantity : 0;
+            
+            // 利润率
+            const profitMargin = revenue > 0 ? (profit / revenue * 100).toFixed(1) : 0;
+            
+            // 排名标识
+            let rankBadge = '';
+            if (idx === 0) rankBadge = '<div class="rank-badge" style="background: #d4af37;">🏆 Top 1</div>';
+            else if (idx === 1) rankBadge = '<div class="rank-badge" style="background: #c0c0c0;">🥈 Top 2</div>';
+            else if (idx === 2) rankBadge = '<div class="rank-badge" style="background: #cd7f32;">🥉 Top 3</div>';
+            
+            return `
+                <div class="product-card">
+                    ${rankBadge}
+                    <div class="product-header">
+                        <img class="product-image" src="${product.image_url || 'https://placehold.co/70x70/f0f2f5/94a3b8?text=Product'}" 
+                             onerror="this.src='https://placehold.co/70x70/f0f2f5/94a3b8?text=Product'">
+                        <div class="product-info">
+                            <div class="product-name">${escapeHtml(product.product_name)}</div>
+                            <div class="product-meta">
+                                <span class="product-price">€${product.price.toFixed(2)}</span>
+                                <span class="product-margin">+${product.margin_percent || 0}% margin</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="sales-grid">
+                        <div class="sales-item">
+                            <div class="sales-label">ORDERS</div>
+                            <div class="sales-value blue">${quantity}</div>
+                        </div>
+                        <div class="sales-item">
+                            <div class="sales-label">REVENUE</div>
+                            <div class="sales-value orange">€${revenue.toFixed(2)}</div>
+                        </div>
+                        <div class="sales-item">
+                            <div class="sales-label">PROFIT</div>
+                            <div class="sales-value green">€${profit.toFixed(2)}</div>
+                        </div>
+                        <div class="sales-item">
+                            <div class="sales-label">AVG VALUE</div>
+                            <div class="sales-value">€${avgOrderValue.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-section">
+                        <div class="progress-label">
+                            <span><i class="fas fa-chart-line"></i> Sales volume</span>
+                            <span>${quantity} orders (${Math.round(quantityPercent)}%)</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${quantityPercent}%;"></div>
+                        </div>
+                        <div class="progress-label" style="margin-top: 10px;">
+                            <span><i class="fas fa-euro-sign"></i> Revenue contribution</span>
+                            <span>€${revenue.toFixed(2)} (${Math.round(revenuePercent)}%)</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${revenuePercent}%; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+                        </div>
+                        <div class="progress-label" style="margin-top: 10px;">
+                            <span><i class="fas fa-percent"></i> Profit margin</span>
+                            <span>${profitMargin}%</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${Math.min(profitMargin, 100)}%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+    }
+
+    function goBack() {
+        window.location.href = 'dashboard.html';
+    }
+
+    function setupBottomNav() {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const page = item.dataset.page;
+                if (page === 'dashboard') window.location.href = 'start.html';
+                else if (page === 'products') window.location.href = 'products.html';
+                else if (page === 'orders') window.location.href = 'orders.html';
+                else if (page === 'profile') window.location.href = 'dashboard.html';
+            });
+        });
+    }
+
+    setupBottomNav();
+    loadSalesData();
+</script>
+</body>
+</html>
