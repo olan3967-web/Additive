@@ -66,6 +66,39 @@
             background: rgba(0,0,0,0.05);
         }
 
+        /* 排序栏 */
+        .sort-bar {
+            padding: 0 16px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sort-btn {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 122, 0, 0.3);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #5a6a7a;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sort-btn.active {
+            background: #ff7a00;
+            color: white;
+            border-color: #ff7a00;
+        }
+
+        .sort-btn:hover:not(.active) {
+            background: rgba(255, 122, 0, 0.1);
+            border-color: #ff7a00;
+        }
+
         /* 统计卡片网格 */
         .stats-grid {
             display: grid;
@@ -110,7 +143,7 @@
             margin-bottom: 20px;
         }
 
-        /* 产品卡片 - 专业面板 */
+        /* 产品卡片 */
         .product-card {
             background: white;
             border-radius: 24px;
@@ -119,6 +152,7 @@
             border: 1px solid #eef2f7;
             transition: all 0.25s ease;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            position: relative;
         }
 
         .product-card:hover {
@@ -126,7 +160,6 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
         }
 
-        /* 产品头部 */
         .product-header {
             display: flex;
             gap: 14px;
@@ -202,17 +235,9 @@
             color: #1f2937;
         }
 
-        .sales-value.orange {
-            color: #ff7a00;
-        }
-
-        .sales-value.green {
-            color: #10b981;
-        }
-
-        .sales-value.blue {
-            color: #3b82f6;
-        }
+        .sales-value.orange { color: #ff7a00; }
+        .sales-value.green { color: #10b981; }
+        .sales-value.blue { color: #3b82f6; }
 
         /* 进度条区域 */
         .progress-section {
@@ -248,7 +273,6 @@
             position: absolute;
             top: 12px;
             right: 12px;
-            background: #ff7a00;
             color: white;
             font-size: 10px;
             font-weight: 700;
@@ -256,9 +280,9 @@
             border-radius: 20px;
         }
 
-        .product-card {
-            position: relative;
-        }
+        .rank-badge.gold { background: #d4af37; }
+        .rank-badge.silver { background: #c0c0c0; color: #333; }
+        .rank-badge.bronze { background: #cd7f32; }
 
         /* 空状态 */
         .empty-state {
@@ -336,6 +360,7 @@
             .phone { width: 100%; }
             .sales-grid { gap: 4px; }
             .sales-value { font-size: 13px; }
+            .sort-btn { padding: 6px 12px; font-size: 11px; }
         }
     </style>
 </head>
@@ -346,6 +371,15 @@
         <button class="back-btn" onclick="goBack()">←</button>
         <h1>My Sales</h1>
         <div style="width: 30px;"></div>
+    </div>
+
+    <!-- 排序栏 -->
+    <div class="sort-bar" id="sortBar">
+        <button class="sort-btn active" data-sort="best_seller">🏆 Best Seller</button>
+        <button class="sort-btn" data-sort="highest_revenue">💰 Highest Revenue</button>
+        <button class="sort-btn" data-sort="highest_profit">📈 Highest Profit</button>
+        <button class="sort-btn" data-sort="lowest_sales">📉 Lowest Sales</button>
+        <button class="sort-btn" data-sort="newest">🆕 Newest</button>
     </div>
 
     <!-- 统计卡片 -->
@@ -395,8 +429,10 @@
 <script>
     let userProducts = [];
     let productSalesMap = {};
+    let currentSort = 'best_seller';
+    let sortedProductList = [];
 
-    // 生成模拟销售数据（没有真实订单时用于预览）
+    // 生成模拟销售数据
     function generateMockSalesData(products) {
         const mockMap = {};
         products.forEach((product, index) => {
@@ -416,6 +452,25 @@
         return mockMap;
     }
 
+    // 排序函数
+    function sortProducts(sortType, productList) {
+        const list = [...productList];
+        switch(sortType) {
+            case 'best_seller':
+                return list.sort((a, b) => b.quantity - a.quantity);
+            case 'highest_revenue':
+                return list.sort((a, b) => b.revenue - a.revenue);
+            case 'highest_profit':
+                return list.sort((a, b) => b.profit - a.profit);
+            case 'lowest_sales':
+                return list.sort((a, b) => a.quantity - b.quantity);
+            case 'newest':
+                return list.sort((a, b) => new Date(b.product.added_at) - new Date(a.product.added_at));
+            default:
+                return list;
+        }
+    }
+
     async function loadSalesData() {
         const user = getCurrentUser();
         if (!user) {
@@ -427,7 +482,6 @@
         container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading sales data...</div></div></div>`;
 
         try {
-            // 获取用户添加的产品
             const { data: products, error: productsError } = await sb
                 .from('user_products')
                 .select('*')
@@ -449,7 +503,6 @@
                 return;
             }
 
-            // 获取订单历史
             const { data: orders, error: ordersError } = await sb
                 .from('order_history')
                 .select('accommodation_name, price, commission')
@@ -457,7 +510,6 @@
 
             if (ordersError) throw ordersError;
 
-            // 初始化销售映射
             productSalesMap = {};
             userProducts.forEach(p => {
                 productSalesMap[p.product_id] = {
@@ -468,7 +520,6 @@
                 };
             });
 
-            // 统计真实订单
             if (orders && orders.length > 0) {
                 for (const order of orders) {
                     const matchedProduct = userProducts.find(p => 
@@ -483,19 +534,21 @@
                 }
             }
 
-            // 检查是否有真实数据
             const hasRealData = Object.values(productSalesMap).some(v => v.quantity > 0);
             if (!hasRealData && userProducts.length > 0) {
                 productSalesMap = generateMockSalesData(userProducts);
             }
 
-            // 计算总统计
             const totalProducts = userProducts.length;
             const totalOrders = Object.values(productSalesMap).reduce((sum, v) => sum + v.quantity, 0);
             const totalRevenue = Object.values(productSalesMap).reduce((sum, v) => sum + v.revenue, 0);
             const totalProfit = Object.values(productSalesMap).reduce((sum, v) => sum + v.profit, 0);
 
             updateStats(totalProducts, totalOrders, totalRevenue, totalProfit);
+            
+            // 排序并渲染
+            const productList = Object.values(productSalesMap);
+            sortedProductList = sortProducts(currentSort, productList);
             renderProductsList();
 
         } catch (err) {
@@ -515,36 +568,31 @@
         const container = document.getElementById('productsList');
         if (!container) return;
 
-        // 按销量排序
-        const sortedProducts = Object.values(productSalesMap).sort((a, b) => b.quantity - a.quantity);
-        const maxQuantity = sortedProducts[0]?.quantity || 1;
-        const maxRevenue = Math.max(...sortedProducts.map(p => p.revenue), 1);
+        const maxQuantity = sortedProductList[0]?.quantity || 1;
+        const maxRevenue = Math.max(...sortedProductList.map(p => p.revenue), 1);
 
-        container.innerHTML = sortedProducts.map((item, idx) => {
+        container.innerHTML = sortedProductList.map((item, idx) => {
             const product = item.product;
             const quantity = item.quantity;
             const revenue = item.revenue;
             const profit = item.profit;
             
-            // 计算百分比
             const quantityPercent = (quantity / maxQuantity) * 100;
             const revenuePercent = (revenue / maxRevenue) * 100;
-            
-            // 平均订单价值
             const avgOrderValue = quantity > 0 ? revenue / quantity : 0;
-            
-            // 利润率
             const profitMargin = revenue > 0 ? (profit / revenue * 100).toFixed(1) : 0;
             
-            // 排名标识
             let rankBadge = '';
-            if (idx === 0) rankBadge = '<div class="rank-badge" style="background: #d4af37;">🏆 Top 1</div>';
-            else if (idx === 1) rankBadge = '<div class="rank-badge" style="background: #c0c0c0;">🥈 Top 2</div>';
-            else if (idx === 2) rankBadge = '<div class="rank-badge" style="background: #cd7f32;">🥉 Top 3</div>';
+            let rankClass = '';
+            if (currentSort === 'best_seller') {
+                if (idx === 0) { rankBadge = '🏆 Top 1'; rankClass = 'gold'; }
+                else if (idx === 1) { rankBadge = '🥈 Top 2'; rankClass = 'silver'; }
+                else if (idx === 2) { rankBadge = '🥉 Top 3'; rankClass = 'bronze'; }
+            }
             
             return `
                 <div class="product-card">
-                    ${rankBadge}
+                    ${rankBadge ? `<div class="rank-badge ${rankClass}">${rankBadge}</div>` : ''}
                     <div class="product-header">
                         <img class="product-image" src="${product.image_url || 'https://placehold.co/70x70/f0f2f5/94a3b8?text=Product'}" 
                              onerror="this.src='https://placehold.co/70x70/f0f2f5/94a3b8?text=Product'">
@@ -604,6 +652,21 @@
         }).join('');
     }
 
+    function applySort(sortType) {
+        currentSort = sortType;
+        const productList = Object.values(productSalesMap);
+        sortedProductList = sortProducts(currentSort, productList);
+        renderProductsList();
+        
+        // 更新按钮样式
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.sort === sortType) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
@@ -624,6 +687,13 @@
             });
         });
     }
+
+    // 绑定排序事件
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            applySort(btn.dataset.sort);
+        });
+    });
 
     setupBottomNav();
     loadSalesData();
