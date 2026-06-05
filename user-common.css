@@ -1,9 +1,9 @@
 /* user-common.css - 用户端页面共用样式
    只修改了 body 背景色，其他样式完全保持原样 */
 
-/* 暖灰渐变背景 (Style 07) */
+/* user-common.css - 强制暖灰渐变背景 */
 body {
-    background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d5 100%);
+    background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d5 100%) !important;
     font-family: 'Inter', sans-serif;
     color: #1f2937;
     display: flex;
