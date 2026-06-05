@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>My Profile - ADDITIVE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
@@ -18,7 +18,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d5 100%);
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             color: #1f2937;
             display: flex;
@@ -33,16 +33,33 @@
             position: relative;
         }
 
-        /* 顶部用户卡片 */
+        /* 顶部用户卡片 - 带粒子容器 */
         .profile-header {
             background: #0f0f23;
             padding: 24px 20px;
-            margin: 0;
+            margin: 0 16px 16px 16px;
             border-bottom: 2px solid #ff7a00;
             box-shadow: 0 0 20px rgba(255, 122, 0, 0.3);
-            border-radius: 0 0 28px 28px;
+            border-radius: 28px;
             position: relative;
             overflow: hidden;
+        }
+
+        /* 粒子画布容器 */
+        .particle-canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
         }
 
         .profile-header::before {
@@ -54,6 +71,7 @@
             bottom: 0;
             background: radial-gradient(circle at 30% 0%, rgba(255, 122, 0, 0.15), transparent 70%);
             pointer-events: none;
+            z-index: 2;
         }
 
         .profile-header::after {
@@ -65,6 +83,7 @@
             height: 100%;
             background: linear-gradient(180deg, rgba(255, 122, 0, 0.08) 0%, transparent 50%);
             pointer-events: none;
+            z-index: 2;
         }
 
         .profile-row {
@@ -72,7 +91,7 @@
             align-items: center;
             gap: 16px;
             position: relative;
-            z-index: 1;
+            z-index: 10;
         }
 
         .avatar {
@@ -131,66 +150,19 @@
             color: #7e8aa8;
         }
 
-        /* 三个透明卡片效果 */
-        .stats-card,
-        .half-card {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 122, 0, 0.5);
-            border-radius: 20px;
-            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .stats-card::before,
-        .half-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transform: skewX(-20deg);
-            animation: shimmer 3s infinite;
-            pointer-events: none;
-        }
-
-        .stats-card::after,
-        .half-card::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 10%;
-            width: 80%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #ff7a00, #ffcc00, transparent);
-            border-radius: 3px;
-            pointer-events: none;
-        }
-
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 200%; }
-        }
-
-        .stats-card:hover,
-        .half-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 30px 40px -12px rgba(0, 0, 0, 0.25);
-            background: rgba(255, 255, 255, 0.28);
-        }
-
         .stats-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             margin: 16px;
             padding: 16px;
+            border-radius: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
         }
 
         .stat-label {
             font-size: 13px;
-            color: #1f2937;
+            color: #5a6a7a;
             margin-bottom: 8px;
             font-weight: 500;
         }
@@ -279,8 +251,19 @@
 
         .half-card {
             flex: 1;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
             padding: 18px;
             cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .half-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.55);
         }
 
         .half-card-header {
@@ -294,7 +277,7 @@
             width: 48px;
             height: 48px;
             border-radius: 16px;
-            background: rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, #fff7ed, #ffe7cc);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -319,17 +302,15 @@
             color: #4b5563 !important;
         }
 
-        /* ========== glass-card 样式 - 固定高度，不随粒子变化 ========== */
         .glass-card {
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(12px);
             border-radius: 24px;
             margin: 16px;
+            overflow: hidden;
             position: relative;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.5);
-            /* 移除 overflow: hidden 的粒子影响，但保留边框圆角裁剪 */
-            overflow: visible;
         }
 
         .glass-card::before {
@@ -343,7 +324,6 @@
             z-index: 10;
             box-shadow: 0 0 8px #ff7a00, 0 0 4px #ff9f43;
             animation: glowBar 1.5s ease-in-out infinite alternate;
-            border-radius: 24px 24px 0 0;
         }
 
         @keyframes glowBar {
@@ -368,7 +348,6 @@
             gap: 8px;
         }
 
-        /* 4列网格 - 固定高度，不会因内容撑高 */
         .grid-4 {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -400,7 +379,6 @@
             box-shadow: 0 10px 20px rgba(255, 122, 0, 0.35);
         }
 
-        /* 按钮文字改小，强制一行 */
         .grid-label {
             font-size: 10px;
             font-weight: 500;
@@ -409,42 +387,12 @@
             letter-spacing: 0.2px;
         }
 
-        /* Settings 单独一行居中 */
         .settings-row {
-            margin-top: 20px;
+            margin-top: 16px;
             padding-top: 16px;
             border-top: 1px solid rgba(0, 0, 0, 0.06);
             display: flex;
             justify-content: center;
-        }
-
-        /* 粒子容器 - 不占位，不影响布局 */
-        .particle-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 5;
-            border-radius: 24px;
-        }
-
-        .particle {
-            position: absolute;
-            background: radial-gradient(circle, #ff9f43, #ff7a00);
-            border-radius: 50%;
-            pointer-events: none;
-            opacity: 0;
-            animation: floatParticle 4s infinite ease-out;
-        }
-
-        @keyframes floatParticle {
-            0% { transform: translateY(0) translateX(0) scale(0.5); opacity: 0; }
-            15% { opacity: 0.6; }
-            85% { opacity: 0.3; }
-            100% { transform: translateY(-180px) translateX(20px) scale(0); opacity: 0; }
         }
 
         .bottom-nav {
@@ -464,7 +412,8 @@
         .nav-item {
             flex: 1;
             text-align: center;
-            font-size: 11px;
+            font-size: 12px;
+            font-weight: 500;
             color: #9ca3af;
             cursor: pointer;
             position: relative;
@@ -472,13 +421,13 @@
 
         .nav-item i {
             display: block;
-            font-size: 20px;
+            font-size: 22px;
             margin-bottom: 4px;
         }
 
         .nav-item.active {
             color: #ff7a00;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         @media (max-width: 390px) {
@@ -493,7 +442,9 @@
 <body>
 <div class="phone">
 
-    <div class="profile-header">
+    <!-- 顶部用户卡片 - 带粒子效果 -->
+    <div class="profile-header" id="profileHeader">
+        <canvas id="particleCanvas" class="particle-canvas-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></canvas>
         <div class="profile-row">
             <div class="avatar" id="avatarInitial">O</div>
             <div class="profile-info">
@@ -540,9 +491,7 @@
         </div>
     </div>
 
-    <!-- QUICK ACTIONS 卡片 - 粒子放入独立容器，不影响高度 -->
     <div class="glass-card" id="particleCard1">
-        <div class="particle-container" id="particleContainer1"></div>
         <div class="card-inner">
             <div class="section-title">
                 <i class="fa-regular fa-star" style="color:#ff7a00;"></i>
@@ -585,9 +534,7 @@
         </div>
     </div>
 
-    <!-- SUPPORT & HISTORY 卡片 -->
     <div class="glass-card" id="particleCard2">
-        <div class="particle-container" id="particleContainer2"></div>
         <div class="card-inner">
             <div class="section-title">
                 <i class="fa-regular fa-circle-question" style="color:#ff7a00;"></i>
@@ -642,33 +589,97 @@
 </div>
 
 <script>
-    let particleIntervals = [];
+    let particleAnimationId = null;
 
-    function createParticle(container) {
-        if (!container) return;
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        const size = 3 + Math.random() * 10;
-        const left = Math.random() * 100;
-        const duration = 2.5 + Math.random() * 2;
-        const delay = Math.random() * 3;
-        particle.style.width = size + 'px';
-        particle.style.height = size + 'px';
-        particle.style.left = left + '%';
-        particle.style.bottom = '0px';
-        particle.style.animationDuration = duration + 's';
-        particle.style.animationDelay = delay + 's';
-        container.appendChild(particle);
-        setTimeout(() => {
-            if (particle.parentNode) particle.remove();
-        }, duration * 1000);
-    }
-
-    function startParticleEffect(containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        const interval = setInterval(() => createParticle(container), 300);
-        particleIntervals.push(interval);
+    // ========== 拖尾粒子效果（Canvas） ==========
+    function initParticleEffect() {
+        const canvas = document.getElementById('particleCanvas');
+        const container = document.getElementById('profileHeader');
+        if (!canvas || !container) return;
+        
+        // 设置canvas尺寸
+        const resizeCanvas = () => {
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        };
+        resizeCanvas();
+        
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function createParticle() {
+            return {
+                x: Math.random() * canvas.width,
+                y: canvas.height - 10 + Math.random() * 30,
+                size: 2 + Math.random() * 6,
+                speedX: (Math.random() - 0.5) * 0.6,
+                speedY: -0.4 - Math.random() * 0.8,
+                alpha: 0.5 + Math.random() * 0.4,
+                color: Math.random() > 0.5 ? '#ff7a00' : '#ffcc00',
+                life: 1,
+                decay: 0.006 + Math.random() * 0.008
+            };
+        }
+        
+        // 初始粒子
+        for (let i = 0; i < 40; i++) {
+            particles.push(createParticle());
+        }
+        
+        function animate() {
+            if (!canvas.parentNode) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 更新并绘制粒子
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.speedX;
+                p.y += p.speedY;
+                p.life -= p.decay;
+                p.alpha = p.life * 0.8;
+                
+                if (p.life <= 0.02 || p.y < -20 || p.x > canvas.width + 50 || p.x < -50) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                
+                // 主粒子
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = p.color;
+                ctx.fill();
+                
+                // 拖尾光晕
+                ctx.beginPath();
+                ctx.arc(p.x - p.speedX * 4, p.y - p.speedY * 4, p.size * 0.7, 0, Math.PI * 2);
+                ctx.fillStyle = p.color + '60';
+                ctx.fill();
+            }
+            
+            // 补充粒子
+            if (particles.length < 30) {
+                for (let i = 0; i < 3; i++) {
+                    particles.push(createParticle());
+                }
+            }
+            
+            particleAnimationId = requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        // 监听容器大小变化
+        const resizeObserver = new ResizeObserver(() => resizeCanvas());
+        resizeObserver.observe(container);
+        
+        return () => {
+            if (particleAnimationId) cancelAnimationFrame(particleAnimationId);
+            resizeObserver.disconnect();
+        };
     }
 
     async function fetchUserData(uid) {
@@ -719,12 +730,12 @@
         const kycBadge = document.getElementById('kycBadge');
         if (isKycVerified) {
             kycBadge.innerText = 'KYC Verified';
-            kycBadge.style.background = 'rgba(0, 255, 255, 0.12)';
-            kycBadge.style.color = '#00e5ff';
+            kycBadge.style.background = 'rgba(0, 200, 200, 0.15)';
+            kycBadge.style.color = '#0e7c7c';
         } else {
             kycBadge.innerText = 'KYC Pending';
             kycBadge.style.background = 'rgba(255, 122, 0, 0.2)';
-            kycBadge.style.color = '#ffb347';
+            kycBadge.style.color = '#b45309';
         }
 
         const { data: orders } = await sb
@@ -782,15 +793,11 @@
 
     loadProfile();
     setupBottomNav();
-
+    
+    // 启动粒子效果
     setTimeout(() => {
-        startParticleEffect('particleContainer1');
-        startParticleEffect('particleContainer2');
+        initParticleEffect();
     }, 500);
-
-    window.checkCertificate = function() {
-        alert('Certificate function');
-    };
 </script>
 </body>
 </html>
