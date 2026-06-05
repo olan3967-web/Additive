@@ -130,17 +130,67 @@
             color: #7e8aa8;
         }
 
-        /* Total Commissions Earned - 透明玻璃效果 + 黑色字体 */
-        .stats-card {
-            background: rgba(255, 255, 255, 0.3);
+        /* ========== 融合效果：标准苹果玻璃 + 橙边 + 橙色底部反光 + 流光反光 + 黑色字体 ========== */
+        .stats-card,
+        .half-card {
+            background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(20px);
-            margin: 16px;
-            padding: 16px;
+            border: 1px solid rgba(255, 122, 0, 0.5);
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
         }
 
+        /* 流光反光动画 */
+        .stats-card::before,
+        .half-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: skewX(-20deg);
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+
+        /* 橙色底部反光条 */
+        .stats-card::after,
+        .half-card::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 10%;
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff7a00, #ffcc00, transparent);
+            border-radius: 3px;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+
+        /* 悬浮效果 */
+        .stats-card:hover,
+        .half-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 30px 40px -12px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .stats-card {
+            margin: 16px;
+            padding: 16px;
+        }
+
+        /* 黑色字体 */
         .stat-label {
             font-size: 13px;
             color: #1f2937;
@@ -230,23 +280,10 @@
             margin: 16px;
         }
 
-        /* My Sales 和 Sourcing - 透明玻璃效果 + 黑色字体 */
         .half-card {
             flex: 1;
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 20px;
             padding: 18px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .half-card:hover {
-            transform: translateY(-2px);
-            background: rgba(255, 255, 255, 0.45);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
 
         .half-card-header {
@@ -260,7 +297,7 @@
             width: 48px;
             height: 48px;
             border-radius: 16px;
-            background: linear-gradient(135deg, #fff7ed, #ffe7cc);
+            background: rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -451,7 +488,7 @@
         </div>
     </div>
 
-    <!-- Total Commissions Earned - 透明玻璃效果 + 黑色字体 -->
+    <!-- Total Commissions Earned - 融合玻璃效果 + 黑色字体 -->
     <div class="stats-card">
         <div class="stat-label">Total Commissions Earned</div>
         <div class="stat-value" id="totalCommissions">€0.00</div>
@@ -467,7 +504,7 @@
     </div>
 
     <div class="double-card-row">
-        <!-- My Sales - 透明玻璃效果 + 黑色字体 -->
+        <!-- My Sales - 融合玻璃效果 + 黑色字体 -->
         <div class="half-card" onclick="location.href='history.html?tab=balance'">
             <div class="half-card-header">
                 <div class="half-card-icon"><i class="fa-solid fa-chart-line"></i></div>
@@ -476,7 +513,7 @@
             <div class="half-card-title">My Sales</div>
             <div style="font-size: 12px; color: #4b5563; margin-top: 6px;" id="salesAmount">€0.00 earned</div>
         </div>
-        <!-- Sourcing - 透明玻璃效果 + 黑色字体 -->
+        <!-- Sourcing - 融合玻璃效果 + 黑色字体 -->
         <div class="half-card" onclick="location.href='start.html'">
             <div class="half-card-header">
                 <div class="half-card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
