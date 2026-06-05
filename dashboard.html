@@ -45,6 +45,17 @@
             overflow: hidden;
         }
 
+        /* 粒子画布 */
+        .dust-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
         .profile-header::before {
             content: '';
             position: absolute;
@@ -54,6 +65,7 @@
             bottom: 0;
             background: radial-gradient(circle at 30% 0%, rgba(255, 122, 0, 0.15), transparent 70%);
             pointer-events: none;
+            z-index: 1;
         }
 
         .profile-header::after {
@@ -65,6 +77,7 @@
             height: 100%;
             background: linear-gradient(180deg, rgba(255, 122, 0, 0.08) 0%, transparent 50%);
             pointer-events: none;
+            z-index: 1;
         }
 
         .profile-row {
@@ -72,7 +85,7 @@
             align-items: center;
             gap: 16px;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
         .avatar {
@@ -319,7 +332,7 @@
             color: #4b5563 !important;
         }
 
-        /* ========== 细沙质感卡片容器 - 删除了顶部橙色光条 ========== */
+        /* 细沙质感卡片容器 - 无顶部橙色光条 */
         .glass-card {
             background: #f5efe7;
             background-image: radial-gradient(circle at 10% 20%, rgba(160, 130, 100, 0.06) 1.5px, transparent 1.5px);
@@ -331,8 +344,6 @@
             border: 1px solid rgba(160, 130, 100, 0.2);
             overflow: visible;
         }
-
-        /* 已删除顶部橙色光条 */
 
         .card-inner {
             padding: 20px;
@@ -444,7 +455,9 @@
 <body>
 <div class="phone">
 
-    <div class="profile-header">
+    <!-- 顶部用户卡片 - 带粒子效果 -->
+    <div class="profile-header" id="profileHeader">
+        <canvas id="dustCanvas" class="dust-canvas"></canvas>
         <div class="profile-row">
             <div class="avatar" id="avatarInitial">O</div>
             <div class="profile-info">
@@ -491,7 +504,6 @@
         </div>
     </div>
 
-    <!-- QUICK ACTIONS 卡片 - 已删除顶部橙色光条 -->
     <div class="glass-card" id="particleCard1">
         <div class="card-inner">
             <div class="section-title">
@@ -535,7 +547,6 @@
         </div>
     </div>
 
-    <!-- SUPPORT & HISTORY 卡片 - 已删除顶部橙色光条 -->
     <div class="glass-card" id="particleCard2">
         <div class="card-inner">
             <div class="section-title">
@@ -591,6 +602,111 @@
 </div>
 
 <script>
+    let particleAnimationId = null;
+
+    // ========== 螺旋上升 + 闪烁呼吸粒子效果 ==========
+    function initSpiralBreathingParticles() {
+        const canvas = document.getElementById('dustCanvas');
+        const container = document.getElementById('profileHeader');
+        if (!canvas || !container) return;
+        
+        const resizeCanvas = () => {
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        };
+        resizeCanvas();
+        
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function createParticle() {
+            return {
+                x: Math.random() * canvas.width,
+                y: canvas.height - 15 + Math.random() * 40,
+                size: 1.5 + Math.random() * 2.5,
+                speedX: (Math.random() - 0.5) * 0.3,
+                speedY: -0.2 - Math.random() * 0.35,
+                alpha: 0.2 + Math.random() * 0.3,
+                color: `rgba(255, ${140 + Math.random() * 60}, ${40 + Math.random() * 40}, 0.4)`,
+                life: 1,
+                decay: 0.002 + Math.random() * 0.005,
+                breathPhase: Math.random() * Math.PI * 2
+            };
+        }
+        
+        // 初始粒子
+        for (let i = 0; i < 55; i++) {
+            const p = createParticle();
+            p.y = Math.random() * canvas.height;
+            particles.push(p);
+        }
+        
+        let startTime = performance.now();
+        
+        function animate() {
+            if (!canvas.parentNode) return;
+            
+            const now = performance.now();
+            const elapsed = (now - startTime) * 0.002;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                
+                // 螺旋轨迹：粒子围绕中心左右摆动
+                const spiralOffset = Math.sin(elapsed * 1.5 + p.y * 0.08) * 0.8;
+                p.x += p.speedX + spiralOffset * 0.15;
+                p.y += p.speedY;
+                p.life -= p.decay;
+                
+                // 闪烁呼吸效果
+                const breath = 0.5 + Math.sin(elapsed * 2 + p.breathPhase) * 0.3;
+                
+                if (p.life <= 0.02 || p.y < -15) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                
+                // 绘制粒子（带光晕）
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                
+                const finalAlpha = Math.min(p.life * 0.5 * breath, 0.6);
+                ctx.fillStyle = `rgba(255, ${140 + Math.random() * 60}, 40, ${finalAlpha})`;
+                ctx.shadowBlur = 6;
+                ctx.shadowColor = 'rgba(255, 122, 0, 0.35)';
+                ctx.fill();
+                
+                // 拖尾光晕
+                ctx.beginPath();
+                ctx.arc(p.x - p.speedX * 5, p.y - p.speedY * 5, p.size * 0.6, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 150, 60, ${finalAlpha * 0.3})`;
+                ctx.fill();
+            }
+            
+            // 补充粒子
+            if (particles.length < 40) {
+                for (let i = 0; i < 2; i++) {
+                    particles.push(createParticle());
+                }
+            }
+            
+            particleAnimationId = requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        const resizeObserver = new ResizeObserver(() => resizeCanvas());
+        resizeObserver.observe(container);
+        
+        return () => {
+            if (particleAnimationId) cancelAnimationFrame(particleAnimationId);
+            resizeObserver.disconnect();
+        };
+    }
+
     async function fetchUserData(uid) {
         const { data, error } = await sb
             .from('users')
@@ -702,6 +818,11 @@
 
     loadProfile();
     setupBottomNav();
+
+    // 启动粒子效果
+    setTimeout(() => {
+        initSpiralBreathingParticles();
+    }, 100);
 </script>
 </body>
 </html>
