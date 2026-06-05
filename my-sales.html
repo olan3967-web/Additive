@@ -66,37 +66,95 @@
             background: rgba(0,0,0,0.05);
         }
 
-        /* 排序栏 */
-        .sort-bar {
-            padding: 0 16px;
-            margin-bottom: 16px;
+        /* 排序栏 - 与 Products 页面一致 */
+        .filter-row {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+            gap: 12px;
+            padding: 0 16px;
+            margin-bottom: 20px;
         }
 
-        .sort-btn {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
+        .select-container {
+            flex: 1;
+            position: relative;
+        }
+
+        .select-trigger {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 122, 0, 0.3);
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-size: 12px;
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-size: 13px;
             font-weight: 500;
-            color: #5a6a7a;
+            color: #1f2937;
             cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: all 0.2s;
         }
 
-        .sort-btn.active {
-            background: #ff7a00;
-            color: white;
+        .select-trigger:hover {
             border-color: #ff7a00;
+            background: rgba(255, 255, 255, 0.8);
         }
 
-        .sort-btn:hover:not(.active) {
+        .trigger-text {
+            flex: 1;
+            text-align: left;
+        }
+
+        .trigger-icon {
+            color: #ff7a00;
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .select-trigger.open .trigger-icon {
+            transform: rotate(180deg);
+        }
+
+        .select-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 122, 0, 0.3);
+            border-radius: 14px;
+            overflow: hidden;
+            z-index: 100;
+            max-height: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: max-height 0.35s ease-out, opacity 0.25s ease, visibility 0.25s;
+        }
+
+        .select-dropdown.open {
+            max-height: 280px;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .select-option {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #374151;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .select-option:hover {
             background: rgba(255, 122, 0, 0.1);
-            border-color: #ff7a00;
+            color: #ff7a00;
+        }
+
+        .select-option.selected {
+            color: #ff7a00;
+            background: rgba(255, 122, 0, 0.08);
         }
 
         /* 统计卡片网格 */
@@ -160,6 +218,33 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
         }
 
+        /* 排名徽章 - 放在右上角但不遮挡内容 */
+        .rank-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 20px;
+            z-index: 5;
+        }
+
+        .rank-badge.gold {
+            background: linear-gradient(135deg, #d4af37, #f5e6a3);
+            color: #5a3e0b;
+        }
+
+        .rank-badge.silver {
+            background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            color: #333;
+        }
+
+        .rank-badge.bronze {
+            background: linear-gradient(135deg, #cd7f32, #e8a87b);
+            color: white;
+        }
+
         .product-header {
             display: flex;
             gap: 14px;
@@ -177,6 +262,7 @@
 
         .product-info {
             flex: 1;
+            padding-right: 70px; /* 为徽章留出空间 */
         }
 
         .product-name {
@@ -268,22 +354,6 @@
             transition: width 0.3s;
         }
 
-        /* 排名标识 */
-        .rank-badge {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 20px;
-        }
-
-        .rank-badge.gold { background: #d4af37; }
-        .rank-badge.silver { background: #c0c0c0; color: #333; }
-        .rank-badge.bronze { background: #cd7f32; }
-
         /* 空状态 */
         .empty-state {
             text-align: center;
@@ -360,7 +430,8 @@
             .phone { width: 100%; }
             .sales-grid { gap: 4px; }
             .sales-value { font-size: 13px; }
-            .sort-btn { padding: 6px 12px; font-size: 11px; }
+            .product-info { padding-right: 60px; }
+            .rank-badge { font-size: 9px; padding: 3px 8px; top: 12px; right: 12px; }
         }
     </style>
 </head>
@@ -373,13 +444,21 @@
         <div style="width: 30px;"></div>
     </div>
 
-    <!-- 排序栏 -->
-    <div class="sort-bar" id="sortBar">
-        <button class="sort-btn active" data-sort="best_seller">🏆 Best Seller</button>
-        <button class="sort-btn" data-sort="highest_revenue">💰 Highest Revenue</button>
-        <button class="sort-btn" data-sort="highest_profit">📈 Highest Profit</button>
-        <button class="sort-btn" data-sort="lowest_sales">📉 Lowest Sales</button>
-        <button class="sort-btn" data-sort="newest">🆕 Newest</button>
+    <!-- 排序栏 - 与 Products 页面样式一致 -->
+    <div class="filter-row">
+        <div class="select-container" id="sortContainer">
+            <div class="select-trigger" id="sortTrigger">
+                <span class="trigger-text" id="sortText">Best Seller</span>
+                <i class="fas fa-chevron-down trigger-icon"></i>
+            </div>
+            <div class="select-dropdown" id="sortDropdown">
+                <div class="select-option" data-value="best_seller" data-label="Best Seller">🏆 Best Seller</div>
+                <div class="select-option" data-value="highest_revenue" data-label="Highest Revenue">💰 Highest Revenue</div>
+                <div class="select-option" data-value="highest_profit" data-label="Highest Profit">📈 Highest Profit</div>
+                <div class="select-option" data-value="lowest_sales" data-label="Lowest Sales">📉 Lowest Sales</div>
+                <div class="select-option" data-value="newest" data-label="Newest">🆕 Newest</div>
+            </div>
+        </div>
     </div>
 
     <!-- 统计卡片 -->
@@ -432,7 +511,6 @@
     let currentSort = 'best_seller';
     let sortedProductList = [];
 
-    // 生成模拟销售数据
     function generateMockSalesData(products) {
         const mockMap = {};
         products.forEach((product, index) => {
@@ -452,7 +530,6 @@
         return mockMap;
     }
 
-    // 排序函数
     function sortProducts(sortType, productList) {
         const list = [...productList];
         switch(sortType) {
@@ -546,7 +623,6 @@
 
             updateStats(totalProducts, totalOrders, totalRevenue, totalProfit);
             
-            // 排序并渲染
             const productList = Object.values(productSalesMap);
             sortedProductList = sortProducts(currentSort, productList);
             renderProductsList();
@@ -585,7 +661,7 @@
             let rankBadge = '';
             let rankClass = '';
             if (currentSort === 'best_seller') {
-                if (idx === 0) { rankBadge = '🏆 Top 1'; rankClass = 'gold'; }
+                if (idx === 0) { rankBadge = '🏆 Top Seller'; rankClass = 'gold'; }
                 else if (idx === 1) { rankBadge = '🥈 Top 2'; rankClass = 'silver'; }
                 else if (idx === 2) { rankBadge = '🥉 Top 3'; rankClass = 'bronze'; }
             }
@@ -652,19 +728,17 @@
         }).join('');
     }
 
-    function applySort(sortType) {
+    function applySort(sortType, sortLabel) {
         currentSort = sortType;
         const productList = Object.values(productSalesMap);
         sortedProductList = sortProducts(currentSort, productList);
         renderProductsList();
         
-        // 更新按钮样式
-        document.querySelectorAll('.sort-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.dataset.sort === sortType) {
-                btn.classList.add('active');
-            }
-        });
+        document.getElementById('sortText').innerText = sortLabel;
+        
+        // 关闭下拉菜单
+        document.getElementById('sortTrigger').classList.remove('open');
+        document.getElementById('sortDropdown').classList.remove('open');
     }
 
     function escapeHtml(str) {
@@ -688,14 +762,38 @@
         });
     }
 
-    // 绑定排序事件
-    document.querySelectorAll('.sort-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            applySort(btn.dataset.sort);
+    // 初始化下拉菜单
+    function initSelect() {
+        const trigger = document.getElementById('sortTrigger');
+        const dropdown = document.getElementById('sortDropdown');
+        const options = dropdown.querySelectorAll('.select-option');
+        
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            trigger.classList.toggle('open');
+            dropdown.classList.toggle('open');
         });
-    });
+        
+        options.forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const value = opt.dataset.value;
+                const label = opt.dataset.label;
+                applySort(value, label);
+                
+                options.forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+            });
+        });
+        
+        document.addEventListener('click', () => {
+            trigger.classList.remove('open');
+            dropdown.classList.remove('open');
+        });
+    }
 
     setupBottomNav();
+    initSelect();
     loadSalesData();
 </script>
 </body>
