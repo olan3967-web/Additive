@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Products - ADDITIVE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="toast.js"></script>
-<script src="notification.js"></script>
+    <script src="notification.js"></script>
     <style>
         * {
             margin: 0;
@@ -18,7 +18,7 @@
         }
 
         body {
-            background: #f5f7fb;
+            background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d5 100%);
             font-family: 'Inter', sans-serif;
             color: #1f2937;
             display: flex;
@@ -28,57 +28,15 @@
         .phone {
             width: 390px;
             min-height: 100vh;
-            background: #f5f7fb;
+            background: transparent;
             padding-bottom: 80px;
             position: relative;
         }
 
-        /* 下拉Refresh指示器 */
-        .pull-to-refresh {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .refresh-indicator {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: linear-gradient(135deg, #ff7a00, #ff9f43);
-            color: white;
-            font-size: 13px;
-            font-weight: 500;
-            transform: translateY(-100%);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-            border-radius: 0 0 20px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .refresh-indicator.show {
-            transform: translateY(0);
-        }
-
-        .refresh-indicator i {
-            font-size: 18px;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
+        /* 顶部 header - 直接融入背景 */
         .products-header {
             padding: 20px 16px 10px;
-            background: #f5f7fb;
-            position: relative;
-            z-index: 2;
+            background: transparent;
         }
 
         .header-title {
@@ -94,13 +52,12 @@
             margin-bottom: 16px;
         }
 
+        /* 筛选行 - 玻璃效果 */
         .filter-row {
             display: flex;
             gap: 12px;
             padding: 0 16px;
             margin-bottom: 20px;
-            position: relative;
-            z-index: 2;
         }
 
         .select-container {
@@ -110,13 +67,14 @@
 
         .select-trigger {
             width: 100%;
-            background: #1a1a2e;
-            border: 1px solid #33334e;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 122, 0, 0.3);
             border-radius: 14px;
             padding: 12px 16px;
             font-size: 13px;
             font-weight: 500;
-            color: white;
+            color: #1f2937;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
@@ -126,6 +84,7 @@
 
         .select-trigger:hover {
             border-color: #ff7a00;
+            background: rgba(255, 255, 255, 0.8);
         }
 
         .trigger-text {
@@ -148,8 +107,9 @@
             top: calc(100% + 4px);
             left: 0;
             right: 0;
-            background: #1a1a2e;
-            border: 1px solid #33334e;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 122, 0, 0.3);
             border-radius: 14px;
             overflow: hidden;
             z-index: 100;
@@ -168,13 +128,13 @@
         .select-option {
             padding: 12px 16px;
             font-size: 13px;
-            color: #cbd5e1;
+            color: #374151;
             cursor: pointer;
             transition: background 0.2s;
         }
 
         .select-option:hover {
-            background: rgba(255, 122, 0, 0.15);
+            background: rgba(255, 122, 0, 0.1);
             color: #ff7a00;
         }
 
@@ -183,21 +143,21 @@
             background: rgba(255, 122, 0, 0.08);
         }
 
+        /* 产品网格 - 玻璃卡片 */
         .products-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
             padding: 0 8px;
             align-items: start;
-            position: relative;
-            z-index: 1;
         }
 
         .product-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
             border-radius: 16px;
             overflow: hidden;
-            border: 1px solid #eef2f7;
+            border: 1px solid rgba(255, 255, 255, 0.5);
             transition: all 0.25s ease;
             cursor: pointer;
         }
@@ -208,6 +168,7 @@
 
         .product-card:hover {
             transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
         }
 
@@ -296,7 +257,7 @@
 
         .add-btn {
             width: 100%;
-            background: #fff3e8;
+            background: rgba(255, 122, 0, 0.15);
             border: none;
             padding: 8px;
             border-radius: 30px;
@@ -318,6 +279,7 @@
             color: white;
         }
 
+        /* 加载状态 */
         .loading-container {
             display: flex;
             justify-content: center;
@@ -335,26 +297,28 @@
             animation: spin 1s linear infinite;
         }
 
-        .load-more-container {
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 滚动加载指示器 */
+        .scroll-loader {
             text-align: center;
             padding: 20px;
-        }
-
-        .load-more-btn {
-            background: white;
-            border: 1px solid #eef2f7;
-            padding: 10px 24px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 500;
             color: #ff7a00;
-            cursor: pointer;
-            transition: all 0.2s;
+            font-size: 12px;
         }
 
-        .load-more-btn:hover {
-            background: #ff7a00;
-            color: white;
+        .scroll-loader i {
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
         }
 
         .bottom-nav {
@@ -372,62 +336,41 @@
         }
 
         .nav-item {
-    flex: 1;
-    text-align: center;
-    font-size: 11px;
-    color: #9ca3af;
-    cursor: pointer;
-    position: relative;  /* 👈 Add这一行 */
-}
+            flex: 1;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: #9ca3af;
+            cursor: pointer;
+            position: relative;
+        }
 
         .nav-item i {
             display: block;
-            font-size: 20px;
+            font-size: 22px;
             margin-bottom: 4px;
         }
 
         .nav-item.active {
             color: #ff7a00;
-            font-weight: 600;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #94a3b8;
-        }
-
-        /* 下拉Refresh触摸区域 */
-        .refresh-trigger-area {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 10px;
-            z-index: 999;
-            pointer-events: none;
+            font-weight: 700;
         }
 
         @media (max-width: 390px) {
             .phone { width: 100%; }
         }
     </style>
-    <link rel="stylesheet" href="user-common.css">
 </head>
 <body>
-<div class="phone" id="app">
+<div class="phone">
 
-    <!-- 下拉Refresh指示器 -->
-    <div class="refresh-indicator" id="refreshIndicator">
-        <i class="fas fa-spinner"></i>
-        <span>Refreshing...</span>
-    </div>
-
+    <!-- 顶部融入背景 -->
     <div class="products-header">
         <div class="header-title">Products</div>
         <div class="header-sub">Discover premium items</div>
     </div>
 
+    <!-- 筛选行 -->
     <div class="filter-row">
         <div class="select-container" id="itemsContainer">
             <div class="select-trigger" id="itemsTrigger">
@@ -459,6 +402,7 @@
         </div>
     </div>
 
+    <!-- 产品网格 -->
     <div class="products-grid" id="productsGrid">
         <div class="loading-container">
             <div class="loading-spinner">
@@ -468,8 +412,9 @@
         </div>
     </div>
 
-    <div class="load-more-container" id="loadMoreContainer" style="display: none;">
-        <button class="load-more-btn" id="loadMoreBtn">Load More</button>
+    <!-- 滚动加载指示器（隐藏） -->
+    <div id="scrollLoader" class="scroll-loader" style="display: none;">
+        <i class="fas fa-spinner"></i> Loading more...
     </div>
 
     <div class="bottom-nav">
@@ -493,8 +438,10 @@
     let displayCount = 10;
     let userAddedProductIds = new Set();
     let isLoading = false;
+    let loadingMore = false;
+    let hasMore = true;
 
-    // 随机排序函数
+    // 随机排序
     function shuffleArray(array) {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -542,9 +489,7 @@
 
     function sortProducts(products, sortType) {
         const sorted = [...products];
-        if (sortType === 'random') {
-            return shuffleArray(sorted);
-        }
+        if (sortType === 'random') return shuffleArray(sorted);
         switch (sortType) {
             case 'price_asc': return sorted.sort((a, b) => a.price - b.price);
             case 'price_desc': return sorted.sort((a, b) => b.price - a.price);
@@ -562,40 +507,18 @@
         (data || []).forEach(item => userAddedProductIds.add(item.product_id));
     }
 
-    function applyFilterAndSort() {
+    function applyFilterAndSort(resetDisplay = true) {
         const filterFn = categoryMap[currentCategory]?.filter || (() => true);
         let filtered = allProducts.filter(filterFn);
         filtered = sortProducts(filtered, currentSort);
         filteredProducts = filtered;
-        displayCount = 10;
-        renderProducts();
-    }
-
-    // Refresh并随机排序（不改变筛选条件）
-    async function refreshAndRandomize() {
-        if (isLoading) return;
-        isLoading = true;
-        
-        // 显示Refresh指示器
-        const indicator = document.getElementById('refreshIndicator');
-        indicator.classList.add('show');
-        
-        // 重新加载产品数据
-        await loadProducts(true);
-        
-        // 如果当前排序是 default，Refresh后应用随机排序
-        if (currentSort === 'default') {
-            filteredProducts = shuffleArray([...filteredProducts]);
+        hasMore = displayCount < filteredProducts.length;
+        if (resetDisplay) {
+            displayCount = 10;
+            renderProducts();
+        } else {
             renderProducts();
         }
-        
-        // 隐藏Refresh指示器
-        setTimeout(() => {
-            indicator.classList.remove('show');
-            isLoading = false;
-        }, 800);
-        
-        showToast('Products refreshed!', 'success');
     }
 
     function renderProducts() {
@@ -603,8 +526,7 @@
         if (!grid) return;
 
         const toShow = filteredProducts.slice(0, displayCount);
-        const hasMore = filteredProducts.length > displayCount;
-        document.getElementById('loadMoreContainer').style.display = hasMore ? 'block' : 'none';
+        hasMore = displayCount < filteredProducts.length;
 
         if (toShow.length === 0 && filteredProducts.length === 0) {
             grid.innerHTML = '<div class="empty-state">No products found</div>';
@@ -642,6 +564,7 @@
 
         grid.innerHTML = html;
 
+        // 绑定添加按钮事件
         document.querySelectorAll('.add-btn:not(.added)').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -655,13 +578,14 @@
             });
         });
 
+        // 绑定卡片点击事件
         document.querySelectorAll('.product-card').forEach(card => {
             card.addEventListener('click', (e) => {
                 if (e.target.classList.contains('add-btn')) return;
                 const id = parseInt(card.dataset.id);
                 const product = allProducts.find(p => p.id === id);
                 if (product) {
-                    showToast(`📦 ${product.accommodation_name || 'Premium Task'}Price: €${product.price}`, 'info');
+                    showToast(`📦 ${product.accommodation_name || 'Premium Task'} Price: €${product.price}`, 'info');
                 }
             });
         });
@@ -719,11 +643,42 @@
         }, { onConflict: 'uid' });
     }
 
-    function loadMore() {
-        if (displayCount < filteredProducts.length) {
-            displayCount = Math.min(displayCount + 10, filteredProducts.length);
-            renderProducts();
-        }
+    // 滚动加载更多
+    function setupInfiniteScroll() {
+        let scrollTimeout;
+        
+        window.addEventListener('scroll', () => {
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                if (loadingMore || !hasMore) return;
+                
+                const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                const windowHeight = window.innerHeight;
+                const documentHeight = document.documentElement.scrollHeight;
+                
+                if (scrollTop + windowHeight >= documentHeight - 200) {
+                    loadMore();
+                }
+            }, 100);
+        });
+    }
+
+    async function loadMore() {
+        if (loadingMore || !hasMore) return;
+        
+        loadingMore = true;
+        const loader = document.getElementById('scrollLoader');
+        if (loader) loader.style.display = 'block';
+        
+        // 模拟加载延迟
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        displayCount += 10;
+        hasMore = displayCount < filteredProducts.length;
+        renderProducts();
+        
+        if (loader) loader.style.display = 'none';
+        loadingMore = false;
     }
 
     function getCurrentUser() {
@@ -732,7 +687,7 @@
         try { return JSON.parse(userStr); } catch(e) { return null; }
     }
 
-    async function loadProducts(forceRefresh = false) {
+    async function loadProducts() {
         const grid = document.getElementById('productsGrid');
         grid.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div style="margin-top: 10px;">Loading products...</div></div></div>`;
 
@@ -757,12 +712,10 @@
             
             await loadUserAddedProducts();
             
-            // 应用筛选和排序
             const filterFn = categoryMap[currentCategory]?.filter || (() => true);
             let filtered = allProducts.filter(filterFn);
             
-            // 如果是随机排序或强制Refresh时的默认排序，打乱顺序
-            if (currentSort === 'random' || forceRefresh) {
+            if (currentSort === 'random') {
                 filtered = shuffleArray(filtered);
             } else {
                 filtered = sortProducts(filtered, currentSort);
@@ -770,7 +723,9 @@
             
             filteredProducts = filtered;
             displayCount = 10;
+            hasMore = displayCount < filteredProducts.length;
             renderProducts();
+            
         } catch (e) {
             console.error('加载失败:', e);
             grid.innerHTML = '<div class="empty-state">Failed to load products</div>';
@@ -825,7 +780,8 @@
                     opt.classList.add('selected');
                     if (isCategory) currentCategory = value;
                     else currentSort = value;
-                    applyFilterAndSort();
+                    displayCount = 10;
+                    applyFilterAndSort(true);
                 });
             });
         }
@@ -843,53 +799,25 @@
         });
     }
 
-    // ========== 下拉Refresh功能 ==========
-    let touchStartY = 0;
-    let isRefreshing = false;
-
-    function initPullToRefresh() {
-        const app = document.getElementById('app');
-        if (!app) return;
-        
-        app.addEventListener('touchstart', (e) => {
-            if (window.scrollY === 0) {
-                touchStartY = e.touches[0].clientY;
-            }
-        });
-        
-        app.addEventListener('touchmove', (e) => {
-            if (isRefreshing) return;
-            if (window.scrollY === 0 && touchStartY > 0) {
-                const currentY = e.touches[0].clientY;
-                const diff = currentY - touchStartY;
-                
-                if (diff > 60 && !isRefreshing) {
-                    isRefreshing = true;
-                    refreshAndRandomize();
-                    setTimeout(() => {
-                        isRefreshing = false;
-                    }, 2000);
-                }
-            }
-        });
-        
-        app.addEventListener('touchend', () => {
-            touchStartY = 0;
-        });
-    }
-
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
-    document.getElementById('loadMoreBtn')?.addEventListener('click', loadMore);
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#ffb84d;padding:10px 20px;border-radius:40px;font-size:13px;z-index:10000;';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    }
+
     document.addEventListener('click', () => closeAllDropdowns(null));
 
     initSelect('itemsContainer', 'itemsText', true);
     initSelect('sortContainer', 'sortText', false);
     setupBottomNav();
-    initPullToRefresh();
+    setupInfiniteScroll();
     loadProducts();
 </script>
 </body>
