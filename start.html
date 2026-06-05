@@ -16,7 +16,7 @@
         }
 
         body {
-            background: #f5f7fb;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: 'Inter', sans-serif;
             color: #1f2937;
             display: flex;
@@ -26,7 +26,7 @@
         .phone {
             width: 390px;
             min-height: 100vh;
-            background: #f5f7fb;
+            background: transparent;
             padding-bottom: 80px;
             position: relative;
         }
@@ -38,33 +38,36 @@
         .welcome-text {
             font-size: 22px;
             font-weight: 700;
-            color: #1a1a2e;
+            color: white;
             margin-bottom: 4px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
         .welcome-name {
-            color: #ff7a00;
+            color: #ffcc66;
         }
 
         .notification-icon {
             width: 44px;
             height: 44px;
-            background: #fff3e8;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
             border-radius: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.3);
         }
 
         .notification-icon:hover {
             transform: scale(1.05);
-            background: #ffe7cc;
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .notification-icon i {
-            color: #ff7a00;
+            color: #ffcc66;
             font-size: 20px;
         }
 
@@ -89,12 +92,12 @@
         }
 
         .progress-container {
-            background: white;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
             border-radius: 20px;
             padding: 20px 20px;
             margin: 16px 20px 20px 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            border: 1px solid #eef2f7;
+            border: 1px solid rgba(255, 255, 255, 0.4);
             transition: all 0.3s ease;
         }
 
@@ -121,14 +124,14 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #eef2f7;
+            background: rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 10px;
             font-weight: 700;
             font-size: 16px;
-            color: #94a3b8;
+            color: rgba(255, 255, 255, 0.7);
             transition: all 0.3s;
         }
 
@@ -146,7 +149,7 @@
         .step-label {
             font-size: 12px;
             font-weight: 600;
-            color: #6b7280;
+            color: rgba(255, 255, 255, 0.8);
             margin-bottom: 4px;
         }
 
@@ -160,13 +163,13 @@
 
         .step-desc {
             font-size: 10px;
-            color: #94a3b8;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .progress-track {
             position: relative;
             height: 4px;
-            background: #eef2f7;
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 4px;
             margin: 8px 0 16px;
             overflow: hidden;
@@ -197,9 +200,10 @@
         .progress-text {
             text-align: center;
             font-size: 12px;
-            color: #6b7280;
+            color: rgba(255, 255, 255, 0.7);
         }
 
+        /* ========== 透明玻璃统计卡片 ========== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -210,24 +214,64 @@
         }
 
         .stat-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 122, 0, 0.5);
             border-radius: 20px;
             padding: 16px;
-            border: 1px solid #eef2f7;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* 流光反光动画 */
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: skewX(-20deg);
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+
+        /* 橙色底部反光条 */
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 10%;
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff7a00, #ffcc00, transparent);
+            border-radius: 3px;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 30px 40px -12px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.28);
         }
 
         .stat-label {
-            font-size: 13px;
-            font-weight: 500;
-            color: #6b7280;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.9);
             margin-bottom: 8px;
         }
 
         .stat-value {
             font-size: 26px;
             font-weight: 800;
-            color: #1a1a2e;
+            color: #1f2937;
             margin-bottom: 6px;
             letter-spacing: -0.5px;
         }
@@ -244,12 +288,14 @@
             font-weight: 600;
         }
 
+        /* 图表卡片保持白色玻璃 */
         .chart-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
             border-radius: 24px;
             padding: 18px;
             margin: 0 20px 20px;
-            border: 1px solid #eef2f7;
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
         .chart-header {
@@ -272,7 +318,6 @@
             gap: 10px;
         }
 
-        /* Shimmer Premium 按钮样式 - 高清 */
         .chart-type-btn {
             background: linear-gradient(95deg, #1e2a3a, #0f172a);
             border: 1px solid rgba(255, 122, 0, 0.5);
@@ -319,6 +364,7 @@
             height: 200px;
         }
 
+        /* 其他卡片保持原有样式 */
         .overview-cards-container {
             padding: 0 8px;
             margin-bottom: 20px;
@@ -435,11 +481,12 @@
         }
 
         .products-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
             border-radius: 24px;
             padding: 18px;
             margin: 0 20px 20px;
-            border: 1px solid #eef2f7;
+            border: 1px solid rgba(255, 255, 255, 0.5);
         }
 
         .products-title {
@@ -454,7 +501,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px 0;
-            border-bottom: 1px solid #eef2f7;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
         }
 
         .product-row:last-child {
@@ -481,7 +528,7 @@
         .partners-title {
             font-weight: 700;
             font-size: 15px;
-            color: #1a1a2e;
+            color: white;
             margin-bottom: 14px;
             display: flex;
             align-items: center;
@@ -510,8 +557,8 @@
             margin-right: 12px;
             border-radius: 16px;
             overflow: hidden;
-            background: white;
-            border: 1px solid #eef2f7;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             transition: transform 0.2s;
             vertical-align: top;
         }
@@ -534,8 +581,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #f8f9fa, #eef2f7);
-            color: #94a3b8;
+            background: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.8);
             font-size: 12px;
             text-align: center;
             white-space: normal;
@@ -590,7 +637,6 @@
             .overview-value { font-size: 28px; }
         }
     </style>
-    <link rel="stylesheet" href="user-common.css">
 </head>
 <body>
 <div class="phone">
@@ -636,6 +682,7 @@
         <div class="progress-text" id="progressText">0 of 3 completed</div>
     </div>
 
+    <!-- 透明玻璃统计卡片 -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Total Sales</div>
@@ -1011,7 +1058,6 @@
         }
     }
 
-    // Line Chart with gradient (有渐变色)
     function createLineChart(ctx, data) {
         const gradient = ctx.createLinearGradient(0, 0, 0, 200);
         gradient.addColorStop(0, 'rgba(255, 122, 0, 0.35)');
@@ -1058,10 +1104,7 @@
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { 
-                            font: { size: 12, weight: '500' }, 
-                            color: '#475569'
-                        }
+                        ticks: { font: { size: 12, weight: '500' }, color: '#475569' }
                     },
                     y: {
                         grid: { color: '#e2e8f0', drawBorder: false },
@@ -1077,7 +1120,6 @@
         });
     }
 
-    // Bar Chart with metallic gradient (金属质感)
     function createBarChart(ctx, data) {
         const maxValue = Math.max(...data, 1);
         const barColors = data.map((value) => {
@@ -1125,10 +1167,7 @@
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { 
-                            font: { size: 12, weight: '500' }, 
-                            color: '#475569'
-                        }
+                        ticks: { font: { size: 12, weight: '500' }, color: '#475569' }
                     },
                     y: {
                         grid: { color: '#e2e8f0', drawBorder: false },
@@ -1341,7 +1380,6 @@
     updateSoundIcon();
     window.addEventListener('storage', updateSoundIcon);
 
-    // 图表类型切换
     document.querySelectorAll('.chart-type-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             document.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
@@ -1363,7 +1401,6 @@
         startParticleEffect('particleCanvas3', 'card3');
         startParticleEffect('particleCanvas4', 'card4');
         
-        // 检查保存的图表风格
         const savedStyle = localStorage.getItem('selected_chart_style');
         if (savedStyle) {
             try {
