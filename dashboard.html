@@ -130,27 +130,27 @@
             color: #7e8aa8;
         }
 
-        /* Total Commissions Earned - 加强透明玻璃效果 */
+        /* Total Commissions Earned - 透明玻璃效果 + 黑色字体 */
         .stats-card {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
             margin: 16px;
             padding: 16px;
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
         }
 
         .stat-label {
             font-size: 13px;
-            color: rgba(255, 255, 255, 0.9);
+            color: #4b5563;
             margin-bottom: 8px;
         }
 
         .stat-value {
             font-size: 28px;
             font-weight: 800;
-            color: white;
+            color: #1f2937;
         }
 
         .wallet-card {
@@ -229,23 +229,23 @@
             margin: 16px;
         }
 
-        /* My Sales 和 Sourcing - 加强透明玻璃效果 */
+        /* My Sales 和 Sourcing - 透明玻璃效果 + 黑色字体 */
         .half-card {
             flex: 1;
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 20px;
             padding: 18px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .half-card:hover {
             transform: translateY(-2px);
-            background: rgba(255, 255, 255, 0.35);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
 
         .half-card-header {
@@ -259,29 +259,29 @@
             width: 48px;
             height: 48px;
             border-radius: 16px;
-            background: rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, #fff7ed, #ffe7cc);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 22px;
-            color: #ffcc66;
+            color: #ff7a00;
         }
 
         .half-card-title {
             font-size: 18px;
             font-weight: 700;
-            color: white;
+            color: #1f2937;
         }
 
         .half-card .view-link {
-            color: #ffcc66;
+            color: #ff7a00;
             font-size: 13px;
             font-weight: 600;
             text-decoration: none;
         }
 
         .half-card div[style] {
-            color: rgba(255, 255, 255, 0.7) !important;
+            color: #6b7280 !important;
         }
 
         .glass-card {
@@ -450,7 +450,7 @@
         </div>
     </div>
 
-    <!-- Total Commissions Earned - 透明玻璃效果 -->
+    <!-- Total Commissions Earned - 透明玻璃效果 + 黑色字体 -->
     <div class="stats-card">
         <div class="stat-label">Total Commissions Earned</div>
         <div class="stat-value" id="totalCommissions">€0.00</div>
@@ -466,23 +466,23 @@
     </div>
 
     <div class="double-card-row">
-        <!-- My Sales - 透明玻璃效果 -->
+        <!-- My Sales - 透明玻璃效果 + 黑色字体 -->
         <div class="half-card" onclick="location.href='history.html?tab=balance'">
             <div class="half-card-header">
                 <div class="half-card-icon"><i class="fa-solid fa-chart-line"></i></div>
                 <span class="view-link">View →</span>
             </div>
             <div class="half-card-title">My Sales</div>
-            <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 6px;" id="salesAmount">€0.00 earned</div>
+            <div style="font-size: 12px; color: #6b7280; margin-top: 6px;" id="salesAmount">€0.00 earned</div>
         </div>
-        <!-- Sourcing - 透明玻璃效果 -->
+        <!-- Sourcing - 透明玻璃效果 + 黑色字体 -->
         <div class="half-card" onclick="location.href='start.html'">
             <div class="half-card-header">
                 <div class="half-card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
                 <span class="view-link">View →</span>
             </div>
             <div class="half-card-title">Sourcing</div>
-            <div style="font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 6px;">Find products</div>
+            <div style="font-size: 12px; color: #6b7280; margin-top: 6px;">Find products</div>
         </div>
     </div>
 
