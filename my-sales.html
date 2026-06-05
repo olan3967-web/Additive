@@ -66,7 +66,7 @@
             background: rgba(0,0,0,0.05);
         }
 
-        /* 排序栏 - 与 Products 页面一致 */
+        /* 排序栏 */
         .filter-row {
             display: flex;
             gap: 12px;
@@ -157,7 +157,7 @@
             background: rgba(255, 122, 0, 0.08);
         }
 
-        /* 统计卡片网格 */
+        /* 透明玻璃统计卡片 - 与 start.html 一致 */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -167,26 +167,66 @@
         }
 
         .stat-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 122, 0, 0.4);
             border-radius: 20px;
             padding: 16px;
-            border: 1px solid #eef2f7;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transform: skewX(-20deg);
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 10%;
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff7a00, #ffcc00, transparent);
+            border-radius: 3px;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 200%; }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 30px 40px -12px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.75);
         }
 
         .stat-label {
             font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 6px;
+            color: #5a6a7a;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
         .stat-value {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 800;
-            color: #1a1a2e;
+            color: #1f2937;
+            letter-spacing: -0.5px;
         }
 
         .stat-sub {
@@ -218,7 +258,7 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
         }
 
-        /* 排名徽章 - 放在右上角但不遮挡内容 */
+        /* 排名徽章 */
         .rank-badge {
             position: absolute;
             top: 16px;
@@ -262,7 +302,7 @@
 
         .product-info {
             flex: 1;
-            padding-right: 70px; /* 为徽章留出空间 */
+            padding-right: 70px;
         }
 
         .product-name {
@@ -351,7 +391,7 @@
             height: 100%;
             border-radius: 10px;
             width: 0%;
-            transition: width 0.3s;
+            transition: width 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
 
         /* 空状态 */
@@ -444,7 +484,7 @@
         <div style="width: 30px;"></div>
     </div>
 
-    <!-- 排序栏 - 与 Products 页面样式一致 -->
+    <!-- 排序栏 -->
     <div class="filter-row">
         <div class="select-container" id="sortContainer">
             <div class="select-trigger" id="sortTrigger">
@@ -452,7 +492,7 @@
                 <i class="fas fa-chevron-down trigger-icon"></i>
             </div>
             <div class="select-dropdown" id="sortDropdown">
-                <div class="select-option" data-value="best_seller" data-label="Best Seller">🏆 Best Seller</div>
+                <div class="select-option selected" data-value="best_seller" data-label="Best Seller">🏆 Best Seller</div>
                 <div class="select-option" data-value="highest_revenue" data-label="Highest Revenue">💰 Highest Revenue</div>
                 <div class="select-option" data-value="highest_profit" data-label="Highest Profit">📈 Highest Profit</div>
                 <div class="select-option" data-value="lowest_sales" data-label="Lowest Sales">📉 Lowest Sales</div>
@@ -461,7 +501,7 @@
         </div>
     </div>
 
-    <!-- 统计卡片 -->
+    <!-- 透明玻璃统计卡片 -->
     <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
             <div class="stat-label"><i class="fas fa-box"></i> Total Products</div>
@@ -510,6 +550,57 @@
     let productSalesMap = {};
     let currentSort = 'best_seller';
     let sortedProductList = [];
+    let animationsStarted = false;
+
+    // 数字滚动动画
+    function animateNumber(element, start, end, duration = 1500, isCurrency = false) {
+        if (!element) return;
+        const startTime = performance.now();
+        
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+        
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            let progress = Math.min(elapsed / duration, 1);
+            const eased = easeOutCubic(progress);
+            const currentValue = start + (end - start) * eased;
+            
+            if (isCurrency) {
+                element.innerHTML = '€' + Math.round(currentValue).toLocaleString();
+            } else {
+                element.innerHTML = Math.round(currentValue).toString();
+            }
+            
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            } else {
+                if (isCurrency) {
+                    element.innerHTML = '€' + Math.round(end).toLocaleString();
+                } else {
+                    element.innerHTML = Math.round(end).toString();
+                }
+            }
+        }
+        
+        requestAnimationFrame(update);
+    }
+
+    // 进度条动画
+    function animateProgressBar(barElement, targetWidth) {
+        if (!barElement) return;
+        setTimeout(() => {
+            barElement.style.width = targetWidth + '%';
+        }, 100);
+    }
+
+    function updateStatsWithAnimation(totalProducts, totalOrders, totalRevenue, totalProfit) {
+        animateNumber(document.getElementById('totalProducts'), 0, totalProducts, 1200, false);
+        animateNumber(document.getElementById('totalOrders'), 0, totalOrders, 1200, false);
+        animateNumber(document.getElementById('totalRevenue'), 0, totalRevenue, 1200, true);
+        animateNumber(document.getElementById('totalProfit'), 0, totalProfit, 1200, true);
+    }
 
     function generateMockSalesData(products) {
         const mockMap = {};
@@ -576,7 +667,7 @@
                         <div style="margin-top: 12px; font-size: 12px;">Go to Products page to add your first product</div>
                     </div>
                 `;
-                updateStats(0, 0, 0, 0);
+                updateStatsWithAnimation(0, 0, 0, 0);
                 return;
             }
 
@@ -621,7 +712,8 @@
             const totalRevenue = Object.values(productSalesMap).reduce((sum, v) => sum + v.revenue, 0);
             const totalProfit = Object.values(productSalesMap).reduce((sum, v) => sum + v.profit, 0);
 
-            updateStats(totalProducts, totalOrders, totalRevenue, totalProfit);
+            // 动画显示统计数字
+            updateStatsWithAnimation(totalProducts, totalOrders, totalRevenue, totalProfit);
             
             const productList = Object.values(productSalesMap);
             sortedProductList = sortProducts(currentSort, productList);
@@ -631,13 +723,6 @@
             console.error('加载失败:', err);
             container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-circle-xmark"></i>Failed to load sales data</div>';
         }
-    }
-
-    function updateStats(totalProducts, totalOrders, totalRevenue, totalProfit) {
-        document.getElementById('totalProducts').innerText = totalProducts;
-        document.getElementById('totalOrders').innerText = totalOrders;
-        document.getElementById('totalRevenue').innerHTML = '€' + totalRevenue.toLocaleString();
-        document.getElementById('totalProfit').innerHTML = '€' + totalProfit.toLocaleString();
     }
 
     function renderProductsList() {
@@ -666,8 +751,10 @@
                 else if (idx === 2) { rankBadge = '🥉 Top 3'; rankClass = 'bronze'; }
             }
             
+            const uniqueId = `progress-${product.product_id}-${Date.now()}-${idx}`;
+            
             return `
-                <div class="product-card">
+                <div class="product-card" data-card-id="${uniqueId}">
                     ${rankBadge ? `<div class="rank-badge ${rankClass}">${rankBadge}</div>` : ''}
                     <div class="product-header">
                         <img class="product-image" src="${product.image_url || 'https://placehold.co/70x70/f0f2f5/94a3b8?text=Product'}" 
@@ -684,15 +771,15 @@
                     <div class="sales-grid">
                         <div class="sales-item">
                             <div class="sales-label">ORDERS</div>
-                            <div class="sales-value blue">${quantity}</div>
+                            <div class="sales-value blue order-count" data-quantity="${quantity}">0</div>
                         </div>
                         <div class="sales-item">
                             <div class="sales-label">REVENUE</div>
-                            <div class="sales-value orange">€${revenue.toFixed(2)}</div>
+                            <div class="sales-value orange revenue-value" data-revenue="${revenue}">€0</div>
                         </div>
                         <div class="sales-item">
                             <div class="sales-label">PROFIT</div>
-                            <div class="sales-value green">€${profit.toFixed(2)}</div>
+                            <div class="sales-value green profit-value" data-profit="${profit}">€0</div>
                         </div>
                         <div class="sales-item">
                             <div class="sales-label">AVG VALUE</div>
@@ -703,29 +790,111 @@
                     <div class="progress-section">
                         <div class="progress-label">
                             <span><i class="fas fa-chart-line"></i> Sales volume</span>
-                            <span>${quantity} orders (${Math.round(quantityPercent)}%)</span>
+                            <span class="quantity-percent">0%</span>
                         </div>
                         <div class="progress-bar-container">
-                            <div class="progress-bar" style="width: ${quantityPercent}%;"></div>
+                            <div class="progress-bar quantity-bar" style="width: 0%;"></div>
                         </div>
                         <div class="progress-label" style="margin-top: 10px;">
                             <span><i class="fas fa-euro-sign"></i> Revenue contribution</span>
-                            <span>€${revenue.toFixed(2)} (${Math.round(revenuePercent)}%)</span>
+                            <span class="revenue-percent">0%</span>
                         </div>
                         <div class="progress-bar-container">
-                            <div class="progress-bar" style="width: ${revenuePercent}%; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
+                            <div class="progress-bar revenue-bar" style="width: 0%; background: linear-gradient(90deg, #3b82f6, #60a5fa);"></div>
                         </div>
                         <div class="progress-label" style="margin-top: 10px;">
                             <span><i class="fas fa-percent"></i> Profit margin</span>
-                            <span>${profitMargin}%</span>
+                            <span class="margin-percent">0%</span>
                         </div>
                         <div class="progress-bar-container">
-                            <div class="progress-bar" style="width: ${Math.min(profitMargin, 100)}%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                            <div class="progress-bar margin-bar" style="width: 0%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
+        
+        // 启动卡片内数字滚动和进度条动画
+        setTimeout(() => {
+            document.querySelectorAll('.product-card').forEach(card => {
+                const orderEl = card.querySelector('.order-count');
+                const revenueEl = card.querySelector('.revenue-value');
+                const profitEl = card.querySelector('.profit-value');
+                const quantityPercentSpan = card.querySelector('.quantity-percent');
+                const revenuePercentSpan = card.querySelector('.revenue-percent');
+                const marginPercentSpan = card.querySelector('.margin-percent');
+                const quantityBar = card.querySelector('.quantity-bar');
+                const revenueBar = card.querySelector('.revenue-bar');
+                const marginBar = card.querySelector('.margin-bar');
+                
+                const quantity = parseInt(orderEl?.dataset.quantity || 0);
+                const revenue = parseFloat(revenueEl?.dataset.revenue || 0);
+                const profit = parseFloat(profitEl?.dataset.profit || 0);
+                
+                const maxQ = sortedProductList[0]?.quantity || 1;
+                const maxR = Math.max(...sortedProductList.map(p => p.revenue), 1);
+                const quantityPercent = (quantity / maxQ) * 100;
+                const revenuePercent = (revenue / maxR) * 100;
+                const profitMargin = revenue > 0 ? (profit / revenue * 100) : 0;
+                
+                // 数字滚动
+                if (orderEl) animateNumber(orderEl, 0, quantity, 800, false);
+                if (revenueEl) animateNumber(revenueEl, 0, revenue, 800, true);
+                if (profitEl) animateNumber(profitEl, 0, profit, 800, true);
+                
+                // 百分比数字滚动
+                if (quantityPercentSpan) animateNumber(quantityPercentSpan, 0, quantityPercent, 600, false);
+                if (revenuePercentSpan) animateNumber(revenuePercentSpan, 0, revenuePercent, 600, false);
+                if (marginPercentSpan) animateNumber(marginPercentSpan, 0, profitMargin, 600, false);
+                
+                // 进度条动画
+                if (quantityBar) animateProgressBar(quantityBar, quantityPercent);
+                if (revenueBar) animateProgressBar(revenueBar, revenuePercent);
+                if (marginBar) animateProgressBar(marginBar, Math.min(profitMargin, 100));
+            });
+        }, 200);
+    }
+
+    function animateNumber(element, start, end, duration, isCurrency = false) {
+        if (!element) return;
+        const startTime = performance.now();
+        
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+        
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            let progress = Math.min(elapsed / duration, 1);
+            const eased = easeOutCubic(progress);
+            const currentValue = start + (end - start) * eased;
+            
+            if (isCurrency) {
+                element.innerHTML = '€' + currentValue.toFixed(2);
+            } else {
+                element.innerHTML = Math.floor(currentValue).toString();
+            }
+            
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            } else {
+                if (isCurrency) {
+                    element.innerHTML = '€' + end.toFixed(2);
+                } else {
+                    element.innerHTML = Math.round(end).toString();
+                }
+            }
+        }
+        
+        requestAnimationFrame(update);
+    }
+
+    function animateProgressBar(barElement, targetWidth) {
+        if (!barElement) return;
+        setTimeout(() => {
+            barElement.style.transition = 'width 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1)';
+            barElement.style.width = targetWidth + '%';
+        }, 150);
     }
 
     function applySort(sortType, sortLabel) {
@@ -736,7 +905,6 @@
         
         document.getElementById('sortText').innerText = sortLabel;
         
-        // 关闭下拉菜单
         document.getElementById('sortTrigger').classList.remove('open');
         document.getElementById('sortDropdown').classList.remove('open');
     }
@@ -762,7 +930,6 @@
         });
     }
 
-    // 初始化下拉菜单
     function initSelect() {
         const trigger = document.getElementById('sortTrigger');
         const dropdown = document.getElementById('sortDropdown');
