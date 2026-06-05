@@ -632,6 +632,7 @@
 <body>
 <div class="phone">
 
+    <!-- 顶部用户卡片 - 拖尾粒子效果 -->
     <div class="dashboard-header">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
@@ -673,7 +674,7 @@
         <div class="progress-text" id="progressText">0 of 3 completed</div>
     </div>
 
-    <!-- 透明玻璃统计卡片 - 数字会优雅滚动 -->
+    <!-- 透明玻璃统计卡片 -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Total Sales</div>
@@ -803,6 +804,135 @@
     let currentUser = null;
     let commissionData = [42, 58, 35, 72, 68, 89, 95];
     let chartDates = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    let particleInterval = null;
+
+    // ========== 拖尾粒子效果（带光晕拖尾） ==========
+    function createParticle(container) {
+        const particle = document.createElement('div');
+        particle.className = 'particle-trail';
+        
+        // 随机颜色（橙色/金色）
+        const isOrange = Math.random() > 0.5;
+        particle.style.background = isOrange 
+            ? 'radial-gradient(circle, #ff7a00, #ff9f43)' 
+            : 'radial-gradient(circle, #ffcc00, #ffd700)';
+        particle.style.boxShadow = isOrange 
+            ? '0 0 6px rgba(255, 122, 0, 0.6)' 
+            : '0 0 6px rgba(255, 204, 0, 0.5)';
+        
+        // 随机位置
+        const left = Math.random() * 100;
+        const top = 10 + Math.random() * 70;
+        
+        // 随机大小
+        const size = 3 + Math.random() * 7;
+        
+        // 随机动画时长
+        const duration = 3 + Math.random() * 3;
+        const delay = Math.random() * 2;
+        
+        particle.style.position = 'absolute';
+        particle.style.left = left + '%';
+        particle.style.top = top + '%';
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
+        particle.style.borderRadius = '50%';
+        particle.style.pointerEvents = 'none';
+        particle.style.opacity = '0';
+        particle.style.animation = `floatTrail ${duration}s ease-in-out infinite`;
+        particle.style.animationDelay = delay + 's';
+        
+        container.appendChild(particle);
+        
+        // 粒子动画结束后移除
+        setTimeout(() => {
+            if (particle.parentNode) particle.remove();
+        }, (duration + delay) * 1000);
+    }
+
+    function startParticleEffect(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
+        // 添加样式
+        if (!document.getElementById('particle-trail-style')) {
+            const style = document.createElement('style');
+            style.id = 'particle-trail-style';
+            style.textContent = `
+                @keyframes floatTrail {
+                    0% {
+                        transform: translateY(0) translateX(0) scale(0.5);
+                        opacity: 0;
+                        filter: blur(2px);
+                    }
+                    20% {
+                        opacity: 0.8;
+                        transform: scale(1);
+                        filter: blur(0.5px);
+                    }
+                    60% {
+                        opacity: 0.5;
+                        filter: blur(1px);
+                    }
+                    100% {
+                        transform: translateY(-70px) translateX(20px) scale(1.3);
+                        opacity: 0;
+                        filter: blur(3px);
+                    }
+                }
+                .particle-trail {
+                    position: absolute;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    opacity: 0;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // 清除现有粒子
+        const existingParticles = container.querySelectorAll('.particle-trail');
+        existingParticles.forEach(p => p.remove());
+        
+        if (particleInterval) clearInterval(particleInterval);
+        
+        // 初始生成粒子
+        for (let i = 0; i < 30; i++) {
+            setTimeout(() => createParticle(container), i * 100);
+        }
+        
+        // 定期补充粒子
+        particleInterval = setInterval(() => {
+            const currentCount = container.querySelectorAll('.particle-trail').length;
+            if (currentCount < 25) {
+                createParticle(container);
+            }
+        }, 1500);
+    }
+
+    function stopParticleEffect() {
+        if (particleInterval) {
+            clearInterval(particleInterval);
+            particleInterval = null;
+        }
+    }
+
+    // 在顶部添加粒子容器
+    const dashboardHeader = document.querySelector('.dashboard-header');
+    if (dashboardHeader && !document.getElementById('particleContainerTop')) {
+        const particleContainer = document.createElement('div');
+        particleContainer.id = 'particleContainerTop';
+        particleContainer.style.position = 'fixed';
+        particleContainer.style.top = '0';
+        particleContainer.style.left = '0';
+        particleContainer.style.width = '100%';
+        particleContainer.style.height = '180px';
+        particleContainer.style.pointerEvents = 'none';
+        particleContainer.style.zIndex = '999';
+        particleContainer.style.overflow = 'hidden';
+        document.body.appendChild(particleContainer);
+        startParticleEffect('particleContainerTop');
+    }
 
     // ========== 优雅慢速数字滚动动画 ==========
     function animateNumber(element, start, end, duration = 2000, onUpdate) {
@@ -839,7 +969,6 @@
         const ordersEl = document.getElementById('ordersCount');
         const profitEl = document.getElementById('profitValue');
         const overviewEarnings = document.getElementById('overviewEarnings');
-        const salesAmount = document.getElementById('salesAmount');
         
         if (salesEl) {
             animateNumber(salesEl, 0, sales, 2000, (val) => {
@@ -870,15 +999,9 @@
                 overviewEarnings.innerHTML = '€' + Math.round(val).toLocaleString();
             });
         }
-        
-        if (salesAmount) {
-            animateNumber(salesAmount, 0, profit, 2000, (val) => {
-                salesAmount.innerHTML = '€' + Math.round(val).toLocaleString() + ' earned';
-            });
-        }
     }
 
-    function startParticleEffect(canvasId, wrapperId) {
+    function startParticleEffectCanvas(canvasId, wrapperId) {
         const canvas = document.getElementById(canvasId);
         const wrapper = document.getElementById(wrapperId);
         if (!canvas || !wrapper) return;
@@ -894,7 +1017,7 @@
         let particles = [];
         let animationId = null;
         
-        function createParticle() {
+        function createParticleCanvas() {
             return {
                 x: Math.random() * canvas.width,
                 y: canvas.height + 5,
@@ -905,13 +1028,13 @@
             };
         }
         
-        function animate() {
+        function animateCanvas() {
             if (!canvas.parentNode) return;
             resizeCanvas();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             if (Math.random() < 0.08 && particles.length < 60) {
-                for (let i = 0; i < 2; i++) particles.push(createParticle());
+                for (let i = 0; i < 2; i++) particles.push(createParticleCanvas());
             }
             
             for (let i = particles.length - 1; i >= 0; i--) {
@@ -935,12 +1058,12 @@
                 ctx.fill();
             }
             
-            animationId = requestAnimationFrame(animate);
+            animationId = requestAnimationFrame(animateCanvas);
         }
         
         const resizeObserver = new ResizeObserver(() => resizeCanvas());
         resizeObserver.observe(wrapper);
-        animate();
+        animateCanvas();
         
         return () => {
             if (animationId) cancelAnimationFrame(animationId);
@@ -1319,7 +1442,6 @@
         const totalRoi = totalSales > 0 ? (totalCommission / totalSales) * 100 : 0;
         const totalProfit = totalCommission * 0.7;
         
-        // 更新趋势箭头（不滚动）
         const salesTrendEl = document.getElementById('salesTrend');
         const roiTrendEl = document.getElementById('roiTrend');
         const ordersTrendEl = document.getElementById('ordersTrend');
@@ -1359,7 +1481,6 @@
         const progress = await loadUserOnboardingProgress(user.uid);
         updateProgressUI(progress);
         
-        // 使用优雅慢速动画滚动显示统计数据
         animateStatsData(totalSales, totalRoi, totalOrderCount, totalCommission);
     }
 
@@ -1472,10 +1593,10 @@
         setupBottomNav();
         await loadPartners();
         
-        startParticleEffect('particleCanvas1', 'card1');
-        startParticleEffect('particleCanvas2', 'card2');
-        startParticleEffect('particleCanvas3', 'card3');
-        startParticleEffect('particleCanvas4', 'card4');
+        startParticleEffectCanvas('particleCanvas1', 'card1');
+        startParticleEffectCanvas('particleCanvas2', 'card2');
+        startParticleEffectCanvas('particleCanvas3', 'card3');
+        startParticleEffectCanvas('particleCanvas4', 'card4');
         
         const savedStyle = localStorage.getItem('selected_chart_style');
         if (savedStyle) {
@@ -1496,6 +1617,11 @@
     } else {
         init();
     }
+    
+    // 页面卸载时清理粒子效果
+    window.addEventListener('beforeunload', () => {
+        stopParticleEffect();
+    });
 </script>
 </body>
 </html>
