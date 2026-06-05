@@ -33,7 +33,6 @@
             position: relative;
         }
 
-        /* 顶部 header - 直接融入背景 */
         .products-header {
             padding: 20px 16px 10px;
             background: transparent;
@@ -52,7 +51,6 @@
             margin-bottom: 16px;
         }
 
-        /* 筛选行 - 玻璃效果 */
         .filter-row {
             display: flex;
             gap: 12px;
@@ -143,7 +141,6 @@
             background: rgba(255, 122, 0, 0.08);
         }
 
-        /* 产品网格 - 玻璃卡片 */
         .products-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -279,7 +276,6 @@
             color: white;
         }
 
-        /* 加载状态 */
         .loading-container {
             display: flex;
             justify-content: center;
@@ -302,17 +298,11 @@
             to { transform: rotate(360deg); }
         }
 
-        /* 滚动加载指示器 */
         .scroll-loader {
             text-align: center;
             padding: 20px;
             color: #ff7a00;
             font-size: 12px;
-        }
-
-        .scroll-loader i {
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
         }
 
         .empty-state {
@@ -364,13 +354,11 @@
 <body>
 <div class="phone">
 
-    <!-- 顶部融入背景 -->
     <div class="products-header">
         <div class="header-title">Products</div>
         <div class="header-sub">Discover premium items</div>
     </div>
 
-    <!-- 筛选行 -->
     <div class="filter-row">
         <div class="select-container" id="itemsContainer">
             <div class="select-trigger" id="itemsTrigger">
@@ -388,21 +376,20 @@
 
         <div class="select-container" id="sortContainer">
             <div class="select-trigger" id="sortTrigger">
-                <span class="trigger-text" id="sortText">Sort By</span>
+                <span class="trigger-text" id="sortText">Random</span>
                 <i class="fas fa-chevron-down trigger-icon"></i>
             </div>
             <div class="select-dropdown" id="sortDropdown">
-                <div class="select-option selected" data-value="default" data-label="Sort By">Sort By</div>
+                <div class="select-option" data-value="random" data-label="Random">🎲 Random</div>
                 <div class="select-option" data-value="price_desc" data-label="Price High To Low">Price High To Low</div>
                 <div class="select-option" data-value="price_asc" data-label="Price Low To High">Price Low To High</div>
                 <div class="select-option" data-value="margin_desc" data-label="High Margin">High Margin</div>
                 <div class="select-option" data-value="margin_asc" data-label="Low Margin">Low Margin</div>
-                <div class="select-option" data-value="random" data-label="Random">🎲 Random</div>
+                <div class="select-option" data-value="default" data-label="Default">Default</div>
             </div>
         </div>
     </div>
 
-    <!-- 产品网格 -->
     <div class="products-grid" id="productsGrid">
         <div class="loading-container">
             <div class="loading-spinner">
@@ -412,7 +399,6 @@
         </div>
     </div>
 
-    <!-- 滚动加载指示器（隐藏） -->
     <div id="scrollLoader" class="scroll-loader" style="display: none;">
         <i class="fas fa-spinner"></i> Loading more...
     </div>
@@ -434,14 +420,14 @@
     let allProducts = [];
     let filteredProducts = [];
     let currentCategory = 'all';
-    let currentSort = 'default';
+    let currentSort = 'random';  // 默认随机排序，每次打开都不一样
     let displayCount = 10;
     let userAddedProductIds = new Set();
     let isLoading = false;
     let loadingMore = false;
     let hasMore = true;
 
-    // 随机排序
+    // Fisher-Yates 随机排序算法
     function shuffleArray(array) {
         const shuffled = [...array];
         for (let i = shuffled.length - 1; i > 0; i--) {
@@ -489,7 +475,9 @@
 
     function sortProducts(products, sortType) {
         const sorted = [...products];
-        if (sortType === 'random') return shuffleArray(sorted);
+        if (sortType === 'random') {
+            return shuffleArray(sorted);
+        }
         switch (sortType) {
             case 'price_asc': return sorted.sort((a, b) => a.price - b.price);
             case 'price_desc': return sorted.sort((a, b) => b.price - a.price);
@@ -564,7 +552,6 @@
 
         grid.innerHTML = html;
 
-        // 绑定添加按钮事件
         document.querySelectorAll('.add-btn:not(.added)').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
@@ -578,7 +565,6 @@
             });
         });
 
-        // 绑定卡片点击事件
         document.querySelectorAll('.product-card').forEach(card => {
             card.addEventListener('click', (e) => {
                 if (e.target.classList.contains('add-btn')) return;
@@ -643,7 +629,6 @@
         }, { onConflict: 'uid' });
     }
 
-    // 滚动加载更多
     function setupInfiniteScroll() {
         let scrollTimeout;
         
@@ -670,7 +655,6 @@
         const loader = document.getElementById('scrollLoader');
         if (loader) loader.style.display = 'block';
         
-        // 模拟加载延迟
         await new Promise(resolve => setTimeout(resolve, 500));
         
         displayCount += 10;
@@ -712,12 +696,14 @@
             
             await loadUserAddedProducts();
             
-            const filterFn = categoryMap[currentCategory]?.filter || (() => true);
-            let filtered = allProducts.filter(filterFn);
+            // 关键：每次加载时自动随机排序（让用户每次看到不同顺序）
+            const randomSorted = shuffleArray(allProducts);
             
-            if (currentSort === 'random') {
-                filtered = shuffleArray(filtered);
-            } else {
+            const filterFn = categoryMap[currentCategory]?.filter || (() => true);
+            let filtered = randomSorted.filter(filterFn);
+            
+            // 如果不是随机排序模式，再应用其他排序
+            if (currentSort !== 'random') {
                 filtered = sortProducts(filtered, currentSort);
             }
             
