@@ -31,24 +31,8 @@
             position: relative;
         }
 
-        /* 顶部用户卡片 - 带粒子容器 */
         .dashboard-header {
             padding: 20px 20px 0;
-            position: relative;
-            z-index: 10;
-        }
-
-        /* 粒子容器 - 固定在顶部区域 */
-        #particleCanvasTop {
-            position: fixed;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 390px;
-            height: 200px;
-            pointer-events: none;
-            z-index: 999;
-            opacity: 0.8;
         }
 
         .welcome-text {
@@ -56,8 +40,6 @@
             font-weight: 700;
             color: #1a1a2e;
             margin-bottom: 4px;
-            position: relative;
-            z-index: 11;
         }
 
         .welcome-name {
@@ -74,8 +56,6 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
-            position: relative;
-            z-index: 11;
         }
 
         .notification-icon:hover {
@@ -116,8 +96,6 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
             border: 1px solid #eef2f7;
             transition: all 0.3s ease;
-            position: relative;
-            z-index: 10;
         }
 
         .progress-container.hidden {
@@ -222,6 +200,7 @@
             color: #6b7280;
         }
 
+        /* 透明玻璃统计卡片 */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -229,8 +208,6 @@
             padding: 0 20px;
             margin-top: 20px;
             margin-bottom: 20px;
-            position: relative;
-            z-index: 10;
         }
 
         .stat-card {
@@ -312,8 +289,6 @@
             padding: 18px;
             margin: 0 20px 20px;
             border: 1px solid #eef2f7;
-            position: relative;
-            z-index: 10;
         }
 
         .chart-header {
@@ -385,8 +360,6 @@
         .overview-cards-container {
             padding: 0 8px;
             margin-bottom: 20px;
-            position: relative;
-            z-index: 10;
         }
 
         .cards-grid {
@@ -505,8 +478,6 @@
             padding: 18px;
             margin: 0 20px 20px;
             border: 1px solid #eef2f7;
-            position: relative;
-            z-index: 10;
         }
 
         .products-title {
@@ -543,8 +514,6 @@
         .partners-section {
             margin: 0 20px 20px;
             overflow: hidden;
-            position: relative;
-            z-index: 10;
         }
 
         .partners-title {
@@ -663,9 +632,6 @@
 <body>
 <div class="phone">
 
-    <!-- Canvas 粒子容器 -->
-    <canvas id="particleCanvasTop" width="390" height="200"></canvas>
-
     <div class="dashboard-header">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
@@ -707,6 +673,7 @@
         <div class="progress-text" id="progressText">0 of 3 completed</div>
     </div>
 
+    <!-- 透明玻璃统计卡片 - 数字会优雅滚动 -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Total Sales</div>
@@ -836,91 +803,6 @@
     let currentUser = null;
     let commissionData = [42, 58, 35, 72, 68, 89, 95];
     let chartDates = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    let particleAnimationId = null;
-    let topParticles = [];
-
-    // ========== 拖尾粒子效果（Canvas版本，可见） ==========
-    function initTopParticleCanvas() {
-        const canvas = document.getElementById('particleCanvasTop');
-        if (!canvas) return;
-        
-        canvas.width = 390;
-        canvas.height = 200;
-        const ctx = canvas.getContext('2d');
-        
-        // 粒子数组
-        let particles = [];
-        
-        function createParticle() {
-            return {
-                x: Math.random() * canvas.width,
-                y: canvas.height - 20 + Math.random() * 30,
-                size: 2 + Math.random() * 6,
-                speedX: (Math.random() - 0.5) * 0.8,
-                speedY: -0.5 - Math.random() * 1.2,
-                alpha: 0.5 + Math.random() * 0.4,
-                color: Math.random() > 0.6 ? '#ff7a00' : '#ffcc00',
-                life: 1,
-                decay: 0.008 + Math.random() * 0.01
-            };
-        }
-        
-        // 初始粒子
-        for (let i = 0; i < 35; i++) {
-            particles.push(createParticle());
-        }
-        
-        function animate() {
-            if (!canvas.parentNode) return;
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 更新并绘制粒子
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.x += p.speedX;
-                p.y += p.speedY;
-                p.life -= p.decay;
-                p.alpha = p.life * 0.8;
-                
-                if (p.life <= 0.02 || p.y < -20 || p.x > canvas.width + 50 || p.x < -50) {
-                    particles.splice(i, 1);
-                    continue;
-                }
-                
-                // 绘制粒子（带光晕拖尾效果）
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                
-                // 主粒子
-                ctx.fillStyle = p.color;
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = p.color;
-                ctx.fill();
-                
-                // 光晕
-                ctx.beginPath();
-                ctx.arc(p.x - p.speedX * 3, p.y - p.speedY * 3, p.size * 0.6, 0, Math.PI * 2);
-                ctx.fillStyle = p.color + '40';
-                ctx.fill();
-            }
-            
-            // 补充粒子
-            if (particles.length < 25) {
-                for (let i = 0; i < 3; i++) {
-                    particles.push(createParticle());
-                }
-            }
-            
-            particleAnimationId = requestAnimationFrame(animate);
-        }
-        
-        animate();
-        
-        return () => {
-            if (particleAnimationId) cancelAnimationFrame(particleAnimationId);
-        };
-    }
 
     // ========== 优雅慢速数字滚动动画 ==========
     function animateNumber(element, start, end, duration = 2000, onUpdate) {
@@ -957,6 +839,7 @@
         const ordersEl = document.getElementById('ordersCount');
         const profitEl = document.getElementById('profitValue');
         const overviewEarnings = document.getElementById('overviewEarnings');
+        const salesAmount = document.getElementById('salesAmount');
         
         if (salesEl) {
             animateNumber(salesEl, 0, sales, 2000, (val) => {
@@ -987,9 +870,15 @@
                 overviewEarnings.innerHTML = '€' + Math.round(val).toLocaleString();
             });
         }
+        
+        if (salesAmount) {
+            animateNumber(salesAmount, 0, profit, 2000, (val) => {
+                salesAmount.innerHTML = '€' + Math.round(val).toLocaleString() + ' earned';
+            });
+        }
     }
 
-    function startParticleEffectCanvas(canvasId, wrapperId) {
+    function startParticleEffect(canvasId, wrapperId) {
         const canvas = document.getElementById(canvasId);
         const wrapper = document.getElementById(wrapperId);
         if (!canvas || !wrapper) return;
@@ -1005,7 +894,7 @@
         let particles = [];
         let animationId = null;
         
-        function createParticleCanvas() {
+        function createParticle() {
             return {
                 x: Math.random() * canvas.width,
                 y: canvas.height + 5,
@@ -1013,17 +902,16 @@
                 alpha: Math.random() * 0.6 + 0.2,
                 speedY: -0.8 - Math.random() * 1.2,
                 speedX: (Math.random() - 0.5) * 0.5,
-                color: Math.random() > 0.5 ? '#ff7a00' : '#ffcc00'
             };
         }
         
-        function animateCanvas() {
+        function animate() {
             if (!canvas.parentNode) return;
             resizeCanvas();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             if (Math.random() < 0.08 && particles.length < 60) {
-                for (let i = 0; i < 2; i++) particles.push(createParticleCanvas());
+                for (let i = 0; i < 2; i++) particles.push(createParticle());
             }
             
             for (let i = particles.length - 1; i >= 0; i--) {
@@ -1039,7 +927,7 @@
                 
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, ${p.color === '#ff7a00' ? 122 : 204}, ${p.color === '#ff7a00' ? 0 : 0}, ${p.alpha * 0.9})`;
+                ctx.fillStyle = `rgba(255, 200, 80, ${p.alpha * 0.9})`;
                 ctx.fill();
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
@@ -1047,12 +935,12 @@
                 ctx.fill();
             }
             
-            animationId = requestAnimationFrame(animateCanvas);
+            animationId = requestAnimationFrame(animate);
         }
         
         const resizeObserver = new ResizeObserver(() => resizeCanvas());
         resizeObserver.observe(wrapper);
-        animateCanvas();
+        animate();
         
         return () => {
             if (animationId) cancelAnimationFrame(animationId);
@@ -1431,6 +1319,7 @@
         const totalRoi = totalSales > 0 ? (totalCommission / totalSales) * 100 : 0;
         const totalProfit = totalCommission * 0.7;
         
+        // 更新趋势箭头（不滚动）
         const salesTrendEl = document.getElementById('salesTrend');
         const roiTrendEl = document.getElementById('roiTrend');
         const ordersTrendEl = document.getElementById('ordersTrend');
@@ -1470,6 +1359,7 @@
         const progress = await loadUserOnboardingProgress(user.uid);
         updateProgressUI(progress);
         
+        // 使用优雅慢速动画滚动显示统计数据
         animateStatsData(totalSales, totalRoi, totalOrderCount, totalCommission);
     }
 
@@ -1582,13 +1472,10 @@
         setupBottomNav();
         await loadPartners();
         
-        startParticleEffectCanvas('particleCanvas1', 'card1');
-        startParticleEffectCanvas('particleCanvas2', 'card2');
-        startParticleEffectCanvas('particleCanvas3', 'card3');
-        startParticleEffectCanvas('particleCanvas4', 'card4');
-        
-        // 启动顶部粒子效果
-        initTopParticleCanvas();
+        startParticleEffect('particleCanvas1', 'card1');
+        startParticleEffect('particleCanvas2', 'card2');
+        startParticleEffect('particleCanvas3', 'card3');
+        startParticleEffect('particleCanvas4', 'card4');
         
         const savedStyle = localStorage.getItem('selected_chart_style');
         if (savedStyle) {
