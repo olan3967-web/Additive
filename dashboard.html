@@ -132,19 +132,20 @@
 
         /* Total Commissions Earned - 透明玻璃效果 + 黑色字体 */
         .stats-card {
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(20px);
             margin: 16px;
             padding: 16px;
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
         }
 
         .stat-label {
             font-size: 13px;
-            color: #4b5563;
+            color: #1f2937;
             margin-bottom: 8px;
+            font-weight: 500;
         }
 
         .stat-value {
@@ -232,9 +233,9 @@
         /* My Sales 和 Sourcing - 透明玻璃效果 + 黑色字体 */
         .half-card {
             flex: 1;
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: 20px;
             padding: 18px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -244,7 +245,7 @@
 
         .half-card:hover {
             transform: translateY(-2px);
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.45);
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
 
@@ -281,7 +282,7 @@
         }
 
         .half-card div[style] {
-            color: #6b7280 !important;
+            color: #4b5563 !important;
         }
 
         .glass-card {
@@ -473,7 +474,7 @@
                 <span class="view-link">View →</span>
             </div>
             <div class="half-card-title">My Sales</div>
-            <div style="font-size: 12px; color: #6b7280; margin-top: 6px;" id="salesAmount">€0.00 earned</div>
+            <div style="font-size: 12px; color: #4b5563; margin-top: 6px;" id="salesAmount">€0.00 earned</div>
         </div>
         <!-- Sourcing - 透明玻璃效果 + 黑色字体 -->
         <div class="half-card" onclick="location.href='start.html'">
@@ -482,7 +483,7 @@
                 <span class="view-link">View →</span>
             </div>
             <div class="half-card-title">Sourcing</div>
-            <div style="font-size: 12px; color: #6b7280; margin-top: 6px;">Find products</div>
+            <div style="font-size: 12px; color: #4b5563; margin-top: 6px;">Find products</div>
         </div>
     </div>
 
