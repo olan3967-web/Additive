@@ -261,6 +261,7 @@
             font-size: 12px;
             color: #5a6a7a;
             margin-bottom: 8px;
+            font-weight: 500;
         }
 
         .stat-value {
@@ -283,6 +284,7 @@
             font-weight: 600;
         }
 
+        /* 图表卡片 */
         .chart-card {
             background: white;
             border-radius: 24px;
@@ -673,7 +675,7 @@
         <div class="progress-text" id="progressText">0 of 3 completed</div>
     </div>
 
-    <!-- 透明玻璃统计卡片 - 数字会优雅滚动 -->
+    <!-- 透明玻璃统计卡片 -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Total Sales</div>
@@ -803,80 +805,6 @@
     let currentUser = null;
     let commissionData = [42, 58, 35, 72, 68, 89, 95];
     let chartDates = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-    // ========== 优雅慢速数字滚动动画 ==========
-    function animateNumber(element, start, end, duration = 2000, onUpdate) {
-        if (!element) return;
-        const startTime = performance.now();
-        
-        function easeInOutCubic(t) {
-            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-        }
-        
-        function update(currentTime) {
-            const elapsed = currentTime - startTime;
-            let progress = Math.min(elapsed / duration, 1);
-            const eased = easeInOutCubic(progress);
-            const currentValue = start + (end - start) * eased;
-            
-            if (onUpdate) {
-                onUpdate(currentValue);
-            }
-            
-            if (progress < 1) {
-                requestAnimationFrame(update);
-            } else {
-                if (onUpdate) onUpdate(end);
-            }
-        }
-        
-        requestAnimationFrame(update);
-    }
-
-    function animateStatsData(sales, roi, orders, profit) {
-        const salesEl = document.getElementById('totalSales');
-        const roiEl = document.getElementById('roiValue');
-        const ordersEl = document.getElementById('ordersCount');
-        const profitEl = document.getElementById('profitValue');
-        const overviewEarnings = document.getElementById('overviewEarnings');
-        const salesAmount = document.getElementById('salesAmount');
-        
-        if (salesEl) {
-            animateNumber(salesEl, 0, sales, 2000, (val) => {
-                salesEl.innerHTML = '€' + Math.round(val).toLocaleString();
-            });
-        }
-        
-        if (roiEl) {
-            animateNumber(roiEl, 0, roi, 2000, (val) => {
-                roiEl.innerHTML = val.toFixed(1) + '%';
-            });
-        }
-        
-        if (ordersEl) {
-            animateNumber(ordersEl, 0, orders, 2000, (val) => {
-                ordersEl.innerHTML = Math.round(val).toString();
-            });
-        }
-        
-        if (profitEl) {
-            animateNumber(profitEl, 0, profit, 2000, (val) => {
-                profitEl.innerHTML = '€' + Math.round(val).toLocaleString();
-            });
-        }
-        
-        if (overviewEarnings) {
-            animateNumber(overviewEarnings, 0, profit, 2000, (val) => {
-                overviewEarnings.innerHTML = '€' + Math.round(val).toLocaleString();
-            });
-        }
-        
-        if (salesAmount) {
-            animateNumber(salesAmount, 0, profit, 2000, (val) => {
-                salesAmount.innerHTML = '€' + Math.round(val).toLocaleString() + ' earned';
-            });
-        }
-    }
 
     function startParticleEffect(canvasId, wrapperId) {
         const canvas = document.getElementById(canvasId);
@@ -1123,11 +1051,20 @@
         }
     }
 
+    // 计算 Y 轴最大刻度（向上取整到50的倍数）
+    function getMaxTick(data) {
+        const maxValue = Math.max(...data, 1);
+        return Math.ceil(maxValue / 50) * 50;
+    }
+
     function createLineChart(ctx, data) {
         const gradient = ctx.createLinearGradient(0, 0, 0, 200);
         gradient.addColorStop(0, 'rgba(255, 122, 0, 0.35)');
         gradient.addColorStop(0.4, 'rgba(255, 122, 0, 0.15)');
         gradient.addColorStop(1, 'rgba(255, 122, 0, 0.02)');
+        
+        const maxTick = getMaxTick(data);
+        const stepSize = 50;
         
         return new Chart(ctx, {
             type: 'line',
@@ -1154,13 +1091,13 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.85)',
                         titleColor: '#ff9f43',
                         bodyColor: '#ffffff',
                         borderColor: '#ff7a00',
                         borderWidth: 1,
-                        titleFont: { size: 12, weight: 'bold' },
-                        bodyFont: { size: 11 },
+                        titleFont: { size: 12, weight: 'bold', family: 'Inter' },
+                        bodyFont: { size: 11, family: 'Inter' },
                         callbacks: {
                             label: (context) => `Revenue: €${context.raw.toFixed(2)}`
                         }
@@ -1169,16 +1106,23 @@
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: 12, weight: '500' }, color: '#475569' }
+                        ticks: { 
+                            font: { size: 12, weight: '600', family: 'Inter' }, 
+                            color: '#475569'
+                        }
                     },
                     y: {
                         grid: { color: '#e2e8f0', drawBorder: false },
                         ticks: {
                             callback: (value) => '€' + value,
-                            font: { size: 11, weight: '500' },
-                            color: '#64748b'
+                            font: { size: 11, weight: '500', family: 'Inter' },
+                            color: '#64748b',
+                            stepSize: stepSize,
+                            max: maxTick,
+                            beginAtZero: true
                         },
-                        beginAtZero: true
+                        beginAtZero: true,
+                        suggestedMax: maxTick
                     }
                 }
             }
@@ -1187,6 +1131,9 @@
 
     function createBarChart(ctx, data) {
         const maxValue = Math.max(...data, 1);
+        const maxTick = Math.ceil(maxValue / 50) * 50;
+        const stepSize = 50;
+        
         const barColors = data.map((value) => {
             const intensity = 0.5 + (value / maxValue) * 0.4;
             const gradient = ctx.createLinearGradient(0, 0, 0, 200);
@@ -1217,13 +1164,13 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.85)',
                         titleColor: '#ff9f43',
                         bodyColor: '#ffffff',
                         borderColor: '#ff7a00',
                         borderWidth: 1,
-                        titleFont: { size: 12, weight: 'bold' },
-                        bodyFont: { size: 11 },
+                        titleFont: { size: 12, weight: 'bold', family: 'Inter' },
+                        bodyFont: { size: 11, family: 'Inter' },
                         callbacks: {
                             label: (context) => `Revenue: €${context.raw.toFixed(2)}`
                         }
@@ -1232,16 +1179,23 @@
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: 12, weight: '500' }, color: '#475569' }
+                        ticks: { 
+                            font: { size: 12, weight: '600', family: 'Inter' }, 
+                            color: '#475569'
+                        }
                     },
                     y: {
                         grid: { color: '#e2e8f0', drawBorder: false },
                         ticks: {
                             callback: (value) => '€' + value,
-                            font: { size: 11, weight: '500' },
-                            color: '#64748b'
+                            font: { size: 11, weight: '500', family: 'Inter' },
+                            color: '#64748b',
+                            stepSize: stepSize,
+                            max: maxTick,
+                            beginAtZero: true
                         },
-                        beginAtZero: true
+                        beginAtZero: true,
+                        suggestedMax: maxTick
                     }
                 }
             }
@@ -1319,48 +1273,37 @@
         const totalRoi = totalSales > 0 ? (totalCommission / totalSales) * 100 : 0;
         const totalProfit = totalCommission * 0.7;
         
-        // 更新趋势箭头（不滚动）
+        document.getElementById('totalSales').innerHTML = '€' + totalSales.toLocaleString();
+        document.getElementById('roiValue').innerHTML = totalRoi.toFixed(1) + '%';
+        document.getElementById('ordersCount').innerHTML = totalOrderCount;
+        document.getElementById('profitValue').innerHTML = '€' + totalProfit.toLocaleString();
+        document.getElementById('overviewEarnings').innerHTML = '€' + totalCommission.toLocaleString();
+        
         const salesTrendEl = document.getElementById('salesTrend');
+        salesTrendEl.innerHTML = (salesChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + salesChange.toFixed(1) + '%';
+        salesTrendEl.className = salesChange >= 0 ? 'trend-up' : 'trend-down';
+        
         const roiTrendEl = document.getElementById('roiTrend');
+        roiTrendEl.innerHTML = (roiChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + roiChange.toFixed(1) + '%';
+        roiTrendEl.className = roiChange >= 0 ? 'trend-up' : 'trend-down';
+        
         const ordersTrendEl = document.getElementById('ordersTrend');
+        ordersTrendEl.innerHTML = (ordersChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + ordersChange.toFixed(1) + '%';
+        ordersTrendEl.className = ordersChange >= 0 ? 'trend-up' : 'trend-down';
+        
         const profitTrendEl = document.getElementById('profitTrend');
-        
-        if (salesTrendEl) {
-            salesTrendEl.innerHTML = (salesChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + salesChange.toFixed(1) + '%';
-            salesTrendEl.className = salesChange >= 0 ? 'trend-up' : 'trend-down';
-        }
-        
-        if (roiTrendEl) {
-            roiTrendEl.innerHTML = (roiChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + roiChange.toFixed(1) + '%';
-            roiTrendEl.className = roiChange >= 0 ? 'trend-up' : 'trend-down';
-        }
-        
-        if (ordersTrendEl) {
-            ordersTrendEl.innerHTML = (ordersChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + ordersChange.toFixed(1) + '%';
-            ordersTrendEl.className = ordersChange >= 0 ? 'trend-up' : 'trend-down';
-        }
-        
-        if (profitTrendEl) {
-            profitTrendEl.innerHTML = (profitChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + profitChange.toFixed(1) + '%';
-            profitTrendEl.className = profitChange >= 0 ? 'trend-up' : 'trend-down';
-        }
+        profitTrendEl.innerHTML = (profitChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + profitChange.toFixed(1) + '%';
+        profitTrendEl.className = profitChange >= 0 ? 'trend-up' : 'trend-down';
         
         const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
-        const overviewPremium = document.getElementById('overviewPremium');
-        const overviewCert = document.getElementById('overviewCert');
-        const certTag = document.getElementById('certTag');
-        
-        if (overviewPremium) overviewPremium.innerText = vipMap[user.vipLevel] || 'Normal';
+        document.getElementById('overviewPremium').innerText = vipMap[user.vipLevel] || 'Normal';
         const certProgress = totalOrderCount >= 100 ? 100 : totalOrderCount;
-        if (overviewCert) overviewCert.innerHTML = certProgress + '/100';
+        document.getElementById('overviewCert').innerHTML = certProgress + '/100';
         const remaining = totalOrderCount >= 100 ? 0 : 100 - totalOrderCount;
-        if (certTag) certTag.innerHTML = remaining === 0 ? 'Completed!' : remaining + ' orders to go';
+        document.getElementById('certTag').innerHTML = remaining === 0 ? 'Completed!' : remaining + ' orders to go';
         
         const progress = await loadUserOnboardingProgress(user.uid);
         updateProgressUI(progress);
-        
-        // 使用优雅慢速动画滚动显示统计数据
-        animateStatsData(totalSales, totalRoi, totalOrderCount, totalCommission);
     }
 
     async function loadVideoConfig() {
