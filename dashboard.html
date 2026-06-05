@@ -33,7 +33,7 @@
             position: relative;
         }
 
-        /* 顶部用户卡片 */
+        /* 顶部用户卡片 - 保持原有样式不变 */
         .profile-header {
             background: #0f0f23;
             padding: 24px 20px;
@@ -54,6 +54,7 @@
             bottom: 0;
             background: radial-gradient(circle at 30% 0%, rgba(255, 122, 0, 0.15), transparent 70%);
             pointer-events: none;
+            z-index: 1;
         }
 
         .profile-header::after {
@@ -65,6 +66,18 @@
             height: 100%;
             background: linear-gradient(180deg, rgba(255, 122, 0, 0.08) 0%, transparent 50%);
             pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 粒子画布 - 在卡片内容底层，不遮挡文字 */
+        .dust-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .profile-row {
@@ -72,7 +85,7 @@
             align-items: center;
             gap: 16px;
             position: relative;
-            z-index: 1;
+            z-index: 2;
         }
 
         .avatar {
@@ -131,7 +144,7 @@
             color: #7e8aa8;
         }
 
-        /* 三个透明卡片效果 */
+        /* 其余样式保持不变 */
         .stats-card,
         .half-card {
             background: rgba(255, 255, 255, 0.2);
@@ -319,7 +332,6 @@
             color: #4b5563 !important;
         }
 
-        /* ========== glass-card 样式 - 固定高度，不随粒子变化 ========== */
         .glass-card {
             background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(12px);
@@ -328,7 +340,6 @@
             position: relative;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.5);
-            /* 移除 overflow: hidden 的粒子影响，但保留边框圆角裁剪 */
             overflow: visible;
         }
 
@@ -368,7 +379,6 @@
             gap: 8px;
         }
 
-        /* 4列网格 - 固定高度，不会因内容撑高 */
         .grid-4 {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -400,7 +410,6 @@
             box-shadow: 0 10px 20px rgba(255, 122, 0, 0.35);
         }
 
-        /* 按钮文字改小，强制一行 */
         .grid-label {
             font-size: 10px;
             font-weight: 500;
@@ -409,42 +418,12 @@
             letter-spacing: 0.2px;
         }
 
-        /* Settings 单独一行居中 */
         .settings-row {
             margin-top: 20px;
             padding-top: 16px;
             border-top: 1px solid rgba(0, 0, 0, 0.06);
             display: flex;
             justify-content: center;
-        }
-
-        /* 粒子容器 - 不占位，不影响布局 */
-        .particle-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 5;
-            border-radius: 24px;
-        }
-
-        .particle {
-            position: absolute;
-            background: radial-gradient(circle, #ff9f43, #ff7a00);
-            border-radius: 50%;
-            pointer-events: none;
-            opacity: 0;
-            animation: floatParticle 4s infinite ease-out;
-        }
-
-        @keyframes floatParticle {
-            0% { transform: translateY(0) translateX(0) scale(0.5); opacity: 0; }
-            15% { opacity: 0.6; }
-            85% { opacity: 0.3; }
-            100% { transform: translateY(-180px) translateX(20px) scale(0); opacity: 0; }
         }
 
         .bottom-nav {
@@ -493,7 +472,9 @@
 <body>
 <div class="phone">
 
-    <div class="profile-header">
+    <!-- 顶部用户卡片 - 只添加粒子canvas，不改变任何原有样式 -->
+    <div class="profile-header" id="profileHeader">
+        <canvas id="dustCanvas" class="dust-canvas"></canvas>
         <div class="profile-row">
             <div class="avatar" id="avatarInitial">O</div>
             <div class="profile-info">
@@ -540,9 +521,7 @@
         </div>
     </div>
 
-    <!-- QUICK ACTIONS 卡片 - 粒子放入独立容器，不影响高度 -->
     <div class="glass-card" id="particleCard1">
-        <div class="particle-container" id="particleContainer1"></div>
         <div class="card-inner">
             <div class="section-title">
                 <i class="fa-regular fa-star" style="color:#ff7a00;"></i>
@@ -585,9 +564,7 @@
         </div>
     </div>
 
-    <!-- SUPPORT & HISTORY 卡片 -->
     <div class="glass-card" id="particleCard2">
-        <div class="particle-container" id="particleContainer2"></div>
         <div class="card-inner">
             <div class="section-title">
                 <i class="fa-regular fa-circle-question" style="color:#ff7a00;"></i>
@@ -642,33 +619,97 @@
 </div>
 
 <script>
-    let particleIntervals = [];
+    let particleAnimationId = null;
 
-    function createParticle(container) {
-        if (!container) return;
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        const size = 3 + Math.random() * 10;
-        const left = Math.random() * 100;
-        const duration = 2.5 + Math.random() * 2;
-        const delay = Math.random() * 3;
-        particle.style.width = size + 'px';
-        particle.style.height = size + 'px';
-        particle.style.left = left + '%';
-        particle.style.bottom = '0px';
-        particle.style.animationDuration = duration + 's';
-        particle.style.animationDelay = delay + 's';
-        container.appendChild(particle);
-        setTimeout(() => {
-            if (particle.parentNode) particle.remove();
-        }, duration * 1000);
-    }
-
-    function startParticleEffect(containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        const interval = setInterval(() => createParticle(container), 300);
-        particleIntervals.push(interval);
+    // ========== 梦幻漂浮粒子效果（尘埃般小颗、缓慢上升、拖尾光晕） ==========
+    function initDustParticles() {
+        const canvas = document.getElementById('dustCanvas');
+        const container = document.getElementById('profileHeader');
+        if (!canvas || !container) return;
+        
+        // 设置canvas尺寸（跟随卡片大小）
+        const resizeCanvas = () => {
+            const rect = container.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        };
+        resizeCanvas();
+        
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        
+        function createParticle() {
+            return {
+                x: Math.random() * canvas.width,
+                y: canvas.height - 15 + Math.random() * 30,
+                size: 1 + Math.random() * 2.5,  // 小颗，像尘埃
+                speedX: (Math.random() - 0.5) * 0.2,
+                speedY: -0.2 - Math.random() * 0.4,  // 缓慢上升
+                alpha: 0.15 + Math.random() * 0.25,  // 半透明，梦幻
+                color: `rgba(255, ${140 + Math.random() * 60}, ${40 + Math.random() * 40}, 0.3)`,
+                life: 1,
+                decay: 0.002 + Math.random() * 0.004
+            };
+        }
+        
+        // 初始生成粒子
+        for (let i = 0; i < 60; i++) {
+            const p = createParticle();
+            p.y = Math.random() * canvas.height;  // 分散在整个卡片
+            particles.push(p);
+        }
+        
+        function animate() {
+            if (!canvas.parentNode) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.speedX;
+                p.y += p.speedY;
+                p.life -= p.decay;
+                
+                if (p.life <= 0.02 || p.y < -10) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                
+                // 主粒子（带光晕拖尾）
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, ${140 + Math.random() * 60}, 40, ${p.life * 0.3})`;
+                ctx.shadowBlur = 6;
+                ctx.shadowColor = 'rgba(255, 122, 0, 0.3)';
+                ctx.fill();
+                
+                // 拖尾光晕（向后延伸）
+                ctx.beginPath();
+                ctx.arc(p.x - p.speedX * 5, p.y - p.speedY * 5, p.size * 0.6, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 150, 60, ${p.life * 0.15})`;
+                ctx.fill();
+            }
+            
+            // 补充粒子
+            if (particles.length < 45) {
+                for (let i = 0; i < 2; i++) {
+                    particles.push(createParticle());
+                }
+            }
+            
+            particleAnimationId = requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        // 监听卡片大小变化
+        const resizeObserver = new ResizeObserver(() => resizeCanvas());
+        resizeObserver.observe(container);
+        
+        return () => {
+            if (particleAnimationId) cancelAnimationFrame(particleAnimationId);
+            resizeObserver.disconnect();
+        };
     }
 
     async function fetchUserData(uid) {
@@ -783,14 +824,10 @@
     loadProfile();
     setupBottomNav();
 
+    // 启动尘埃粒子效果（不改变卡片任何样式）
     setTimeout(() => {
-        startParticleEffect('particleContainer1');
-        startParticleEffect('particleContainer2');
-    }, 500);
-
-    window.checkCertificate = function() {
-        alert('Certificate function');
-    };
+        initDustParticles();
+    }, 100);
 </script>
 </body>
 </html>
