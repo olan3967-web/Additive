@@ -319,7 +319,7 @@
             color: #4b5563 !important;
         }
 
-        /* ========== 细沙质感卡片容器 ========== */
+        /* ========== 细沙质感卡片容器 - 删除了顶部橙色光条 ========== */
         .glass-card {
             background: #f5efe7;
             background-image: radial-gradient(circle at 10% 20%, rgba(160, 130, 100, 0.06) 1.5px, transparent 1.5px);
@@ -332,24 +332,7 @@
             overflow: visible;
         }
 
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #ff7a00, #ff9f43);
-            z-index: 10;
-            box-shadow: 0 0 8px #ff7a00, 0 0 4px #ff9f43;
-            animation: glowBar 1.5s ease-in-out infinite alternate;
-            border-radius: 28px 28px 0 0;
-        }
-
-        @keyframes glowBar {
-            0% { box-shadow: 0 0 2px #ff7a00, 0 0 2px #ff9f43; opacity: 0.8; }
-            100% { box-shadow: 0 0 12px #ff7a00, 0 0 8px #ff9f43; opacity: 1; }
-        }
+        /* 已删除顶部橙色光条 */
 
         .card-inner {
             padding: 20px;
@@ -508,7 +491,7 @@
         </div>
     </div>
 
-    <!-- QUICK ACTIONS 卡片 - 细沙质感 -->
+    <!-- QUICK ACTIONS 卡片 - 已删除顶部橙色光条 -->
     <div class="glass-card" id="particleCard1">
         <div class="card-inner">
             <div class="section-title">
@@ -552,7 +535,7 @@
         </div>
     </div>
 
-    <!-- SUPPORT & HISTORY 卡片 - 细沙质感 -->
+    <!-- SUPPORT & HISTORY 卡片 - 已删除顶部橙色光条 -->
     <div class="glass-card" id="particleCard2">
         <div class="card-inner">
             <div class="section-title">
