@@ -88,4 +88,38 @@ body {
     transition: all 0.2s;
 }
 
-/* 其他所有样式保持原样，不做任何修改 */
+/* user-common.css - 统一底部导航栏字体 */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid #eef2f7;
+    display: flex;
+    padding: 10px 0 14px;
+    z-index: 100;
+}
+
+.nav-item {
+    flex: 1;
+    text-align: center;
+    font-size: 12px;  /* 从 11px 改为 12px，与 start.html 一致 */
+    font-weight: 500;
+    color: #9ca3af;
+    cursor: pointer;
+    position: relative;
+}
+
+.nav-item i {
+    display: block;
+    font-size: 22px;  /* 从 20px 改为 22px */
+    margin-bottom: 4px;
+}
+
+.nav-item.active {
+    color: #ff7a00;
+    font-weight: 700;  /* 从 600 改为 700 */
+}
