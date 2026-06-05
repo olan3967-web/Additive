@@ -42,7 +42,7 @@
         }
 
         .page-header h1 {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: 700;
             color: #1a1a2e;
             flex: 1;
@@ -214,7 +214,8 @@
         .nav-item {
             flex: 1;
             text-align: center;
-            font-size: 11px;
+            font-size: 12px;
+            font-weight: 500;
             color: #9ca3af;
             cursor: pointer;
             position: relative;
@@ -235,7 +236,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 300px;
+            min-height: 200px;
         }
 
         .loading-spinner i {
@@ -247,6 +248,12 @@
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 40px;
+            color: #ef4444;
         }
     </style>
 </head>
@@ -281,6 +288,7 @@
 <script>
     let orderData = null;
     let checkInterval = null;
+    let hasError = false;
 
     function getQueryParam(param) {
         const urlParams = new URLSearchParams(window.location.search);
@@ -290,6 +298,7 @@
     function formatDate(dateStr) {
         if (!dateStr) return '—';
         const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return '—';
         return date.toLocaleString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -303,12 +312,26 @@
         window.location.href = 'orders.html';
     }
 
+    function showError(message) {
+        if (hasError) return;
+        hasError = true;
+        
+        const orderInfoDiv = document.getElementById('orderInfo');
+        orderInfoDiv.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> ${message}</div>`;
+        document.getElementById('currentStatusCard').style.display = 'none';
+        document.getElementById('timelineContainer').style.display = 'none';
+        showToast(message, 'error');
+        
+        setTimeout(() => {
+            goBack();
+        }, 2000);
+    }
+
     async function loadOrder() {
         const orderNo = getQueryParam('order_no');
         
         if (!orderNo) {
-            showToast('无效的订单号', 'error');
-            setTimeout(() => goBack(), 1500);
+            showError('无效的订单号');
             return;
         }
 
@@ -321,24 +344,28 @@
         const orderInfoDiv = document.getElementById('orderInfo');
         orderInfoDiv.innerHTML = '<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i></div></div>';
 
-        const { data: order, error } = await sb
-            .from('user_orders')
-            .select('*')
-            .eq('order_no', orderNo)
-            .eq('uid', user.uid)
-            .single();
+        try {
+            const { data: order, error } = await sb
+                .from('user_orders')
+                .select('*')
+                .eq('order_no', orderNo)
+                .eq('uid', user.uid)
+                .single();
 
-        if (error || !order) {
-            orderInfoDiv.innerHTML = '<div style="text-align:center; padding:40px;">订单不存在</div>';
-            showToast('订单不存在', 'error');
-            setTimeout(() => goBack(), 2000);
-            return;
+            if (error || !order) {
+                showError('订单不存在');
+                return;
+            }
+
+            orderData = order;
+            renderOrderInfo();
+            renderTimeline();
+            startAutoRefresh();
+            
+        } catch (err) {
+            console.error('加载订单失败:', err);
+            showError('加载失败，请重试');
         }
-
-        orderData = order;
-        renderOrderInfo();
-        renderTimeline();
-        startAutoRefresh();
     }
 
     function renderOrderInfo() {
@@ -356,7 +383,7 @@
         container.innerHTML = `
             <div class="order-no">${orderData.order_no}</div>
             <div class="order-date">下单时间：${formatDate(orderData.created_at)}</div>
-            <div class="order-date" style="margin-top:8px;">产品：${productsText}</div>
+            <div class="order-date" style="margin-top:8px;">产品：${productsText.substring(0, 80)}${productsText.length > 80 ? '...' : ''}</div>
             <div class="order-date">总金额：€${(orderData.total_supply_price || 0).toFixed(2)}</div>
         `;
     }
@@ -385,7 +412,7 @@
         
         for (let i = 0; i < timeline.length; i++) {
             const itemTime = new Date(timeline[i].time);
-            if (itemTime <= now) {
+            if (!isNaN(itemTime.getTime()) && itemTime <= now) {
                 currentIndex = i;
             } else {
                 break;
@@ -401,7 +428,7 @@
             const currentStatus = timeline[currentIndex];
             currentStatusCard.innerHTML = `
                 <div class="current-status-label">当前状态</div>
-                <div class="current-status-text"><i class="fas fa-truck"></i> ${currentStatus.status}</div>
+                <div class="current-status-text"><i class="fas fa-truck"></i> ${escapeHtml(currentStatus.status)}</div>
                 <div class="current-status-label" style="margin-top:8px;">更新时间：${formatDate(currentStatus.time)}</div>
             `;
         } else {
@@ -423,6 +450,7 @@
                     let showTime = false;
                     
                     const itemTime = new Date(item.time);
+                    const isValidTime = !isNaN(itemTime.getTime());
                     
                     if (index < currentIndex) {
                         statusClass = 'completed';
@@ -447,8 +475,8 @@
                                 <i class="${icon}"></i>
                             </div>
                             <div class="timeline-content">
-                                <div class="timeline-status">${item.status}</div>
-                                ${showTime ? `<div class="timeline-time">${formatDate(item.time)}</div>` : '<div class="timeline-time" style="color:#e2e8f0;">⏳ 待更新</div>'}
+                                <div class="timeline-status">${escapeHtml(item.status)}</div>
+                                ${showTime && isValidTime ? `<div class="timeline-time">${formatDate(item.time)}</div>` : '<div class="timeline-time" style="color:#e2e8f0;">⏳ 待更新</div>'}
                             </div>
                         </div>
                     `;
@@ -471,19 +499,28 @@
     function startAutoRefresh() {
         if (checkInterval) clearInterval(checkInterval);
         checkInterval = setInterval(async () => {
-            if (!orderData) return;
+            if (!orderData || orderData.status === 'delivered') return;
             
-            const { data: freshOrder, error } = await sb
-                .from('user_orders')
-                .select('*')
-                .eq('order_no', orderData.order_no)
-                .single();
-            
-            if (!error && freshOrder) {
-                orderData = freshOrder;
-                renderTimeline();
+            try {
+                const { data: freshOrder, error } = await sb
+                    .from('user_orders')
+                    .select('*')
+                    .eq('order_no', orderData.order_no)
+                    .single();
+                
+                if (!error && freshOrder) {
+                    orderData = freshOrder;
+                    renderTimeline();
+                }
+            } catch(e) {
+                console.log('刷新失败:', e);
             }
-        }, 10000);
+        }, 15000);
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
     }
 
     function setupBottomNav() {
