@@ -806,6 +806,7 @@
 
     // ========== 优雅慢速数字滚动动画 ==========
     function animateNumber(element, start, end, duration = 2000, onUpdate) {
+        if (!element) return;
         const startTime = performance.now();
         
         function easeInOutCubic(t) {
@@ -840,35 +841,41 @@
         const overviewEarnings = document.getElementById('overviewEarnings');
         const salesAmount = document.getElementById('salesAmount');
         
-        // 优雅慢速滚动 Total Sales
-        animateNumber(salesEl, 0, sales, 2000, (val) => {
-            salesEl.innerHTML = '€' + Math.round(val).toLocaleString();
-        });
+        if (salesEl) {
+            animateNumber(salesEl, 0, sales, 2000, (val) => {
+                salesEl.innerHTML = '€' + Math.round(val).toLocaleString();
+            });
+        }
         
-        // 优雅慢速滚动 ROI
-        animateNumber(roiEl, 0, roi, 2000, (val) => {
-            roiEl.innerHTML = val.toFixed(1) + '%';
-        });
+        if (roiEl) {
+            animateNumber(roiEl, 0, roi, 2000, (val) => {
+                roiEl.innerHTML = val.toFixed(1) + '%';
+            });
+        }
         
-        // 优雅慢速滚动 Orders
-        animateNumber(ordersEl, 0, orders, 2000, (val) => {
-            ordersEl.innerHTML = Math.round(val).toString();
-        });
+        if (ordersEl) {
+            animateNumber(ordersEl, 0, orders, 2000, (val) => {
+                ordersEl.innerHTML = Math.round(val).toString();
+            });
+        }
         
-        // 优雅慢速滚动 Profit
-        animateNumber(profitEl, 0, profit, 2000, (val) => {
-            profitEl.innerHTML = '€' + Math.round(val).toLocaleString();
-        });
+        if (profitEl) {
+            animateNumber(profitEl, 0, profit, 2000, (val) => {
+                profitEl.innerHTML = '€' + Math.round(val).toLocaleString();
+            });
+        }
         
-        // 优雅慢速滚动 Overview Earnings
-        animateNumber(overviewEarnings, 0, profit, 2000, (val) => {
-            overviewEarnings.innerHTML = '€' + Math.round(val).toLocaleString();
-        });
+        if (overviewEarnings) {
+            animateNumber(overviewEarnings, 0, profit, 2000, (val) => {
+                overviewEarnings.innerHTML = '€' + Math.round(val).toLocaleString();
+            });
+        }
         
-        // 优雅慢速滚动 Sales Amount
-        animateNumber(salesAmount, 0, profit, 2000, (val) => {
-            salesAmount.innerHTML = '€' + Math.round(val).toLocaleString() + ' earned';
-        });
+        if (salesAmount) {
+            animateNumber(salesAmount, 0, profit, 2000, (val) => {
+                salesAmount.innerHTML = '€' + Math.round(val).toLocaleString() + ' earned';
+            });
+        }
     }
 
     function startParticleEffect(canvasId, wrapperId) {
@@ -1314,27 +1321,40 @@
         
         // 更新趋势箭头（不滚动）
         const salesTrendEl = document.getElementById('salesTrend');
-        salesTrendEl.innerHTML = (salesChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + salesChange.toFixed(1) + '%';
-        salesTrendEl.className = salesChange >= 0 ? 'trend-up' : 'trend-down';
-        
         const roiTrendEl = document.getElementById('roiTrend');
-        roiTrendEl.innerHTML = (roiChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + roiChange.toFixed(1) + '%';
-        roiTrendEl.className = roiChange >= 0 ? 'trend-up' : 'trend-down';
-        
         const ordersTrendEl = document.getElementById('ordersTrend');
-        ordersTrendEl.innerHTML = (ordersChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + ordersChange.toFixed(1) + '%';
-        ordersTrendEl.className = ordersChange >= 0 ? 'trend-up' : 'trend-down';
-        
         const profitTrendEl = document.getElementById('profitTrend');
-        profitTrendEl.innerHTML = (profitChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + profitChange.toFixed(1) + '%';
-        profitTrendEl.className = profitChange >= 0 ? 'trend-up' : 'trend-down';
+        
+        if (salesTrendEl) {
+            salesTrendEl.innerHTML = (salesChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + salesChange.toFixed(1) + '%';
+            salesTrendEl.className = salesChange >= 0 ? 'trend-up' : 'trend-down';
+        }
+        
+        if (roiTrendEl) {
+            roiTrendEl.innerHTML = (roiChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + roiChange.toFixed(1) + '%';
+            roiTrendEl.className = roiChange >= 0 ? 'trend-up' : 'trend-down';
+        }
+        
+        if (ordersTrendEl) {
+            ordersTrendEl.innerHTML = (ordersChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + ordersChange.toFixed(1) + '%';
+            ordersTrendEl.className = ordersChange >= 0 ? 'trend-up' : 'trend-down';
+        }
+        
+        if (profitTrendEl) {
+            profitTrendEl.innerHTML = (profitChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + profitChange.toFixed(1) + '%';
+            profitTrendEl.className = profitChange >= 0 ? 'trend-up' : 'trend-down';
+        }
         
         const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
-        document.getElementById('overviewPremium').innerText = vipMap[user.vipLevel] || 'Normal';
+        const overviewPremium = document.getElementById('overviewPremium');
+        const overviewCert = document.getElementById('overviewCert');
+        const certTag = document.getElementById('certTag');
+        
+        if (overviewPremium) overviewPremium.innerText = vipMap[user.vipLevel] || 'Normal';
         const certProgress = totalOrderCount >= 100 ? 100 : totalOrderCount;
-        document.getElementById('overviewCert').innerHTML = certProgress + '/100';
+        if (overviewCert) overviewCert.innerHTML = certProgress + '/100';
         const remaining = totalOrderCount >= 100 ? 0 : 100 - totalOrderCount;
-        document.getElementById('certTag').innerHTML = remaining === 0 ? 'Completed!' : remaining + ' orders to go';
+        if (certTag) certTag.innerHTML = remaining === 0 ? 'Completed!' : remaining + ' orders to go';
         
         const progress = await loadUserOnboardingProgress(user.uid);
         updateProgressUI(progress);
