@@ -1,12 +1,9 @@
-// admin-setorders.js - 设置订单页面（支持 Payment Release Timer/Trigger）
+// admin-setorders.js - 设置订单页面（支持从用户 my_products 选择产品，生成真实欧洲/亚洲买家信息）
 
 let setordersSearchKeyword = '';
 let selectedUser = null;
 let userProductsList = [];
 let orderItems = [];
-let manualTriggerOrders = [];  // 存储手动触发订单
-let paymentReleaseTimer = null;  // 当前选中的 Timer 值（分钟）
-let paymentReleaseTrigger = false;  // 当前选中的 Trigger 复选框状态
 
 // ========== 买家信息生成器（欧洲+亚洲，地址匹配电话号码） ==========
 
@@ -156,8 +153,13 @@ function generatePostalCode(country, city) {
 }
 
 function generateRandomBuyer() {
+    // 随机选择国家
     const country = countries[Math.floor(Math.random() * countries.length)];
+    
+    // 随机决定是亚洲还是欧洲名字（根据国家判断）
     const isAsianCountry = ['852', '65', '60', '62', '66', '84', '63', '82', '81', '86', '886'].includes(country.code);
+    
+    // 随机决定用全名还是小名（60%全名，40%小名）
     const useFullName = Math.random() > 0.4;
     let name;
     if (useFullName) {
@@ -166,13 +168,24 @@ function generateRandomBuyer() {
         name = randomNickname(isAsianCountry);
     }
     
+    // 生成电话（只显示后4位）
     const numberPart = Math.floor(Math.random() * 90000000 + 10000000);
     const phoneFull = `+${country.code}${numberPart}`;
     const phoneDisplay = `+${country.code}****${numberPart.toString().slice(-4)}`;
+    
+    // 随机城市
     const city = country.cities[Math.floor(Math.random() * country.cities.length)];
+    
+    // 门牌号
     const streetNumber = Math.floor(Math.random() * 500) + 1;
+    
+    // 街道
     const street = generateStreet(country, streetNumber);
+    
+    // 邮编
     const postalCode = generatePostalCode(country, city);
+    
+    // 完整地址
     let address;
     if (postalCode) {
         address = `${street}, ${postalCode} ${city}, ${country.name}`;
@@ -191,163 +204,8 @@ function generateRandomBuyer() {
     };
 }
 
-// ========== 加载 Manual Trigger Orders ==========
-async function loadManualTriggerOrders() {
-    const { data: orders, error } = await sb
-        .from('user_orders')
-        .select('*')
-        .eq('status', 'pending_payment')
-        .order('created_at', { ascending: false });
-    
-    if (error) return;
-    manualTriggerOrders = orders || [];
-    renderManualTriggerCard();
-}
-
-function renderManualTriggerCard() {
-    const container = document.getElementById('manualTriggerContainer');
-    if (!container) return;
-    
-    if (manualTriggerOrders.length === 0) {
-        container.style.display = 'none';
-        return;
-    }
-    
-    container.style.display = 'block';
-    container.innerHTML = `
-        <div class="card" style="margin-top: 20px; background: rgba(255, 200, 150, 0.1); border: 1px solid rgba(255, 122, 0, 0.3);">
-            <h4 style="color: #ffb84d; margin-bottom: 12px;"><i class="fas fa-clock"></i> Manual Trigger Orders</h4>
-            <div style="max-height: 300px; overflow-y: auto;">
-                ${manualTriggerOrders.map(order => `
-                    <div style="background: #0f172a; border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid rgba(255,122,0,0.2);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                            <div>
-                                <div style="font-weight: 700; color: #ffb84d;">${order.order_no}</div>
-                                <div style="font-size: 11px; color: #8a9abb;">User: ${order.uid} | €${order.total_supply_price}</div>
-                            </div>
-                            <button class="trigger-release-btn" data-order="${order.order_no}" style="background: #2f6b3a; border: none; padding: 6px 16px; border-radius: 20px; color: white; cursor: pointer;">
-                                <i class="fas fa-play"></i> Trigger Payment Release
-                            </button>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-    
-    document.querySelectorAll('.trigger-release-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            const orderNo = btn.dataset.order;
-            await triggerPaymentRelease(orderNo, 0);
-            await loadManualTriggerOrders();
-            showToast(`已触发订单 ${orderNo} 的 Payment Release`, 'success');
-        });
-    });
-}
-
-// ========== 调用前端触发函数 ==========
-async function triggerPaymentRelease(orderNo, delayMinutes = 0) {
-    try {
-        // 调用 orders.html 中暴露的全局函数
-        if (window.triggerPaymentReleased) {
-            await window.triggerPaymentReleased(orderNo, delayMinutes);
-        } else {
-            // 直接通过 Supabase 更新
-            const { data: order } = await sb
-                .from('user_orders')
-                .select('tracking_timeline, created_at')
-                .eq('order_no', orderNo)
-                .single();
-            
-            if (!order) return false;
-            
-            let timeline = JSON.parse(order.tracking_timeline || '[]');
-            let escrowTime = null;
-            for (let i = 0; i < timeline.length; i++) {
-                if (timeline[i].status === "Payment under escrow protection") {
-                    escrowTime = new Date(timeline[i].time);
-                    break;
-                }
-            }
-            
-            if (!escrowTime) return false;
-            
-            let paymentReleasedTime = new Date();
-            if (delayMinutes > 0) {
-                const calculatedTime = new Date(escrowTime.getTime() + delayMinutes * 60 * 1000);
-                if (calculatedTime > paymentReleasedTime) {
-                    paymentReleasedTime = calculatedTime;
-                }
-            }
-            
-            timeline = timeline.filter(item => item.status !== "Payment released");
-            timeline.push({
-                status: "Payment released",
-                time: paymentReleasedTime.toISOString()
-            });
-            
-            const subsequentStatuses = [
-                "Order confirmed",
-                "Preparing parcel for shipment",
-                "Courier assigned",
-                "Parcel picked up by logistics partner",
-                "Parcel arrived at sorting facility",
-                "Parcel departed from sorting facility",
-                "Parcel arrived at delivery hub",
-                "Parcel out for delivery",
-                "Parcel delivered"
-            ];
-            
-            const orderConfirmedDelay = 5 + Math.random() * 5;
-            const preparingDelay = 30 + Math.random() * 30;
-            
-            const orderConfirmedTime = new Date(paymentReleasedTime.getTime() + orderConfirmedDelay * 60 * 1000);
-            timeline.push({
-                status: "Order confirmed",
-                time: orderConfirmedTime.toISOString()
-            });
-            
-            const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
-            timeline.push({
-                status: "Preparing parcel for shipment",
-                time: preparingTime.toISOString()
-            });
-            
-            const remainingStatuses = subsequentStatuses.length - 2;
-            const totalRemainingMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
-            
-            let intervals = [];
-            let remaining = totalRemainingMs;
-            for (let i = 0; i < remainingStatuses; i++) {
-                const maxGap = remaining / (remainingStatuses - i);
-                const gap = maxGap * (0.3 + Math.random() * 0.7);
-                intervals.push(gap);
-                remaining -= gap;
-            }
-            
-            let laterTime = new Date(preparingTime);
-            for (let i = 0; i < remainingStatuses; i++) {
-                laterTime = new Date(laterTime.getTime() + intervals[i]);
-                timeline.push({
-                    status: subsequentStatuses[i + 2],
-                    time: laterTime.toISOString()
-                });
-            }
-            
-            await sb.from('user_orders').update({
-                status: 'processing',
-                tracking_status: 'processing',
-                tracking_timeline: JSON.stringify(timeline)
-            }).eq('order_no', orderNo);
-        }
-        return true;
-    } catch (err) {
-        console.error('触发 Payment Release 失败:', err);
-        return false;
-    }
-}
-
 // ========== 页面加载函数 ==========
+
 async function loadSetordersPage() {
     const container = document.getElementById('page_setorders');
     if (!container) return;
@@ -379,26 +237,6 @@ async function loadSetordersPage() {
                 
                 <div id="userProductsList" style="max-height: 500px; overflow-y: auto; margin-bottom: 20px;"></div>
                 
-                <!-- Payment Release Timer / Trigger 卡片 -->
-                <div id="paymentReleaseCard" class="card" style="margin-bottom: 20px; background: rgba(74,124,255,0.05); border: 1px solid rgba(74,124,255,0.2);">
-                    <h4 style="color: #ffb84d; margin-bottom: 16px;"><i class="fas fa-clock"></i> Payment Release Timer / Trigger</h4>
-                    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center;">
-                        <div style="flex: 1; min-width: 150px;">
-                            <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 6px;">Set Payment Release Timer (Minutes)</label>
-                            <input type="number" id="paymentTimerInput" placeholder="e.g., 30" style="width: 100%; background: #0f172a; border: 1px solid #1e2a3a; border-radius: 8px; padding: 10px; color: #fff;">
-                        </div>
-                        <div>
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="paymentTriggerCheckbox" style="width: 18px; height: 18px; cursor: pointer;">
-                                <span style="color: #ffb84d; font-size: 13px;"><i class="fas fa-bolt"></i> Trigger Payment Release</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div style="font-size: 11px; color: #6a7a9a; margin-top: 12px; padding-top: 8px; border-top: 1px solid rgba(74,124,255,0.1);">
-                        <i class="fas fa-info-circle"></i> Set timer to auto-release after user completes order, or check trigger to release immediately. Leave both empty to add to Manual Trigger Orders.
-                    </div>
-                </div>
-                
                 <div id="orderSummary" style="background: #0f172a; border-radius: 16px; padding: 16px; margin-top: 20px; border: 1px solid rgba(74,124,255,0.2);">
                     <h4 style="margin-bottom: 12px; color: #ffb84d;"><i class="fas fa-receipt"></i> Order Summary</h4>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
@@ -417,15 +255,11 @@ async function loadSetordersPage() {
                         <i class="fas fa-check"></i> Create Order
                     </button>
                 </div>
-                
-                <!-- Manual Trigger Orders 卡片容器 -->
-                <div id="manualTriggerContainer" style="margin-top: 20px; display: none;"></div>
             </div>
         </div>
     `;
     
     await loadSetordersUserList();
-    await loadManualTriggerOrders();
     
     document.getElementById('setordersSearchBtn')?.addEventListener('click', () => {
         setordersSearchKeyword = document.getElementById('setordersSearchUid').value.trim();
@@ -437,30 +271,9 @@ async function loadSetordersPage() {
         document.getElementById('setordersMain').style.display = 'none';
         selectedUser = null;
         orderItems = [];
-        paymentReleaseTimer = null;
-        paymentReleaseTrigger = false;
-        document.getElementById('paymentTimerInput').value = '';
-        document.getElementById('paymentTriggerCheckbox').checked = false;
     });
     
     document.getElementById('confirmSetOrderBtn')?.addEventListener('click', confirmSetOrder);
-    
-    // 监听 Timer/Trigger 变化
-    document.getElementById('paymentTimerInput')?.addEventListener('input', (e) => {
-        paymentReleaseTimer = e.target.value ? parseInt(e.target.value) : null;
-        if (paymentReleaseTimer) {
-            document.getElementById('paymentTriggerCheckbox').checked = false;
-            paymentReleaseTrigger = false;
-        }
-    });
-    
-    document.getElementById('paymentTriggerCheckbox')?.addEventListener('change', (e) => {
-        paymentReleaseTrigger = e.target.checked;
-        if (paymentReleaseTrigger) {
-            document.getElementById('paymentTimerInput').value = '';
-            paymentReleaseTimer = null;
-        }
-    });
 }
 
 async function loadSetordersUserList() {
@@ -597,6 +410,7 @@ async function confirmSetOrder() {
     
     const orderNo = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
     const buyer = generateRandomBuyer();
+    
     const shippingAddress = "Supplier Warehouse, 100 Century Avenue, Pudong, Shanghai, China";
     
     let totalSupplyPrice = 0;
@@ -618,31 +432,6 @@ async function confirmSetOrder() {
         });
     }
     
-    // 根据 Timer/Trigger 设置订单初始状态
-    let orderStatus = 'pending_payment';
-    let trackingStatus = 'pending_payment';
-    let initialTimeline = generateInitialTimelineForOrder();
-    
-    // 场景 A: 有 Timer
-    if (paymentReleaseTimer && paymentReleaseTimer > 0) {
-        // 创建订单，等用户完成后自动计时
-        orderStatus = 'pending_payment';
-        trackingStatus = 'pending_payment';
-        // 存储 timer 值到 order 记录中
-    }
-    // 场景 B: 勾选了 Trigger
-    else if (paymentReleaseTrigger) {
-        // 立即激活 Payment released，生成完整 timeline
-        orderStatus = 'processing';
-        trackingStatus = 'processing';
-        initialTimeline = generateFullTimelineWithPaymentReleased();
-    }
-    // 场景 C: 什么都不选
-    else {
-        orderStatus = 'pending_payment';
-        trackingStatus = 'pending_payment';
-    }
-    
     const { error } = await sb.from('user_orders').insert({
         uid: selectedUser.uid,
         order_no: orderNo,
@@ -653,10 +442,7 @@ async function confirmSetOrder() {
         buyer_phone: buyer.phone,
         buyer_address: buyer.address,
         shipping_address: shippingAddress,
-        status: orderStatus,
-        tracking_status: trackingStatus,
-        tracking_timeline: JSON.stringify(initialTimeline),
-        payment_release_timer: paymentReleaseTimer || null,
+        status: 'pending',
         created_at: new Date().toISOString()
     });
     
@@ -665,124 +451,10 @@ async function confirmSetOrder() {
         return;
     }
     
-    // 如果勾选了 Trigger，立即触发 Payment Released
-    if (paymentReleaseTrigger) {
-        await triggerPaymentRelease(orderNo, 0);
-    }
-    // 如果有 Timer，创建定时任务（这里用 setTimeout 模拟，实际生产环境建议用后端定时任务）
-    else if (paymentReleaseTimer && paymentReleaseTimer > 0) {
-        // 注意：这个 timer 应该在用户完成订单后开始计时
-        // 这里只是存储 timer 值，实际计时在用户 confirm order 后由前端或后端处理
-        showToast(`订单 ${orderNo} 创建成功！Payment Release 将在用户确认订单后 ${paymentReleaseTimer} 分钟自动触发`, 'success');
-    } else {
-        showToast(`订单 ${orderNo} 创建成功！已添加到 Manual Trigger Orders`, 'success');
-        await loadManualTriggerOrders();
-    }
+    showToast(`Order ${orderNo} created successfully!`, 'success');
     
-    // 重置表单
     orderItems = orderItems.map(item => ({ ...item, quantity: 0 }));
     renderProductSelectionList();
-    paymentReleaseTimer = null;
-    paymentReleaseTrigger = false;
-    document.getElementById('paymentTimerInput').value = '';
-    document.getElementById('paymentTriggerCheckbox').checked = false;
-}
-
-function generateInitialTimelineForOrder() {
-    const startTime = new Date();
-    const timeline = [];
-    
-    timeline.push({
-        status: "Order is placed",
-        time: new Date(startTime).toISOString()
-    });
-    
-    const paymentReceivedDelay = 5 + Math.random() * 2;
-    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
-    timeline.push({
-        status: "Payment received from buyer",
-        time: paymentReceivedTime.toISOString()
-    });
-    
-    timeline.push({
-        status: "Payment under escrow protection",
-        time: paymentReceivedTime.toISOString()
-    });
-    
-    return timeline;
-}
-
-function generateFullTimelineWithPaymentReleased() {
-    const startTime = new Date();
-    const timeline = [];
-    
-    timeline.push({
-        status: "Order is placed",
-        time: new Date(startTime).toISOString()
-    });
-    
-    const paymentReceivedDelay = 5 + Math.random() * 2;
-    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
-    timeline.push({
-        status: "Payment received from buyer",
-        time: paymentReceivedTime.toISOString()
-    });
-    
-    timeline.push({
-        status: "Payment under escrow protection",
-        time: paymentReceivedTime.toISOString()
-    });
-    
-    const paymentReleasedTime = new Date();
-    timeline.push({
-        status: "Payment released",
-        time: paymentReleasedTime.toISOString()
-    });
-    
-    const orderConfirmedDelay = 5 + Math.random() * 5;
-    const orderConfirmedTime = new Date(paymentReleasedTime.getTime() + orderConfirmedDelay * 60 * 1000);
-    timeline.push({
-        status: "Order confirmed",
-        time: orderConfirmedTime.toISOString()
-    });
-    
-    const preparingDelay = 30 + Math.random() * 30;
-    const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
-    timeline.push({
-        status: "Preparing parcel for shipment",
-        time: preparingTime.toISOString()
-    });
-    
-    const subsequentStatuses = [
-        "Courier assigned",
-        "Parcel picked up by logistics partner",
-        "Parcel arrived at sorting facility",
-        "Parcel departed from sorting facility",
-        "Parcel arrived at delivery hub",
-        "Parcel out for delivery",
-        "Parcel delivered"
-    ];
-    
-    const totalRemainingMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
-    let intervals = [];
-    let remaining = totalRemainingMs;
-    for (let i = 0; i < subsequentStatuses.length; i++) {
-        const maxGap = remaining / (subsequentStatuses.length - i);
-        const gap = maxGap * (0.3 + Math.random() * 0.7);
-        intervals.push(gap);
-        remaining -= gap;
-    }
-    
-    let laterTime = new Date(preparingTime);
-    for (let i = 0; i < subsequentStatuses.length; i++) {
-        laterTime = new Date(laterTime.getTime() + intervals[i]);
-        timeline.push({
-            status: subsequentStatuses[i],
-            time: laterTime.toISOString()
-        });
-    }
-    
-    return timeline;
 }
 
 function escapeHtml(str) {
