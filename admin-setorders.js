@@ -78,7 +78,7 @@ function renderManualReleaseCard() {
     });
 }
 
-// ========== 触发 Payment Release ==========
+// ========== 触发 Payment Release（修复版） ==========
 async function triggerPaymentRelease(orderNo) {
     try {
         const { data: order } = await sb.from('user_orders').select('*').eq('order_no', orderNo).single();
@@ -91,43 +91,56 @@ async function triggerPaymentRelease(orderNo) {
                 : (order.tracking_timeline || []);
         } catch(e) { timeline = []; }
         
-        // 找到并更新 Payment released (pending) 状态
+        // 1. 找到并更新 Payment released (pending) 为 Payment released（立即打勾）
         let paymentReleasedTime = new Date();
-        let foundIndex = -1;
+        let foundPending = false;
         for (let i = 0; i < timeline.length; i++) {
             if (timeline[i].status === "Payment released (pending)") {
                 timeline[i] = { status: "Payment released", time: paymentReleasedTime.toISOString() };
-                foundIndex = i;
+                foundPending = true;
                 break;
             }
         }
         
-        if (foundIndex === -1) return false;
+        if (!foundPending) return false;
         
-        // 后续状态列表
-        const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
-        
-        const orderConfirmedDelay = 5 + Math.random() * 5;
-        const preparingDelay = 30 + Math.random() * 30;
+        // 2. 计算后续状态的时间
+        const orderConfirmedDelay = 5 + Math.random() * 5;      // 5-10分钟
+        const preparingDelay = 30 + Math.random() * 30;         // 30-60分钟
         
         let currentTime = new Date(paymentReleasedTime);
         const orderConfirmedTime = new Date(currentTime.getTime() + orderConfirmedDelay * 60 * 1000);
         const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
         
-        // 更新后续状态
-        let subIndex = 0;
+        // 3. 更新 Order confirmed 为橙色等待状态（设置未来时间）
+        let orderConfirmedUpdated = false;
+        let preparingUpdated = false;
+        
         for (let i = 0; i < timeline.length; i++) {
-            if (timeline[i].isPending && subsequent.includes(timeline[i].status)) {
-                if (subIndex === 0) timeline[i] = { status: subsequent[0], time: orderConfirmedTime.toISOString() };
-                else if (subIndex === 1) timeline[i] = { status: subsequent[1], time: preparingTime.toISOString() };
-                subIndex++;
+            if (timeline[i].status === "Order confirmed" && timeline[i].isPending) {
+                timeline[i] = { status: "Order confirmed", time: orderConfirmedTime.toISOString() };
+                orderConfirmedUpdated = true;
+            }
+            if (timeline[i].status === "Preparing parcel for shipment" && timeline[i].isPending) {
+                timeline[i] = { status: "Preparing parcel for shipment", time: preparingTime.toISOString() };
+                preparingUpdated = true;
             }
         }
         
-        // 剩余状态在3-4天内按顺序分配
-        const remainingStatuses = subsequent.slice(2);
-        const totalMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
-        let intervals = [], remaining = totalMs;
+        // 4. 剩余7个状态在3-4天内按顺序分配
+        const remainingStatuses = [
+            "Courier assigned",
+            "Parcel picked up by logistics partner",
+            "Parcel arrived at sorting facility",
+            "Parcel departed from sorting facility",
+            "Parcel arrived at delivery hub",
+            "Parcel out for delivery",
+            "Parcel delivered"
+        ];
+        
+        const totalMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;  // 3-4天
+        let intervals = [];
+        let remaining = totalMs;
         for (let i = 0; i < remainingStatuses.length; i++) {
             const gap = (remaining / (remainingStatuses.length - i)) * (0.3 + Math.random() * 0.7);
             intervals.push(gap);
@@ -144,24 +157,37 @@ async function triggerPaymentRelease(orderNo) {
             }
         }
         
-        // 返还余额
+        // 5. 返还余额（货款 + 佣金）
         const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
         const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
         const newBalance = (user?.balance || 0) + refundAmount;
         await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
         
         await sb.from('deposits').insert([{
-            uid: order.uid, username: order.username, amount: refundAmount,
-            type: 'order_settlement', created_at: new Date().toISOString()
+            uid: order.uid,
+            username: order.username,
+            amount: refundAmount,
+            type: 'order_settlement',
+            created_at: new Date().toISOString()
         }]);
         
+        // 6. 更新订单的 tracking_timeline
         await sb.from('user_orders').update({
             tracking_timeline: JSON.stringify(timeline)
         }).eq('order_no', orderNo);
         
+        // 7. 更新本地用户余额
+        const localUser = getCurrentUser();
+        if (localUser && localUser.uid === order.uid) {
+            localUser.balance = newBalance;
+            localStorage.setItem('currentUser', JSON.stringify(localUser));
+        }
+        
+        console.log(`订单 ${orderNo} Payment Release 已激活，状态已更新`);
         return true;
+        
     } catch (err) {
-        console.error('触发失败:', err);
+        console.error('触发 Payment Release 失败:', err);
         return false;
     }
 }
@@ -351,7 +377,7 @@ async function confirmSetOrder() {
         productsList.push({ product_id: item.product_id, product_name: item.product_name, quantity: item.quantity, unit_price: item.price, commission_per_item: item.margin_profit, image_url: item.image_url });
     }
     
-    // 生成初始 timeline（包含 Payment released pending）
+    // 生成初始 timeline
     const startTime = new Date();
     const initialTimeline = [
         { status: "Order is placed", time: startTime.toISOString() }
