@@ -262,10 +262,14 @@ async function checkAndActivateTimers() {
     for (const order of orders) {
         let timeline = JSON.parse(order.tracking_timeline || '[]');
         for (let i = 0; i < timeline.length; i++) {
-            if (timeline[i].status === "Payment released (pending)") {
+            // 检查两种等待状态：
+            // 1. Manual Release: "Payment released (pending)"
+            // 2. Timer Release: "Payment released" + isPending === true
+            let isPendingRelease = (timeline[i].status === "Payment released (pending)") || 
+                                   (timeline[i].status === "Payment released" && timeline[i].isPending === true);
+            if (isPendingRelease) {
                 let pendingTime = new Date(timeline[i].time);
                 if (pendingTime <= now) {
-                    // 修改这里：传入当前时间 now，而不是 pendingTime
                     await activatePaymentRelease(order.order_no, now);
                 }
                 break;
