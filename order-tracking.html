@@ -173,19 +173,19 @@ function renderTimeline() {
             showTime = true;
         } 
         else if (idx === currentIndex) {
-            // 当前状态
-            if (isWaiting) {
-                statusClass = 'waiting';
-                icon = 'fas fa-hourglass-half';
-                iconBg = '#fef3c7';
-                showTime = true;
-            } else {
-                statusClass = 'current';
-                icon = 'fas fa-circle';
-                iconBg = '#ff7a00';
-                showTime = true;
-            }
-        }
+    // 当前状态
+    if (isWaiting || item.isPending) {  // 👈 检查 isPending 标记
+        statusClass = 'waiting';
+        icon = 'fas fa-hourglass-half';
+        iconBg = '#fef3c7';
+        showTime = true;
+    } else {
+        statusClass = 'current';
+        icon = 'fas fa-circle';
+        iconBg = '#ff7a00';
+        showTime = true;
+    }
+}
         // 未来状态不显示时间
         
         let displayStatus = isWaiting ? "Payment released (等待中)" : item.status;
