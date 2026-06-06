@@ -809,7 +809,7 @@
     let revenueChart = null;
     let currentChartType = 'line';
     let currentUser = null;
-    let commissionData = [42, 58, 35, 72, 68, 89, 95];
+    let commissionData = [0, 0, 0, 0, 0, 0, 0];
     let chartDates = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     function startParticleEffect(canvasId, wrapperId) {
@@ -1096,9 +1096,12 @@
                 }
                 
                 const hasRealData = dailyData.some(v => v > 0);
-                if (hasRealData) {
-                    commissionData = dailyData;
-                }
+if (hasRealData) {
+    commissionData = dailyData;
+} else {
+    // 没有真实数据时，全部设为 0
+    commissionData = [0, 0, 0, 0, 0, 0, 0];
+}
             }
         } catch (err) {
             console.error('获取图表数据失败:', err);
