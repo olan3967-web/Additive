@@ -195,7 +195,19 @@ for (let i = 0; i < timeline.length; i++) {
         
         let displayStatus = isWaiting ? "Payment released (等待中)" : item.status;
         
-        return `<div class="timeline-item ${statusClass}"><div class="timeline-icon ${statusClass}" style="background:${iconBg};"><i class="${icon}"></i></div><div class="timeline-content"><div class="timeline-status">${displayStatus}</div>${showTime && isValidTime ? `<div class="timeline-time">${formatDate(item.time)}</div>` : '<div class="timeline-time" style="color:#e2e8f0;">⏳ 待更新</div>'}</div></div>`;
+        // 等待中的状态（橙色）不显示具体时间
+const isWaitingStatus = (statusClass === 'waiting');
+const shouldShowTime = showTime && isValidTime && !isWaitingStatus;
+
+return `<div class="timeline-item ${statusClass}">
+    <div class="timeline-icon ${statusClass}" style="background:${iconBg};">
+        <i class="${icon}"></i>
+    </div>
+    <div class="timeline-content">
+        <div class="timeline-status">${displayStatus}</div>
+        ${shouldShowTime ? `<div class="timeline-time">${formatDate(item.time)}</div>` : '<div class="timeline-time" style="color:#e2e8f0;">⏳ 待更新</div>'}
+    </div>
+</div>`;
     }).join('')}</div>`;
 }
 
