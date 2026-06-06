@@ -472,7 +472,7 @@
     </div>
 
     <div class="stats-card">
-        <div class="stat-label">Total Commissions Earned</div>
+        <div class="stat-label">Today's Earnings</div>
         <div class="stat-value" id="totalCommissions">€0.00</div>
     </div>
 
@@ -767,7 +767,20 @@
             .from('order_history')
             .select('commission')
             .eq('uid', user.uid);
-        const totalCommission = orders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
+        // 获取今天的开始时间（00:00:00）
+const todayStart = new Date();
+todayStart.setHours(0, 0, 0, 0);
+const todayEnd = new Date();
+todayEnd.setHours(23, 59, 59, 999);
+
+// 只统计今天的订单佣金
+const todayOrders = allOrders?.filter(o => {
+    const orderDate = new Date(o.date);
+    return orderDate >= todayStart && orderDate <= todayEnd;
+}) || [];
+const todayCommission = todayOrders.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
+
+animateNumber(document.getElementById('totalCommissions'), 0, todayCommission, 1500, true, false);
         document.getElementById('totalCommissions').innerHTML = '€' + totalCommission.toFixed(2);
         document.getElementById('salesAmount').innerHTML = '€' + totalCommission.toFixed(2) + ' earned';
     }
