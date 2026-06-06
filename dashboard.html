@@ -770,9 +770,12 @@ if (totalCommissionsEl) {
     totalCommissionsEl.innerHTML = '€' + todayCommission.toFixed(2);
 }
 
+// 计算总佣金（所有订单）
+const totalCommission = orders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
+
 const salesAmountEl = document.getElementById('salesAmount');
 if (salesAmountEl) {
-    salesAmountEl.innerHTML = '€' + todayCommission.toFixed(2) + ' earned';
+    salesAmountEl.innerHTML = '€' + totalCommission.toFixed(2) + ' earned';
 }
 }
     function topUp() {
