@@ -311,24 +311,30 @@
                 let isPositive = true;
                 
                 if (d.type === 'manual') {
-                    typeName = 'Manual Deposit';
-                    badgeClass = 'badge-deposit';
-                } else if (d.type === 'deposit_bonus') {
-                    typeName = 'Deposit Bonus';
-                    badgeClass = 'badge-bonus';
-                } else if (d.type === 'order_commission') {
-                    typeName = 'Order Commission';
-                    badgeClass = 'badge-commission';
-                } else if (d.type === 'trial_bonus') {
-                    typeName = 'Trial Bonus';
-                    badgeClass = 'badge-bonus';
-                } else if (d.type === 'referral_bonus') {
-                    typeName = 'Referral Bonus';
-                    badgeClass = 'badge-bonus';
-                } else {
-                    typeName = 'Deposit';
-                    badgeClass = 'badge-deposit';
-                }
+    typeName = 'Deposit Successful';
+    badgeClass = 'badge-deposit';
+} else if (d.type === 'deposit_bonus') {
+    typeName = 'Funds Added';
+    badgeClass = 'badge-bonus';
+} else if (d.type === 'order_commission') {
+    typeName = 'Order\'s Commissions';
+    badgeClass = 'badge-commission';
+} else if (d.type === 'order_settlement') {
+    typeName = 'Order\'s Payment Release';
+    badgeClass = 'badge-commission';
+} else if (d.type === 'trial_bonus') {
+    typeName = 'Trial Funds';
+    badgeClass = 'badge-bonus';
+} else if (d.type === 'signin_reward') {
+    typeName = 'Check In Reward';
+    badgeClass = 'badge-bonus';
+} else if (d.type === 'referral_bonus') {
+    typeName = 'Referral Bonus';
+    badgeClass = 'badge-bonus';
+} else {
+    typeName = 'Deposit';
+    badgeClass = 'badge-deposit';
+}
                 
                 records.push({
                     id: d.id,
@@ -342,18 +348,18 @@
 
             withdrawals?.forEach(w => {
                 let statusText = '';
-                if (w.status === 'pending') statusText = ' (Pending)';
-                else if (w.status === 'approved') statusText = '';
-                else if (w.status === 'rejected') statusText = ' (Rejected)';
-                
-                records.push({
-                    id: w.id,
-                    date: w.request_date,
-                    title: `Withdrawal${statusText}`,
-                    amount: w.amount,
-                    isPositive: false,
-                    badgeClass: 'badge-withdrawal'
-                });
+                if (w.status === 'pending') statusText = ' (Submitted)';
+else if (w.status === 'approved') statusText = ' (Processed)';
+else if (w.status === 'rejected') statusText = ' (Rejected)';
+
+records.push({
+    id: w.id,
+    date: w.request_date,
+    title: `Withdrawal${statusText}`,
+    amount: w.amount,
+    isPositive: false,
+    badgeClass: 'badge-withdrawal'
+});
             });
 
             // 按时间倒序排序
