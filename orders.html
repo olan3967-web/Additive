@@ -194,14 +194,14 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
     
     let timeline = JSON.parse(order.tracking_timeline || '[]');
     
-    // Anti-duplicate check: if already processed, skip
+    // 1. Anti-duplicate check: if already processed, skip
     const alreadyProcessed = timeline.find(t => t.status === "Payment released" && !t.isPending);
     if (alreadyProcessed) {
         console.log('Order already processed, skipping');
         return false;
     }
     
-    // Find pending Payment released
+    // 2. Find pending Payment released
     const pendingIndex = timeline.findIndex(t => t.status === "Payment released" && t.isPending === true);
     if (pendingIndex === -1) {
         console.log('No pending Payment released found');
@@ -210,11 +210,11 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
     
     let timelineUpdated = false;
     
-    // 1. Update Payment released (pending) to completed
+    // 3. Update Payment released (pending) to completed
     timeline[pendingIndex] = { status: "Payment released", time: paymentReleasedTime.toISOString() };
     timelineUpdated = true;
     
-    // 2. Calculate and update Order confirmed and Preparing parcel for shipment
+    // 4. Calculate and update Order confirmed and Preparing parcel for shipment
     const orderConfirmedDelay = 5 + Math.random() * 5;
     const preparingDelay = 30 + Math.random() * 30;
     
@@ -232,7 +232,7 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
         }
     }
     
-    // 3. Return balance to user
+    // 5. Return balance to user
     const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
     const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
     const newBalance = (user?.balance || 0) + refundAmount;
@@ -245,14 +245,34 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
         created_at: new Date().toISOString() 
     }]);
     
-    // 4. Save updated timeline
+    // 6. Save updated timeline
     if (timelineUpdated) {
         await sb.from('user_orders').update({ 
             tracking_timeline: JSON.stringify(timeline) 
         }).eq('order_no', orderNo);
     }
     
-    // 5. Update local user balance
+    // 7. Write to order_history (commission records) - AFTER all checks
+    try {
+        let products = typeof order.products === 'string' ? JSON.parse(order.products) : order.products;
+        if (Array.isArray(products)) {
+            for (let product of products) {
+                for (let j = 0; j < product.quantity; j++) {
+                    await sb.from('order_history').insert({ 
+                        uid: order.uid, 
+                        username: order.username, 
+                        order_code: order.order_no, 
+                        accommodation_name: product.product_name, 
+                        price: product.unit_price, 
+                        commission: product.commission_per_item || 0, 
+                        date: new Date().toISOString() 
+                    });
+                }
+            }
+        }
+    } catch(e) { console.error('Failed to record order history:', e); }
+    
+    // 8. Update local user balance
     const localUser = getCurrentUser();
     if (localUser && localUser.uid === order.uid) {
         localUser.balance = newBalance;
@@ -388,17 +408,6 @@ document.getElementById('confirmOrderBtn').addEventListener('click', async funct
         tracking_status: 'processing',
         tracking_timeline: JSON.stringify(fullTimeline)
     }).eq('order_no', currentOrder.order_no);
-    
-    try {
-        let products = typeof currentOrder.products === 'string' ? JSON.parse(currentOrder.products) : currentOrder.products;
-        if (Array.isArray(products)) {
-            for (let product of products) {
-                for (let j = 0; j < product.quantity; j++) {
-                    await sb.from('order_history').insert({ uid: user.uid, username: user.username, order_code: currentOrder.order_no, accommodation_name: product.product_name, price: product.unit_price, commission: product.commission_per_item || 0, date: new Date().toISOString() });
-                }
-            }
-        }
-    } catch(e) { console.error('Failed to record order history:', e); }
     
     let updatedUser = getCurrentUser();
     if (updatedUser) { updatedUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(updatedUser)); }
