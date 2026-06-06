@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -42,7 +42,7 @@
         .timeline-item.pending .timeline-status { color: #94a3b8; }
         .current-status-card { background: linear-gradient(135deg, #fff7ed, #ffe7cc); margin: 0 16px 20px; padding: 16px; border-radius: 20px; border: 1px solid rgba(255,122,0,0.2); }
         .current-status-label { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
-        .current-status-text { font-size: 16px; font-weight: 700; color: #ff7a00; }
+        .current-status-text { font-size: 16px; font-weight: 700; color: #ff7a00; display: flex; align-items: center; gap: 10px; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: rgba(255,255,255,0.96); backdrop-filter: blur(20px); border-top: 1px solid #eef2f7; display: flex; padding: 10px 0 14px; z-index: 100; }
         .nav-item { flex: 1; text-align: center; font-size: 12px; font-weight: 500; color: #9ca3af; cursor: pointer; position: relative; }
         .nav-item i { display: block; font-size: 20px; margin-bottom: 4px; }
@@ -76,13 +76,34 @@ function getQueryParam(p) { return new URLSearchParams(window.location.search).g
 function formatDate(d) { if (!d) return '—'; let date = new Date(d); if (isNaN(date.getTime())) return '—'; return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 function goBack() { if (checkInterval) clearInterval(checkInterval); window.location.href = 'orders.html'; }
 
+// Map status to icon
+function getStatusIcon(status, isWaiting = false) {
+    if (isWaiting) return 'fa-clock';
+    const statusMap = {
+        'Order is placed': 'fa-shopping-cart',
+        'Payment received from buyer': 'fa-credit-card',
+        'Payment under escrow protection': 'fa-shield-alt',
+        'Payment released': 'fa-check-double',
+        'Order confirmed': 'fa-check-circle',
+        'Preparing parcel for shipment': 'fa-box',
+        'Courier assigned': 'fa-truck-fast',
+        'Parcel picked up by logistics partner': 'fa-clipboard-list',
+        'Parcel arrived at sorting facility': 'fa-warehouse',
+        'Parcel departed from sorting facility': 'fa-plane-departure',
+        'Parcel arrived at delivery hub': 'fa-map-marker-alt',
+        'Parcel out for delivery': 'fa-truck',
+        'Parcel delivered': 'fa-home'
+    };
+    return statusMap[status] || 'fa-truck';
+}
+
 async function loadOrder() {
     let orderNo = getQueryParam('order_no');
-    if (!orderNo) { showToast('无效的订单号', 'error'); setTimeout(() => goBack(), 1500); return; }
+    if (!orderNo) { showToast('Invalid order number', 'error'); setTimeout(() => goBack(), 1500); return; }
     let user = getCurrentUser();
     if (!user) { window.location.href = 'signin.html'; return; }
     let { data: order, error } = await sb.from('user_orders').select('*').eq('order_no', orderNo).eq('uid', user.uid).single();
-    if (error || !order) { showToast('订单不存在', 'error'); setTimeout(() => goBack(), 2000); return; }
+    if (error || !order) { showToast('Order not found', 'error'); setTimeout(() => goBack(), 2000); return; }
     orderData = order;
     renderOrderInfo();
     renderTimeline();
@@ -100,9 +121,9 @@ function renderOrderInfo() {
     let productsText = '';
     try { let products = JSON.parse(orderData.products || '[]'); productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', '); } catch(e) { productsText = orderData.products || '-'; }
     container.innerHTML = `<div class="order-no">${orderData.order_no}</div>
-        <div class="order-date">Order Placed Time：${formatDate(orderData.created_at)}</div>
-        <div class="order-date" style="margin-top:8px;">Product：${productsText}</div>
-        <div class="order-date">Total Price：€${(orderData.total_supply_price || 0).toFixed(2)}</div>`;
+        <div class="order-date">Order Placed Time: ${formatDate(orderData.created_at)}</div>
+        <div class="order-date" style="margin-top:8px;">Product: ${productsText}</div>
+        <div class="order-date">Total Price: €${(orderData.total_supply_price || 0).toFixed(2)}</div>`;
 }
 
 function renderTimeline() {
@@ -113,8 +134,8 @@ function renderTimeline() {
     try { timeline = JSON.parse(orderData.tracking_timeline || '[]'); } catch(e) { timeline = []; }
     
     if (timeline.length === 0) { 
-        timelineContainer.innerHTML = '<div style="text-align:center; padding:40px;">物流信息加载中...</div>'; 
-        currentStatusCard.innerHTML = '<div class="current-status-label">Current Tracking Status</div><div class="current-status-text">等待物流更新...</div>'; 
+        timelineContainer.innerHTML = '<div style="text-align:center; padding:40px;">Loading tracking info...</div>'; 
+        currentStatusCard.innerHTML = '<div class="current-status-label">Current Tracking Status</div><div class="current-status-text">Waiting for tracking update...</div>'; 
         return; 
     }
     
@@ -122,7 +143,7 @@ function renderTimeline() {
     let currentIndex = -1;
     let foundFuture = false;
     
-    // 找到第一个未来时间的状态作为当前等待状态
+    // Find current status (first future time or last past time)
     for (let i = 0; i < timeline.length; i++) {
         let itemTime = new Date(timeline[i].time);
         if (!isNaN(itemTime.getTime())) {
@@ -135,36 +156,37 @@ function renderTimeline() {
         }
     }
     
-    // 检查最后一个状态是否已完成（Parcel delivered）
+    // Check if last status is completed
     let last = timeline[timeline.length - 1];
     if (last && new Date(last.time) <= now && orderData.status !== 'delivered') {
         sb.from('user_orders').update({ status: 'delivered' }).eq('order_no', orderData.order_no);
         orderData.status = 'delivered';
     }
     
-    // 获取当前要显示的状态
+    // Get current status item
     let currentStatusItem = (currentIndex >= 0 && timeline[currentIndex]) ? timeline[currentIndex] : null;
     
-    // 显示当前状态卡片
+    // Display current status card with icon
     if (currentStatusItem) {
         let isWaiting = currentStatusItem.status === "Payment released (pending)" || currentStatusItem.isPending === true;
-        let statusText = isWaiting ? "等待中" : currentStatusItem.status;
+        let statusText = isWaiting ? "Pending" : currentStatusItem.status;
+        let statusIcon = isWaiting ? 'fa-clock' : getStatusIcon(currentStatusItem.status, false);
         let displayTime = !isWaiting && currentStatusItem.time ? formatDate(currentStatusItem.time) : '';
         currentStatusCard.innerHTML = `<div class="current-status-label">Current Tracking Status</div>
-            <div class="current-status-text"><i class="fas ${isWaiting ? 'fa-clock' : 'fa-truck'}"></i> ${statusText}</div>
-            ${displayTime ? `<div class="current-status-label" style="margin-top:8px;">Recent Updated Time：${displayTime}</div>` : ''}`;
+            <div class="current-status-text"><i class="fas ${statusIcon}"></i> ${statusText}</div>
+            ${displayTime ? `<div class="current-status-label" style="margin-top:8px;">Recent Updated Time: ${displayTime}</div>` : ''}`;
     } else {
-        currentStatusCard.innerHTML = '<div class="current-status-label">Current Tracking Status</div><div class="current-status-text">等待物流更新...</div>';
+        currentStatusCard.innerHTML = '<div class="current-status-label">Current Tracking Status</div><div class="current-status-text">Waiting for tracking update...</div>';
     }
     
-    // 渲染时间线
-    timelineContainer.innerHTML = `<div class="timeline-title"><i class="fas fa-road"></i> 物流追踪</div><div class="timeline-items">${timeline.map((item, idx) => {
+    // Render timeline
+    timelineContainer.innerHTML = `<div class="timeline-title"><i class="fas fa-road"></i> Tracking Status</div><div class="timeline-items">${timeline.map((item, idx) => {
         let statusClass = 'pending', icon = 'far fa-circle', iconBg = '#e2e8f0', showTime = false;
         let itemTime = new Date(item.time);
         let isValidTime = !isNaN(itemTime.getTime());
         let isWaiting = item.status === "Payment released (pending)" || item.isPending === true;
         
-        // Order is placed 强制显示为已完成（绿色打勾）
+        // Order is placed - force completed
         if (item.status === "Order is placed") {
             statusClass = 'completed';
             icon = 'fas fa-check-circle';
@@ -172,19 +194,19 @@ function renderTimeline() {
             showTime = true;
         }
         else if (idx < currentIndex) {
-            // 其他已完成的状态（时间已过）
+            // Completed statuses
             statusClass = 'completed';
             icon = 'fas fa-check-circle';
             iconBg = '#10b981';
             showTime = true;
         } 
         else if (idx === currentIndex) {
-            // 当前状态
+            // Current status
             if (isWaiting) {
                 statusClass = 'waiting';
                 icon = 'fas fa-hourglass-half';
                 iconBg = '#fef3c7';
-                showTime = false;  // 等待状态不显示时间
+                showTime = false;
             } else {
                 statusClass = 'current';
                 icon = 'fas fa-circle';
@@ -193,8 +215,9 @@ function renderTimeline() {
             }
         }
         
-        let displayStatus = isWaiting && item.status === "Payment released (pending)" ? "Payment released (等待中)" : item.status;
+        let displayStatus = isWaiting && item.status === "Payment released (pending)" ? "Payment released (Pending)" : item.status;
         let shouldShowTime = showTime && isValidTime;
+        let statusIcon = !isWaiting && !(item.status === "Order is placed") && idx === currentIndex ? getStatusIcon(item.status, false) : '';
         
         return `<div class="timeline-item ${statusClass}">
             <div class="timeline-icon ${statusClass}" style="background:${iconBg};">
