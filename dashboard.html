@@ -794,36 +794,27 @@
             kycBadge.style.color = '#ffb347';
         }
 
-        // ========== 获取订单数据 ==========
-        const { data: orders } = await sb
-            .from('order_history')
-            .select('commission, date')
-            .eq('uid', user.uid);
+        // ========== 获取今日已释放佣金（Today's Earnings） ==========
+        // 只统计 payment release 已经完成并加到余额的订单
+        const { data: settlements } = await sb
+            .from('deposits')
+            .select('amount, created_at')
+            .eq('uid', user.uid)
+            .eq('type', 'order_settlement');
 
-        // 今日佣金（用于 Today's Earnings）
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
-        // 今日佣金（用于 Today's Earnings）- 只统计 Payment released 已完成且打勾的订单
-// ========== 获取今日已释放佣金（Today's Earnings） ==========
-const { data: settlements } = await sb
-    .from('deposits')
-    .select('amount, created_at')
-    .eq('uid', user.uid)
-    .eq('type', 'order_settlement');
 
-const today = new Date();
-const todayStr = today.toISOString().split('T')[0];
+        const todaySettlements = settlements?.filter(s => {
+            if (!s.created_at) return false;
+            const dateStr = new Date(s.created_at).toISOString().split('T')[0];
+            return dateStr === todayStr;
+        }) || [];
 
-const todaySettlements = settlements?.filter(s => {
-    if (!s.created_at) return false;
-    const dateStr = new Date(s.created_at).toISOString().split('T')[0];
-    return dateStr === todayStr;
-}) || [];
+        const todayCommission = todaySettlements.reduce((sum, s) => sum + (s.amount || 0), 0) || 0;
 
-const todayCommission = todaySettlements.reduce((sum, s) => sum + (s.amount || 0), 0) || 0;
-
-// 总佣金（用于 My Sales 卡片）
-const totalCommission = settlements?.reduce((sum, s) => sum + (s.amount || 0), 0) || 0;
+        // 总佣金（用于 My Sales 卡片）- 所有已释放的订单总佣金
+        const totalCommission = settlements?.reduce((sum, s) => sum + (s.amount || 0), 0) || 0;
 
         // ========== 计算 Pending Release 金额 ==========
         const { data: processingOrders } = await sb
@@ -844,11 +835,11 @@ const totalCommission = settlements?.reduce((sum, s) => sum + (s.amount || 0), 0
             // 查找 Payment released 状态
             const paymentReleased = timeline.find(t => t.status === 'Payment released');
             
-            // 判断 Payment released 是否已经打勾（时间已到）
+            // 判断 Payment released 是否已经打勾（时间已到且没有 isPending）
             let isPaymentReleased = false;
             if (paymentReleased) {
                 const releasedTime = new Date(paymentReleased.time);
-                if (releasedTime <= now) {
+                if (releasedTime <= now && !paymentReleased.isPending) {
                     isPaymentReleased = true;
                 }
             }
