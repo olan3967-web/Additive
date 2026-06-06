@@ -164,13 +164,25 @@ function renderTimeline() {
     let currentStatusItem = (currentIndex >= 0 && timeline[currentIndex]) ? timeline[currentIndex] : null;
     
     if (currentStatusItem) {
-        let isWaiting = currentStatusItem.status === "Payment released (pending)" || currentStatusItem.isPending === true;
-        let statusText = currentStatusItem.status === "Payment released (pending)" ? "Payment released" : currentStatusItem.status;
+        // Use isPending to determine waiting status
+        let isWaiting = currentStatusItem.isPending === true;
+        let statusText = currentStatusItem.status;
         let statusIcon = isWaiting ? 'fa-clock' : getStatusIcon(currentStatusItem.status, false);
-        let displayTime = (!isWaiting && currentStatusItem.time) ? formatDate(currentStatusItem.time) : '';
+        
+        // Find last completed status time
+        let lastCompletedTime = '';
+        for (let i = currentIndex - 1; i >= 0; i--) {
+            let prevItem = timeline[i];
+            let prevIsWaiting = prevItem.isPending === true;
+            if (!prevIsWaiting) {
+                lastCompletedTime = formatDate(prevItem.time);
+                break;
+            }
+        }
+        
         currentStatusCard.innerHTML = `<div class="current-status-label">Current Tracking Status</div>
             <div class="current-status-text"><i class="fas ${statusIcon}"></i> ${statusText}</div>
-            ${displayTime ? `<div class="current-status-label" style="margin-top:8px;">Recent Updated Time: ${displayTime}</div>` : ''}`;
+            ${lastCompletedTime ? `<div class="current-status-label" style="margin-top:8px;">Recent Updated Time: ${lastCompletedTime}</div>` : ''}`;
     } else {
         currentStatusCard.innerHTML = '<div class="current-status-label">Current Tracking Status</div><div class="current-status-text">Waiting for tracking update...</div>';
     }
@@ -179,7 +191,8 @@ function renderTimeline() {
         let statusClass = 'pending', icon = 'far fa-circle', iconBg = '#e2e8f0', showTime = false;
         let itemTime = new Date(item.time);
         let isValidTime = !isNaN(itemTime.getTime());
-        let isWaiting = item.status === "Payment released (pending)" || item.isPending === true;
+        // Use isPending to determine waiting status
+        let isWaiting = item.isPending === true;
         
         if (item.status === "Order is placed") {
             statusClass = 'completed';
@@ -207,11 +220,9 @@ function renderTimeline() {
             }
         }
         
-        let displayStatus = item.status === "Payment released (pending)" ? "Payment released" : item.status;
+        let displayStatus = item.status;
         let isWaitingStatus = (statusClass === 'waiting');
-        // 强制：Payment released (pending) 永远不显示时间
-        let isPaymentReleasePending = item.status === "Payment released (pending)";
-        let shouldShowTime = showTime && isValidTime && !isWaitingStatus && !isPaymentReleasePending;
+        let shouldShowTime = showTime && isValidTime && !isWaitingStatus;
         
         return `<div class="timeline-item ${statusClass}">
             <div class="timeline-icon ${statusClass}" style="background:${iconBg};">
