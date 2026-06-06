@@ -754,12 +754,12 @@ const todayStr = today.toISOString().split('T')[0];
 
 const { data: orders } = await sb
     .from('order_history')
-    .select('commission, created_at')
+    .select('commission, date')
     .eq('uid', user.uid);
 
 const todayOrders = orders?.filter(o => {
-    if (!o.created_at) return false;
-    const dateStr = new Date(o.created_at).toISOString().split('T')[0];
+    if (!o.date) return false;
+    const dateStr = new Date(o.date).toISOString().split('T')[0];
     return dateStr === todayStr;
 }) || [];
 
