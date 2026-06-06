@@ -51,6 +51,7 @@
         .loading-spinner i { font-size: 40px; color: #ff7a00; animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
+    <link rel="stylesheet" href="user-common.css">
 </head>
 <body>
 <div class="phone">
@@ -98,7 +99,10 @@ function renderOrderInfo() {
     if (!container) return;
     let productsText = '';
     try { let products = JSON.parse(orderData.products || '[]'); productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', '); } catch(e) { productsText = orderData.products || '-'; }
-    container.innerHTML = `<div class="order-no">${orderData.order_no}</div><div class="order-date">下单时间：${formatDate(orderData.created_at)}</div><div class="order-date" style="margin-top:8px;">产品：${productsText}</div><div class="order-date">总金额：€${(orderData.total_supply_price || 0).toFixed(2)}</div>`;
+    container.innerHTML = `<div class="order-no">${orderData.order_no}</div>
+        <div class="order-date">Order Placed Time：${formatDate(orderData.created_at)}</div>
+        <div class="order-date" style="margin-top:8px;">Product：${productsText}</div>
+        <div class="order-date">Total Price：€${(orderData.total_supply_price || 0).toFixed(2)}</div>`;
 }
 
 function renderTimeline() {
@@ -110,27 +114,26 @@ function renderTimeline() {
     
     if (timeline.length === 0) { 
         timelineContainer.innerHTML = '<div style="text-align:center; padding:40px;">物流信息加载中...</div>'; 
-        currentStatusCard.innerHTML = '<div class="current-status-label">当前状态</div><div class="current-status-text">等待物流更新...</div>'; 
+        currentStatusCard.innerHTML = '<div class="current-status-label">Current Tracking Status</div><div class="current-status-text">等待物流更新...</div>'; 
         return; 
     }
     
     let now = new Date();
     let currentIndex = -1;
-    
-    // 找到最后一个时间 <= 当前时间的状态
     let foundFuture = false;
-for (let i = 0; i < timeline.length; i++) {
-    let itemTime = new Date(timeline[i].time);
-    if (!isNaN(itemTime.getTime())) {
-        if (itemTime <= now) {
-            currentIndex = i;
-        } else if (!foundFuture) {
-            // 第一个未来时间的状态，作为当前等待状态
-            currentIndex = i;
-            foundFuture = true;
+    
+    // 找到第一个未来时间的状态作为当前等待状态
+    for (let i = 0; i < timeline.length; i++) {
+        let itemTime = new Date(timeline[i].time);
+        if (!isNaN(itemTime.getTime())) {
+            if (itemTime <= now) {
+                currentIndex = i;
+            } else if (!foundFuture) {
+                currentIndex = i;
+                foundFuture = true;
+            }
         }
     }
-}
     
     // 检查最后一个状态是否已完成（Parcel delivered）
     let last = timeline[timeline.length - 1];
@@ -141,18 +144,17 @@ for (let i = 0; i < timeline.length; i++) {
     
     // 获取当前要显示的状态
     let currentStatusItem = (currentIndex >= 0 && timeline[currentIndex]) ? timeline[currentIndex] : null;
-    let nextStatusItem = (currentIndex + 1 < timeline.length) ? timeline[currentIndex + 1] : null;
-    
-    // 判断是否有等待中的状态（Payment released pending）
-    let hasWaitingPending = timeline.some(item => item.status === "Payment released (pending)");
     
     // 显示当前状态卡片
     if (currentStatusItem) {
-        let isWaiting = currentStatusItem.status === "Payment released (pending)";
-        let statusText = isWaiting ? "等待 Payment Release" : currentStatusItem.status;
-        currentStatusCard.innerHTML = `<div class="current-status-label">当前状态</div><div class="current-status-text"><i class="fas ${isWaiting ? 'fa-clock' : 'fa-truck'}"></i> ${statusText}</div><div class="current-status-label" style="margin-top:8px;">更新时间：${formatDate(currentStatusItem.time)}</div>`;
+        let isWaiting = currentStatusItem.status === "Payment released (pending)" || currentStatusItem.isPending === true;
+        let statusText = isWaiting ? "等待中" : currentStatusItem.status;
+        let displayTime = !isWaiting && currentStatusItem.time ? formatDate(currentStatusItem.time) : '';
+        currentStatusCard.innerHTML = `<div class="current-status-label">Current Tracking Status</div>
+            <div class="current-status-text"><i class="fas ${isWaiting ? 'fa-clock' : 'fa-truck'}"></i> ${statusText}</div>
+            ${displayTime ? `<div class="current-status-label" style="margin-top:8px;">Recent Updated Time：${displayTime}</div>` : ''}`;
     } else {
-        currentStatusCard.innerHTML = `<div class="current-status-label">当前状态</div><div class="current-status-text">等待物流更新...</div>`;
+        currentStatusCard.innerHTML = '<div class="current-status-label">Current Tracking Status</div><div class="current-status-text">等待物流更新...</div>';
     }
     
     // 渲染时间线
@@ -160,11 +162,10 @@ for (let i = 0; i < timeline.length; i++) {
         let statusClass = 'pending', icon = 'far fa-circle', iconBg = '#e2e8f0', showTime = false;
         let itemTime = new Date(item.time);
         let isValidTime = !isNaN(itemTime.getTime());
-        let isWaiting = item.status === "Payment released (pending)";
+        let isWaiting = item.status === "Payment released (pending)" || item.isPending === true;
         
-        // ========== 关键修改：Order is placed 强制显示为已完成 ==========
+        // Order is placed 强制显示为已完成（绿色打勾）
         if (item.status === "Order is placed") {
-            // 强制显示为已完成（绿色打勾）
             statusClass = 'completed';
             icon = 'fas fa-check-circle';
             iconBg = '#10b981';
@@ -178,36 +179,32 @@ for (let i = 0; i < timeline.length; i++) {
             showTime = true;
         } 
         else if (idx === currentIndex) {
-    // 当前状态
-    if (isWaiting || item.isPending) {  // 👈 加上 item.isPending
-        statusClass = 'waiting';
-        icon = 'fas fa-hourglass-half';
-        iconBg = '#fef3c7';
-        showTime = true;
-    } else {
-        statusClass = 'current';
-        icon = 'fas fa-circle';
-        iconBg = '#ff7a00';
-        showTime = true;
-    }
-}
-        // 未来状态不显示时间
+            // 当前状态
+            if (isWaiting) {
+                statusClass = 'waiting';
+                icon = 'fas fa-hourglass-half';
+                iconBg = '#fef3c7';
+                showTime = false;  // 等待状态不显示时间
+            } else {
+                statusClass = 'current';
+                icon = 'fas fa-circle';
+                iconBg = '#ff7a00';
+                showTime = true;
+            }
+        }
         
-        let displayStatus = isWaiting ? "Payment released (等待中)" : item.status;
+        let displayStatus = isWaiting && item.status === "Payment released (pending)" ? "Payment released (等待中)" : item.status;
+        let shouldShowTime = showTime && isValidTime;
         
-        // 等待中的状态（橙色）不显示具体时间
-const isWaitingStatus = (statusClass === 'waiting');
-const shouldShowTime = showTime && isValidTime && !isWaitingStatus;
-
-return `<div class="timeline-item ${statusClass}">
-    <div class="timeline-icon ${statusClass}" style="background:${iconBg};">
-        <i class="${icon}"></i>
-    </div>
-    <div class="timeline-content">
-        <div class="timeline-status">${displayStatus}</div>
-        ${shouldShowTime ? `<div class="timeline-time">${formatDate(item.time)}</div>` : '<div class="timeline-time" style="color:#e2e8f0;">⏳ 待更新</div>'}
-    </div>
-</div>`;
+        return `<div class="timeline-item ${statusClass}">
+            <div class="timeline-icon ${statusClass}" style="background:${iconBg};">
+                <i class="${icon}"></i>
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-status">${displayStatus}</div>
+                ${shouldShowTime ? `<div class="timeline-time">${formatDate(item.time)}</div>` : '<div class="timeline-time" style="color:#e2e8f0;">⏳ Waiting For Update</div>'}
+            </div>
+        </div>`;
     }).join('')}</div>`;
 }
 
