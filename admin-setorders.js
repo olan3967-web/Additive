@@ -16,11 +16,9 @@ function generateRandomBuyer() {
     return { name, phone, address };
 }
 
-// ========== 加载 Manual Release 订单（创建后立即显示，不需要等待用户 Confirm） ==========
+// ========== 加载 Manual Release 订单（创建后立即显示） ==========
 async function loadManualReleaseOrders() {
     try {
-        // 查询：payment_release_timer IS NULL 或 = 0 的订单（无论 status 是什么）
-        // 并且 tracking_timeline 中包含 "Payment released (pending)"
         const { data: orders, error } = await sb
             .from('user_orders')
             .select('*')
@@ -29,7 +27,6 @@ async function loadManualReleaseOrders() {
         
         if (error) throw error;
         
-        // 过滤出包含 "Payment released (pending)" 且未被释放的订单
         const pendingReleaseOrders = [];
         for (const order of orders || []) {
             if (order.tracking_timeline) {
@@ -40,7 +37,6 @@ async function loadManualReleaseOrders() {
                         : order.tracking_timeline;
                 } catch(e) {}
                 
-                // 检查是否有 "Payment released (pending)" 且没有被释放
                 const hasPending = timeline.some(item => item.status === "Payment released (pending)");
                 const hasReleased = timeline.some(item => item.status === "Payment released" && !item.isPending);
                 
@@ -95,13 +91,11 @@ function renderManualReleaseCard() {
             const orderNo = btn.dataset.order;
             const success = await triggerPaymentRelease(orderNo);
             if (success) {
-                // 按钮变为 Release Successful
                 btn.innerHTML = '<i class="fas fa-check"></i> Release Successful';
                 btn.disabled = true;
                 btn.style.background = '#475569';
                 btn.style.cursor = 'default';
                 showToast(`订单 ${orderNo} 释放成功`, 'success');
-                // 延迟刷新列表，但保持按钮状态
                 setTimeout(() => loadManualReleaseOrders(), 1000);
             } else {
                 showToast(`释放失败`, 'error');
@@ -123,7 +117,7 @@ async function triggerPaymentRelease(orderNo) {
                 : (order.tracking_timeline || []);
         } catch(e) { timeline = []; }
         
-        // 1. 找到并更新 Payment released (pending) 为 Payment released（立即打勾）
+        // 1. 找到并更新 Payment released (pending) 为 Payment released
         let paymentReleasedTime = new Date();
         let foundPending = false;
         for (let i = 0; i < timeline.length; i++) {
@@ -136,15 +130,15 @@ async function triggerPaymentRelease(orderNo) {
         
         if (!foundPending) return false;
         
-        // 2. 计算后续状态的时间
-        const orderConfirmedDelay = 5 + Math.random() * 5;      // 5-10分钟
-        const preparingDelay = 30 + Math.random() * 30;         // 30-60分钟
+        // 2. 计算后续状态时间
+        const orderConfirmedDelay = 5 + Math.random() * 5;
+        const preparingDelay = 30 + Math.random() * 30;
         
         let currentTime = new Date(paymentReleasedTime);
         const orderConfirmedTime = new Date(currentTime.getTime() + orderConfirmedDelay * 60 * 1000);
         const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
         
-        // 3. 更新 Order confirmed 和 Preparing parcel
+        // 3. 更新后续状态
         for (let i = 0; i < timeline.length; i++) {
             if (timeline[i].status === "Order confirmed" && timeline[i].isPending) {
                 timeline[i] = { status: "Order confirmed", time: orderConfirmedTime.toISOString() };
@@ -154,20 +148,15 @@ async function triggerPaymentRelease(orderNo) {
             }
         }
         
-        // 4. 剩余7个状态在3-4天内按顺序分配
+        // 4. 剩余7个状态在3-4天内分配
         const remainingStatuses = [
-            "Courier assigned",
-            "Parcel picked up by logistics partner",
-            "Parcel arrived at sorting facility",
-            "Parcel departed from sorting facility",
-            "Parcel arrived at delivery hub",
-            "Parcel out for delivery",
-            "Parcel delivered"
+            "Courier assigned", "Parcel picked up by logistics partner",
+            "Parcel arrived at sorting facility", "Parcel departed from sorting facility",
+            "Parcel arrived at delivery hub", "Parcel out for delivery", "Parcel delivered"
         ];
         
-        const totalMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;  // 3-4天
-        let intervals = [];
-        let remaining = totalMs;
+        const totalMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
+        let intervals = [], remaining = totalMs;
         for (let i = 0; i < remainingStatuses.length; i++) {
             const gap = (remaining / (remainingStatuses.length - i)) * (0.3 + Math.random() * 0.7);
             intervals.push(gap);
@@ -184,21 +173,18 @@ async function triggerPaymentRelease(orderNo) {
             }
         }
         
-        // 5. 返还余额（货款 + 佣金）
+        // 5. 返还余额
         const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
         const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
         const newBalance = (user?.balance || 0) + refundAmount;
         await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
         
         await sb.from('deposits').insert([{
-            uid: order.uid,
-            username: order.username,
-            amount: refundAmount,
-            type: 'order_settlement',
-            created_at: new Date().toISOString()
+            uid: order.uid, username: order.username, amount: refundAmount,
+            type: 'order_settlement', created_at: new Date().toISOString()
         }]);
         
-        // 6. 更新订单的 tracking_timeline 和 status
+        // 6. 更新订单
         await sb.from('user_orders').update({
             tracking_timeline: JSON.stringify(timeline),
             status: 'processing'
@@ -211,11 +197,9 @@ async function triggerPaymentRelease(orderNo) {
             localStorage.setItem('currentUser', JSON.stringify(localUser));
         }
         
-        console.log(`订单 ${orderNo} Payment Release 已激活，状态已更新`);
         return true;
-        
     } catch (err) {
-        console.error('触发 Payment Release 失败:', err);
+        console.error('触发失败:', err);
         return false;
     }
 }
@@ -237,7 +221,7 @@ async function loadSetordersPage() {
                     <button id="setordersSearchBtn" class="btn-primary">🔍 Search</button>
                 </div>
                 <div id="setordersUserList" class="table-container" style="max-height:300px;">
-                    <table class="data-table"><thead><tr><th>UID</th><th>Username</th><th>Action</th></tr></thead><tbody id="setordersUserTableBody"></tbody></td>
+                    <table class="data-table"><thead><tr><th>UID</th><th>Username</th><th>Action</th></tr></thead><tbody id="setordersUserTableBody"></tbody></table>
                 </div>
             </div>
             <div id="setordersMain" style="display:none;">
@@ -311,6 +295,7 @@ async function loadUserList() {
 }
 
 async function selectUser(uid, username) {
+    console.log('选择用户:', uid, username);
     selectedUser = { uid, username };
     document.getElementById('selectedUidDisplay').innerText = uid;
     document.getElementById('selectedUsernameDisplay').innerText = username;
@@ -321,12 +306,30 @@ async function selectUser(uid, username) {
 
 async function loadUserProducts(uid) {
     const container = document.getElementById('userProductsList');
+    if (!container) return;
+    
     container.innerHTML = '<div style="text-align:center; padding:40px;">Loading...</div>';
-    const { data: products } = await sb.from('user_products').select('*').eq('uid', uid).order('added_at', { ascending: false });
+    console.log('正在加载用户产品, uid:', uid);
+    
+    const { data: products, error } = await sb
+        .from('user_products')
+        .select('*')
+        .eq('uid', uid)
+        .order('added_at', { ascending: false });
+    
+    console.log('查询结果:', products);
+    
+    if (error) {
+        console.error('查询错误:', error);
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;">加载失败: ' + error.message + '</div>';
+        return;
+    }
+    
     if (!products || products.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">No products added by this user</div>';
         return;
     }
+    
     orderItems = products.map(p => ({
         product_id: p.product_id || p.id,
         product_name: p.product_name,
@@ -335,20 +338,32 @@ async function loadUserProducts(uid) {
         quantity: 0,
         image_url: p.image_url
     }));
+    
+    console.log('处理后的 orderItems 数量:', orderItems.length);
     renderProducts();
 }
 
 function renderProducts() {
     const container = document.getElementById('userProductsList');
+    if (!container) return;
+    
+    console.log('渲染产品, 数量:', orderItems.length);
+    
+    if (orderItems.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">No products available</div>';
+        return;
+    }
+    
     container.innerHTML = '';
     container.style.cssText = 'display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;';
+    
     for (let i = 0; i < orderItems.length; i++) {
         const item = orderItems[i];
         const div = document.createElement('div');
         div.style.cssText = 'background:#0f172a; border-radius:16px; padding:12px; width:calc(16.666% - 10px); min-width:140px; text-align:center; border:1px solid rgba(74,124,255,0.2);';
         div.innerHTML = `
-            <img src="${item.image_url || 'https://placehold.co/80x80/1e2a3a/4a7cff?text=No+Image'}" style="width:80px; height:80px; border-radius:12px; margin-bottom:10px;">
-            <div style="font-weight:600; color:#ffb84d;">${item.product_name}</div>
+            <img src="${item.image_url || 'https://placehold.co/80x80/1e2a3a/4a7cff?text=No+Image'}" style="width:80px; height:80px; border-radius:12px; margin-bottom:10px;" onerror="this.src='https://placehold.co/80x80/1e2a3a/4a7cff?text=No+Image'">
+            <div style="font-weight:600; color:#ffb84d;">${escapeHtml(item.product_name)}</div>
             <div style="font-size:11px; color:#8a9abb;">€${item.price} | +€${item.margin_profit}</div>
             <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:10px;">
                 <button class="qty-decr" data-index="${i}" style="background:#4a7cff; width:28px; height:28px; border-radius:6px; color:white;">-</button>
@@ -358,6 +373,8 @@ function renderProducts() {
         `;
         container.appendChild(div);
     }
+    
+    // 绑定数量增减事件
     document.querySelectorAll('.qty-decr').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = parseInt(btn.dataset.index);
@@ -368,6 +385,7 @@ function renderProducts() {
             }
         });
     });
+    
     document.querySelectorAll('.qty-incr').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = parseInt(btn.dataset.index);
@@ -376,6 +394,7 @@ function renderProducts() {
             updateSummary();
         });
     });
+    
     updateSummary();
 }
 
@@ -396,20 +415,30 @@ async function confirmSetOrder() {
         showToast('Please select at least one product', 'error');
         return;
     }
+    
     const orderNo = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
     const buyer = generateRandomBuyer();
     let totalSupplyPrice = 0, totalCommission = 0, productsList = [];
+    
     for (const item of selectedItems) {
         totalSupplyPrice += item.price * item.quantity;
         totalCommission += item.margin_profit * item.quantity;
-        productsList.push({ product_id: item.product_id, product_name: item.product_name, quantity: item.quantity, unit_price: item.price, commission_per_item: item.margin_profit, image_url: item.image_url });
+        productsList.push({
+            product_id: item.product_id,
+            product_name: item.product_name,
+            quantity: item.quantity,
+            unit_price: item.price,
+            commission_per_item: item.margin_profit,
+            image_url: item.image_url
+        });
     }
     
-    // 生成初始 timeline（包含 Payment released pending）
+    // 生成初始 timeline
     const startTime = new Date();
     const initialTimeline = [
         { status: "Order is placed", time: startTime.toISOString() }
     ];
+    
     const paymentReceivedDelay = 5 + Math.random() * 2;
     const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
     initialTimeline.push({ status: "Payment received from buyer", time: paymentReceivedTime.toISOString() });
@@ -417,16 +446,14 @@ async function confirmSetOrder() {
     
     // 根据是否有 Timer 决定 Payment released 状态
     if (paymentReleaseTimer && paymentReleaseTimer > 0) {
-        // 有 Timer：设置具体时间
         const paymentReleasedTime = new Date(paymentReceivedTime.getTime() + paymentReleaseTimer * 60 * 1000);
         initialTimeline.push({ status: "Payment released", time: paymentReleasedTime.toISOString() });
     } else {
-        // 无 Timer：设置为 pending 状态（等待后台释放）
         const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         initialTimeline.push({ status: "Payment released (pending)", time: futureDate.toISOString(), isPending: true });
     }
     
-    // 添加后续状态（占位）
+    // 后续状态占位
     const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
     const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     for (let i = 0; i < subsequent.length; i++) {
@@ -434,10 +461,15 @@ async function confirmSetOrder() {
     }
     
     const { error } = await sb.from('user_orders').insert({
-        uid: selectedUser.uid, username: selectedUser.username, order_no: orderNo,
+        uid: selectedUser.uid,
+        username: selectedUser.username,
+        order_no: orderNo,
         products: JSON.stringify(productsList),
-        total_supply_price: totalSupplyPrice, total_commission: totalCommission,
-        buyer_name: buyer.name, buyer_phone: buyer.phone, buyer_address: buyer.address,
+        total_supply_price: totalSupplyPrice,
+        total_commission: totalCommission,
+        buyer_name: buyer.name,
+        buyer_phone: buyer.phone,
+        buyer_address: buyer.address,
         shipping_address: "Supplier Warehouse, Shanghai, China",
         status: 'pending',
         payment_release_timer: paymentReleaseTimer || null,
