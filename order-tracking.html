@@ -117,7 +117,7 @@ function renderTimeline() {
     let now = new Date();
     let currentIndex = -1;
     
-    // 找到最后一个时间 <= 当前时间的状态（已完成或进行中）
+    // 找到最后一个时间 <= 当前时间的状态
     for (let i = 0; i < timeline.length; i++) {
         let itemTime = new Date(timeline[i].time);
         if (!isNaN(itemTime.getTime()) && itemTime <= now) {
@@ -157,8 +157,16 @@ function renderTimeline() {
         let isValidTime = !isNaN(itemTime.getTime());
         let isWaiting = item.status === "Payment released (pending)";
         
-        if (idx < currentIndex) {
-            // 已完成的状态
+        // ========== 关键修改：Order is placed 强制显示为已完成 ==========
+        if (item.status === "Order is placed") {
+            // 强制显示为已完成（绿色打勾）
+            statusClass = 'completed';
+            icon = 'fas fa-check-circle';
+            iconBg = '#10b981';
+            showTime = true;
+        }
+        else if (idx < currentIndex) {
+            // 其他已完成的状态（时间已过）
             statusClass = 'completed';
             icon = 'fas fa-check-circle';
             iconBg = '#10b981';

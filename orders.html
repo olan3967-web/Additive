@@ -126,13 +126,17 @@ function generateProcessingTimeline(confirmTime, paymentReleaseTimer = null) {
     const startTime = new Date(confirmTime);  // 改为 Confirm Order 的时间
     const timeline = [];
     
-    // 状态1: Order is placed - 立即完成（绿色打勾）
-    timeline.push({ status: "Order is placed", time: startTime.toISOString() });
-    
-    // 状态2: Payment received from buyer - 5-7分钟后（橙色等待）
-    const paymentReceivedDelay = 5 + Math.random() * 2;  // 5-7 分钟
-    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
-    timeline.push({ status: "Payment received from buyer", time: paymentReceivedTime.toISOString() });
+    // 状态1: Order is placed - 立即打勾 ✅（已完成，绿色）
+timeline.push({ status: "Order is placed", time: startTime.toISOString() });
+
+// 状态2: Payment received from buyer - 需要等待 5-7 分钟（橙色等待状态）
+const paymentReceivedDelay = 5 + Math.random() * 2;  // 5-7 分钟
+const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
+timeline.push({ 
+    status: "Payment received from buyer", 
+    time: paymentReceivedTime.toISOString(),
+    isPending: true   // 👈 添加这个标记，表示是等待状态（橙色）
+});
     
     // 状态3: Payment under escrow protection - 紧跟状态2，立即打勾
     timeline.push({ status: "Payment under escrow protection", time: paymentReceivedTime.toISOString() });
