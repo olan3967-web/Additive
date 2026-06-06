@@ -121,7 +121,7 @@ function parseProductsText(productsData) {
 let currentTab = 'new', pendingOrders = [], processingOrders = [], currentOrder = null, hasCheckedShipping = false;
 let refreshInterval = null;
 
-// 生成完整 Timeline（从 Confirm Order 开始）
+// 生成初始 Timeline（从 Confirm Order 开始）
 function generateProcessingTimeline(orderCreatedAt, paymentReleaseTimer = null) {
     const startTime = new Date(orderCreatedAt);
     const timeline = [];
@@ -136,10 +136,11 @@ function generateProcessingTimeline(orderCreatedAt, paymentReleaseTimer = null) 
     let paymentReleasedTime;
     if (paymentReleaseTimer && paymentReleaseTimer > 0) {
         paymentReleasedTime = new Date(paymentReceivedTime.getTime() + paymentReleaseTimer * 60 * 1000);
+        timeline.push({ status: "Payment released", time: paymentReleasedTime.toISOString() });
     } else {
         paymentReleasedTime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        timeline.push({ status: "Payment released (pending)", time: paymentReleasedTime.toISOString(), isPending: true });
     }
-    timeline.push({ status: "Payment released (pending)", time: paymentReleasedTime.toISOString(), isPending: true });
     
     const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
@@ -270,6 +271,7 @@ function renderNewOrders() {
         let displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
         return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-pending">Pending</span></div></div>`;
     }).join('');
+    // New Orders: 点击打开弹窗
     document.querySelectorAll('#newOrdersList .order-card').forEach(card => card.addEventListener('click', () => openOrderModal(JSON.parse(card.dataset.order))));
 }
 
@@ -282,7 +284,13 @@ function renderProcessingOrders() {
         let displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
         return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-processing">In Transit</span></div></div>`;
     }).join('');
-    document.querySelectorAll('#processingOrdersList .order-card').forEach(card => card.addEventListener('click', () => window.location.href = 'order-tracking.html?order_no=' + JSON.parse(card.dataset.order).order_no));
+    // Processing Orders: 点击跳转到 order-tracking.html 查看物流状态
+    document.querySelectorAll('#processingOrdersList .order-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const order = JSON.parse(card.dataset.order);
+            window.location.href = 'order-tracking.html?order_no=' + order.order_no;
+        });
+    });
 }
 
 function openOrderModal(order) {
