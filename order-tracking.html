@@ -209,7 +209,9 @@ function renderTimeline() {
         
         let displayStatus = item.status === "Payment released (pending)" ? "Payment released" : item.status;
         let isWaitingStatus = (statusClass === 'waiting');
-        let shouldShowTime = showTime && isValidTime && !isWaitingStatus;
+        // 强制：Payment released (pending) 永远不显示时间
+        let isPaymentReleasePending = item.status === "Payment released (pending)";
+        let shouldShowTime = showTime && isValidTime && !isWaitingStatus && !isPaymentReleasePending;
         
         return `<div class="timeline-item ${statusClass}">
             <div class="timeline-icon ${statusClass}" style="background:${iconBg};">
