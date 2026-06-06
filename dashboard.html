@@ -749,34 +749,31 @@
         }
 
         // ========== 获取今日订单佣金 ==========
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
-        
-        const { data: orders } = await sb
-            .from('order_history')
-            .select('commission, date, created_at')
-            .eq('uid', user.uid);
+const today = new Date();
+const todayStr = today.toISOString().split('T')[0];
 
-        // 只统计今天的订单
-        const todayOrders = orders?.filter(o => {
-            const orderDate = o.date || o.created_at;
-            if (!orderDate) return false;
-            const dateStr = new Date(orderDate).toISOString().split('T')[0];
-            return dateStr === todayStr;
-        }) || [];
-        
-        const todayCommission = todayOrders.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
-        
-        const totalCommissionsEl = document.getElementById('totalCommissions');
-        if (totalCommissionsEl) {
-            totalCommissionsEl.innerHTML = '€' + todayCommission.toFixed(2);
-        }
-        
-        const salesAmountEl = document.getElementById('salesAmount');
-        if (salesAmountEl) {
-            salesAmountEl.innerHTML = '€' + todayCommission.toFixed(2) + ' earned';
-        }
-    }
+const { data: orders } = await sb
+    .from('order_history')
+    .select('commission, created_at')
+    .eq('uid', user.uid);
+
+const todayOrders = orders?.filter(o => {
+    if (!o.created_at) return false;
+    const dateStr = new Date(o.created_at).toISOString().split('T')[0];
+    return dateStr === todayStr;
+}) || [];
+
+const todayCommission = todayOrders.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
+
+const totalCommissionsEl = document.getElementById('totalCommissions');
+if (totalCommissionsEl) {
+    totalCommissionsEl.innerHTML = '€' + todayCommission.toFixed(2);
+}
+
+const salesAmountEl = document.getElementById('salesAmount');
+if (salesAmountEl) {
+    salesAmountEl.innerHTML = '€' + todayCommission.toFixed(2) + ' earned';
+}
 
     function topUp() {
         alert('Please contact support for deposit.');
