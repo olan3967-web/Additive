@@ -794,27 +794,26 @@
             kycBadge.style.color = '#ffb347';
         }
 
-        // ========== 获取已完成订单（用于佣金统计） ==========
-        const { data: deliveredOrders } = await sb
-            .from('user_orders')
-            .select('total_commission, completed_at')
-            .eq('uid', user.uid)
-            .eq('status', 'delivered');
+        // ========== 获取佣金统计（从 order_history 表） ==========
+const { data: historyOrders } = await sb
+    .from('order_history')
+    .select('commission, date')
+    .eq('uid', user.uid);
 
-        // 总佣金（My Sales 卡片）- 所有已完成订单的佣金总和
-        const totalCommission = deliveredOrders?.reduce((sum, o) => sum + (o.total_commission || 0), 0) || 0;
+// 总佣金（My Sales 卡片）- 所有订单佣金总和
+const totalCommission = historyOrders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
 
-        // 今日佣金（Today's Earnings）- 今天完成的订单佣金
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
+// 今日佣金（Today's Earnings）- 今天的订单佣金
+const today = new Date();
+const todayStr = today.toISOString().split('T')[0];
 
-        const todayOrders = deliveredOrders?.filter(o => {
-            if (!o.completed_at) return false;
-            const dateStr = new Date(o.completed_at).toISOString().split('T')[0];
-            return dateStr === todayStr;
-        }) || [];
+const todayOrders = historyOrders?.filter(o => {
+    if (!o.date) return false;
+    const dateStr = new Date(o.date).toISOString().split('T')[0];
+    return dateStr === todayStr;
+}) || [];
 
-        const todayCommission = todayOrders.reduce((sum, o) => sum + (o.total_commission || 0), 0) || 0;
+const todayCommission = todayOrders.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
 
         // ========== 计算 Pending Release 金额 ==========
         const { data: processingOrders } = await sb
