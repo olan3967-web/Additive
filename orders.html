@@ -191,55 +191,62 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
     if (!order) return false;
     
     let timeline = JSON.parse(order.tracking_timeline || '[]');
+    let timelineUpdated = false;
     
+    // 1. 更新 Payment released (pending) 为 Payment released
     for (let i = 0; i < timeline.length; i++) {
         if (timeline[i].status === "Payment released (pending)") {
             timeline[i] = { status: "Payment released", time: paymentReleasedTime.toISOString() };
+            timelineUpdated = true;
             break;
         }
     }
     
-    const orderConfirmedDelay = 5 + Math.random() * 5;
-    const preparingDelay = 30 + Math.random() * 30;
-    let currentTime = new Date(paymentReleasedTime);
-    const orderConfirmedTime = new Date(currentTime.getTime() + orderConfirmedDelay * 60 * 1000);
+    // 2. 计算并更新 Order confirmed 和 Preparing parcel for shipment
+    const orderConfirmedDelay = 5 + Math.random() * 5;  // 5-10 分钟
+    const preparingDelay = 30 + Math.random() * 30;     // 30-60 分钟
+    
+    const orderConfirmedTime = new Date(paymentReleasedTime.getTime() + orderConfirmedDelay * 60 * 1000);
     const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
     
-    const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
-    const totalMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
-    let intervals = [], remaining = totalMs;
-    for (let i = 0; i < subsequent.length; i++) {
-        let gap = (remaining / (subsequent.length - i)) * (0.3 + Math.random() * 0.7);
-        intervals.push(gap);
-        remaining -= gap;
-    }
-    
-    let laterTime = new Date(preparingTime);
-    let subIndex = 0;
     for (let i = 0; i < timeline.length; i++) {
-        if (timeline[i].isPending && subsequent.includes(timeline[i].status)) {
-            if (subIndex === 0) timeline[i] = { status: subsequent[0], time: orderConfirmedTime.toISOString() };
-            else if (subIndex === 1) timeline[i] = { status: subsequent[1], time: preparingTime.toISOString() };
-            else {
-                laterTime = new Date(laterTime.getTime() + intervals[subIndex]);
-                timeline[i] = { status: subsequent[subIndex], time: laterTime.toISOString() };
-            }
-            subIndex++;
+        if (timeline[i].status === "Order confirmed" && timeline[i].isPending === true) {
+            timeline[i] = { status: "Order confirmed", time: orderConfirmedTime.toISOString() };
+            timelineUpdated = true;
+        }
+        if (timeline[i].status === "Preparing parcel for shipment" && timeline[i].isPending === true) {
+            timeline[i] = { status: "Preparing parcel for shipment", time: preparingTime.toISOString() };
+            timelineUpdated = true;
         }
     }
     
+    // 3. 返还余额给用户
     const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
     const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
     const newBalance = (user?.balance || 0) + refundAmount;
     await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
-    await sb.from('deposits').insert([{ uid: order.uid, username: order.username, amount: refundAmount, type: 'order_settlement', created_at: new Date().toISOString() }]);
-    await sb.from('user_orders').update({ tracking_timeline: JSON.stringify(timeline) }).eq('order_no', orderNo);
+    await sb.from('deposits').insert([{ 
+        uid: order.uid, 
+        username: order.username, 
+        amount: refundAmount, 
+        type: 'order_settlement', 
+        created_at: new Date().toISOString() 
+    }]);
     
+    // 4. 保存更新后的 timeline
+    if (timelineUpdated) {
+        await sb.from('user_orders').update({ 
+            tracking_timeline: JSON.stringify(timeline) 
+        }).eq('order_no', orderNo);
+    }
+    
+    // 5. 更新本地用户余额
     const localUser = getCurrentUser();
     if (localUser && localUser.uid === order.uid) {
         localUser.balance = newBalance;
         localStorage.setItem('currentUser', JSON.stringify(localUser));
     }
+    
     return true;
 }
 
