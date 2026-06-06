@@ -122,15 +122,15 @@ let currentTab = 'new', pendingOrders = [], processingOrders = [], currentOrder 
 let refreshInterval = null;
 
 // 生成初始 Timeline（从 Confirm Order 开始）
-function generateProcessingTimeline(orderCreatedAt, paymentReleaseTimer = null) {
-    const startTime = new Date(orderCreatedAt);
+function generateProcessingTimeline(confirmTime, paymentReleaseTimer = null) {
+    const startTime = new Date(confirmTime);  // 改为 Confirm Order 的时间
     const timeline = [];
     
-    // 状态1: Order is placed - 立即打勾
+    // 状态1: Order is placed - 立即完成（绿色打勾）
     timeline.push({ status: "Order is placed", time: startTime.toISOString() });
     
-    // 状态2: Payment received from buyer - 5-7分钟后打勾
-    const paymentReceivedDelay = 5 + Math.random() * 2;
+    // 状态2: Payment received from buyer - 5-7分钟后（橙色等待）
+    const paymentReceivedDelay = 5 + Math.random() * 2;  // 5-7 分钟
     const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
     timeline.push({ status: "Payment received from buyer", time: paymentReceivedTime.toISOString() });
     
