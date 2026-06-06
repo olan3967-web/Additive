@@ -794,27 +794,27 @@
             kycBadge.style.color = '#ffb347';
         }
 
-        // ========== 获取今日已释放佣金（Today's Earnings） ==========
-        // 只统计 payment release 已经完成并加到余额的订单
-        const { data: settlements } = await sb
-            .from('deposits')
-            .select('amount, created_at')
+        // ========== 获取已完成订单（用于佣金统计） ==========
+        const { data: deliveredOrders } = await sb
+            .from('user_orders')
+            .select('total_commission, completed_at')
             .eq('uid', user.uid)
-            .eq('type', 'order_settlement');
+            .eq('status', 'delivered');
 
+        // 总佣金（My Sales 卡片）- 所有已完成订单的佣金总和
+        const totalCommission = deliveredOrders?.reduce((sum, o) => sum + (o.total_commission || 0), 0) || 0;
+
+        // 今日佣金（Today's Earnings）- 今天完成的订单佣金
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
 
-        const todaySettlements = settlements?.filter(s => {
-            if (!s.created_at) return false;
-            const dateStr = new Date(s.created_at).toISOString().split('T')[0];
+        const todayOrders = deliveredOrders?.filter(o => {
+            if (!o.completed_at) return false;
+            const dateStr = new Date(o.completed_at).toISOString().split('T')[0];
             return dateStr === todayStr;
         }) || [];
 
-        const todayCommission = todaySettlements.reduce((sum, s) => sum + (s.amount || 0), 0) || 0;
-
-        // 总佣金（用于 My Sales 卡片）- 所有已释放的订单总佣金
-        const totalCommission = settlements?.reduce((sum, s) => sum + (s.amount || 0), 0) || 0;
+        const todayCommission = todayOrders.reduce((sum, o) => sum + (o.total_commission || 0), 0) || 0;
 
         // ========== 计算 Pending Release 金额 ==========
         const { data: processingOrders } = await sb
