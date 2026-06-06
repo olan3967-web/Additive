@@ -27,14 +27,14 @@
         .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .order-no { font-size: 13px; font-weight: 600; color: #ff7a00; font-family: monospace; }
         .order-date { font-size: 10px; color: #94a3b8; }
-        .order-products { font-size: 13px; color: #1f2937; margin-bottom: 8px; }
+        .order-products { font-size: 13px; color: #1f2937; margin-bottom: 8px; word-break: break-word; }
         .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eef2f7; }
         .order-total { font-size: 14px; font-weight: 700; color: #ff7a00; }
         .order-commission { font-size: 12px; color: #10b981; }
         .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
         .status-pending { background: #fef3c7; color: #d97706; }
-        .status-pending-payment { background: #fef3c7; color: #d97706; }
-        .status-processing { background: #dbeafe; color: #2563eb; }
+        .status-processing { background: #dbeafe; color: #2563eb; animation: pulseOrange 2s infinite; }
+        @keyframes pulseOrange { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
         .empty-state i { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; display: block; }
         .order-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: all 0.3s; }
@@ -119,86 +119,105 @@ function parseProductsText(productsData) {
 }
 
 let currentTab = 'new', pendingOrders = [], processingOrders = [], currentOrder = null, hasCheckedShipping = false;
+let refreshInterval = null;
 
-// 生成初始 Timeline（状态1-3）
-function generateInitialTimeline() {
-    const startTime = new Date();
-    const timeline = [{ status: "Order is placed", time: startTime.toISOString() }];
+// 生成完整 Timeline（从 Confirm Order 开始，包含 Payment Release 等待状态）
+function generateProcessingTimeline(orderCreatedAt, paymentReleaseTimer = null) {
+    const startTime = new Date(orderCreatedAt);
+    const timeline = [];
+    
+    // 状态1: 立即
+    timeline.push({ status: "Order is placed", time: startTime.toISOString() });
+    
+    // 状态2: 5-7分钟后
     const paymentReceivedDelay = 5 + Math.random() * 2;
     const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
     timeline.push({ status: "Payment received from buyer", time: paymentReceivedTime.toISOString() });
+    
+    // 状态3: 紧跟
     timeline.push({ status: "Payment under escrow protection", time: paymentReceivedTime.toISOString() });
+    
+    // 状态4: Payment released - 根据 Timer 设置时间
+    let paymentReleasedTime;
+    if (paymentReleaseTimer && paymentReleaseTimer > 0) {
+        paymentReleasedTime = new Date(paymentReceivedTime.getTime() + paymentReleaseTimer * 60 * 1000);
+    } else {
+        // 无 Timer，设置为未来7天（等待手动释放）
+        paymentReleasedTime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    }
+    timeline.push({ status: "Payment released (pending)", time: paymentReleasedTime.toISOString(), isPending: true });
+    
+    // 后续状态暂时设为未来时间
+    const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
+    for (let i = 0; i < subsequent.length; i++) {
+        timeline.push({ status: subsequent[i], time: futureDate.toISOString(), isPending: true });
+    }
+    
     return timeline;
 }
 
-// 生成完整 Timeline（Payment Released 后）
-function generateFullTimeline(startTime, paymentReleasedTime) {
-    const timeline = [
-        { status: "Order is placed", time: startTime.toISOString() }
-    ];
-    const paymentReceivedDelay = 5 + Math.random() * 2;
-    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
-    timeline.push({ status: "Payment received from buyer", time: paymentReceivedTime.toISOString() });
-    timeline.push({ status: "Payment under escrow protection", time: paymentReceivedTime.toISOString() });
-    timeline.push({ status: "Payment released", time: paymentReleasedTime.toISOString() });
-    
-    const orderConfirmedDelay = 5 + Math.random() * 5;
-    const orderConfirmedTime = new Date(paymentReleasedTime.getTime() + orderConfirmedDelay * 60 * 1000);
-    timeline.push({ status: "Order confirmed", time: orderConfirmedTime.toISOString() });
-    
-    const preparingDelay = 30 + Math.random() * 30;
-    const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
-    timeline.push({ status: "Preparing parcel for shipment", time: preparingTime.toISOString() });
-    
-    const subsequent = ["Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
-    const totalMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
-    let intervals = [], remaining = totalMs;
-    for (let i = 0; i < subsequent.length; i++) {
-        let gap = (remaining / (subsequent.length - i)) * (0.3 + Math.random() * 0.7);
-        intervals.push(gap); remaining -= gap;
-    }
-    let laterTime = new Date(preparingTime);
-    for (let i = 0; i < subsequent.length; i++) {
-        laterTime = new Date(laterTime.getTime() + intervals[i]);
-        timeline.push({ status: subsequent[i], time: laterTime.toISOString() });
-    }
-    return timeline;
-}
-
-// 后台调用此函数触发 Payment Released
-async function triggerPaymentReleased(orderNo, delayMinutes = 0) {
+// 激活 Payment Release 并生成剩余状态
+async function activatePaymentRelease(orderNo, paymentReleasedTime) {
     const { data: order } = await sb.from('user_orders').select('*').eq('order_no', orderNo).single();
     if (!order) return false;
     
     let timeline = JSON.parse(order.tracking_timeline || '[]');
-    let escrowTime = null;
+    
+    // 更新 Payment released 状态
     for (let i = 0; i < timeline.length; i++) {
-        if (timeline[i].status === "Payment under escrow protection") { escrowTime = new Date(timeline[i].time); break; }
-    }
-    if (!escrowTime) return false;
-    
-    let paymentReleasedTime = new Date();
-    if (delayMinutes > 0) {
-        let calcTime = new Date(escrowTime.getTime() + delayMinutes * 60 * 1000);
-        if (calcTime > paymentReleasedTime) paymentReleasedTime = calcTime;
+        if (timeline[i].status === "Payment released (pending)") {
+            timeline[i] = { status: "Payment released", time: paymentReleasedTime.toISOString() };
+            break;
+        }
     }
     
-    const fullTimeline = generateFullTimeline(new Date(order.created_at), paymentReleasedTime);
+    // 生成后续状态
+    const orderConfirmedDelay = 5 + Math.random() * 5;
+    const preparingDelay = 30 + Math.random() * 30;
     
-    // 返还余额（货款 + 佣金）
+    let currentTime = new Date(paymentReleasedTime);
+    const orderConfirmedTime = new Date(currentTime.getTime() + orderConfirmedDelay * 60 * 1000);
+    const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
+    
+    // 找到后续状态的位置并更新
+    const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
+    const totalMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
+    let intervals = [], remaining = totalMs;
+    for (let i = 0; i < subsequent.length; i++) {
+        let gap = (remaining / (subsequent.length - i)) * (0.3 + Math.random() * 0.7);
+        intervals.push(gap);
+        remaining -= gap;
+    }
+    
+    let laterTime = new Date(preparingTime);
+    for (let i = 0; i < subsequent.length; i++) {
+        for (let j = 0; j < timeline.length; j++) {
+            if (timeline[j].status === subsequent[i] && timeline[j].isPending) {
+                if (i === 0) timeline[j] = { status: subsequent[i], time: orderConfirmedTime.toISOString() };
+                else if (i === 1) timeline[j] = { status: subsequent[i], time: preparingTime.toISOString() };
+                else {
+                    laterTime = new Date(laterTime.getTime() + intervals[i]);
+                    timeline[j] = { status: subsequent[i], time: laterTime.toISOString() };
+                }
+                break;
+            }
+        }
+    }
+    
+    // 返还余额
     const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
     const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
     const newBalance = (user?.balance || 0) + refundAmount;
     await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
     
-    // 记录返还记录
     await sb.from('deposits').insert([{
         uid: order.uid, username: order.username, amount: refundAmount, type: 'order_settlement',
         created_at: new Date().toISOString()
     }]);
     
     await sb.from('user_orders').update({
-        status: 'processing', tracking_status: 'processing', tracking_timeline: JSON.stringify(fullTimeline)
+        tracking_timeline: JSON.stringify(timeline)
     }).eq('order_no', orderNo);
     
     // 更新本地用户余额
@@ -207,42 +226,89 @@ async function triggerPaymentReleased(orderNo, delayMinutes = 0) {
         localUser.balance = newBalance;
         localStorage.setItem('currentUser', JSON.stringify(localUser));
     }
+    
     return true;
+}
+
+// 检查并自动激活 Timer 订单
+async function checkAndActivateTimers() {
+    const { data: orders } = await sb
+        .from('user_orders')
+        .select('*')
+        .eq('status', 'processing')
+        .not('payment_release_timer', 'is', null);
+    
+    if (!orders) return;
+    
+    const now = new Date();
+    for (const order of orders) {
+        let timeline = JSON.parse(order.tracking_timeline || '[]');
+        let pendingReleaseIndex = -1;
+        let pendingReleaseTime = null;
+        
+        for (let i = 0; i < timeline.length; i++) {
+            if (timeline[i].status === "Payment released (pending)") {
+                pendingReleaseIndex = i;
+                pendingReleaseTime = new Date(timeline[i].time);
+                break;
+            }
+        }
+        
+        if (pendingReleaseTime && pendingReleaseTime <= now) {
+            await activatePaymentRelease(order.order_no, pendingReleaseTime);
+        }
+    }
 }
 
 async function loadOrders() {
     const user = getCurrentUser();
     if (!user) { window.location.href = 'signin.html'; return; }
     const { data: orders } = await sb.from('user_orders').select('*').eq('uid', user.uid).order('created_at', { ascending: false });
-    pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'pending_payment');
+    // New Orders: 只有 status = 'pending'（用户尚未确认的订单）
+    pendingOrders = orders.filter(o => o.status === 'pending');
+    // Processing: status = 'processing' 或 'delivered'（已确认的订单）
     processingOrders = orders.filter(o => o.status === 'processing' || o.status === 'delivered');
     renderOrders();
+    
+    // 检查 Timer 订单
+    await checkAndActivateTimers();
 }
+
 function renderOrders() { renderNewOrders(); renderProcessingOrders(); }
+
 function renderNewOrders() {
     const container = document.getElementById('newOrdersList');
     if (!container) return;
     if (pendingOrders.length === 0) { container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-inbox"></i>No new orders</div>'; return; }
     container.innerHTML = pendingOrders.map(order => {
         let productsText = parseProductsText(order.products);
-        let statusClass = order.status === 'pending_payment' ? 'status-pending-payment' : 'status-pending';
-        let statusText = order.status === 'pending_payment' ? 'Awaiting Payment Release' : 'Pending';
-        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${productsText.substring(0, 60)}${productsText.length > 60 ? '...' : ''}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge ${statusClass}">${statusText}</span></div></div>`;
+        let displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
+        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-pending">Pending</span></div></div>`;
     }).join('');
     document.querySelectorAll('#newOrdersList .order-card').forEach(card => card.addEventListener('click', () => openOrderModal(JSON.parse(card.dataset.order))));
 }
+
 function renderProcessingOrders() {
     const container = document.getElementById('processingOrdersList');
     if (!container) return;
     if (processingOrders.length === 0) { container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-clock"></i>No orders in processing</div>'; return; }
     container.innerHTML = processingOrders.map(order => {
         let productsText = parseProductsText(order.products);
-        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${productsText.substring(0, 60)}${productsText.length > 60 ? '...' : ''}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-processing">In Transit</span></div></div>`;
+        let displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
+        let statusText = order.status === 'processing' ? 'In Transit' : 'Delivered';
+        let statusClass = order.status === 'processing' ? 'status-processing' : 'status-pending';
+        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge ${statusClass}">${statusText}</span></div></div>`;
     }).join('');
     document.querySelectorAll('#processingOrdersList .order-card').forEach(card => card.addEventListener('click', () => window.location.href = 'order-tracking.html?order_no=' + JSON.parse(card.dataset.order).order_no));
 }
+
 function openOrderModal(order) {
-    currentOrder = order; hasCheckedShipping = false;
+    if (order.status !== 'pending') {
+        showToast('该订单已处理，无法再次确认', 'warning');
+        return;
+    }
+    currentOrder = order;
+    hasCheckedShipping = false;
     document.getElementById('modalOrderNo').innerHTML = '订单 ' + order.order_no;
     let productsHtml = '';
     try {
@@ -258,6 +324,7 @@ function openOrderModal(order) {
     confirmBtn.classList.add('disabled'); confirmBtn.disabled = true;
     document.getElementById('orderModal').classList.add('active');
 }
+
 document.getElementById('checkShippingBtn').addEventListener('click', function() {
     if (!currentOrder) return;
     let address = currentOrder.buyer_address || '未知地址';
@@ -269,26 +336,42 @@ document.getElementById('checkShippingBtn').addEventListener('click', function()
     checkBtn.classList.add('checked'); checkBtn.innerHTML = '<i class="fas fa-check-circle"></i> Shipping Info Checked';
     confirmBtn.classList.remove('disabled'); confirmBtn.disabled = false;
 });
+
 document.getElementById('closeShippingBtn').addEventListener('click', () => document.getElementById('shippingModal').classList.remove('active'));
+
 document.getElementById('confirmOrderBtn').addEventListener('click', async function() {
     if (!hasCheckedShipping) { showToast('请先点击 Check Shipping Info 确认发货地址', 'warning'); return; }
     if (!currentOrder) return;
     let user = getCurrentUser();
     if (!user) return;
+    
     let userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
     let currentBalance = userDataResult.data?.balance || 0;
     if (currentBalance < currentOrder.total_supply_price) {
         showToast('余额不足！需要 €' + currentOrder.total_supply_price.toFixed(2) + '，请先充值', 'error');
         return;
     }
+    
     showToast('处理订单中...', 'info');
+    
+    // 扣除余额
     let newBalance = currentBalance - currentOrder.total_supply_price;
     await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
-    let initialTimeline = generateInitialTimeline();
+    
+    // 获取订单的 payment_release_timer
+    const timerValue = currentOrder.payment_release_timer;
+    
+    // 生成完整 timeline（包含等待 Payment Release）
+    const fullTimeline = generateProcessingTimeline(new Date(), timerValue);
+    
+    // 更新订单状态为 processing（进入 Processing 页面）
     await sb.from('user_orders').update({
-        status: 'pending_payment', tracking_status: 'pending_payment',
-        tracking_timeline: JSON.stringify(initialTimeline)
+        status: 'processing',
+        tracking_status: 'processing',
+        tracking_timeline: JSON.stringify(fullTimeline)
     }).eq('order_no', currentOrder.order_no);
+    
+    // 记录订单历史
     try {
         let products = typeof currentOrder.products === 'string' ? JSON.parse(currentOrder.products) : currentOrder.products;
         if (Array.isArray(products)) {
@@ -299,12 +382,15 @@ document.getElementById('confirmOrderBtn').addEventListener('click', async funct
             }
         }
     } catch(e) { console.error('记录订单历史失败:', e); }
+    
     let updatedUser = getCurrentUser();
     if (updatedUser) { updatedUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(updatedUser)); }
+    
     document.getElementById('orderModal').classList.remove('active');
-    showToast('订单已提交！等待 Payment Release 后到账', 'success');
+    showToast('订单已确认！', 'success');
     await loadOrders();
 });
+
 function initTabs() {
     document.querySelectorAll('.tab-btn').forEach(tab => {
         tab.addEventListener('click', () => {
@@ -316,6 +402,7 @@ function initTabs() {
         });
     });
 }
+
 function setupBottomNav() {
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', () => {
@@ -327,7 +414,14 @@ function setupBottomNav() {
         });
     });
 }
-window.triggerPaymentReleased = triggerPaymentReleased;
+
+// 每30秒检查一次 Timer 订单
+if (refreshInterval) clearInterval(refreshInterval);
+refreshInterval = setInterval(async () => {
+    await checkAndActivateTimers();
+    await loadOrders();
+}, 30000);
+
 initTabs(); setupBottomNav(); loadOrders();
 </script>
 </body>

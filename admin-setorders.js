@@ -1,4 +1,4 @@
-// admin-setorders.js - 完整版（含 Timer 输入框 + Manual Release）
+// admin-setorders.js - 后台设置订单（Timer 输入框 + Manual Release）
 
 let setordersSearchKeyword = '';
 let selectedUser = null;
@@ -16,235 +16,154 @@ function generateRandomBuyer() {
     return { name, phone, address };
 }
 
-async function triggerPaymentRelease(orderNo, delayMinutes = 0) {
-    try {
-        const { data: order } = await sb.from('user_orders').select('*').eq('order_no', orderNo).single();
-        if (!order) return false;
-        
-        let timeline = JSON.parse(order.tracking_timeline || '[]');
-        let escrowTime = null;
-        for (let i = 0; i < timeline.length; i++) {
-            if (timeline[i].status === "Payment under escrow protection") {
-                escrowTime = new Date(timeline[i].time);
-                break;
-            }
-        }
-        if (!escrowTime) return false;
-        
-        let paymentReleasedTime = new Date();
-        if (delayMinutes > 0) {
-            const calculatedTime = new Date(escrowTime.getTime() + delayMinutes * 60 * 1000);
-            if (calculatedTime > paymentReleasedTime) paymentReleasedTime = calculatedTime;
-        }
-        
-        timeline = timeline.filter(item => item.status !== "Payment released");
-        timeline.push({ status: "Payment released", time: paymentReleasedTime.toISOString() });
-        
-        const subsequentStatuses = [
-            "Order confirmed", "Preparing parcel for shipment", "Courier assigned",
-            "Parcel picked up by logistics partner", "Parcel arrived at sorting facility",
-            "Parcel departed from sorting facility", "Parcel arrived at delivery hub",
-            "Parcel out for delivery", "Parcel delivered"
-        ];
-        
-        const orderConfirmedDelay = 5 + Math.random() * 5;
-        const preparingDelay = 30 + Math.random() * 30;
-        
-        const orderConfirmedTime = new Date(paymentReleasedTime.getTime() + orderConfirmedDelay * 60 * 1000);
-        timeline.push({ status: "Order confirmed", time: orderConfirmedTime.toISOString() });
-        
-        const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
-        timeline.push({ status: "Preparing parcel for shipment", time: preparingTime.toISOString() });
-        
-        const remainingStatuses = subsequentStatuses.length - 2;
-        const totalRemainingMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
-        let intervals = [], remaining = totalRemainingMs;
-        for (let i = 0; i < remainingStatuses; i++) {
-            const gap = (remaining / (remainingStatuses - i)) * (0.3 + Math.random() * 0.7);
-            intervals.push(gap);
-            remaining -= gap;
-        }
-        
-        let laterTime = new Date(preparingTime);
-        for (let i = 0; i < remainingStatuses; i++) {
-            laterTime = new Date(laterTime.getTime() + intervals[i]);
-            timeline.push({ status: subsequentStatuses[i + 2], time: laterTime.toISOString() });
-        }
-        
-        const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
-        const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
-        const newBalance = (user?.balance || 0) + refundAmount;
-        await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
-        
-        await sb.from('deposits').insert([{
-            uid: order.uid, username: order.username, amount: refundAmount,
-            type: 'order_settlement', created_at: new Date().toISOString()
-        }]);
-        
-        await sb.from('user_orders').update({
-            status: 'processing', tracking_status: 'processing',
-            tracking_timeline: JSON.stringify(timeline)
-        }).eq('order_no', orderNo);
-        
-        return true;
-    } catch (err) {
-        console.error('触发失败:', err);
-        return false;
-    }
-}
-
 async function loadManualReleaseOrders() {
     try {
         const { data: orders } = await sb
             .from('user_orders')
             .select('*')
-            .eq('status', 'pending_payment')
-            .is('payment_release_timer', null)
+            .eq('status', 'processing')
+            .contains('tracking_timeline', '"Payment released (pending)"')
             .order('created_at', { ascending: false });
         manualReleaseOrders = orders || [];
         renderManualReleaseCard();
-    } catch (err) {
-        console.error(err);
-    }
+    } catch (err) { console.error(err); }
 }
 
 function renderManualReleaseCard() {
     const container = document.getElementById('manualReleaseContainer');
     if (!container) return;
-    
-    if (manualReleaseOrders.length === 0) {
-        container.style.display = 'none';
-        return;
-    }
-    
+    if (manualReleaseOrders.length === 0) { container.style.display = 'none'; return; }
     container.style.display = 'block';
     container.innerHTML = `
         <div style="background: rgba(15,25,40,0.9); border-radius: 16px; padding: 16px; margin-top: 20px; border: 1px solid rgba(255,122,0,0.3);">
             <h4 style="color: #ffb84d;"><i class="fas fa-hand-pointer"></i> Manual Release</h4>
             <div style="max-height: 300px; overflow-y: auto; margin-top: 12px;">
-                ${manualReleaseOrders.map(order => `
-                    <div style="background: #0f172a; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
+                ${manualReleaseOrders.map(order => {
+                    let timeline = JSON.parse(order.tracking_timeline || '[]');
+                    let pendingTime = '';
+                    for (let i = 0; i < timeline.length; i++) {
+                        if (timeline[i].status === "Payment released (pending)") {
+                            pendingTime = new Date(timeline[i].time).toLocaleString();
+                            break;
+                        }
+                    }
+                    return `<div style="background: #0f172a; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <div style="font-weight:700; color:#ffb84d;">${order.order_no}</div>
-                                <div style="font-size:11px;">User: ${order.uid} | €${order.total_supply_price}</div>
-                            </div>
-                            <button class="release-order-btn" data-order="${order.order_no}" style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:white; cursor:pointer;">
-                                ✓ Release
-                            </button>
+                            <div><div style="font-weight:700; color:#ffb84d;">${order.order_no}</div><div style="font-size:11px;">User: ${order.uid} | €${order.total_supply_price} | 等待释放: ${pendingTime}</div></div>
+                            <button class="release-order-btn" data-order="${order.order_no}" style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:white; cursor:pointer;">✓ Release Now</button>
                         </div>
-                    </div>
-                `).join('')}
+                    </div>`;
+                }).join('')}
             </div>
         </div>
     `;
-    
     document.querySelectorAll('.release-order-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
-            await triggerPaymentRelease(btn.dataset.order, 0);
+            await triggerPaymentRelease(btn.dataset.order);
             await loadManualReleaseOrders();
             showToast(`已释放订单 ${btn.dataset.order}`, 'success');
         });
     });
 }
 
+async function triggerPaymentRelease(orderNo) {
+    try {
+        const { data: order } = await sb.from('user_orders').select('*').eq('order_no', orderNo).single();
+        if (!order) return false;
+        let timeline = JSON.parse(order.tracking_timeline || '[]');
+        let paymentReleasedTime = new Date();
+        for (let i = 0; i < timeline.length; i++) {
+            if (timeline[i].status === "Payment released (pending)") {
+                timeline[i] = { status: "Payment released", time: paymentReleasedTime.toISOString() };
+                break;
+            }
+        }
+        const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
+        const orderConfirmedDelay = 5 + Math.random() * 5;
+        const preparingDelay = 30 + Math.random() * 30;
+        let currentTime = new Date(paymentReleasedTime);
+        const orderConfirmedTime = new Date(currentTime.getTime() + orderConfirmedDelay * 60 * 1000);
+        const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
+        const totalMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
+        let intervals = [], remaining = totalMs;
+        for (let i = 0; i < subsequent.length; i++) {
+            let gap = (remaining / (subsequent.length - i)) * (0.3 + Math.random() * 0.7);
+            intervals.push(gap);
+            remaining -= gap;
+        }
+        let laterTime = new Date(preparingTime);
+        let subIndex = 0;
+        for (let i = 0; i < timeline.length; i++) {
+            if (timeline[i].isPending && subsequent.includes(timeline[i].status)) {
+                if (subIndex === 0) timeline[i] = { status: subsequent[0], time: orderConfirmedTime.toISOString() };
+                else if (subIndex === 1) timeline[i] = { status: subsequent[1], time: preparingTime.toISOString() };
+                else {
+                    laterTime = new Date(laterTime.getTime() + intervals[subIndex]);
+                    timeline[i] = { status: subsequent[subIndex], time: laterTime.toISOString() };
+                }
+                subIndex++;
+            }
+        }
+        const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
+        const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
+        const newBalance = (user?.balance || 0) + refundAmount;
+        await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
+        await sb.from('deposits').insert([{ uid: order.uid, username: order.username, amount: refundAmount, type: 'order_settlement', created_at: new Date().toISOString() }]);
+        await sb.from('user_orders').update({ tracking_timeline: JSON.stringify(timeline) }).eq('order_no', orderNo);
+        return true;
+    } catch (err) { console.error('触发失败:', err); return false; }
+}
+
 async function loadSetordersPage() {
     const container = document.getElementById('page_setorders');
     if (!container) return;
-    
     container.innerHTML = `
         <div class="card">
             <div class="search-bar" style="justify-content: space-between;">
                 <h3><i class="fas fa-cog"></i> Set Orders</h3>
                 <button id="backToUserList" class="btn-primary" style="display:none;">← Back to Users</button>
             </div>
-            
             <div id="setordersUserSearch">
-                <div class="search-bar">
-                    <input type="text" id="setordersSearchUid" placeholder="🔍 Search UID or Username" class="search-input">
-                    <button id="setordersSearchBtn" class="btn-primary">🔍 Search</button>
-                </div>
-                <div id="setordersUserList" class="table-container" style="max-height: 300px;">
-                    <table class="data-table">
-                        <thead><tr><th>UID</th><th>Username</th><th>Action</th></tr></thead>
-                        <tbody id="setordersUserTableBody"></tbody>
-                    </table>
-                </div>
+                <div class="search-bar"><input type="text" id="setordersSearchUid" placeholder="🔍 Search UID or Username" class="search-input"><button id="setordersSearchBtn" class="btn-primary">🔍 Search</button></div>
+                <div id="setordersUserList" class="table-container" style="max-height:300px;"><table class="data-table"><thead><tr><th>UID</th><th>Username</th><th>Action</th></tr></thead><tbody id="setordersUserTableBody"></tbody></table></div>
             </div>
-            
-            <div id="setordersMain" style="display: none;">
-                <div style="background: rgba(74,124,255,0.1); padding: 10px 16px; border-radius: 12px; margin-bottom: 20px;">
-                    Current User: <span id="selectedUidDisplay" style="color:#4a7cff;"></span> - <span id="selectedUsernameDisplay"></span>
+            <div id="setordersMain" style="display:none;">
+                <div style="background:rgba(74,124,255,0.1); padding:10px 16px; border-radius:12px; margin-bottom:20px;">Current User: <span id="selectedUidDisplay" style="color:#4a7cff;"></span> - <span id="selectedUsernameDisplay"></span></div>
+                <div id="userProductsList" style="max-height:500px; overflow-y:auto; margin-bottom:20px; display:flex; flex-wrap:wrap; gap:12px;"></div>
+                <div style="background:rgba(74,124,255,0.08); border:1px solid rgba(74,124,255,0.2); border-radius:16px; padding:16px; margin-bottom:20px;">
+                    <h4 style="color:#ffb84d;"><i class="fas fa-hourglass-half"></i> Payment Release Timer</h4>
+                    <input type="number" id="paymentTimerInput" placeholder="输入分钟数 (留空则进入 Manual Release)" style="width:100%; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:12px; color:#fff;">
+                    <div style="font-size:12px; color:#6a7a9a; margin-top:12px;"><i class="fas fa-info-circle"></i> 输入分钟后自动触发 Payment Release。留空则进入 Manual Release 列表。</div>
                 </div>
-                
-                <div id="userProductsList" style="max-height: 500px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px;"></div>
-                
-                <!-- ========== Timer 输入框 - 在 Order Summary 上方 ========== -->
-                <div style="background: rgba(74,124,255,0.08); border: 1px solid rgba(74,124,255,0.2); border-radius: 16px; padding: 16px; margin-bottom: 20px;">
-                    <h4 style="color: #ffb84d; margin-bottom: 12px;"><i class="fas fa-hourglass-half"></i> Payment Release Timer</h4>
-                    <input type="number" id="paymentTimerInput" placeholder="输入分钟数 (留空则进入 Manual Release)" style="width: 100%; background: #0f172a; border: 1px solid #1e2a3a; border-radius: 8px; padding: 12px; color: #fff; font-size: 14px;">
-                    <div style="font-size: 12px; color: #6a7a9a; margin-top: 12px;">
-                        <i class="fas fa-info-circle"></i> 输入分钟后自动触发 Payment Release。留空则进入 Manual Release 列表。
-                    </div>
+                <div id="orderSummary" style="background:#0f172a; border-radius:16px; padding:16px; border:1px solid rgba(74,124,255,0.2);">
+                    <h4 style="margin-bottom:12px; color:#ffb84d;"><i class="fas fa-receipt"></i> Order Summary</h4>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Total Supply Price:</span><span id="totalSupplyPrice" style="color:#ffb84d; font-weight:700;">€0</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Total Commission:</span><span id="totalCommission" style="color:#2ed15a; font-weight:700;">€0</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:16px;"><span>Final Account Increase:</span><span id="totalIncrease" style="color:#4a7cff; font-weight:700;">€0</span></div>
+                    <button id="confirmSetOrderBtn" class="success" style="width:100%; padding:12px;"><i class="fas fa-check"></i> Create Order</button>
                 </div>
-                
-                <div id="orderSummary" style="background: #0f172a; border-radius: 16px; padding: 16px; border: 1px solid rgba(74,124,255,0.2);">
-                    <h4 style="margin-bottom: 12px; color: #ffb84d;"><i class="fas fa-receipt"></i> Order Summary</h4>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Total Supply Price:</span>
-                        <span id="totalSupplyPrice" style="color: #ffb84d; font-weight: 700;">€0</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Total Commission:</span>
-                        <span id="totalCommission" style="color: #2ed15a; font-weight: 700;">€0</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
-                        <span>Final Account Increase:</span>
-                        <span id="totalIncrease" style="color: #4a7cff; font-weight: 700;">€0</span>
-                    </div>
-                    <button id="confirmSetOrderBtn" class="success" style="width: 100%; padding: 12px;">
-                        <i class="fas fa-check"></i> Create Order
-                    </button>
-                </div>
-                
-                <!-- Manual Release 卡片 -->
-                <div id="manualReleaseContainer" style="margin-top: 20px; display: none;"></div>
+                <div id="manualReleaseContainer" style="margin-top:20px; display:none;"></div>
             </div>
         </div>
     `;
-    
     await loadUserList();
     await loadManualReleaseOrders();
-    
-    document.getElementById('setordersSearchBtn')?.addEventListener('click', () => {
-        setordersSearchKeyword = document.getElementById('setordersSearchUid').value.trim();
-        loadUserList();
-    });
-    
+    document.getElementById('setordersSearchBtn')?.addEventListener('click', () => { setordersSearchKeyword = document.getElementById('setordersSearchUid').value.trim(); loadUserList(); });
     document.getElementById('backToUserList')?.addEventListener('click', () => {
         document.getElementById('setordersUserSearch').style.display = 'block';
         document.getElementById('setordersMain').style.display = 'none';
-        selectedUser = null;
-        orderItems = [];
-        paymentReleaseTimer = null;
+        selectedUser = null; orderItems = []; paymentReleaseTimer = null;
         document.getElementById('paymentTimerInput').value = '';
     });
-    
     document.getElementById('confirmSetOrderBtn')?.addEventListener('click', confirmSetOrder);
-    
-    document.getElementById('paymentTimerInput')?.addEventListener('input', (e) => {
-        paymentReleaseTimer = e.target.value ? parseInt(e.target.value) : null;
-    });
+    document.getElementById('paymentTimerInput')?.addEventListener('input', (e) => { paymentReleaseTimer = e.target.value ? parseInt(e.target.value) : null; });
 }
 
 async function loadUserList() {
     let query = sb.from('users').select('uid, username').order('created_at', { ascending: false });
-    if (setordersSearchKeyword) {
-        query = query.or(`uid.ilike.%${setordersSearchKeyword}%,username.ilike.%${setordersSearchKeyword}%`);
-    }
+    if (setordersSearchKeyword) query = query.or(`uid.ilike.%${setordersSearchKeyword}%,username.ilike.%${setordersSearchKeyword}%`);
     const { data: users } = await query;
     const tbody = document.getElementById('setordersUserTableBody');
-    
     if (tbody && users) {
         tbody.innerHTML = '';
         for (let u of users) {
@@ -253,9 +172,7 @@ async function loadUserList() {
             row.insertCell(1).innerText = u.username;
             row.insertCell(2).innerHTML = `<button class="setorder-select-btn" data-uid="${u.uid}" data-name="${u.username}" style="background:#4a7cff; padding:6px 16px; border-radius:20px; border:none; color:white; cursor:pointer;">Set Orders</button>`;
         }
-        document.querySelectorAll('.setorder-select-btn').forEach(btn => {
-            btn.addEventListener('click', () => selectUser(btn.dataset.uid, btn.dataset.name));
-        });
+        document.querySelectorAll('.setorder-select-btn').forEach(btn => btn.addEventListener('click', () => selectUser(btn.dataset.uid, btn.dataset.name)));
     }
 }
 
@@ -271,27 +188,9 @@ async function selectUser(uid, username) {
 async function loadUserProducts(uid) {
     const container = document.getElementById('userProductsList');
     container.innerHTML = '<div style="text-align:center; padding:40px;">Loading...</div>';
-    
-    const { data: products } = await sb
-        .from('user_products')
-        .select('*')
-        .eq('uid', uid)
-        .order('added_at', { ascending: false });
-    
-    if (!products || products.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">No products added by this user</div>';
-        return;
-    }
-    
-    orderItems = products.map(p => ({
-        product_id: p.product_id || p.id,
-        product_name: p.product_name,
-        price: p.price,
-        margin_profit: p.margin_profit,
-        quantity: 0,
-        image_url: p.image_url
-    }));
-    
+    const { data: products } = await sb.from('user_products').select('*').eq('uid', uid).order('added_at', { ascending: false });
+    if (!products || products.length === 0) { container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">No products added by this user</div>'; return; }
+    orderItems = products.map(p => ({ product_id: p.product_id || p.id, product_name: p.product_name, price: p.price, margin_profit: p.margin_profit, quantity: 0, image_url: p.image_url }));
     renderProducts();
 }
 
@@ -299,53 +198,21 @@ function renderProducts() {
     const container = document.getElementById('userProductsList');
     container.innerHTML = '';
     container.style.cssText = 'display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;';
-    
     for (let i = 0; i < orderItems.length; i++) {
         const item = orderItems[i];
         const div = document.createElement('div');
         div.style.cssText = 'background:#0f172a; border-radius:16px; padding:12px; width:calc(16.666% - 10px); min-width:140px; text-align:center; border:1px solid rgba(74,124,255,0.2);';
-        div.innerHTML = `
-            <img src="${item.image_url || 'https://placehold.co/80x80/1e2a3a/4a7cff?text=No+Image'}" style="width:80px; height:80px; border-radius:12px; margin-bottom:10px;">
-            <div style="font-weight:600; color:#ffb84d;">${item.product_name}</div>
-            <div style="font-size:11px; color:#8a9abb;">€${item.price} | +€${item.margin_profit}</div>
-            <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:10px;">
-                <button class="qty-decr" data-index="${i}" style="background:#4a7cff; width:28px; height:28px; border-radius:6px; color:white;">-</button>
-                <span id="qty_${i}" style="min-width:30px;">${item.quantity}</span>
-                <button class="qty-incr" data-index="${i}" style="background:#4a7cff; width:28px; height:28px; border-radius:6px; color:white;">+</button>
-            </div>
-        `;
+        div.innerHTML = `<img src="${item.image_url || 'https://placehold.co/80x80/1e2a3a/4a7cff?text=No+Image'}" style="width:80px; height:80px; border-radius:12px; margin-bottom:10px;"><div style="font-weight:600; color:#ffb84d;">${item.product_name}</div><div style="font-size:11px; color:#8a9abb;">€${item.price} | +€${item.margin_profit}</div><div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:10px;"><button class="qty-decr" data-index="${i}" style="background:#4a7cff; width:28px; height:28px; border-radius:6px; color:white;">-</button><span id="qty_${i}" style="min-width:30px;">${item.quantity}</span><button class="qty-incr" data-index="${i}" style="background:#4a7cff; width:28px; height:28px; border-radius:6px; color:white;">+</button></div>`;
         container.appendChild(div);
     }
-    
-    document.querySelectorAll('.qty-decr').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const idx = parseInt(btn.dataset.index);
-            if (orderItems[idx].quantity > 0) {
-                orderItems[idx].quantity--;
-                document.getElementById(`qty_${idx}`).innerText = orderItems[idx].quantity;
-                updateSummary();
-            }
-        });
-    });
-    
-    document.querySelectorAll('.qty-incr').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const idx = parseInt(btn.dataset.index);
-            orderItems[idx].quantity++;
-            document.getElementById(`qty_${idx}`).innerText = orderItems[idx].quantity;
-            updateSummary();
-        });
-    });
-    
+    document.querySelectorAll('.qty-decr').forEach(btn => { btn.addEventListener('click', () => { const idx = parseInt(btn.dataset.index); if (orderItems[idx].quantity > 0) { orderItems[idx].quantity--; document.getElementById(`qty_${idx}`).innerText = orderItems[idx].quantity; updateSummary(); } }); });
+    document.querySelectorAll('.qty-incr').forEach(btn => { btn.addEventListener('click', () => { const idx = parseInt(btn.dataset.index); orderItems[idx].quantity++; document.getElementById(`qty_${idx}`).innerText = orderItems[idx].quantity; updateSummary(); }); });
     updateSummary();
 }
 
 function updateSummary() {
     let totalSupply = 0, totalCommission = 0;
-    for (const item of orderItems) {
-        totalSupply += item.price * item.quantity;
-        totalCommission += item.margin_profit * item.quantity;
-    }
+    for (const item of orderItems) { totalSupply += item.price * item.quantity; totalCommission += item.margin_profit * item.quantity; }
     document.getElementById('totalSupplyPrice').innerHTML = `€${totalSupply.toFixed(2)}`;
     document.getElementById('totalCommission').innerHTML = `€${totalCommission.toFixed(2)}`;
     document.getElementById('totalIncrease').innerHTML = `€${(totalSupply + totalCommission).toFixed(2)}`;
@@ -353,73 +220,35 @@ function updateSummary() {
 
 async function confirmSetOrder() {
     const selectedItems = orderItems.filter(item => item.quantity > 0);
-    if (selectedItems.length === 0) {
-        showToast('Please select at least one product', 'error');
-        return;
-    }
-    
+    if (selectedItems.length === 0) { showToast('Please select at least one product', 'error'); return; }
     const orderNo = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
     const buyer = generateRandomBuyer();
-    
     let totalSupplyPrice = 0, totalCommission = 0, productsList = [];
     for (const item of selectedItems) {
         totalSupplyPrice += item.price * item.quantity;
         totalCommission += item.margin_profit * item.quantity;
-        productsList.push({
-            product_id: item.product_id, product_name: item.product_name,
-            quantity: item.quantity, unit_price: item.price,
-            commission_per_item: item.margin_profit, image_url: item.image_url
-        });
+        productsList.push({ product_id: item.product_id, product_name: item.product_name, quantity: item.quantity, unit_price: item.price, commission_per_item: item.margin_profit, image_url: item.image_url });
     }
-    
-    const startTime = new Date();
-    const initialTimeline = [{ status: "Order is placed", time: startTime.toISOString() }];
-    const paymentReceivedDelay = 5 + Math.random() * 2;
-    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
-    initialTimeline.push({ status: "Payment received from buyer", time: paymentReceivedTime.toISOString() });
-    initialTimeline.push({ status: "Payment under escrow protection", time: paymentReceivedTime.toISOString() });
-    
     const { error } = await sb.from('user_orders').insert({
         uid: selectedUser.uid, username: selectedUser.username, order_no: orderNo,
-        products: JSON.stringify(productsList),
-        total_supply_price: totalSupplyPrice, total_commission: totalCommission,
+        products: JSON.stringify(productsList), total_supply_price: totalSupplyPrice, total_commission: totalCommission,
         buyer_name: buyer.name, buyer_phone: buyer.phone, buyer_address: buyer.address,
         shipping_address: "Supplier Warehouse, Shanghai, China",
-        status: 'pending_payment', tracking_status: 'pending_payment',
-        tracking_timeline: JSON.stringify(initialTimeline),
-        payment_release_timer: paymentReleaseTimer || null,
+        status: 'pending', payment_release_timer: paymentReleaseTimer || null,
         created_at: new Date().toISOString()
     });
-    
-    if (error) {
-        showToast('Failed: ' + error.message, 'error');
-        return;
-    }
-    
+    if (error) { showToast('Failed: ' + error.message, 'error'); return; }
     if (paymentReleaseTimer && paymentReleaseTimer > 0) {
-        showToast(`订单 ${orderNo} 创建成功！${paymentReleaseTimer}分钟后自动触发`, 'success');
+        showToast(`订单 ${orderNo} 创建成功！${paymentReleaseTimer}分钟后自动触发 Payment Release`, 'success');
     } else {
-        showToast(`订单 ${orderNo} 创建成功！已添加到 Manual Release`, 'success');
-        await loadManualReleaseOrders();
+        showToast(`订单 ${orderNo} 创建成功！等待用户 Confirm 后进入 Manual Release 列表`, 'success');
     }
-    
     orderItems = orderItems.map(item => ({ ...item, quantity: 0 }));
     renderProducts();
     paymentReleaseTimer = null;
     document.getElementById('paymentTimerInput').value = '';
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
-}
-
-function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.textContent = msg;
-    toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#ffb84d;padding:10px 20px;border-radius:40px;font-size:13px;z-index:10000;';
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-}
-
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+function showToast(msg) { const toast = document.createElement('div'); toast.textContent = msg; toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#ffb84d;padding:10px 20px;border-radius:40px;font-size:13px;z-index:10000;'; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2000); }
 window.loadSetordersPage = loadSetordersPage;

@@ -29,13 +29,16 @@
         .timeline-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 1; }
         .timeline-icon.completed { background: #10b981; color: white; }
         .timeline-icon.current { background: #ff7a00; color: white; animation: pulse 1.5s infinite; }
+        .timeline-icon.waiting { background: #fef3c7; color: #d97706; animation: pulseOrange 2s infinite; }
         .timeline-icon.pending { background: #e2e8f0; color: #94a3b8; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,122,0,0.4); } 70% { box-shadow: 0 0 0 8px rgba(255,122,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,122,0,0); } }
+        @keyframes pulseOrange { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; box-shadow: 0 0 0 4px rgba(255,122,0,0.2); } }
         .timeline-content { flex: 1; }
         .timeline-status { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 4px; }
         .timeline-time { font-size: 11px; color: #94a3b8; }
         .timeline-item.completed .timeline-status { color: #10b981; }
         .timeline-item.current .timeline-status { color: #ff7a00; }
+        .timeline-item.waiting .timeline-status { color: #d97706; }
         .timeline-item.pending .timeline-status { color: #94a3b8; }
         .current-status-card { background: linear-gradient(135deg, #fff7ed, #ffe7cc); margin: 0 16px 20px; padding: 16px; border-radius: 20px; border: 1px solid rgba(255,122,0,0.2); }
         .current-status-label { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
@@ -101,17 +104,36 @@ function renderTimeline() {
     let timeline = []; try { timeline = JSON.parse(orderData.tracking_timeline || '[]'); } catch(e) { timeline = []; }
     if (timeline.length === 0) { timelineContainer.innerHTML = '<div style="text-align:center; padding:40px;">物流信息加载中...</div>'; currentStatusCard.innerHTML = '<div class="current-status-label">当前状态</div><div class="current-status-text">等待物流更新...</div>'; return; }
     let now = new Date(), currentIndex = -1;
-    for (let i = 0; i < timeline.length; i++) { if (new Date(timeline[i].time) <= now) currentIndex = i; else break; }
+    for (let i = 0; i < timeline.length; i++) {
+        let itemTime = new Date(timeline[i].time);
+        if (!isNaN(itemTime.getTime()) && itemTime <= now) currentIndex = i;
+        else break;
+    }
     let last = timeline[timeline.length - 1];
-    if (last && new Date(last.time) <= now && orderData.status !== 'delivered') { sb.from('user_orders').update({ status: 'delivered' }).eq('order_no', orderData.order_no); orderData.status = 'delivered'; }
-    if (currentIndex >= 0 && timeline[currentIndex]) {
-        currentStatusCard.innerHTML = `<div class="current-status-label">当前状态</div><div class="current-status-text"><i class="fas fa-truck"></i> ${timeline[currentIndex].status}</div><div class="current-status-label" style="margin-top:8px;">更新时间：${formatDate(timeline[currentIndex].time)}</div>`;
-    } else { currentStatusCard.innerHTML = `<div class="current-status-label">当前状态</div><div class="current-status-text">等待物流更新...</div>`; }
+    if (last && new Date(last.time) <= now && orderData.status !== 'delivered') {
+        sb.from('user_orders').update({ status: 'delivered' }).eq('order_no', orderData.order_no);
+        orderData.status = 'delivered';
+    }
+    let currentStatusItem = (currentIndex >= 0 && timeline[currentIndex]) ? timeline[currentIndex] : null;
+    if (currentStatusItem) {
+        let isWaiting = currentStatusItem.status === "Payment released (pending)";
+        let statusText = isWaiting ? "等待 Payment Release" : currentStatusItem.status;
+        currentStatusCard.innerHTML = `<div class="current-status-label">当前状态</div><div class="current-status-text"><i class="fas ${isWaiting ? 'fa-clock' : 'fa-truck'}"></i> ${statusText}</div><div class="current-status-label" style="margin-top:8px;">更新时间：${formatDate(currentStatusItem.time)}</div>`;
+    } else {
+        currentStatusCard.innerHTML = `<div class="current-status-label">当前状态</div><div class="current-status-text">等待物流更新...</div>`;
+    }
     timelineContainer.innerHTML = `<div class="timeline-title"><i class="fas fa-road"></i> 物流追踪</div><div class="timeline-items">${timeline.map((item, idx) => {
         let statusClass = 'pending', icon = 'far fa-circle', iconBg = '#e2e8f0', showTime = false;
+        let itemTime = new Date(item.time);
+        let isValidTime = !isNaN(itemTime.getTime());
+        let isWaiting = item.status === "Payment released (pending)";
         if (idx < currentIndex) { statusClass = 'completed'; icon = 'fas fa-check-circle'; iconBg = '#10b981'; showTime = true; }
-        else if (idx === currentIndex) { statusClass = 'current'; icon = 'fas fa-circle'; iconBg = '#ff7a00'; showTime = true; }
-        return `<div class="timeline-item ${statusClass}"><div class="timeline-icon ${statusClass}" style="background:${iconBg};"><i class="${icon}"></i></div><div class="timeline-content"><div class="timeline-status">${item.status}</div>${showTime ? `<div class="timeline-time">${formatDate(item.time)}</div>` : '<div class="timeline-time" style="color:#e2e8f0;">⏳ 待更新</div>'}</div></div>`;
+        else if (idx === currentIndex) {
+            if (isWaiting) { statusClass = 'waiting'; icon = 'fas fa-hourglass-half'; iconBg = '#fef3c7'; showTime = true; }
+            else { statusClass = 'current'; icon = 'fas fa-circle'; iconBg = '#ff7a00'; showTime = true; }
+        }
+        let displayStatus = isWaiting ? "Payment released (等待中)" : item.status;
+        return `<div class="timeline-item ${statusClass}"><div class="timeline-icon ${statusClass}" style="background:${iconBg};"><i class="${icon}"></i></div><div class="timeline-content"><div class="timeline-status">${displayStatus}</div>${showTime && isValidTime ? `<div class="timeline-time">${formatDate(item.time)}</div>` : '<div class="timeline-time" style="color:#e2e8f0;">⏳ 待更新</div>'}</div></div>`;
     }).join('')}</div>`;
 }
 function setupBottomNav() {

@@ -2,58 +2,28 @@
 
 let lastCheckTime = localStorage.getItem('last_order_check_time') || new Date().toISOString();
 let unreadCount = 0;
-
-// 从 localStorage 读取声音状态
 let audioEnabled = localStorage.getItem('audio_enabled') === 'true';
 
-// ========== 查找并使用顶部的喇叭按钮 ==========
 function initSoundButton() {
-    // 查找顶部喇叭按钮（通常是 .notification-icon 或包含 bell 图标的元素）
     const soundBtn = document.querySelector('.notification-icon')?.closest('div, a, button');
-    
-    if (!soundBtn) {
-        console.log('未找到顶部喇叭按钮，声音功能需要手动激活');
-        return;
-    }
-    
-    // 更新图标状态
+    if (!soundBtn) return;
     updateSoundIcon(soundBtn);
-    
-    // 绑定点击事件
     soundBtn.addEventListener('click', (e) => {
-        // 如果点击是跳转到 chat.html，阻止跳转，先激活声音
-        if (soundBtn.getAttribute('onclick')?.includes('chat.html')) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        
+        if (soundBtn.getAttribute('onclick')?.includes('chat.html')) { e.preventDefault(); e.stopPropagation(); }
         enableAudio(soundBtn);
-        
-        // 激活后延迟跳转（如果需要）
-        setTimeout(() => {
-            if (soundBtn.getAttribute('onclick')?.includes('chat.html')) {
-                window.location.href = 'chat.html';
-            }
-        }, 300);
+        setTimeout(() => { if (soundBtn.getAttribute('onclick')?.includes('chat.html')) window.location.href = 'chat.html'; }, 300);
     });
 }
 
 function updateSoundIcon(btn) {
     const icon = btn.querySelector('i');
     if (!icon) return;
-    
-    if (audioEnabled) {
-        icon.className = 'fas fa-volume-up';
-        icon.style.color = '#ff7a00';
-    } else {
-        icon.className = 'fas fa-volume-mute';
-        icon.style.color = '#ff7a00';
-    }
+    if (audioEnabled) { icon.className = 'fas fa-volume-up'; icon.style.color = '#ff7a00'; }
+    else { icon.className = 'fas fa-volume-mute'; icon.style.color = '#ff7a00'; }
 }
 
 function enableAudio(btn) {
     if (audioEnabled) return;
-    
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
@@ -66,16 +36,12 @@ function enableAudio(btn) {
         audioEnabled = true;
         localStorage.setItem('audio_enabled', 'true');
         updateSoundIcon(btn);
-        console.log('🔊 声音已启用（全局生效）');
-        
-        // 播放测试音
         setTimeout(() => playSound(), 100);
     }).catch(e => console.log('音频激活失败:', e));
 }
 
 function playSound() {
     if (!audioEnabled) return;
-    
     try {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioContext.createOscillator();
@@ -91,200 +57,77 @@ function playSound() {
     } catch(e) {}
 }
 
-// ========== 弹窗函数 ==========
 function showPopup(order) {
     let stack = document.querySelector('.toast-stack');
-    if (!stack) {
-        stack = document.createElement('div');
-        stack.className = 'toast-stack';
-        document.body.appendChild(stack);
-    }
-    
-    const toast = document.createElement('div');
-    toast.className = 'order-toast-metal';
-    
+    if (!stack) { stack = document.createElement('div'); stack.className = 'toast-stack'; document.body.appendChild(stack); }
+    const toast = document.createElement('div'); toast.className = 'order-toast-metal';
     let productsText = '';
     try {
         let products = order.products;
         if (typeof products === 'string') products = JSON.parse(products);
-        if (Array.isArray(products)) {
-            productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
-        }
-    } catch(e) {
-        productsText = '新订单';
-    }
-    
-    toast.innerHTML = `
-        <div class="toast-metal-content">
-            <div class="toast-metal-icon"><i class="fas fa-gift"></i></div>
-            <div class="toast-metal-info">
-                <div class="toast-metal-title">📦 新订单通知</div>
-                <div class="toast-metal-order">${order.order_no}</div>
-                <div class="toast-metal-product">${productsText.substring(0, 35)}</div>
-            </div>
-            <div class="toast-metal-amount">€${(order.total_supply_price || 0).toFixed(2)}</div>
-            <div class="toast-metal-close"><i class="fas fa-times"></i></div>
-        </div>
-        <div class="toast-metal-progress"></div>
-        <div class="toast-metal-shimmer"></div>
-    `;
-    
+        if (Array.isArray(products)) productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
+    } catch(e) { productsText = '新订单'; }
+    toast.innerHTML = `<div class="toast-metal-content"><div class="toast-metal-icon"><i class="fas fa-gift"></i></div><div class="toast-metal-info"><div class="toast-metal-title">📦 新订单通知</div><div class="toast-metal-order">${order.order_no}</div><div class="toast-metal-product">${productsText.substring(0, 35)}</div></div><div class="toast-metal-amount">€${(order.total_supply_price || 0).toFixed(2)}</div><div class="toast-metal-close"><i class="fas fa-times"></i></div></div><div class="toast-metal-progress"></div><div class="toast-metal-shimmer"></div>`;
     stack.insertBefore(toast, stack.firstChild);
-    
     let timeoutId = setTimeout(() => removeToast(toast), 5000);
-    
     const closeBtn = toast.querySelector('.toast-metal-close');
-    closeBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        clearTimeout(timeoutId);
-        removeToast(toast);
-    });
-    
-    toast.addEventListener('click', (e) => {
-        if (e.target.closest('.toast-metal-close')) return;
-        clearTimeout(timeoutId);
-        removeToast(toast);
-        window.location.href = 'orders.html';
-    });
+    closeBtn.addEventListener('click', (e) => { e.stopPropagation(); clearTimeout(timeoutId); removeToast(toast); });
+    toast.addEventListener('click', (e) => { if (e.target.closest('.toast-metal-close')) return; clearTimeout(timeoutId); removeToast(toast); window.location.href = 'orders.html'; });
 }
 
-function removeToast(toast) {
-    toast.classList.add('exit');
-    setTimeout(() => {
-        if (toast.parentNode) toast.remove();
-    }, 300);
-}
+function removeToast(toast) { toast.classList.add('exit'); setTimeout(() => { if (toast.parentNode) toast.remove(); }, 300); }
 
 function updateBadge() {
     const ordersBtn = document.querySelector('.nav-item[data-page="orders"]');
     if (!ordersBtn) return;
     let badge = ordersBtn.querySelector('.order-badge');
     if (unreadCount > 0) {
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.className = 'order-badge';
-            ordersBtn.style.position = 'relative';
-            ordersBtn.appendChild(badge);
-        }
+        if (!badge) { badge = document.createElement('span'); badge.className = 'order-badge'; ordersBtn.style.position = 'relative'; ordersBtn.appendChild(badge); }
         badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
         badge.style.cssText = 'position:absolute;top:-5px;right:-5px;background:#ef4444;color:white;font-size:10px;padding:2px 6px;border-radius:20px;';
-    } else if (badge) {
-        badge.remove();
-    }
+    } else if (badge) { badge.remove(); }
 }
 
-function clearOrderBadge() {
-    unreadCount = 0;
-    const ordersBtn = document.querySelector('.nav-item[data-page="orders"]');
-    if (ordersBtn) {
-        const badge = ordersBtn.querySelector('.order-badge');
-        if (badge) badge.remove();
-    }
-    localStorage.setItem('last_order_check_time', new Date().toISOString());
-}
+function clearOrderBadge() { unreadCount = 0; const ordersBtn = document.querySelector('.nav-item[data-page="orders"]'); if (ordersBtn) { const badge = ordersBtn.querySelector('.order-badge'); if (badge) badge.remove(); } localStorage.setItem('last_order_check_time', new Date().toISOString()); }
 
 async function checkOrders() {
     const userStr = localStorage.getItem('currentUser');
     if (!userStr) return;
     const user = JSON.parse(userStr);
-    
     if (typeof sb === 'undefined') return;
-    
     try {
+        // 只查询 status = 'pending' 的订单（用户尚未确认的订单才需要通知）
         const { data, error } = await sb
             .from('user_orders')
             .select('*')
             .eq('uid', user.uid)
             .eq('status', 'pending')
             .gt('created_at', lastCheckTime);
-        
         if (error || !data || data.length === 0) return;
-        
         for (const order of data) {
             if (audioEnabled) playSound();
             showPopup(order);
             unreadCount++;
             updateBadge();
-            
             if (Notification.permission === 'granted') {
-                new Notification('📦 新订单', {
-                    body: `${order.order_no} - €${(order.total_supply_price || 0).toFixed(2)}`,
-                    icon: 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png'
-                });
+                new Notification('📦 新订单', { body: `${order.order_no} - €${(order.total_supply_price || 0).toFixed(2)}`, icon: 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png' });
             }
         }
-        
         lastCheckTime = new Date().toISOString();
         localStorage.setItem('last_order_check_time', lastCheckTime);
     } catch(e) {}
 }
 
-// ========== 样式 ==========
+// 样式
 const style = document.createElement('style');
 style.textContent = `
-    .toast-stack {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 100000;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 12px;
-        padding: 12px;
-        pointer-events: none;
-    }
-    
-    .order-toast-metal {
-        pointer-events: auto;
-        width: 100%;
-        max-width: 380px;
-        margin: 0 auto;
-        position: relative;
-        background: linear-gradient(145deg, #2a2a3e, #1a1a2e);
-        border-radius: 20px;
-        border-bottom: 3px solid #ff7a00;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-        animation: metalSlideIn 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
-        overflow: hidden;
-        cursor: pointer;
-    }
-    
-    .order-toast-metal.exit {
-        animation: metalSlideOut 0.3s ease forwards;
-    }
-    
-    @keyframes metalSlideIn {
-        0% { opacity: 0; transform: translateY(-80px); }
-        100% { opacity: 1; transform: translateY(0); }
-    }
-    
-    @keyframes metalSlideOut {
-        0% { opacity: 1; transform: translateY(0); }
-        100% { opacity: 0; transform: translateY(-80px); }
-    }
-    
-    .toast-metal-content {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        padding: 16px 18px;
-        position: relative;
-        z-index: 2;
-    }
-    
-    .toast-metal-icon {
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(145deg, #3a3a50, #2a2a3e);
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
+    .toast-stack { position: fixed; top: 0; left: 0; right: 0; z-index: 100000; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 12px; pointer-events: none; }
+    .order-toast-metal { pointer-events: auto; width: 100%; max-width: 380px; margin: 0 auto; position: relative; background: linear-gradient(145deg, #2a2a3e, #1a1a2e); border-radius: 20px; border-bottom: 3px solid #ff7a00; box-shadow: 0 10px 25px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1); animation: metalSlideIn 0.4s cubic-bezier(0.2,0.9,0.4,1.1) forwards; overflow: hidden; cursor: pointer; }
+    .order-toast-metal.exit { animation: metalSlideOut 0.3s ease forwards; }
+    @keyframes metalSlideIn { 0% { opacity: 0; transform: translateY(-80px); } 100% { opacity: 1; transform: translateY(0); } }
+    @keyframes metalSlideOut { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
+    .toast-metal-content { display: flex; align-items: center; gap: 14px; padding: 16px 18px; position: relative; z-index: 2; }
+    .toast-metal-icon { width: 48px; height: 48px; background: linear-gradient(145deg, #3a3a50, #2a2a3e); border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), 0 2px 4px rgba(0,0,0,0.2); }
     .toast-metal-icon i { font-size: 22px; color: #ff7a00; }
     .toast-metal-info { flex: 1; }
     .toast-metal-title { font-size: 13px; font-weight: 700; color: #e0e0f0; letter-spacing: 0.5px; }
@@ -294,60 +137,18 @@ style.textContent = `
     .toast-metal-close { width: 28px; height: 28px; background: rgba(255,255,255,0.05); border-radius: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
     .toast-metal-close:hover { background: rgba(255,255,255,0.15); }
     .toast-metal-close i { font-size: 12px; color: rgba(255,255,255,0.5); }
-    .toast-metal-progress {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 3px;
-        width: 100%;
-        background: linear-gradient(90deg, #ff7a00, #ffcc00);
-        animation: progressShrink 5s linear forwards;
-        border-radius: 0 0 20px 20px;
-    }
-    
-    @keyframes progressShrink {
-        0% { width: 100%; }
-        100% { width: 0%; }
-    }
-    
-    .toast-metal-shimmer {
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 3px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), rgba(255,200,100,0.8), rgba(255,255,255,0.6), transparent);
-        animation: shimmerFlow 2.5s ease-in-out infinite;
-        z-index: 3;
-        pointer-events: none;
-        border-radius: 3px;
-    }
-    
-    @keyframes shimmerFlow {
-        0% { left: -100%; }
-        50% { left: 100%; }
-        100% { left: 100%; }
-    }
+    .toast-metal-progress { position: absolute; bottom: 0; left: 0; height: 3px; width: 100%; background: linear-gradient(90deg, #ff7a00, #ffcc00); animation: progressShrink 5s linear forwards; border-radius: 0 0 20px 20px; }
+    @keyframes progressShrink { 0% { width: 100%; } 100% { width: 0%; } }
+    .toast-metal-shimmer { position: absolute; top: 0; left: -100%; width: 100%; height: 3px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), rgba(255,200,100,0.8), rgba(255,255,255,0.6), transparent); animation: shimmerFlow 2.5s ease-in-out infinite; z-index: 3; pointer-events: none; border-radius: 3px; }
+    @keyframes shimmerFlow { 0% { left: -100%; } 50% { left: 100%; } 100% { left: 100%; } }
 `;
 document.head.appendChild(style);
 
-// ========== 启动 ==========
-// 初始化声音按钮
-setTimeout(() => {
-    initSoundButton();
-}, 500);
-
-// 启动轮询（5秒）
+setTimeout(() => { initSoundButton(); }, 500);
 let interval = setInterval(checkOrders, 5000);
 checkOrders();
-
-if (Notification && Notification.permission !== 'denied') {
-    Notification.requestPermission();
-}
-
+if (Notification && Notification.permission !== 'denied') Notification.requestPermission();
 window.clearOrderBadge = clearOrderBadge;
 window.updateOrderBadge = updateBadge;
 window.enableAudio = enableAudio;
-
 console.log('✅ 通知系统已启动');
-console.log('🔊 点击顶部喇叭按钮激活声音（只需激活一次，所有页面共用）');
