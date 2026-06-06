@@ -1,33 +1,203 @@
-function generateProcessingTimeline(orderCreatedAt, paymentReleaseTimer = null) {
-    const startTime = new Date(orderCreatedAt);
-    const timeline = [];
-    
-    // 状态1: Order is placed - 立即打勾
-    timeline.push({ status: "Order is placed", time: startTime.toISOString() });
-    
-    // 状态2: Payment received from buyer - 5-7分钟后打勾
-    const paymentReceivedDelay = 5 + Math.random() * 2;
-    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
-    timeline.push({ status: "Payment received from buyer", time: paymentReceivedTime.toISOString() });
-    
-    // 状态3: Payment under escrow protection - 紧跟状态2，立即打勾
-    timeline.push({ status: "Payment under escrow protection", time: paymentReceivedTime.toISOString() });
-    
-    // 状态4: Payment released
-    if (paymentReleaseTimer && paymentReleaseTimer > 0) {
-        const paymentReleasedTime = new Date(paymentReceivedTime.getTime() + paymentReleaseTimer * 60 * 1000);
-        timeline.push({ status: "Payment released", time: paymentReleasedTime.toISOString() });
-    } else {
-        const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        timeline.push({ status: "Payment released (pending)", time: futureDate.toISOString(), isPending: true });
-    }
-    
-    // 后续状态占位
-    const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
-    const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    for (let i = 0; i < subsequent.length; i++) {
-        timeline.push({ status: subsequent[i], time: futureDate.toISOString(), isPending: true });
-    }
-    
-    return timeline;
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Order Tracking - ADDITIVE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="toast.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
+    <script src="toast.js"></script>
+    <script src="notification.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d5 100%); font-family: 'Inter', sans-serif; color: #1f2937; display: flex; justify-content: center; }
+        .phone { width: 390px; min-height: 100vh; background: transparent; padding-bottom: 80px; position: relative; }
+        .page-header { padding: 20px 16px 10px; display: flex; align-items: center; gap: 16px; }
+        .page-header h1 { font-size: 24px; font-weight: 700; color: #1a1a2e; flex: 1; }
+        .back-btn { background: none; border: none; font-size: 24px; color: #ff7a00; cursor: pointer; }
+        .order-info { background: white; margin: 0 16px 20px; padding: 16px; border-radius: 20px; border: 1px solid #eef2f7; }
+        .order-no { font-size: 14px; font-weight: 600; color: #ff7a00; font-family: monospace; margin-bottom: 8px; }
+        .order-date { font-size: 12px; color: #6b7280; }
+        .timeline-container { background: white; margin: 0 16px 20px; padding: 24px 20px; border-radius: 24px; border: 1px solid #eef2f7; }
+        .timeline-title { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .timeline-title i { color: #ff7a00; }
+        .timeline-item { display: flex; gap: 16px; padding: 12px 0; position: relative; }
+        .timeline-item:not(:last-child)::before { content: ''; position: absolute; left: 15px; top: 40px; bottom: -8px; width: 2px; background: #e2e8f0; }
+        .timeline-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 1; }
+        .timeline-icon.completed { background: #10b981; color: white; }
+        .timeline-icon.current { background: #ff7a00; color: white; animation: pulse 1.5s infinite; }
+        .timeline-icon.waiting { background: #fef3c7; color: #d97706; animation: pulseOrange 2s infinite; }
+        .timeline-icon.pending { background: #e2e8f0; color: #94a3b8; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,122,0,0.4); } 70% { box-shadow: 0 0 0 8px rgba(255,122,0,0); } 100% { box-shadow: 0 0 0 0 rgba(255,122,0,0); } }
+        @keyframes pulseOrange { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; box-shadow: 0 0 0 4px rgba(255,122,0,0.2); } }
+        .timeline-content { flex: 1; }
+        .timeline-status { font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 4px; }
+        .timeline-time { font-size: 11px; color: #94a3b8; }
+        .timeline-item.completed .timeline-status { color: #10b981; }
+        .timeline-item.current .timeline-status { color: #ff7a00; }
+        .timeline-item.waiting .timeline-status { color: #d97706; }
+        .timeline-item.pending .timeline-status { color: #94a3b8; }
+        .current-status-card { background: linear-gradient(135deg, #fff7ed, #ffe7cc); margin: 0 16px 20px; padding: 16px; border-radius: 20px; border: 1px solid rgba(255,122,0,0.2); }
+        .current-status-label { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+        .current-status-text { font-size: 16px; font-weight: 700; color: #ff7a00; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: rgba(255,255,255,0.96); backdrop-filter: blur(20px); border-top: 1px solid #eef2f7; display: flex; padding: 10px 0 14px; z-index: 100; }
+        .nav-item { flex: 1; text-align: center; font-size: 12px; font-weight: 500; color: #9ca3af; cursor: pointer; position: relative; }
+        .nav-item i { display: block; font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: #ff7a00; font-weight: 600; }
+        .loading-container { display: flex; justify-content: center; align-items: center; min-height: 200px; }
+        .loading-spinner i { font-size: 40px; color: #ff7a00; animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+<div class="phone">
+    <div class="page-header">
+        <button class="back-btn" onclick="goBack()">←</button>
+        <h1>Order Tracking</h1>
+        <div style="width: 30px;"></div>
+    </div>
+    <div id="orderInfo" class="order-info"><div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i></div></div></div>
+    <div id="currentStatusCard" class="current-status-card"></div>
+    <div id="timelineContainer" class="timeline-container"></div>
+    <div class="bottom-nav">
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+        <div class="nav-item active" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+        <div class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
+    </div>
+</div>
+<script>
+let orderData = null, checkInterval = null;
+function getQueryParam(p) { return new URLSearchParams(window.location.search).get(p); }
+function formatDate(d) { if (!d) return '—'; let date = new Date(d); if (isNaN(date.getTime())) return '—'; return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function goBack() { if (checkInterval) clearInterval(checkInterval); window.location.href = 'orders.html'; }
+
+async function loadOrder() {
+    let orderNo = getQueryParam('order_no');
+    if (!orderNo) { showToast('无效的订单号', 'error'); setTimeout(() => goBack(), 1500); return; }
+    let user = getCurrentUser();
+    if (!user) { window.location.href = 'signin.html'; return; }
+    let { data: order, error } = await sb.from('user_orders').select('*').eq('order_no', orderNo).eq('uid', user.uid).single();
+    if (error || !order) { showToast('订单不存在', 'error'); setTimeout(() => goBack(), 2000); return; }
+    orderData = order;
+    renderOrderInfo();
+    renderTimeline();
+    if (checkInterval) clearInterval(checkInterval);
+    checkInterval = setInterval(async () => {
+        if (!orderData || orderData.status === 'delivered') return;
+        let { data: fresh } = await sb.from('user_orders').select('*').eq('order_no', orderData.order_no).single();
+        if (fresh) { orderData = fresh; renderTimeline(); }
+    }, 15000);
 }
+
+function renderOrderInfo() {
+    let container = document.getElementById('orderInfo');
+    if (!container) return;
+    let productsText = '';
+    try { let products = JSON.parse(orderData.products || '[]'); productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', '); } catch(e) { productsText = orderData.products || '-'; }
+    container.innerHTML = `<div class="order-no">${orderData.order_no}</div><div class="order-date">下单时间：${formatDate(orderData.created_at)}</div><div class="order-date" style="margin-top:8px;">产品：${productsText}</div><div class="order-date">总金额：€${(orderData.total_supply_price || 0).toFixed(2)}</div>`;
+}
+
+function renderTimeline() {
+    let timelineContainer = document.getElementById('timelineContainer'), currentStatusCard = document.getElementById('currentStatusCard');
+    if (!timelineContainer) return;
+    
+    let timeline = []; 
+    try { timeline = JSON.parse(orderData.tracking_timeline || '[]'); } catch(e) { timeline = []; }
+    
+    if (timeline.length === 0) { 
+        timelineContainer.innerHTML = '<div style="text-align:center; padding:40px;">物流信息加载中...</div>'; 
+        currentStatusCard.innerHTML = '<div class="current-status-label">当前状态</div><div class="current-status-text">等待物流更新...</div>'; 
+        return; 
+    }
+    
+    let now = new Date();
+    let currentIndex = -1;
+    
+    // 找到最后一个时间 <= 当前时间的状态（已完成或进行中）
+    for (let i = 0; i < timeline.length; i++) {
+        let itemTime = new Date(timeline[i].time);
+        if (!isNaN(itemTime.getTime()) && itemTime <= now) {
+            currentIndex = i;
+        } else {
+            break;
+        }
+    }
+    
+    // 检查最后一个状态是否已完成（Parcel delivered）
+    let last = timeline[timeline.length - 1];
+    if (last && new Date(last.time) <= now && orderData.status !== 'delivered') {
+        sb.from('user_orders').update({ status: 'delivered' }).eq('order_no', orderData.order_no);
+        orderData.status = 'delivered';
+    }
+    
+    // 获取当前要显示的状态
+    let currentStatusItem = (currentIndex >= 0 && timeline[currentIndex]) ? timeline[currentIndex] : null;
+    let nextStatusItem = (currentIndex + 1 < timeline.length) ? timeline[currentIndex + 1] : null;
+    
+    // 判断是否有等待中的状态（Payment released pending）
+    let hasWaitingPending = timeline.some(item => item.status === "Payment released (pending)");
+    
+    // 显示当前状态卡片
+    if (currentStatusItem) {
+        let isWaiting = currentStatusItem.status === "Payment released (pending)";
+        let statusText = isWaiting ? "等待 Payment Release" : currentStatusItem.status;
+        currentStatusCard.innerHTML = `<div class="current-status-label">当前状态</div><div class="current-status-text"><i class="fas ${isWaiting ? 'fa-clock' : 'fa-truck'}"></i> ${statusText}</div><div class="current-status-label" style="margin-top:8px;">更新时间：${formatDate(currentStatusItem.time)}</div>`;
+    } else {
+        currentStatusCard.innerHTML = `<div class="current-status-label">当前状态</div><div class="current-status-text">等待物流更新...</div>`;
+    }
+    
+    // 渲染时间线
+    timelineContainer.innerHTML = `<div class="timeline-title"><i class="fas fa-road"></i> 物流追踪</div><div class="timeline-items">${timeline.map((item, idx) => {
+        let statusClass = 'pending', icon = 'far fa-circle', iconBg = '#e2e8f0', showTime = false;
+        let itemTime = new Date(item.time);
+        let isValidTime = !isNaN(itemTime.getTime());
+        let isWaiting = item.status === "Payment released (pending)";
+        
+        if (idx < currentIndex) {
+            // 已完成的状态
+            statusClass = 'completed';
+            icon = 'fas fa-check-circle';
+            iconBg = '#10b981';
+            showTime = true;
+        } 
+        else if (idx === currentIndex) {
+            // 当前状态
+            if (isWaiting) {
+                statusClass = 'waiting';
+                icon = 'fas fa-hourglass-half';
+                iconBg = '#fef3c7';
+                showTime = true;
+            } else {
+                statusClass = 'current';
+                icon = 'fas fa-circle';
+                iconBg = '#ff7a00';
+                showTime = true;
+            }
+        }
+        // 未来状态不显示时间
+        
+        let displayStatus = isWaiting ? "Payment released (等待中)" : item.status;
+        
+        return `<div class="timeline-item ${statusClass}"><div class="timeline-icon ${statusClass}" style="background:${iconBg};"><i class="${icon}"></i></div><div class="timeline-content"><div class="timeline-status">${displayStatus}</div>${showTime && isValidTime ? `<div class="timeline-time">${formatDate(item.time)}</div>` : '<div class="timeline-time" style="color:#e2e8f0;">⏳ 待更新</div>'}</div></div>`;
+    }).join('')}</div>`;
+}
+
+function setupBottomNav() {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            let page = item.dataset.page;
+            if (page === 'dashboard') window.location.href = 'start.html';
+            else if (page === 'products') window.location.href = 'products.html';
+            else if (page === 'orders') window.location.href = 'orders.html';
+            else if (page === 'profile') window.location.href = 'dashboard.html';
+        });
+    });
+}
+setupBottomNav(); loadOrder();
+</script>
+</body>
+</html>
