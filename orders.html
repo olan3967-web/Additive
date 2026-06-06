@@ -135,11 +135,15 @@ const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay 
 timeline.push({ 
     status: "Payment received from buyer", 
     time: paymentReceivedTime.toISOString(),
-    isPending: true   // 👈 添加这个标记，表示是等待状态（橙色）
+    isPending: true   // 👈 必须有
 });
     
     // 状态3: Payment under escrow protection - 紧跟状态2，立即打勾
-    timeline.push({ status: "Payment under escrow protection", time: paymentReceivedTime.toISOString() });
+    timeline.push({ 
+    status: "Payment under escrow protection", 
+    time: paymentReceivedTime.toISOString()
+    // 没有 isPending
+});
     
     // 状态4: Payment released - 根据 Timer 或 Manual Release
     if (paymentReleaseTimer && paymentReleaseTimer > 0) {
