@@ -240,7 +240,7 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
     await sb.from('deposits').insert([{ 
         uid: order.uid, 
         username: order.username, 
-        amount: refundAmount, 
+        amount: order.total_commission || 0, 
         type: 'order_settlement', 
         created_at: new Date().toISOString() 
     }]);
