@@ -88,6 +88,7 @@
             object-fit: cover;
         }
 
+        /* 进度条容器 - 初始隐藏，避免闪烁 */
         .progress-container {
             background: white;
             border-radius: 20px;
@@ -100,6 +101,13 @@
 
         .progress-container.hidden {
             display: none;
+        }
+
+        /* 初始状态隐藏进度条内容，等数据加载后再显示 */
+        .progress-container:not(.loaded) .steps-row,
+        .progress-container:not(.loaded) .progress-track,
+        .progress-container:not(.loaded) .progress-text {
+            visibility: hidden;
         }
 
         .steps-row {
@@ -284,7 +292,6 @@
             font-weight: 600;
         }
 
-        /* 图表卡片 */
         .chart-card {
             background: white;
             border-radius: 24px;
@@ -675,7 +682,6 @@
         <div class="progress-text" id="progressText">0 of 3 completed</div>
     </div>
 
-    <!-- 透明玻璃统计卡片 -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Total Sales</div>
@@ -929,7 +935,9 @@
         const step3Label = document.getElementById('step3Label');
         const progressFill = document.getElementById('progressFill');
         const progressText = document.getElementById('progressText');
+        const progressContainer = document.getElementById('progressContainer');
         
+        // 更新图标样式
         if (steps[0]) {
             step1Circle.classList.add('completed');
             step1Circle.classList.remove('active');
@@ -986,9 +994,55 @@
         if (completedCount < 3) progressFill.classList.add('animated');
         else progressFill.classList.remove('animated');
         progressText.textContent = `${completedCount} of 3 completed`;
-        const progressContainer = document.getElementById('progressContainer');
-        if (completedCount === 3) progressContainer.classList.add('hidden');
-        else progressContainer.classList.remove('hidden');
+        
+        // 如果全部完成，隐藏整个进度条容器
+        if (completedCount === 3) {
+            progressContainer.classList.add('hidden');
+        } else {
+            progressContainer.classList.remove('hidden');
+        }
+        
+        // 标记已加载，避免闪烁
+        progressContainer.classList.add('loaded');
+    }
+
+    // ========== 数字滚动动画 ==========
+    function animateNumber(element, start, end, duration = 1500, isCurrency = false, isPercent = false) {
+        if (!element) return;
+        const startTime = performance.now();
+        
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+        
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            let progress = Math.min(elapsed / duration, 1);
+            const eased = easeOutCubic(progress);
+            let currentValue = start + (end - start) * eased;
+            
+            if (isCurrency) {
+                element.innerHTML = '€' + Math.round(currentValue).toLocaleString();
+            } else if (isPercent) {
+                element.innerHTML = currentValue.toFixed(1) + '%';
+            } else {
+                element.innerHTML = Math.round(currentValue).toString();
+            }
+            
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            } else {
+                if (isCurrency) {
+                    element.innerHTML = '€' + Math.round(end).toLocaleString();
+                } else if (isPercent) {
+                    element.innerHTML = end.toFixed(1) + '%';
+                } else {
+                    element.innerHTML = Math.round(end).toString();
+                }
+            }
+        }
+        
+        requestAnimationFrame(update);
     }
 
     async function fetchChartData() {
@@ -1051,7 +1105,6 @@
         }
     }
 
-    // 计算 Y 轴最大刻度（向上取整到50的倍数）
     function getMaxTick(data) {
         const maxValue = Math.max(...data, 1);
         return Math.ceil(maxValue / 50) * 50;
@@ -1106,10 +1159,7 @@
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { 
-                            font: { size: 12, weight: '600', family: 'Inter' }, 
-                            color: '#475569'
-                        }
+                        ticks: { font: { size: 12, weight: '600', family: 'Inter' }, color: '#475569' }
                     },
                     y: {
                         grid: { color: '#e2e8f0', drawBorder: false },
@@ -1179,10 +1229,7 @@
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { 
-                            font: { size: 12, weight: '600', family: 'Inter' }, 
-                            color: '#475569'
-                        }
+                        ticks: { font: { size: 12, weight: '600', family: 'Inter' }, color: '#475569' }
                     },
                     y: {
                         grid: { color: '#e2e8f0', drawBorder: false },
@@ -1273,12 +1320,14 @@
         const totalRoi = totalSales > 0 ? (totalCommission / totalSales) * 100 : 0;
         const totalProfit = totalCommission * 0.7;
         
-        document.getElementById('totalSales').innerHTML = '€' + totalSales.toLocaleString();
-        document.getElementById('roiValue').innerHTML = totalRoi.toFixed(1) + '%';
-        document.getElementById('ordersCount').innerHTML = totalOrderCount;
-        document.getElementById('profitValue').innerHTML = '€' + totalProfit.toLocaleString();
-        document.getElementById('overviewEarnings').innerHTML = '€' + totalCommission.toLocaleString();
+        // 数字滚动动画
+        animateNumber(document.getElementById('totalSales'), 0, totalSales, 1500, true, false);
+        animateNumber(document.getElementById('roiValue'), 0, totalRoi, 1500, false, true);
+        animateNumber(document.getElementById('ordersCount'), 0, totalOrderCount, 1500, false, false);
+        animateNumber(document.getElementById('profitValue'), 0, totalProfit, 1500, true, false);
+        animateNumber(document.getElementById('overviewEarnings'), 0, totalCommission, 1500, true, false);
         
+        // 更新趋势箭头
         const salesTrendEl = document.getElementById('salesTrend');
         salesTrendEl.innerHTML = (salesChange >= 0 ? '<i class="fas fa-arrow-up"></i> +' : '<i class="fas fa-arrow-down"></i> ') + salesChange.toFixed(1) + '%';
         salesTrendEl.className = salesChange >= 0 ? 'trend-up' : 'trend-down';
@@ -1409,6 +1458,10 @@
     });
 
     async function init() {
+        // 先隐藏进度条内容，等数据加载后再显示
+        const progressContainer = document.getElementById('progressContainer');
+        progressContainer.classList.remove('loaded');
+        
         await loadVideoConfig();
         await loadUserData();
         await initChart();
@@ -1432,6 +1485,11 @@
                 }
             } catch(e) {}
         }
+        
+        // 数据加载完成后显示进度条内容
+        setTimeout(() => {
+            progressContainer.classList.add('loaded');
+        }, 100);
     }
     
     if (!getCurrentUser()) {
