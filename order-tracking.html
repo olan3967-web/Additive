@@ -118,14 +118,19 @@ function renderTimeline() {
     let currentIndex = -1;
     
     // 找到最后一个时间 <= 当前时间的状态
-    for (let i = 0; i < timeline.length; i++) {
-        let itemTime = new Date(timeline[i].time);
-        if (!isNaN(itemTime.getTime()) && itemTime <= now) {
+    let foundFuture = false;
+for (let i = 0; i < timeline.length; i++) {
+    let itemTime = new Date(timeline[i].time);
+    if (!isNaN(itemTime.getTime())) {
+        if (itemTime <= now) {
             currentIndex = i;
-        } else {
-            break;
+        } else if (!foundFuture) {
+            // 第一个未来时间的状态，作为当前等待状态
+            currentIndex = i;
+            foundFuture = true;
         }
     }
+}
     
     // 检查最后一个状态是否已完成（Parcel delivered）
     let last = timeline[timeline.length - 1];
@@ -174,7 +179,7 @@ function renderTimeline() {
         } 
         else if (idx === currentIndex) {
     // 当前状态
-    if (isWaiting || item.isPending) {  // 👈 检查 isPending 标记
+    if (isWaiting || item.isPending) {  // 👈 加上 item.isPending
         statusClass = 'waiting';
         icon = 'fas fa-hourglass-half';
         iconBg = '#fef3c7';
