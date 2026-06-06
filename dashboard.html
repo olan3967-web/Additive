@@ -143,20 +143,26 @@
             color: #7e8aa8;
         }
 
-        .stats-card,
-        .half-card {
+        /* 双卡片并排样式 */
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            margin: 16px;
+        }
+
+        .stats-card-half {
+            flex: 1;
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 122, 0, 0.5);
             border-radius: 20px;
-            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.2);
+            padding: 16px;
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease;
         }
 
-        .stats-card::before,
-        .half-card::before {
+        .stats-card-half::before {
             content: '';
             position: absolute;
             top: 0;
@@ -169,8 +175,7 @@
             pointer-events: none;
         }
 
-        .stats-card::after,
-        .half-card::after {
+        .stats-card-half::after {
             content: '';
             position: absolute;
             bottom: -2px;
@@ -182,59 +187,27 @@
             pointer-events: none;
         }
 
+        .stats-card-half:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.28);
+        }
+
         @keyframes shimmer {
             0% { left: -100%; }
             100% { left: 200%; }
         }
 
-        .stats-card:hover,
-        .half-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 30px 40px -12px rgba(0, 0, 0, 0.25);
-            background: rgba(255, 255, 255, 0.28);
-        }
-
-        .stats-card {
-            margin: 16px;
-            padding: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
         .stat-label {
-            font-size: 13px;
+            font-size: 12px;
             color: #1f2937;
             margin-bottom: 8px;
             font-weight: 500;
         }
 
         .stat-value {
-            font-size: 28px;
-            font-weight: 800;
-            color: #1f2937;
-        }
-
-        .right-stat-value {
             font-size: 24px;
             font-weight: 800;
             color: #1f2937;
-        }
-
-        .divider-line {
-            width: 1px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.3);
-            margin: 0 16px;
-        }
-
-        .stats-left {
-            flex: 1;
-        }
-
-        .stats-right {
-            flex: 1;
-            text-align: right;
         }
 
         .wallet-card {
@@ -315,8 +288,45 @@
 
         .half-card {
             flex: 1;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 122, 0, 0.5);
+            border-radius: 20px;
             padding: 18px;
             cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .half-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transform: skewX(-20deg);
+            animation: shimmer 3s infinite;
+            pointer-events: none;
+        }
+
+        .half-card::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 10%;
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff7a00, #ffcc00, transparent);
+            border-radius: 3px;
+            pointer-events: none;
+        }
+
+        .half-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.28);
         }
 
         .half-card-header {
@@ -329,8 +339,8 @@
         .half-card-icon {
             width: 48px;
             height: 48px;
-            border-radius: 16px;
             background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -351,8 +361,10 @@
             text-decoration: none;
         }
 
-        .half-card div[style] {
-            color: #4b5563 !important;
+        .half-card .earnings-amount {
+            font-size: 12px;
+            color: #4b5563;
+            margin-top: 6px;
         }
 
         .glass-card {
@@ -468,8 +480,8 @@
         @media (max-width: 390px) {
             .phone { width: 100%; }
             .grid-label { font-size: 9px; }
-            .stat-value { font-size: 22px; }
-            .right-stat-value { font-size: 18px; }
+            .stat-value { font-size: 20px; }
+            .wallet-balance { font-size: 28px; }
         }
     </style>
     <link rel="stylesheet" href="user-common.css">
@@ -492,15 +504,15 @@
         </div>
     </div>
 
-    <div class="stats-card">
-        <div class="stats-left">
+    <!-- 双卡片并排：Today's Earnings 和 Pending Release -->
+    <div class="stats-row">
+        <div class="stats-card-half">
             <div class="stat-label">Today's Earnings</div>
             <div class="stat-value" id="totalCommissions">€0.00</div>
         </div>
-        <div class="divider-line"></div>
-        <div class="stats-right">
+        <div class="stats-card-half">
             <div class="stat-label">Pending Release</div>
-            <div class="right-stat-value" id="pendingReleaseAmount">€0.00</div>
+            <div class="stat-value" id="pendingReleaseAmount">€0.00</div>
         </div>
     </div>
 
@@ -520,7 +532,7 @@
                 <span class="view-link">View →</span>
             </div>
             <div class="half-card-title">My Sales</div>
-            <div style="font-size: 12px; color: #4b5563; margin-top: 6px;" id="salesAmount">€0.00 earned</div>
+            <div class="earnings-amount" id="salesAmount">€0.00 earned</div>
         </div>
         <div class="half-card" onclick="location.href='start.html'">
             <div class="half-card-header">
@@ -528,7 +540,7 @@
                 <span class="view-link">View →</span>
             </div>
             <div class="half-card-title">Sourcing</div>
-            <div style="font-size: 12px; color: #4b5563; margin-top: 6px;">Find products</div>
+            <div class="earnings-amount">Find products</div>
         </div>
     </div>
 
@@ -807,7 +819,7 @@
             .select('total_supply_price, total_commission, tracking_timeline')
             .eq('uid', user.uid)
             .eq('status', 'processing');
-        
+
         let pendingReleaseTotal = 0;
         for (const order of processingOrders || []) {
             let timeline = [];
@@ -815,11 +827,19 @@
                 timeline = JSON.parse(order.tracking_timeline || '[]');
             } catch(e) {}
             
-            // 检查 Payment released 是否还未完成（还在等待中）
-            const paymentReleasedDone = timeline.find(t => t.status === 'Payment released' && !t.isPending);
-            const paymentReleasedPending = timeline.find(t => t.status === 'Payment released (pending)' || (t.status === 'Payment released' && t.isPending === true));
+            // 查找 Payment released 相关状态
+            // 完成状态：Payment released 且没有 isPending 标记
+            const paymentReleasedCompleted = timeline.find(t => t.status === 'Payment released' && !t.isPending);
             
-            if (!paymentReleasedDone && paymentReleasedPending) {
+            // 等待状态：Payment released (pending) 或 Payment released 且 isPending === true
+            const paymentReleasedPending = timeline.find(t => t.status === 'Payment released (pending)');
+            const timerPaymentReleasedPending = timeline.find(t => t.status === 'Payment released' && t.isPending === true);
+            
+            const hasPending = paymentReleasedPending || timerPaymentReleasedPending;
+            const hasCompleted = paymentReleasedCompleted;
+            
+            // 只有当存在等待状态且没有完成状态时，才计入 Pending Release
+            if (hasPending && !hasCompleted) {
                 pendingReleaseTotal += (order.total_supply_price || 0) + (order.total_commission || 0);
             }
         }
