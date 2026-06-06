@@ -702,10 +702,12 @@
                 }
             }
 
-            const hasRealData = Object.values(productSalesMap).some(v => v.quantity > 0);
-            if (!hasRealData && userProducts.length > 0) {
-                productSalesMap = generateMockSalesData(userProducts);
-            }
+            // 不再生成模拟数据，显示空状态
+const hasRealData = Object.values(productSalesMap).some(v => v.quantity > 0);
+if (!hasRealData) {
+    // 不生成模拟数据，直接显示空
+    productSalesMap = {};
+}
 
             const totalProducts = userProducts.length;
             const totalOrders = Object.values(productSalesMap).reduce((sum, v) => sum + v.quantity, 0);
