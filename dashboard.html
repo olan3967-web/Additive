@@ -820,26 +820,29 @@
             .eq('uid', user.uid)
             .eq('status', 'processing');
 
+        const now = new Date();
         let pendingReleaseTotal = 0;
+
         for (const order of processingOrders || []) {
             let timeline = [];
             try {
                 timeline = JSON.parse(order.tracking_timeline || '[]');
             } catch(e) {}
             
-            // 查找 Payment released 相关状态
-            // 完成状态：Payment released 且没有 isPending 标记
-            const paymentReleasedCompleted = timeline.find(t => t.status === 'Payment released' && !t.isPending);
+            // 查找 Payment released 状态
+            const paymentReleased = timeline.find(t => t.status === 'Payment released');
             
-            // 等待状态：Payment released (pending) 或 Payment released 且 isPending === true
-            const paymentReleasedPending = timeline.find(t => t.status === 'Payment released (pending)');
-            const timerPaymentReleasedPending = timeline.find(t => t.status === 'Payment released' && t.isPending === true);
+            // 判断 Payment released 是否已经打勾（时间已到）
+            let isPaymentReleased = false;
+            if (paymentReleased) {
+                const releasedTime = new Date(paymentReleased.time);
+                if (releasedTime <= now) {
+                    isPaymentReleased = true;
+                }
+            }
             
-            const hasPending = paymentReleasedPending || timerPaymentReleasedPending;
-            const hasCompleted = paymentReleasedCompleted;
-            
-            // 只有当存在等待状态且没有完成状态时，才计入 Pending Release
-            if (hasPending && !hasCompleted) {
+            // 如果 Payment released 还没有打勾，则计入 Pending Release
+            if (!isPaymentReleased) {
                 pendingReleaseTotal += (order.total_supply_price || 0) + (order.total_commission || 0);
             }
         }
