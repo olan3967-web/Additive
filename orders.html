@@ -261,7 +261,8 @@ async function checkAndActivateTimers() {
             if (timeline[i].status === "Payment released (pending)") {
                 let pendingTime = new Date(timeline[i].time);
                 if (pendingTime <= now) {
-                    await activatePaymentRelease(order.order_no, pendingTime);
+                    // 修改这里：传入当前时间 now，而不是 pendingTime
+                    await activatePaymentRelease(order.order_no, now);
                 }
                 break;
             }
