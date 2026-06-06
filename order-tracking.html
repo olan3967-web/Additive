@@ -168,9 +168,15 @@ function renderTimeline() {
     
     // Display current status card with icon
     if (currentStatusItem) {
-        let isWaiting = currentStatusItem.status === "Payment released (pending)" || currentStatusItem.isPending === true;
-        let statusText = currentStatusItem.status === "Payment released (pending)" ? "Payment released" : currentStatusItem.status;
-if (isWaiting && currentStatusItem.status !== "Payment released (pending)") statusText = "Pending";
+    let isWaiting = currentStatusItem.status === "Payment released (pending)" || currentStatusItem.isPending === true;
+    // 直接显示当前状态，不改成 "Pending"
+    let statusText = currentStatusItem.status === "Payment released (pending)" ? "Payment released" : currentStatusItem.status;
+    let statusIcon = isWaiting ? 'fa-clock' : getStatusIcon(currentStatusItem.status, false);
+    let displayTime = !isWaiting && currentStatusItem.time ? formatDate(currentStatusItem.time) : '';
+    currentStatusCard.innerHTML = `<div class="current-status-label">Current Tracking Status</div>
+        <div class="current-status-text"><i class="fas ${statusIcon}"></i> ${statusText}</div>
+        ${displayTime ? `<div class="current-status-label" style="margin-top:8px;">Recent Updated Time: ${displayTime}</div>` : ''}`;
+}
         let statusIcon = isWaiting ? 'fa-clock' : getStatusIcon(currentStatusItem.status, false);
         let displayTime = !isWaiting && currentStatusItem.time ? formatDate(currentStatusItem.time) : '';
         currentStatusCard.innerHTML = `<div class="current-status-label">Current Tracking Status</div>
