@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Orders - ADDITIVE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="toast.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,758 +12,323 @@
     <script src="toast.js"></script>
     <script src="notification.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #f5f7fb;
-            font-family: 'Inter', sans-serif;
-            color: #1f2937;
-            display: flex;
-            justify-content: center;
-        }
-
-        .phone {
-            width: 390px;
-            min-height: 100vh;
-            background: #f5f7fb;
-            padding-bottom: 80px;
-            position: relative;
-        }
-
-        .page-header {
-            padding: 20px 16px 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .page-header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1a1a2e;
-        }
-
-        .back-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: #ff7a00;
-            cursor: pointer;
-        }
-
-        .tabs {
-            display: flex;
-            margin: 0 16px 16px;
-            background: white;
-            border-radius: 40px;
-            padding: 4px;
-            border: 1px solid #eef2f7;
-        }
-
-        .tab-btn {
-            flex: 1;
-            background: none;
-            border: none;
-            padding: 10px;
-            border-radius: 36px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #94a3b8;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .tab-btn.active {
-            background: #ff7a00;
-            color: white;
-        }
-
-        .orders-list {
-            margin: 0 16px;
-        }
-
-        .order-card {
-            background: white;
-            border-radius: 20px;
-            padding: 16px;
-            margin-bottom: 12px;
-            border: 1px solid #eef2f7;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .order-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .order-no {
-            font-size: 13px;
-            font-weight: 600;
-            color: #ff7a00;
-            font-family: monospace;
-        }
-
-        .order-date {
-            font-size: 10px;
-            color: #94a3b8;
-        }
-
-        .order-products {
-            font-size: 13px;
-            color: #1f2937;
-            margin-bottom: 8px;
-            word-break: break-word;
-        }
-
-        .order-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid #eef2f7;
-        }
-
-        .order-total {
-            font-size: 14px;
-            font-weight: 700;
-            color: #ff7a00;
-        }
-
-        .order-commission {
-            font-size: 12px;
-            color: #10b981;
-        }
-
-        .status-badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .status-pending {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .status-processing {
-            background: #dbeafe;
-            color: #2563eb;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #94a3b8;
-        }
-
-        .empty-state i {
-            font-size: 48px;
-            color: #cbd5e1;
-            margin-bottom: 12px;
-            display: block;
-        }
-
-        .order-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            visibility: hidden;
-            opacity: 0;
-            transition: all 0.3s;
-        }
-
-        .order-modal.active {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .order-modal-content {
-            background: white;
-            border-radius: 28px;
-            width: 90%;
-            max-width: 350px;
-            max-height: 80vh;
-            overflow-y: auto;
-            padding: 24px;
-        }
-
-        .order-modal-content h3 {
-            margin-bottom: 16px;
-            color: #1a1a2e;
-        }
-
-        .product-list {
-            margin-bottom: 20px;
-        }
-
-        .product-item-modal {
-            display: flex;
-            gap: 12px;
-            padding: 10px 0;
-            border-bottom: 1px solid #eef2f7;
-        }
-
-        .product-item-modal img {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            object-fit: cover;
-        }
-
-        .buyer-info {
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-
-        .buyer-info p {
-            font-size: 13px;
-            margin-bottom: 6px;
-        }
-
-        .btn-check-shipping {
-            width: 100%;
-            background: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            padding: 12px;
-            border-radius: 40px;
-            font-weight: 600;
-            color: #475569;
-            cursor: pointer;
-            margin-bottom: 12px;
-        }
-
-        .btn-check-shipping.checked {
-            background: #ff7a00;
-            color: white;
-            border-color: #ff7a00;
-        }
-
-        .btn-confirm {
-            width: 100%;
-            background: #ff7a00;
-            border: none;
-            padding: 14px;
-            border-radius: 40px;
-            color: white;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .btn-confirm.disabled {
-            background: #cbd5e1;
-            cursor: not-allowed;
-        }
-
-        .shipping-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            z-index: 1100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            visibility: hidden;
-            opacity: 0;
-            transition: all 0.3s;
-        }
-
-        .shipping-modal.active {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid #eef2f7;
-            display: flex;
-            padding: 10px 0 14px;
-            z-index: 100;
-        }
-
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            font-size: 11px;
-            color: #9ca3af;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .nav-item i {
-            display: block;
-            font-size: 20px;
-            margin-bottom: 4px;
-        }
-
-        .nav-item.active {
-            color: #ff7a00;
-            font-weight: 600;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f5f7fb; font-family: 'Inter', sans-serif; color: #1f2937; display: flex; justify-content: center; }
+        .phone { width: 390px; min-height: 100vh; background: #f5f7fb; padding-bottom: 80px; position: relative; }
+        .page-header { padding: 20px 16px 10px; display: flex; justify-content: space-between; align-items: center; }
+        .page-header h1 { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+        .back-btn { background: none; border: none; font-size: 24px; color: #ff7a00; cursor: pointer; }
+        .tabs { display: flex; margin: 0 16px 16px; background: white; border-radius: 40px; padding: 4px; border: 1px solid #eef2f7; }
+        .tab-btn { flex: 1; background: none; border: none; padding: 10px; border-radius: 36px; font-size: 14px; font-weight: 600; color: #94a3b8; cursor: pointer; }
+        .tab-btn.active { background: #ff7a00; color: white; }
+        .orders-list { margin: 0 16px; }
+        .order-card { background: white; border-radius: 20px; padding: 16px; margin-bottom: 12px; border: 1px solid #eef2f7; cursor: pointer; transition: all 0.2s; }
+        .order-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .order-no { font-size: 13px; font-weight: 600; color: #ff7a00; font-family: monospace; }
+        .order-date { font-size: 10px; color: #94a3b8; }
+        .order-products { font-size: 13px; color: #1f2937; margin-bottom: 8px; }
+        .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eef2f7; }
+        .order-total { font-size: 14px; font-weight: 700; color: #ff7a00; }
+        .order-commission { font-size: 12px; color: #10b981; }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-pending-payment { background: #fef3c7; color: #d97706; }
+        .status-processing { background: #dbeafe; color: #2563eb; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
+        .empty-state i { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; display: block; }
+        .order-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: all 0.3s; }
+        .order-modal.active { visibility: visible; opacity: 1; }
+        .order-modal-content { background: white; border-radius: 28px; width: 90%; max-width: 350px; max-height: 80vh; overflow-y: auto; padding: 24px; }
+        .order-modal-content h3 { margin-bottom: 16px; color: #1a1a2e; }
+        .product-list { margin-bottom: 20px; }
+        .product-item-modal { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eef2f7; }
+        .product-item-modal img { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; }
+        .buyer-info { background: #f8fafc; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
+        .buyer-info p { font-size: 13px; margin-bottom: 6px; }
+        .btn-check-shipping { width: 100%; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 12px; border-radius: 40px; font-weight: 600; color: #475569; cursor: pointer; margin-bottom: 12px; }
+        .btn-check-shipping.checked { background: #ff7a00; color: white; border-color: #ff7a00; }
+        .btn-confirm { width: 100%; background: #ff7a00; border: none; padding: 14px; border-radius: 40px; color: white; font-weight: 700; font-size: 16px; cursor: pointer; }
+        .btn-confirm.disabled { background: #cbd5e1; cursor: not-allowed; }
+        .shipping-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1100; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: all 0.3s; }
+        .shipping-modal.active { visibility: visible; opacity: 1; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: rgba(255,255,255,0.96); backdrop-filter: blur(20px); border-top: 1px solid #eef2f7; display: flex; padding: 10px 0 14px; z-index: 100; }
+        .nav-item { flex: 1; text-align: center; font-size: 11px; color: #9ca3af; cursor: pointer; position: relative; }
+        .nav-item i { display: block; font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: #ff7a00; font-weight: 600; }
     </style>
 </head>
 <body>
 <div class="phone">
-
     <div class="page-header">
         <button class="back-btn" onclick="goBack()">←</button>
         <h1>Orders</h1>
         <div style="width: 30px;"></div>
     </div>
-
     <div class="tabs">
         <button class="tab-btn active" data-tab="new">New</button>
         <button class="tab-btn" data-tab="processing">Processing</button>
     </div>
-
     <div id="newOrdersList" class="orders-list"></div>
     <div id="processingOrdersList" class="orders-list" style="display: none;"></div>
-
     <div class="bottom-nav">
         <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
         <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
         <div class="nav-item active" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
         <div class="nav-item" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
     </div>
-
 </div>
 
-<!-- 做单弹窗 -->
 <div id="orderModal" class="order-modal">
     <div class="order-modal-content">
         <h3 id="modalOrderNo">订单详情</h3>
         <div id="modalProductsList" class="product-list"></div>
         <div id="modalBuyerInfo" class="buyer-info"></div>
-        <button id="checkShippingBtn" class="btn-check-shipping">
-            <i class="fas fa-truck"></i> Check Shipping Info
-        </button>
-        <button id="confirmOrderBtn" class="btn-confirm disabled" disabled>
-            Confirm Order
-        </button>
+        <button id="checkShippingBtn" class="btn-check-shipping"><i class="fas fa-truck"></i> Check Shipping Info</button>
+        <button id="confirmOrderBtn" class="btn-confirm disabled" disabled>Confirm Order</button>
     </div>
 </div>
 
-<!-- Shipping Info 弹窗 -->
 <div id="shippingModal" class="shipping-modal">
     <div class="order-modal-content" style="max-width: 380px;">
-        <h3><i class="fas fa-map-marker-alt"></i> 地址Confirm</h3>
-        
-        <!-- Supplier Shipping Info -->
+        <h3><i class="fas fa-map-marker-alt"></i> 地址确认</h3>
         <div style="background: #fef3c7; border-radius: 16px; padding: 16px; margin: 16px 0;">
-            <p style="font-weight: 600; color: #d97706; margin-bottom: 8px;">
-                <i class="fas fa-warehouse"></i> Supplier Shipping Info
-            </p>
-            <p id="supplierAddressText" style="font-size: 13px; line-height: 1.5; background: white; padding: 12px; border-radius: 12px;"></p>
+            <p style="font-weight: 600; color: #d97706; margin-bottom: 8px;"><i class="fas fa-warehouse"></i> Supplier Shipping Info</p>
+            <p id="supplierAddressText" style="font-size: 13px; background: white; padding: 12px; border-radius: 12px;"></p>
         </div>
-        
-        <!-- Buyer Address -->
         <div style="background: #f8fafc; border-radius: 16px; padding: 16px; margin: 0 0 16px 0;">
-            <p style="font-weight: 600; color: #1a1a2e; margin-bottom: 8px;">
-                <i class="fas fa-user"></i> Buyer Address
-            </p>
-            <p id="buyerAddressText" style="font-size: 13px; line-height: 1.5; background: white; padding: 12px; border-radius: 12px;"></p>
+            <p style="font-weight: 600; color: #1a1a2e; margin-bottom: 8px;"><i class="fas fa-user"></i> Buyer Address</p>
+            <p id="buyerAddressText" style="font-size: 13px; background: white; padding: 12px; border-radius: 12px;"></p>
         </div>
-        
         <div style="background: #e6f7ec; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
-            <p style="font-size: 12px; color: #2e7d32;">
-                <i class="fas fa-check-circle"></i> 请Confirm两个地址一致后，Back点击"Confirm发货"
-            </p>
+            <p style="font-size: 12px; color: #2e7d32;"><i class="fas fa-check-circle"></i> 请确认两个地址一致后，点击关闭</p>
         </div>
-        
-        <button id="closeShippingBtn" class="btn-confirm" style="background:#475569;">我已Confirm，Close</button>
+        <button id="closeShippingBtn" class="btn-confirm" style="background:#475569;">我已确认，关闭</button>
     </div>
 </div>
 
 <script>
-    // ========== 工具函数 ==========
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+function formatDate(dateStr) { const date = new Date(dateStr); return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function goBack() { window.location.href = 'dashboard.html'; }
+function parseProductsText(productsData) {
+    try { let products = typeof productsData === 'string' ? JSON.parse(productsData) : productsData;
+        if (!Array.isArray(products)) return '-';
+        return products.map(p => (p.product_name || '产品') + ' ×' + (p.quantity || 1)).join(', ');
+    } catch(e) { return String(productsData || '-'); }
+}
 
-    function formatDate(dateStr) {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    }
+let currentTab = 'new', pendingOrders = [], processingOrders = [], currentOrder = null, hasCheckedShipping = false;
 
-    function goBack() {
-        window.location.href = 'dashboard.html';
-    }
+// 生成初始 Timeline（状态1-3）
+function generateInitialTimeline() {
+    const startTime = new Date();
+    const timeline = [{ status: "Order is placed", time: startTime.toISOString() }];
+    const paymentReceivedDelay = 5 + Math.random() * 2;
+    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
+    timeline.push({ status: "Payment received from buyer", time: paymentReceivedTime.toISOString() });
+    timeline.push({ status: "Payment under escrow protection", time: paymentReceivedTime.toISOString() });
+    return timeline;
+}
 
-    function parseProductsText(productsData) {
-        try {
-            let products = productsData;
-            if (typeof productsData === 'string') {
-                products = JSON.parse(productsData);
-            }
-            if (!Array.isArray(products)) {
-                return '-';
-            }
-            return products.map(function(p) { return (p.product_name || '产品') + ' ×' + (p.quantity || 1); }).join(', ');
-        } catch(e) {
-            return String(productsData || '-');
+// 生成完整 Timeline（Payment Released 后）
+function generateFullTimeline(startTime, paymentReleasedTime) {
+    const timeline = [
+        { status: "Order is placed", time: startTime.toISOString() }
+    ];
+    const paymentReceivedDelay = 5 + Math.random() * 2;
+    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
+    timeline.push({ status: "Payment received from buyer", time: paymentReceivedTime.toISOString() });
+    timeline.push({ status: "Payment under escrow protection", time: paymentReceivedTime.toISOString() });
+    timeline.push({ status: "Payment released", time: paymentReleasedTime.toISOString() });
+    
+    const orderConfirmedDelay = 5 + Math.random() * 5;
+    const orderConfirmedTime = new Date(paymentReleasedTime.getTime() + orderConfirmedDelay * 60 * 1000);
+    timeline.push({ status: "Order confirmed", time: orderConfirmedTime.toISOString() });
+    
+    const preparingDelay = 30 + Math.random() * 30;
+    const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
+    timeline.push({ status: "Preparing parcel for shipment", time: preparingTime.toISOString() });
+    
+    const subsequent = ["Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
+    const totalMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
+    let intervals = [], remaining = totalMs;
+    for (let i = 0; i < subsequent.length; i++) {
+        let gap = (remaining / (subsequent.length - i)) * (0.3 + Math.random() * 0.7);
+        intervals.push(gap); remaining -= gap;
+    }
+    let laterTime = new Date(preparingTime);
+    for (let i = 0; i < subsequent.length; i++) {
+        laterTime = new Date(laterTime.getTime() + intervals[i]);
+        timeline.push({ status: subsequent[i], time: laterTime.toISOString() });
+    }
+    return timeline;
+}
+
+// 后台调用此函数触发 Payment Released
+async function triggerPaymentReleased(orderNo, delayMinutes = 0) {
+    const { data: order } = await sb.from('user_orders').select('*').eq('order_no', orderNo).single();
+    if (!order) return false;
+    
+    let timeline = JSON.parse(order.tracking_timeline || '[]');
+    let escrowTime = null;
+    for (let i = 0; i < timeline.length; i++) {
+        if (timeline[i].status === "Payment under escrow protection") { escrowTime = new Date(timeline[i].time); break; }
+    }
+    if (!escrowTime) return false;
+    
+    let paymentReleasedTime = new Date();
+    if (delayMinutes > 0) {
+        let calcTime = new Date(escrowTime.getTime() + delayMinutes * 60 * 1000);
+        if (calcTime > paymentReleasedTime) paymentReleasedTime = calcTime;
+    }
+    
+    const fullTimeline = generateFullTimeline(new Date(order.created_at), paymentReleasedTime);
+    
+    // 返还余额（货款 + 佣金）
+    const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
+    const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
+    const newBalance = (user?.balance || 0) + refundAmount;
+    await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
+    
+    // 记录返还记录
+    await sb.from('deposits').insert([{
+        uid: order.uid, username: order.username, amount: refundAmount, type: 'order_settlement',
+        created_at: new Date().toISOString()
+    }]);
+    
+    await sb.from('user_orders').update({
+        status: 'processing', tracking_status: 'processing', tracking_timeline: JSON.stringify(fullTimeline)
+    }).eq('order_no', orderNo);
+    
+    // 更新本地用户余额
+    const localUser = getCurrentUser();
+    if (localUser && localUser.uid === order.uid) {
+        localUser.balance = newBalance;
+        localStorage.setItem('currentUser', JSON.stringify(localUser));
+    }
+    return true;
+}
+
+async function loadOrders() {
+    const user = getCurrentUser();
+    if (!user) { window.location.href = 'signin.html'; return; }
+    const { data: orders } = await sb.from('user_orders').select('*').eq('uid', user.uid).order('created_at', { ascending: false });
+    pendingOrders = orders.filter(o => o.status === 'pending' || o.status === 'pending_payment');
+    processingOrders = orders.filter(o => o.status === 'processing' || o.status === 'delivered');
+    renderOrders();
+}
+function renderOrders() { renderNewOrders(); renderProcessingOrders(); }
+function renderNewOrders() {
+    const container = document.getElementById('newOrdersList');
+    if (!container) return;
+    if (pendingOrders.length === 0) { container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-inbox"></i>No new orders</div>'; return; }
+    container.innerHTML = pendingOrders.map(order => {
+        let productsText = parseProductsText(order.products);
+        let statusClass = order.status === 'pending_payment' ? 'status-pending-payment' : 'status-pending';
+        let statusText = order.status === 'pending_payment' ? 'Awaiting Payment Release' : 'Pending';
+        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${productsText.substring(0, 60)}${productsText.length > 60 ? '...' : ''}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge ${statusClass}">${statusText}</span></div></div>`;
+    }).join('');
+    document.querySelectorAll('#newOrdersList .order-card').forEach(card => card.addEventListener('click', () => openOrderModal(JSON.parse(card.dataset.order))));
+}
+function renderProcessingOrders() {
+    const container = document.getElementById('processingOrdersList');
+    if (!container) return;
+    if (processingOrders.length === 0) { container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-clock"></i>No orders in processing</div>'; return; }
+    container.innerHTML = processingOrders.map(order => {
+        let productsText = parseProductsText(order.products);
+        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${productsText.substring(0, 60)}${productsText.length > 60 ? '...' : ''}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-processing">In Transit</span></div></div>`;
+    }).join('');
+    document.querySelectorAll('#processingOrdersList .order-card').forEach(card => card.addEventListener('click', () => window.location.href = 'order-tracking.html?order_no=' + JSON.parse(card.dataset.order).order_no));
+}
+function openOrderModal(order) {
+    currentOrder = order; hasCheckedShipping = false;
+    document.getElementById('modalOrderNo').innerHTML = '订单 ' + order.order_no;
+    let productsHtml = '';
+    try {
+        let products = typeof order.products === 'string' ? JSON.parse(order.products) : order.products;
+        if (Array.isArray(products)) {
+            products.forEach(p => { productsHtml += `<div class="product-item-modal"><img src="${p.image_url || 'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'}" onerror="this.src='https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'"><div style="flex:1;"><div style="font-weight:600;">${escapeHtml(p.product_name)}</div><div style="font-size:12px; color:#6b7280;">×${p.quantity} | €${p.unit_price.toFixed(2)}/each</div></div><div style="font-weight:700; color:#ff7a00;">€${(p.unit_price * p.quantity).toFixed(2)}</div></div>`; });
         }
+    } catch(e) { productsHtml = '<div>产品信息加载失败</div>'; }
+    document.getElementById('modalProductsList').innerHTML = productsHtml;
+    document.getElementById('modalBuyerInfo').innerHTML = `<p><strong>👤 买家信息</strong></p><p>姓名：${escapeHtml(order.buyer_name || '未知')}</p><p>电话：${escapeHtml(order.buyer_phone || '未知')}</p><p>地址：${escapeHtml(order.buyer_address || '未知')}</p>`;
+    let checkBtn = document.getElementById('checkShippingBtn'), confirmBtn = document.getElementById('confirmOrderBtn');
+    checkBtn.classList.remove('checked'); checkBtn.innerHTML = '<i class="fas fa-truck"></i> Check Shipping Info';
+    confirmBtn.classList.add('disabled'); confirmBtn.disabled = true;
+    document.getElementById('orderModal').classList.add('active');
+}
+document.getElementById('checkShippingBtn').addEventListener('click', function() {
+    if (!currentOrder) return;
+    let address = currentOrder.buyer_address || '未知地址';
+    document.getElementById('supplierAddressText').innerHTML = address.replace(/\n/g, '<br>');
+    document.getElementById('buyerAddressText').innerHTML = address.replace(/\n/g, '<br>');
+    document.getElementById('shippingModal').classList.add('active');
+    hasCheckedShipping = true;
+    let checkBtn = document.getElementById('checkShippingBtn'), confirmBtn = document.getElementById('confirmOrderBtn');
+    checkBtn.classList.add('checked'); checkBtn.innerHTML = '<i class="fas fa-check-circle"></i> Shipping Info Checked';
+    confirmBtn.classList.remove('disabled'); confirmBtn.disabled = false;
+});
+document.getElementById('closeShippingBtn').addEventListener('click', () => document.getElementById('shippingModal').classList.remove('active'));
+document.getElementById('confirmOrderBtn').addEventListener('click', async function() {
+    if (!hasCheckedShipping) { showToast('请先点击 Check Shipping Info 确认发货地址', 'warning'); return; }
+    if (!currentOrder) return;
+    let user = getCurrentUser();
+    if (!user) return;
+    let userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+    let currentBalance = userDataResult.data?.balance || 0;
+    if (currentBalance < currentOrder.total_supply_price) {
+        showToast('余额不足！需要 €' + currentOrder.total_supply_price.toFixed(2) + '，请先充值', 'error');
+        return;
     }
-
-    let currentTab = 'new';
-    let pendingOrders = [];
-    let processingOrders = [];
-    let currentOrder = null;
-    let hasCheckedShipping = false;
-
-    async function loadOrders() {
-        const user = getCurrentUser();
-        if (!user) {
-            window.location.href = 'signin.html';
-            return;
-        }
-
-        const { data: orders, error } = await sb
-            .from('user_orders')
-            .select('*')
-            .eq('uid', user.uid)
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error('加载订单失败:', error);
-            return;
-        }
-
-        pendingOrders = orders.filter(function(o) { return o.status === 'pending'; });
-        processingOrders = orders.filter(function(o) { return o.status === 'processing'; });
-        
-        renderOrders();
-    }
-
-    function renderOrders() {
-        renderNewOrders();
-        renderProcessingOrders();
-    }
-
-    function renderNewOrders() {
-        const container = document.getElementById('newOrdersList');
-        if (!container) return;
-
-        if (pendingOrders.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-inbox"></i>No new orders</div>';
-            return;
-        }
-
-        container.innerHTML = pendingOrders.map(function(order) {
-            var productsText = parseProductsText(order.products);
-            var displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
-            
-            return '<div class="order-card" data-order=\'' + JSON.stringify(order) + '\'>' +
-                '<div class="order-header">' +
-                    '<span class="order-no">' + order.order_no + '</span>' +
-                    '<span class="order-date">' + formatDate(order.created_at) + '</span>' +
-                '</div>' +
-                '<div class="order-products">' + displayText + '</div>' +
-                '<div class="order-footer">' +
-                    '<span class="order-total">€' + (order.total_supply_price || 0).toFixed(2) + '</span>' +
-                    '<span class="order-commission">+€' + (order.total_commission || 0).toFixed(2) + '</span>' +
-                    '<span class="status-badge status-pending">Pending</span>' +
-                '</div>' +
-            '</div>';
-        }).join('');
-
-        document.querySelectorAll('#newOrdersList .order-card').forEach(function(card) {
-            card.addEventListener('click', function() {
-                var order = JSON.parse(card.dataset.order);
-                openOrderModal(order);
-            });
-        });
-    }
-
-    function renderProcessingOrders() {
-        const container = document.getElementById('processingOrdersList');
-        if (!container) return;
-
-        if (processingOrders.length === 0) {
-            container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-clock"></i>No orders in processing</div>';
-            return;
-        }
-
-        container.innerHTML = processingOrders.map(function(order) {
-            var productsText = parseProductsText(order.products);
-            var displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
-            
-            return '<div class="order-card" data-order=\'' + JSON.stringify(order) + '\'>' +
-                '<div class="order-header">' +
-                    '<span class="order-no">' + order.order_no + '</span>' +
-                    '<span class="order-date">' + formatDate(order.created_at) + '</span>' +
-                '</div>' +
-                '<div class="order-products">' + displayText + '</div>' +
-                '<div class="order-footer">' +
-                    '<span class="order-total">€' + (order.total_supply_price || 0).toFixed(2) + '</span>' +
-                    '<span class="order-commission">+€' + (order.total_commission || 0).toFixed(2) + '</span>' +
-                    '<span class="status-badge status-processing">In Transit</span>' +
-                '</div>' +
-            '</div>';
-        }).join('');
-
-        document.querySelectorAll('#processingOrdersList .order-card').forEach(function(card) {
-            card.addEventListener('click', function() {
-                var order = JSON.parse(card.dataset.order);
-                window.location.href = 'order-tracking.html?order_no=' + order.order_no;
-            });
-        });
-    }
-
-    function openOrderModal(order) {
-        currentOrder = order;
-        hasCheckedShipping = false;
-        
-        document.getElementById('modalOrderNo').innerHTML = '订单 ' + order.order_no;
-        
-        var productsHtml = '';
-        try {
-            var products = order.products;
-            if (typeof products === 'string') {
-                products = JSON.parse(products);
-            }
-            if (Array.isArray(products)) {
-                for (var i = 0; i < products.length; i++) {
-                    var p = products[i];
-                    productsHtml += '<div class="product-item-modal">' +
-                        '<img src="' + (p.image_url || 'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product') + '" onerror="this.src=\'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product\'">' +
-                        '<div style="flex:1;">' +
-                            '<div style="font-weight:600;">' + escapeHtml(p.product_name) + '</div>' +
-                            '<div style="font-size:12px; color:#6b7280;">×' + p.quantity + ' | €' + p.unit_price.toFixed(2) + '/each</div>' +
-                        '</div>' +
-                        '<div style="font-weight:700; color:#ff7a00;">€' + (p.unit_price * p.quantity).toFixed(2) + '</div>' +
-                    '</div>';
-                }
-            } else {
-                productsHtml = '<div>产品信息加载失败</div>';
-            }
-        } catch(e) {
-            productsHtml = '<div>产品信息加载失败</div>';
-        }
-        document.getElementById('modalProductsList').innerHTML = productsHtml;
-        
-        document.getElementById('modalBuyerInfo').innerHTML = 
-            '<p><strong>👤 买家信息</strong></p>' +
-            '<p>姓名：' + escapeHtml(order.buyer_name || '未知') + '</p>' +
-            '<p>电话：' + escapeHtml(order.buyer_phone || '未知') + '</p>' +
-            '<p>地址：' + escapeHtml(order.buyer_address || '未知') + '</p>';
-        
-        var checkBtn = document.getElementById('checkShippingBtn');
-        var confirmBtn = document.getElementById('confirmOrderBtn');
-        checkBtn.classList.remove('checked');
-        checkBtn.innerHTML = '<i class="fas fa-truck"></i> Check Shipping Info';
-        confirmBtn.classList.add('disabled');
-        confirmBtn.disabled = true;
-        
-        document.getElementById('orderModal').classList.add('active');
-    }
-
-    document.getElementById('checkShippingBtn').addEventListener('click', function() {
-        if (!currentOrder) return;
-        
-        var address = currentOrder.buyer_address || '未知地址';
-        var formattedAddress = address.replace(/\n/g, '<br>');
-        
-        document.getElementById('supplierAddressText').innerHTML = formattedAddress;
-        document.getElementById('buyerAddressText').innerHTML = formattedAddress;
-        document.getElementById('shippingModal').classList.add('active');
-        
-        hasCheckedShipping = true;
-        var checkBtn = document.getElementById('checkShippingBtn');
-        var confirmBtn = document.getElementById('confirmOrderBtn');
-        checkBtn.classList.add('checked');
-        checkBtn.innerHTML = '<i class="fas fa-check-circle"></i> Shipping Info Checked';
-        confirmBtn.classList.remove('disabled');
-        confirmBtn.disabled = false;
-    });
-
-    document.getElementById('closeShippingBtn').addEventListener('click', function() {
-        document.getElementById('shippingModal').classList.remove('active');
-    });
-
-    document.getElementById('confirmOrderBtn').addEventListener('click', async function() {
-        if (!hasCheckedShipping) {
-            showToast('请先点击 Check Shipping Info Confirm发货地址', 'warning');
-            return;
-        }
-        
-        if (!currentOrder) return;
-        
-        var user = getCurrentUser();
-        if (!user) return;
-        
-        var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-        var currentBalance = userDataResult.data?.balance || 0;
-        
-        if (currentBalance < currentOrder.total_supply_price) {
-            showToast('余额不足！需要 €' + currentOrder.total_supply_price.toFixed(2) + '，请先Top Up', 'error');
-            return;
-        }
-        
-        showToast('处理订单中...', 'info');
-        
-        var newBalance = currentBalance - currentOrder.total_supply_price;
-        await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
-        
-        var finalBalance = newBalance + currentOrder.total_supply_price + currentOrder.total_commission;
-        await sb.from('users').update({ balance: finalBalance }).eq('uid', user.uid);
-        
-        var timeline = generateTrackingTimeline();
-        
-        await sb.from('user_orders').update({
-            status: 'processing',
-            tracking_status: 'processing',
-            tracking_timeline: JSON.stringify(timeline),
-            completed_at: new Date().toISOString()
-        }).eq('order_no', currentOrder.order_no);
-        
-        try {
-            var products = currentOrder.products;
-            if (typeof products === 'string') {
-                products = JSON.parse(products);
-            }
-            if (Array.isArray(products)) {
-                for (var i = 0; i < products.length; i++) {
-                    var product = products[i];
-                    for (var j = 0; j < product.quantity; j++) {
-                        await sb.from('order_history').insert({
-                            uid: user.uid,
-                            username: user.username,
-                            order_code: currentOrder.order_no,
-                            accommodation_name: product.product_name,
-                            price: product.unit_price,
-                            commission: product.commission / product.quantity,
-                            date: new Date().toISOString()
-                        });
-                    }
+    showToast('处理订单中...', 'info');
+    let newBalance = currentBalance - currentOrder.total_supply_price;
+    await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+    let initialTimeline = generateInitialTimeline();
+    await sb.from('user_orders').update({
+        status: 'pending_payment', tracking_status: 'pending_payment',
+        tracking_timeline: JSON.stringify(initialTimeline)
+    }).eq('order_no', currentOrder.order_no);
+    try {
+        let products = typeof currentOrder.products === 'string' ? JSON.parse(currentOrder.products) : currentOrder.products;
+        if (Array.isArray(products)) {
+            for (let product of products) {
+                for (let j = 0; j < product.quantity; j++) {
+                    await sb.from('order_history').insert({ uid: user.uid, username: user.username, order_code: currentOrder.order_no, accommodation_name: product.product_name, price: product.unit_price, commission: product.commission_per_item || 0, date: new Date().toISOString() });
                 }
             }
-        } catch(e) {
-            console.error('记录订单历史失败:', e);
         }
-        
-        var updatedUser = getCurrentUser();
-        if (updatedUser) {
-            updatedUser.balance = finalBalance;
-            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-        }
-        
-        document.getElementById('orderModal').classList.remove('active');
-        showToast('订单 ' + currentOrder.order_no + ' 已Confirm发货！', 'success');
-        
-        await loadOrders();
+    } catch(e) { console.error('记录订单历史失败:', e); }
+    let updatedUser = getCurrentUser();
+    if (updatedUser) { updatedUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(updatedUser)); }
+    document.getElementById('orderModal').classList.remove('active');
+    showToast('订单已提交！等待 Payment Release 后到账', 'success');
+    await loadOrders();
+});
+function initTabs() {
+    document.querySelectorAll('.tab-btn').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentTab = tab.dataset.tab;
+            document.getElementById('newOrdersList').style.display = currentTab === 'new' ? 'block' : 'none';
+            document.getElementById('processingOrdersList').style.display = currentTab === 'processing' ? 'block' : 'none';
+        });
     });
-
-    function initTabs() {
-        var tabs = document.querySelectorAll('.tab-btn');
-        tabs.forEach(function(tab) {
-            tab.addEventListener('click', function() {
-                tabs.forEach(function(t) { t.classList.remove('active'); });
-                tab.classList.add('active');
-                currentTab = tab.dataset.tab;
-                document.getElementById('newOrdersList').style.display = currentTab === 'new' ? 'block' : 'none';
-                document.getElementById('processingOrdersList').style.display = currentTab === 'processing' ? 'block' : 'none';
-            });
+}
+function setupBottomNav() {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            let page = item.dataset.page;
+            if (page === 'dashboard') window.location.href = 'start.html';
+            else if (page === 'products') window.location.href = 'products.html';
+            else if (page === 'orders') window.location.href = 'orders.html';
+            else if (page === 'profile') window.location.href = 'dashboard.html';
         });
-    }
-
-    function setupBottomNav() {
-        document.querySelectorAll('.nav-item').forEach(function(item) {
-            item.addEventListener('click', function() {
-                var page = item.dataset.page;
-                if (page === 'dashboard') window.location.href = 'start.html';
-                else if (page === 'products') window.location.href = 'products.html';
-                else if (page === 'orders') window.location.href = 'orders.html';
-                else if (page === 'profile') window.location.href = 'dashboard.html';
-            });
-        });
-    }
-
-    function generateTrackingTimeline() {
-        var startTime = new Date();
-        var timeline = [];
-        var totalDuration = (3 + Math.random() * 2) * 24 * 60 * 60 * 1000;
-        
-        var statuses = [
-            "Order is placed",
-            "Sender is preparing to ship your parcel",
-            "Courier assigned for your order, kindly wait for pickup",
-            "Your parcel has been picked up by our logistics partner",
-            "Your parcel has arrived at sorting facility",
-            "Your parcel has departed from sorting facility",
-            "Your parcel has arrived the delivery hub",
-            "Your parcel is out for delivery",
-            "Parcel has been delivered"
-        ];
-        
-        var intervals = [];
-        var remaining = totalDuration;
-        for (var i = 0; i < statuses.length - 1; i++) {
-            var maxGap = remaining / (statuses.length - i);
-            var gap = maxGap * (0.3 + Math.random() * 0.7);
-            intervals.push(gap);
-            remaining -= gap;
-        }
-        intervals.push(remaining);
-        
-        var currentTime = startTime;
-        for (var i = 0; i < statuses.length; i++) {
-            timeline.push({
-                status: statuses[i],
-                time: new Date(currentTime).toISOString()
-            });
-            if (i < intervals.length) {
-                currentTime = new Date(currentTime.getTime() + intervals[i]);
-            }
-        }
-        
-        return timeline;
-    }
-
-    initTabs();
-    setupBottomNav();
-    if (typeof clearOrderBadge === 'function') clearOrderBadge();
-    window.refreshOrdersList = loadOrders;
-    loadOrders();
+    });
+}
+window.triggerPaymentReleased = triggerPaymentReleased;
+initTabs(); setupBottomNav(); loadOrders();
 </script>
 </body>
 </html>
