@@ -553,17 +553,17 @@
         </div>
     </div>
 
-    <div class="stats-card">
-        <div class="stats-left">
-            <div class="stat-label">Today's Earnings</div>
-            <div class="stat-value" id="totalCommissions">€0.00</div>
-        </div>
-        <div class="divider-line"></div>
-        <div class="stats-right">
-            <div class="stat-label">Pending Release</div>
-            <div class="right-stat-value" id="pendingReleaseAmount">€0.00</div>
-        </div>
+    <!-- 双卡片并排：Today's Earnings 和 Pending Release -->
+<div style="display: flex; gap: 12px; margin: 16px;">
+    <div style="flex: 1; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(20px); border: 1px solid rgba(255, 122, 0, 0.5); border-radius: 20px; padding: 16px;">
+        <div style="font-size: 12px; color: #1f2937; margin-bottom: 8px;">Today's Earnings</div>
+        <div style="font-size: 24px; font-weight: 800; color: #1f2937;" id="totalCommissions">€0.00</div>
     </div>
+    <div style="flex: 1; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(20px); border: 1px solid rgba(255, 122, 0, 0.5); border-radius: 20px; padding: 16px;">
+        <div style="font-size: 12px; color: #1f2937; margin-bottom: 8px;">Pending Release</div>
+        <div style="font-size: 24px; font-weight: 800; color: #1f2937;" id="pendingReleaseAmount">€0.00</div>
+    </div>
+</div>
 
     <div class="wallet-card">
         <div class="wallet-title">Account Balance</div>
