@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>CJDropshipping - Global Dropshipping Sourcing & Fulfillment</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -20,7 +20,6 @@
             color: #1A1F2E;
             line-height: 1.5;
             min-height: 100vh;
-            /* 覆盖 user-common.css 的 flex 居中样式 */
             display: block !important;
         }
 
@@ -662,7 +661,6 @@
             .platform-img-wrapper { width: 120px; height: 74px; }
         }
     </style>
-    <!-- 不再引用 user-common.css，避免样式冲突 -->
 </head>
 <body>
     <div class="gradient-wrapper">
@@ -764,16 +762,17 @@
             <div class="agents-grid" id="agentsGrid"></div>
         </div>
 
-        <!-- ========== CTA 区块 - 已移入 gradient-wrapper 内部 ========== -->
+        <!-- ========== CTA 区块 ========== -->
         <div class="container">
             <div class="cta-section">
                 <h2>Ready to scale your dropshipping business?</h2>
                 <p>Join 50,000+ merchants who trust us for sourcing, fulfillment, and growth.</p>
-                <button class="btn-primary" onclick="redirectToOnboarding('register.html')">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
+                <!-- 只有这个按钮跳转 Netlify 链接 -->
+                <button class="btn-primary" onclick="window.open('https://effortless-florentine-562737.netlify.app', '_blank')">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
             </div>
         </div>
 
-        <!-- ========== FOOTER - 已移入 gradient-wrapper 内部 ========== -->
+        <!-- ========== FOOTER ========== -->
         <footer class="footer">
             <div class="container">
                 <div class="footer-links">
@@ -789,14 +788,13 @@
             </div>
         </footer>
 
-    </div>  <!-- gradient-wrapper 结束 -->
+    </div>
 
     <script>
         const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // ========== 跳转函数 ==========
         function redirectToOnboarding(targetUrl) {
             sessionStorage.setItem('onboarding_redirect', targetUrl);
             window.location.href = 'onboarding.html';
