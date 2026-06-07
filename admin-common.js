@@ -1,4 +1,5 @@
-// admin-common.js - 完整版（包含自定义弹窗和通知 + 所有页面实时Refresh）
+// admin-common.js - 完整版（包含自定义弹窗和通知 + 所有页面实时Refresh + 多语言支持）
+
 const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -11,14 +12,14 @@ window.toggleSidebar = toggleSidebar;
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m); }
 
 function formatTime(dateStr) {
-    if (!dateStr) return '刚刚';
+    if (!dateStr) return 'Just now';
     const date = new Date(dateStr);
     const now = new Date();
     const diff = Math.floor((now - date) / 1000 / 60);
-    if (diff < 1) return '刚刚';
-    if (diff < 60) return `${diff}分钟前`;
-    if (diff < 1440) return `${Math.floor(diff / 60)}小时前`;
-    return `${Math.floor(diff / 1440)}天前`;
+    if (diff < 1) return 'Just now';
+    if (diff < 60) return `${diff} minutes ago`;
+    if (diff < 1440) return `${Math.floor(diff / 60)} hours ago`;
+    return `${Math.floor(diff / 1440)} days ago`;
 }
 
 function animateNumber(element, target, prefix = '', suffix = '') {
@@ -43,6 +44,14 @@ function getTrendHtml(current, previous) {
     if (percent > 0) return `<span class="trend-up">↑ +${percent}%</span>`;
     if (percent < 0) return `<span class="trend-down">↓ ${percent}%</span>`;
     return '<span>→ 0%</span>';
+}
+
+// ========== 多语言辅助函数 ==========
+function __(key) {
+    if (window.adminLang && window.adminLang.t) {
+        return window.adminLang.t(key);
+    }
+    return key;
 }
 
 // ========== 自定义 Toast 提示 ==========
@@ -83,7 +92,7 @@ function showToast(message, type = 'success') {
     
     toast.innerHTML = `
         <div><i class="fas ${icon}" style="color: ${bgColor}; font-size: 18px;"></i></div>
-        <div style="font-size: 14px;">${message}</div>
+        <div style="font-size: 14px;">${escapeHtml(message)}</div>
         <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: ${bgColor}; width: 100%; border-radius: 0 0 50px 50px; animation: toastProgress 3s linear forwards;"></div>
     `;
     
@@ -121,11 +130,11 @@ function showConfirm(title, message, onConfirm, onCancel) {
     modal.innerHTML = `
         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);"></div>
         <div style="position: relative; background: linear-gradient(145deg, #1a1508, #0f0c06); border-radius: 24px; padding: 24px; width: 340px; max-width: 90%; text-align: center; border: 1px solid rgba(255,184,77,0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.4); transform: scale(0.9); transition: transform 0.2s ease;">
-            <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 12px;">${title}</div>
-            <div style="font-size: 14px; color: #d4c8a0; margin-bottom: 24px; line-height: 1.5;">${message}</div>
+            <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 12px;">${escapeHtml(title)}</div>
+            <div style="font-size: 14px; color: #d4c8a0; margin-bottom: 24px; line-height: 1.5;">${escapeHtml(message)}</div>
             <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="confirm-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">Cancel</button>
-                <button id="confirm-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">Confirm</button>
+                <button id="confirm-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">${__('btn_cancel') || 'Cancel'}</button>
+                <button id="confirm-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">${__('btn_confirm') || 'Confirm'}</button>
             </div>
         </div>
     `;
@@ -184,11 +193,11 @@ function showPrompt(title, placeholder, callback) {
     modal.innerHTML = `
         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);"></div>
         <div style="position: relative; background: linear-gradient(145deg, #1a1508, #0f0c06); border-radius: 24px; padding: 24px; width: 340px; max-width: 90%; text-align: center; border: 1px solid rgba(255,184,77,0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.4); transform: scale(0.9); transition: transform 0.2s ease;">
-            <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 20px;">${title}</div>
-            <input type="text" id="prompt-input" placeholder="${placeholder}" style="width: 100%; padding: 12px 16px; background: #0a0806; border: 1px solid rgba(255,184,77,0.3); border-radius: 12px; color: #fff; font-size: 14px; outline: none; margin-bottom: 20px;">
+            <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 20px;">${escapeHtml(title)}</div>
+            <input type="text" id="prompt-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; padding: 12px 16px; background: #0a0806; border: 1px solid rgba(255,184,77,0.3); border-radius: 12px; color: #fff; font-size: 14px; outline: none; margin-bottom: 20px;">
             <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="prompt-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">Cancel</button>
-                <button id="prompt-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">Confirm</button>
+                <button id="prompt-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">${__('btn_cancel') || 'Cancel'}</button>
+                <button id="prompt-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">${__('btn_confirm') || 'Confirm'}</button>
             </div>
         </div>
     `;
@@ -302,7 +311,7 @@ window.showAmberNotification = function(title, message, type) {
         <div style="flex: 1; min-width: 0;">
             <div style="font-weight: 700; font-size: 15px; color: #ffb84d; margin-bottom: 6px;">${escapeHtml(title)}</div>
             <div style="font-size: 12px; color: #d4c8a0; opacity: 0.95; line-height: 1.4;">${escapeHtml(message)}</div>
-            <div style="font-size: 10px; color: #8a7a5a; margin-top: 6px;">刚刚收到</div>
+            <div style="font-size: 10px; color: #8a7a5a; margin-top: 6px;">Just received</div>
         </div>
         <div style="cursor: pointer; opacity: 0.6; padding: 6px; flex-shrink: 0;" class="notification-close">
             <i class="fas fa-times" style="color: #d4c8a0; font-size: 14px;"></i>
@@ -377,7 +386,6 @@ function initGlobalRealtime() {
     
     realtimeChannel = sb
         .channel('global-realtime')
-        // 监听 KYC 新申请
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'kyc_verifications' },
@@ -386,7 +394,6 @@ function initGlobalRealtime() {
                 handleNewKyc(payload.new);
             }
         )
-        // 监听 Withdraw 新申请
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'withdrawals' },
@@ -395,7 +402,6 @@ function initGlobalRealtime() {
                 handleNewWithdrawal(payload.new);
             }
         )
-        // 监听邮箱验证新请求
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
@@ -404,7 +410,6 @@ function initGlobalRealtime() {
                 handleNewEmailRequest(payload.new);
             }
         )
-        // 监听新用户注册
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'users' },
@@ -413,7 +418,6 @@ function initGlobalRealtime() {
                 handleNewUser(payload.new);
             }
         )
-        // 监听订单结算（Payment release 完成）
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'deposits' },
@@ -424,7 +428,6 @@ function initGlobalRealtime() {
                 }
             }
         )
-        // 监听充值（手动充值 + 充值奖励）
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'deposits' },
@@ -435,7 +438,6 @@ function initGlobalRealtime() {
                 }
             }
         )
-        // 监听奖励（推荐奖励、签到奖励）
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'deposits' },
@@ -446,7 +448,6 @@ function initGlobalRealtime() {
                 }
             }
         )
-        // 监听体验金
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'deposits' },
@@ -461,7 +462,6 @@ function initGlobalRealtime() {
             console.log('📡 全局实时订阅状态:', status);
             if (status === 'SUBSCRIBED') {
                 console.log('✅ 全局实时订阅已成功连接！');
-                console.log('✅ 正在监听: kyc_verifications, withdrawals, email_verification_requests, users, deposits');
             } else if (status === 'CHANNEL_ERROR') {
                 console.error('❌ 实时订阅连接失败，5秒后重试...');
                 setTimeout(() => initGlobalRealtime(), 5000);
@@ -471,168 +471,60 @@ function initGlobalRealtime() {
 
 // ========== 处理函数 ==========
 
-// 处理新KYC申请
 function handleNewKyc(data) {
     console.log('📋 处理新KYC申请:', data);
-    
-    if (window.refreshDashboardData) {
-        window.refreshDashboardData(currentDays);
-    }
-    
-    if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) {
-        console.log('RefreshKYC页面');
-        window.loadKycPage();
-    }
-    
-    if (window.showAmberNotification) {
-        window.showAmberNotification(
-            '📋 New KYC Application',
-            `User ${data.username || data.uid} submitted verification`,
-            'kyc'
-        );
-    }
+    if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
+    if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) window.loadKycPage();
+    if (window.showAmberNotification) window.showAmberNotification('📋 New KYC Application', `User ${data.username || data.uid} submitted verification`, 'kyc');
 }
 
-// 处理新Withdraw申请
 function handleNewWithdrawal(data) {
     console.log('💰 处理新Withdraw申请:', data);
-    
-    if (window.refreshDashboardData) {
-        window.refreshDashboardData(currentDays);
-    }
-    
-    if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) {
-        console.log('RefreshWithdraw页面');
-        window.loadWithdrawalsPage();
-    }
-    
-    if (window.showAmberNotification) {
-        window.showAmberNotification(
-            '💰 New Withdrawal Request',
-            `User ${data.username} requested €${data.amount}`,
-            'withdrawal'
-        );
-    }
+    if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
+    if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) window.loadWithdrawalsPage();
+    if (window.showAmberNotification) window.showAmberNotification('💰 New Withdrawal Request', `User ${data.username} requested €${data.amount}`, 'withdrawal');
 }
 
-// 处理新邮箱验证请求
 function handleNewEmailRequest(data) {
     console.log('📧 处理新邮箱验证请求:', data.email);
-    
-    if (window.refreshDashboardData) {
-        window.refreshDashboardData(currentDays);
-    }
-    
+    if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
     const emailPage = document.getElementById('page_emailverify');
-    if (emailPage && emailPage.classList.contains('active')) {
-        console.log('当前在Email页面，自动Refresh列表');
-        if (window.loadEmailVerifyPage) {
-            window.loadEmailVerifyPage();
-        }
-    }
-    
-    if (window.showAmberNotification) {
-        window.showAmberNotification(
-            '📧 New Email Verification',
-            `User ${data.email} requested verification`,
-            'email'
-        );
-    }
+    if (emailPage && emailPage.classList.contains('active') && window.loadEmailVerifyPage) window.loadEmailVerifyPage();
+    if (window.showAmberNotification) window.showAmberNotification('📧 New Email Verification', `User ${data.email} requested verification`, 'email');
 }
 
-// 处理新用户注册
 function handleNewUser(data) {
     console.log('👤 处理新用户注册:', data);
-    
-    if (window.refreshDashboardData) {
-        window.refreshDashboardData(currentDays);
-    }
-    
-    if (window.loadUsersPage && document.getElementById('page_users')?.classList.contains('active')) {
-        window.loadUsersPage();
-    }
-    
-    if (window.showAmberNotification) {
-        window.showAmberNotification(
-            '👤 New User Registration',
-            `User ${data.username || data.uid} just signed up`,
-            'user'
-        );
-    }
+    if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
+    if (window.loadUsersPage && document.getElementById('page_users')?.classList.contains('active')) window.loadUsersPage();
+    if (window.showAmberNotification) window.showAmberNotification('👤 New User Registration', `User ${data.username || data.uid} just signed up`, 'user');
 }
 
-// 处理订单结算（Payment release 完成）
 function handlePaymentRelease(data) {
     console.log('💰 处理订单结算:', data);
-    
-    if (window.refreshDashboardData) {
-        window.refreshDashboardData(currentDays);
-    }
-    
-    if (window.showAmberNotification) {
-        window.showAmberNotification(
-            '💰 Order Settlement Completed',
-            `User ${data.username} received €${data.amount.toFixed(2)} commission`,
-            'payment'
-        );
-    }
+    if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
+    if (window.showAmberNotification) window.showAmberNotification('💰 Order Settlement Completed', `User ${data.username} received €${data.amount.toFixed(2)} commission`, 'payment');
 }
 
-// 处理充值
 function handleDeposit(data) {
     console.log('💳 处理充值:', data);
-    
-    if (window.refreshDashboardData) {
-        window.refreshDashboardData(currentDays);
-    }
-    
+    if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
     let typeText = data.type === 'manual' ? 'Manual Deposit' : 'Deposit Bonus';
-    if (window.showAmberNotification) {
-        window.showAmberNotification(
-            '💳 Deposit Completed',
-            `User ${data.username} ${typeText} €${data.amount.toFixed(2)}`,
-            'deposit'
-        );
-    }
+    if (window.showAmberNotification) window.showAmberNotification('💳 Deposit Completed', `User ${data.username} ${typeText} €${data.amount.toFixed(2)}`, 'deposit');
 }
 
-// 处理奖励
 function handleBonusAdded(data) {
     console.log('🎁 处理奖励:', data);
-    
-    if (window.refreshDashboardData) {
-        window.refreshDashboardData(currentDays);
-    }
-    
+    if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
     let typeText = data.type === 'referral_bonus' ? 'Referral Bonus' : 'Check-in Reward';
-    if (window.showAmberNotification) {
-        window.showAmberNotification(
-            '🎁 Bonus Added',
-            `User ${data.username} received ${typeText} €${data.amount.toFixed(2)}`,
-            'bonus'
-        );
-    }
+    if (window.showAmberNotification) window.showAmberNotification('🎁 Bonus Added', `User ${data.username} received ${typeText} €${data.amount.toFixed(2)}`, 'bonus');
 }
 
-// 处理体验金
 function handleTrialBonus(data) {
     console.log('🧪 处理体验金:', data);
-    
-    if (window.refreshDashboardData) {
-        window.refreshDashboardData(currentDays);
-    }
-    
-    if (window.loadTrialPage && document.getElementById('page_trial')?.classList.contains('active')) {
-        window.loadTrialPage();
-    }
-    
-    if (window.showAmberNotification) {
-        window.showAmberNotification(
-            '🧪 Trial Funds Added',
-            `User ${data.username} received €${data.amount.toFixed(2)} trial bonus`,
-            'trial'
-        );
-    }
+    if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
+    if (window.loadTrialPage && document.getElementById('page_trial')?.classList.contains('active')) window.loadTrialPage();
+    if (window.showAmberNotification) window.showAmberNotification('🧪 Trial Funds Added', `User ${data.username} received €${data.amount.toFixed(2)} trial bonus`, 'trial');
 }
 
 // 启动全局实时订阅
@@ -641,8 +533,6 @@ setTimeout(() => {
 }, 1000);
 
 // ========== 页面切换函数 ==========
-const loadedPages = {};
-
 function showPage(pageId) {
     console.log('切换页面:', pageId);
     
@@ -695,5 +585,16 @@ function showPage(pageId) {
 if (localStorage.getItem('admin_logged_in') !== 'true') {
     window.location.href = 'admin-login.html';
 }
+
+// 暴露全局函数
+window.showPage = showPage;
+window.showToast = showToast;
+window.showConfirm = showConfirm;
+window.showPrompt = showPrompt;
+window.__ = __;
+window.escapeHtml = escapeHtml;
+window.formatTime = formatTime;
+window.animateNumber = animateNumber;
+window.getTrendHtml = getTrendHtml;
 
 console.log('✅ admin-common.js 加载完成');
