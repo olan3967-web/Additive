@@ -12,14 +12,14 @@ window.toggleSidebar = toggleSidebar;
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m); }
 
 function formatTime(dateStr) {
-    if (!dateStr) return 'Just now';
+    if (!dateStr) return __('just_now');
     const date = new Date(dateStr);
     const now = new Date();
     const diff = Math.floor((now - date) / 1000 / 60);
-    if (diff < 1) return 'Just now';
-    if (diff < 60) return `${diff} minutes ago`;
-    if (diff < 1440) return `${Math.floor(diff / 60)} hours ago`;
-    return `${Math.floor(diff / 1440)} days ago`;
+    if (diff < 1) return __('just_now');
+    if (diff < 60) return __('minutes_ago', { count: diff });
+    if (diff < 1440) return __('hours_ago', { count: Math.floor(diff / 60) });
+    return __('days_ago', { count: Math.floor(diff / 1440) });
 }
 
 function animateNumber(element, target, prefix = '', suffix = '') {
@@ -47,9 +47,13 @@ function getTrendHtml(current, previous) {
 }
 
 // ========== 多语言辅助函数 ==========
-function __(key) {
+function __(key, params = {}) {
     if (window.adminLang && window.adminLang.t) {
-        return window.adminLang.t(key);
+        let text = window.adminLang.t(key);
+        if (params.count !== undefined) {
+            text = text.replace('{count}', params.count);
+        }
+        return text;
     }
     return key;
 }
@@ -133,8 +137,8 @@ function showConfirm(title, message, onConfirm, onCancel) {
             <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 12px;">${escapeHtml(title)}</div>
             <div style="font-size: 14px; color: #d4c8a0; margin-bottom: 24px; line-height: 1.5;">${escapeHtml(message)}</div>
             <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="confirm-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">${__('btn_cancel') || 'Cancel'}</button>
-                <button id="confirm-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">${__('btn_confirm') || 'Confirm'}</button>
+                <button id="confirm-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">${__('btn_cancel')}</button>
+                <button id="confirm-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">${__('btn_confirm')}</button>
             </div>
         </div>
     `;
@@ -196,8 +200,8 @@ function showPrompt(title, placeholder, callback) {
             <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 20px;">${escapeHtml(title)}</div>
             <input type="text" id="prompt-input" placeholder="${escapeHtml(placeholder)}" style="width: 100%; padding: 12px 16px; background: #0a0806; border: 1px solid rgba(255,184,77,0.3); border-radius: 12px; color: #fff; font-size: 14px; outline: none; margin-bottom: 20px;">
             <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="prompt-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">${__('btn_cancel') || 'Cancel'}</button>
-                <button id="prompt-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">${__('btn_confirm') || 'Confirm'}</button>
+                <button id="prompt-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">${__('btn_cancel')}</button>
+                <button id="prompt-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">${__('btn_confirm')}</button>
             </div>
         </div>
     `;
@@ -311,7 +315,7 @@ window.showAmberNotification = function(title, message, type) {
         <div style="flex: 1; min-width: 0;">
             <div style="font-weight: 700; font-size: 15px; color: #ffb84d; margin-bottom: 6px;">${escapeHtml(title)}</div>
             <div style="font-size: 12px; color: #d4c8a0; opacity: 0.95; line-height: 1.4;">${escapeHtml(message)}</div>
-            <div style="font-size: 10px; color: #8a7a5a; margin-top: 6px;">Just received</div>
+            <div style="font-size: 10px; color: #8a7a5a; margin-top: 6px;">${__('just_received')}</div>
         </div>
         <div style="cursor: pointer; opacity: 0.6; padding: 6px; flex-shrink: 0;" class="notification-close">
             <i class="fas fa-times" style="color: #d4c8a0; font-size: 14px;"></i>
@@ -378,7 +382,7 @@ if (document.readyState === 'loading') {
 let realtimeChannel = null;
 
 function initGlobalRealtime() {
-    console.log('🚀 正在启动全局实时订阅...');
+    console.log('🚀 Starting global realtime subscription...');
     
     if (realtimeChannel) {
         sb.removeChannel(realtimeChannel);
@@ -390,7 +394,7 @@ function initGlobalRealtime() {
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'kyc_verifications' },
             (payload) => {
-                console.log('🔔 检测到新KYC申请:', payload.new);
+                console.log('🔔 New KYC application detected:', payload.new);
                 handleNewKyc(payload.new);
             }
         )
@@ -398,7 +402,7 @@ function initGlobalRealtime() {
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'withdrawals' },
             (payload) => {
-                console.log('🔔 检测到新Withdraw申请:', payload.new);
+                console.log('🔔 New withdrawal request detected:', payload.new);
                 handleNewWithdrawal(payload.new);
             }
         )
@@ -406,7 +410,7 @@ function initGlobalRealtime() {
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
             (payload) => {
-                console.log('🔔 检测到新邮箱验证请求:', payload.new);
+                console.log('🔔 New email verification request detected:', payload.new);
                 handleNewEmailRequest(payload.new);
             }
         )
@@ -414,7 +418,7 @@ function initGlobalRealtime() {
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'users' },
             (payload) => {
-                console.log('👤 检测到新用户注册:', payload.new);
+                console.log('👤 New user registration detected:', payload.new);
                 handleNewUser(payload.new);
             }
         )
@@ -423,7 +427,7 @@ function initGlobalRealtime() {
             { event: 'INSERT', schema: 'public', table: 'deposits' },
             (payload) => {
                 if (payload.new.type === 'order_settlement') {
-                    console.log('💰 检测到订单结算:', payload.new);
+                    console.log('💰 Order settlement detected:', payload.new);
                     handlePaymentRelease(payload.new);
                 }
             }
@@ -433,7 +437,7 @@ function initGlobalRealtime() {
             { event: 'INSERT', schema: 'public', table: 'deposits' },
             (payload) => {
                 if (payload.new.type === 'manual' || payload.new.type === 'deposit_bonus') {
-                    console.log('💳 检测到充值:', payload.new);
+                    console.log('💳 Deposit detected:', payload.new);
                     handleDeposit(payload.new);
                 }
             }
@@ -443,7 +447,7 @@ function initGlobalRealtime() {
             { event: 'INSERT', schema: 'public', table: 'deposits' },
             (payload) => {
                 if (payload.new.type === 'referral_bonus' || payload.new.type === 'signin_reward') {
-                    console.log('🎁 检测到奖励:', payload.new);
+                    console.log('🎁 Bonus detected:', payload.new);
                     handleBonusAdded(payload.new);
                 }
             }
@@ -453,17 +457,17 @@ function initGlobalRealtime() {
             { event: 'INSERT', schema: 'public', table: 'deposits' },
             (payload) => {
                 if (payload.new.type === 'trial_bonus') {
-                    console.log('🧪 检测到体验金:', payload.new);
+                    console.log('🧪 Trial bonus detected:', payload.new);
                     handleTrialBonus(payload.new);
                 }
             }
         )
         .subscribe((status) => {
-            console.log('📡 全局实时订阅状态:', status);
+            console.log('📡 Global realtime subscription status:', status);
             if (status === 'SUBSCRIBED') {
-                console.log('✅ 全局实时订阅已成功连接！');
+                console.log('✅ Global realtime subscription connected successfully!');
             } else if (status === 'CHANNEL_ERROR') {
-                console.error('❌ 实时订阅连接失败，5秒后重试...');
+                console.error('❌ Realtime connection failed, retrying in 5 seconds...');
                 setTimeout(() => initGlobalRealtime(), 5000);
             }
         });
@@ -472,59 +476,59 @@ function initGlobalRealtime() {
 // ========== 处理函数 ==========
 
 function handleNewKyc(data) {
-    console.log('📋 处理新KYC申请:', data);
+    console.log('📋 Processing new KYC:', data);
     if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
     if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) window.loadKycPage();
-    if (window.showAmberNotification) window.showAmberNotification('📋 New KYC Application', `User ${data.username || data.uid} submitted verification`, 'kyc');
+    if (window.showAmberNotification) window.showAmberNotification(__('new_kyc_title'), __('new_kyc_message', { user: data.username || data.uid }), 'kyc');
 }
 
 function handleNewWithdrawal(data) {
-    console.log('💰 处理新Withdraw申请:', data);
+    console.log('💰 Processing new withdrawal:', data);
     if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
     if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) window.loadWithdrawalsPage();
-    if (window.showAmberNotification) window.showAmberNotification('💰 New Withdrawal Request', `User ${data.username} requested €${data.amount}`, 'withdrawal');
+    if (window.showAmberNotification) window.showAmberNotification(__('new_withdrawal_title'), __('new_withdrawal_message', { user: data.username, amount: data.amount }), 'withdrawal');
 }
 
 function handleNewEmailRequest(data) {
-    console.log('📧 处理新邮箱验证请求:', data.email);
+    console.log('📧 Processing new email verification:', data.email);
     if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
     const emailPage = document.getElementById('page_emailverify');
     if (emailPage && emailPage.classList.contains('active') && window.loadEmailVerifyPage) window.loadEmailVerifyPage();
-    if (window.showAmberNotification) window.showAmberNotification('📧 New Email Verification', `User ${data.email} requested verification`, 'email');
+    if (window.showAmberNotification) window.showAmberNotification(__('new_email_title'), __('new_email_message', { email: data.email }), 'email');
 }
 
 function handleNewUser(data) {
-    console.log('👤 处理新用户注册:', data);
+    console.log('👤 Processing new user:', data);
     if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
     if (window.loadUsersPage && document.getElementById('page_users')?.classList.contains('active')) window.loadUsersPage();
-    if (window.showAmberNotification) window.showAmberNotification('👤 New User Registration', `User ${data.username || data.uid} just signed up`, 'user');
+    if (window.showAmberNotification) window.showAmberNotification(__('new_user_title'), __('new_user_message', { user: data.username || data.uid }), 'user');
 }
 
 function handlePaymentRelease(data) {
-    console.log('💰 处理订单结算:', data);
+    console.log('💰 Processing payment release:', data);
     if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
-    if (window.showAmberNotification) window.showAmberNotification('💰 Order Settlement Completed', `User ${data.username} received €${data.amount.toFixed(2)} commission`, 'payment');
+    if (window.showAmberNotification) window.showAmberNotification(__('payment_release_title'), __('payment_release_message', { user: data.username, amount: data.amount.toFixed(2) }), 'payment');
 }
 
 function handleDeposit(data) {
-    console.log('💳 处理充值:', data);
+    console.log('💳 Processing deposit:', data);
     if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
-    let typeText = data.type === 'manual' ? 'Manual Deposit' : 'Deposit Bonus';
-    if (window.showAmberNotification) window.showAmberNotification('💳 Deposit Completed', `User ${data.username} ${typeText} €${data.amount.toFixed(2)}`, 'deposit');
+    let typeText = data.type === 'manual' ? __('deposit_manual') : __('deposit_bonus');
+    if (window.showAmberNotification) window.showAmberNotification(__('deposit_title'), `${data.username} ${typeText} €${data.amount.toFixed(2)}`, 'deposit');
 }
 
 function handleBonusAdded(data) {
-    console.log('🎁 处理奖励:', data);
+    console.log('🎁 Processing bonus:', data);
     if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
-    let typeText = data.type === 'referral_bonus' ? 'Referral Bonus' : 'Check-in Reward';
-    if (window.showAmberNotification) window.showAmberNotification('🎁 Bonus Added', `User ${data.username} received ${typeText} €${data.amount.toFixed(2)}`, 'bonus');
+    let typeText = data.type === 'referral_bonus' ? __('bonus_referral') : __('bonus_checkin');
+    if (window.showAmberNotification) window.showAmberNotification(__('bonus_title'), `${data.username} ${typeText} €${data.amount.toFixed(2)}`, 'bonus');
 }
 
 function handleTrialBonus(data) {
-    console.log('🧪 处理体验金:', data);
+    console.log('🧪 Processing trial bonus:', data);
     if (window.refreshDashboardData) window.refreshDashboardData(currentDays);
     if (window.loadTrialPage && document.getElementById('page_trial')?.classList.contains('active')) window.loadTrialPage();
-    if (window.showAmberNotification) window.showAmberNotification('🧪 Trial Funds Added', `User ${data.username} received €${data.amount.toFixed(2)} trial bonus`, 'trial');
+    if (window.showAmberNotification) window.showAmberNotification(__('trial_title'), __('trial_message', { user: data.username, amount: data.amount.toFixed(2) }), 'trial');
 }
 
 // 启动全局实时订阅
@@ -534,7 +538,7 @@ setTimeout(() => {
 
 // ========== 页面切换函数 ==========
 function showPage(pageId) {
-    console.log('切换页面:', pageId);
+    console.log('Switching page:', pageId);
     
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const targetPage = document.getElementById('page_' + pageId);
@@ -544,23 +548,17 @@ function showPage(pageId) {
     const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if (activeNav) activeNav.classList.add('active');
     
-    // 每次切换页面都重新加载，确保数据最新
     if (pageId === 'dashboard' && window.loadDashboardPage) {
-        console.log('加载仪表板');
         window.loadDashboardPage(currentDays);
     } else if (pageId === 'users' && window.loadUsersPage) {
-        console.log('加载用户管理');
         window.loadUsersPage();
     } else if (pageId === 'kyc' && window.loadKycPage) {
-        console.log('加载KYC页面');
         window.loadKycPage();
     } else if (pageId === 'emailverify' && window.loadEmailVerifyPage) {
-        console.log('加载Email验证页面');
         window.loadEmailVerifyPage();
     } else if (pageId === 'trial' && window.loadTrialPage) {
         window.loadTrialPage();
     } else if (pageId === 'withdrawals' && window.loadWithdrawalsPage) {
-        console.log('加载Withdraw页面');
         window.loadWithdrawalsPage();
     } else if (pageId === 'vip' && window.loadVipPage) {
         window.loadVipPage();
@@ -597,4 +595,4 @@ window.formatTime = formatTime;
 window.animateNumber = animateNumber;
 window.getTrendHtml = getTrendHtml;
 
-console.log('✅ admin-common.js 加载完成');
+console.log('✅ admin-common.js loaded');
