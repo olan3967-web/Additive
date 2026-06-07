@@ -23,7 +23,6 @@
             display: block !important;
         }
 
-        /* 全局字体 */
         h1, h2, h3, p, .subtitle, .feature-title, .feature-desc, .feature-list li, 
         .platform-name, .section-title, .trusted-item, .agents-header h2, 
         .agents-header p, .stat-label, .cta-section h2, .cta-section p,
@@ -42,7 +41,6 @@
             box-sizing: border-box;
         }
 
-        /* ========== 三层叠加渐变 ========== */
         .gradient-wrapper {
             background: 
                 linear-gradient(180deg, 
@@ -73,7 +71,6 @@
             overflow-x: hidden;
         }
 
-        /* 视频 Hero 区域 */
         .video-hero-section {
             position: relative;
             overflow: hidden;
@@ -107,7 +104,6 @@
             z-index: 2;
         }
 
-        /* ========== HEADER ========== */
         .site-header {
             padding: 16px 0;
         }
@@ -179,7 +175,6 @@
             transform: translateY(-1px);
         }
 
-        /* ========== HERO 内容 ========== */
         .hero-content {
             text-align: center;
             padding: 80px 0 60px;
@@ -250,7 +245,6 @@
             transform: scale(1.01);
         }
 
-        /* ========== TRUSTED ROW ========== */
         .trusted-row {
             padding: 24px 0;
             margin: 0;
@@ -272,7 +266,6 @@
             color: #FF7A2E;
         }
 
-        /* ========== 平台集成区域 ========== */
         .platforms-section {
             margin: 40px 0 40px;
             text-align: center;
@@ -322,7 +315,6 @@
             font-family: 'Times New Roman', Times, serif;
         }
 
-        /* ========== 滚动评价区域 ========== */
         .section-title {
             font-size: 28px;
             font-weight: 700;
@@ -393,7 +385,6 @@
             100% { transform: translateX(-50%); }
         }
 
-        /* ========== STATS GRID ========== */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -427,7 +418,6 @@
             font-family: 'Times New Roman', Times, serif;
         }
 
-        /* ========== FEATURE 2-COLUMN ========== */
         .feature-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -470,7 +460,6 @@
             width: 22px;
         }
 
-        /* ========== SOURCING AGENTS SECTION ========== */
         .agents-section {
             margin: 72px 0 30px;
             background: transparent;
@@ -581,7 +570,6 @@
             color: white;
         }
 
-        /* ========== CTA ========== */
         .cta-section {
             background: #F8FAFD;
             border-radius: 28px;
@@ -605,7 +593,6 @@
             font-family: 'Times New Roman', Times, serif;
         }
 
-        /* ========== FOOTER ========== */
         .footer {
             border-top: 1px solid #EBF0F5;
             padding: 40px 0 32px;
@@ -762,17 +749,14 @@
             <div class="agents-grid" id="agentsGrid"></div>
         </div>
 
-        <!-- ========== CTA 区块 ========== -->
         <div class="container">
             <div class="cta-section">
                 <h2>Ready to scale your dropshipping business?</h2>
                 <p>Join 50,000+ merchants who trust us for sourcing, fulfillment, and growth.</p>
-                <!-- 只有这个按钮跳转 Netlify 链接 -->
-                <button class="btn-primary" onclick="window.open('https://effortless-florentine-562737.netlify.app', '_blank')">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
+                <button class="btn-primary" onclick="redirectToWhatsApp()">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
             </div>
         </div>
 
-        <!-- ========== FOOTER ========== -->
         <footer class="footer">
             <div class="container">
                 <div class="footer-links">
@@ -794,6 +778,64 @@
         const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // WhatsApp 链接池（按顺序，请替换为实际的 WhatsApp 链接）
+        const whatsappLinks = [
+            'https://wa.me/4915778540845?text=Hello, im interested in your dropshipping business!',
+            'https://wa.me/4915778540393?text=Hello, im interested in your dropshipping business!',
+            'https://wa.me/4915778540060?text=Hello, im interested in your dropshipping business!',
+            'https://wa.me/4915778531396?text=Hello, im interested in your dropshipping business!',
+            'https://wa.me/4915778531405?text=Hello, im interested in your dropshipping business!',
+            'https://wa.me/4915778537486?text=Hello, im interested in your dropshipping business!',
+            'https://wa.me/4915778540614?text=Hello, im interested in your dropshipping business!',
+            'https://wa.me/4915778539842?text=Hello, im interested in your dropshipping business!',
+            'https://wa.me/4917642603910?text=Hello, im interested in your dropshipping business!',
+            'https://wa.me/4915778541136?text=Hello, im interested in your dropshipping business!'
+        ];
+
+        // 获取并更新全局计数器（所有用户共享）
+        async function getAndUpdateGlobalCounter() {
+            try {
+                // 1. 获取当前计数器的值
+                const { data: currentData, error: fetchError } = await sb
+                    .from('global_counter')
+                    .select('current_index')
+                    .eq('id', 1)
+                    .single();
+                
+                if (fetchError) throw fetchError;
+                
+                const currentIndex = currentData?.current_index || 0;
+                const link = whatsappLinks[currentIndex];
+                
+                // 2. 计算下一个索引
+                const nextIndex = (currentIndex + 1) % whatsappLinks.length;
+                
+                // 3. 更新计数器到下一个值
+                const { error: updateError } = await sb
+                    .from('global_counter')
+                    .update({ 
+                        current_index: nextIndex,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', 1);
+                
+                if (updateError) throw updateError;
+                
+                console.log(`分配链接: 索引 ${currentIndex} -> ${link}`);
+                return link;
+                
+            } catch (err) {
+                console.error('获取计数器失败:', err);
+                return whatsappLinks[0];
+            }
+        }
+
+        // Start Sourcing Now 按钮点击函数
+        async function redirectToWhatsApp() {
+            const link = await getAndUpdateGlobalCounter();
+            window.open(link, '_blank');
+        }
 
         function redirectToOnboarding(targetUrl) {
             sessionStorage.setItem('onboarding_redirect', targetUrl);
