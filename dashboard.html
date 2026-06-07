@@ -467,10 +467,10 @@
             font-weight: 600;
         }
 
-        /* ========== 活动弹窗样式（无框架、无圆角、X在图片右上角） ========== */
+        /* ========== 活动弹窗样式（底部紧贴菜单栏） ========== */
 .activity-popup {
     position: fixed;
-    bottom: 80px;
+    bottom: 70px;  /* 底部导航栏高度约 70px，紧贴在上方 */
     right: 20px;
     width: 280px;
     z-index: 1000;
@@ -521,7 +521,7 @@
 @media (max-width: 390px) {
     .activity-popup {
         width: 240px;
-        bottom: 75px;
+        bottom: 65px;  /* 手机版底部导航栏高度 */
         right: 12px;
     }
 }
