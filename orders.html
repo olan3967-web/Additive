@@ -122,48 +122,82 @@ function goBack() {
     window.location.href = 'dashboard.html'; 
 }
 
-// 安全解析 products 字段（增加容错）
-function parseProductsText(productsData) {
-    if (!productsData) return '-';
-    try {
-        let products = null;
-        if (typeof productsData === 'string') {
-            let cleanData = productsData.trim();
-            if (cleanData === '' || cleanData === 'null' || cleanData === 'undefined') {
-                return '-';
-            }
-            products = JSON.parse(cleanData);
-        } else {
-            products = productsData;
-        }
-        if (!Array.isArray(products)) return '-';
-        return products.map(p => (p.product_name || 'Product') + ' ×' + (p.quantity || 1)).join(', ');
-    } catch(e) {
-        console.error('JSON解析失败:', e);
-        return '-';
+// ========== 核心修复：不依赖JSON.parse，手动提取产品名称 ==========
+function extractProductNameFromRaw(rawData) {
+    if (!rawData) return null;
+    if (typeof rawData !== 'string') return null;
+    // 手动匹配 product_name
+    const match = rawData.match(/"product_name":"([^"]+)/);
+    if (match && match[1]) {
+        return match[1];
     }
+    return null;
 }
 
-// 安全解析产品列表用于弹窗（增加容错）
+function parseProductsText(productsData) {
+    if (!productsData) return '-';
+    
+    // 如果是字符串，手动提取所有 product_name
+    if (typeof productsData === 'string') {
+        const matches = productsData.match(/"product_name":"([^"]+)/g);
+        if (matches && matches.length > 0) {
+            const names = matches.map(m => {
+                const nameMatch = m.match(/"product_name":"([^"]+)/);
+                return nameMatch ? nameMatch[1] : 'Product';
+            });
+            return names.join(', ');
+        }
+        return '-';
+    }
+    
+    // 如果是数组对象
+    if (Array.isArray(productsData) && productsData.length > 0) {
+        return productsData.map(p => p.product_name || 'Product').join(', ');
+    }
+    
+    return '-';
+}
+
 function parseProductsList(productsData) {
     if (!productsData) return [];
-    try {
-        let products = null;
-        if (typeof productsData === 'string') {
-            let cleanData = productsData.trim();
-            if (cleanData === '' || cleanData === 'null' || cleanData === 'undefined') {
-                return [];
+    
+    const result = [];
+    
+    if (typeof productsData === 'string') {
+        // 手动提取每个产品块
+        const productBlocks = productsData.split(/\}\s*,\s*\{/);
+        for (let block of productBlocks) {
+            try {
+                // 清理花括号
+                let clean = block.replace(/^\{|\}$/g, '');
+                
+                // 提取各个字段
+                const productIdMatch = clean.match(/"product_id":(\d+)/);
+                const productNameMatch = clean.match(/"product_name":"([^"]+)/);
+                const quantityMatch = clean.match(/"quantity":(\d+)/);
+                const unitPriceMatch = clean.match(/"unit_price":([\d.]+)/);
+                const commissionMatch = clean.match(/"commission_per_item":([\d.]+)/);
+                const imageMatch = clean.match(/"image_url":"([^"]+)/);
+                
+                if (productNameMatch) {
+                    result.push({
+                        product_id: productIdMatch ? parseInt(productIdMatch[1]) : 0,
+                        product_name: productNameMatch[1],
+                        quantity: quantityMatch ? parseInt(quantityMatch[1]) : 1,
+                        unit_price: unitPriceMatch ? parseFloat(unitPriceMatch[1]) : 0,
+                        commission_per_item: commissionMatch ? parseFloat(commissionMatch[1]) : 0,
+                        image_url: imageMatch ? imageMatch[1] : ''
+                    });
+                }
+            } catch(e) {
+                console.log('解析产品块失败:', block);
             }
-            products = JSON.parse(cleanData);
-        } else {
-            products = productsData;
         }
-        if (!Array.isArray(products)) return [];
-        return products;
-    } catch(e) {
-        console.error('产品列表解析失败:', e);
-        return [];
+    } else if (Array.isArray(productsData)) {
+        return productsData;
     }
+    
+    return result;
 }
 
 let currentTab = 'new', pendingOrders = [], processingOrders = [], currentOrder = null, hasCheckedShipping = false;
@@ -284,7 +318,6 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
     
     await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
     
-    // 记录货款返还
     if (supplyPrice > 0) {
         await sb.from('deposits').insert([{
             uid: order.uid,
@@ -295,7 +328,6 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
         }]);
     }
     
-    // 记录佣金
     if (commission > 0) {
         await sb.from('deposits').insert([{
             uid: order.uid,
@@ -377,54 +409,52 @@ async function loadOrders() {
 
 function renderOrders() { renderNewOrders(); renderProcessingOrders(); }
 
-// 修复版：不使用 encodeURIComponent，直接传递
 function renderNewOrders() {
     const container = document.getElementById('newOrdersList');
     if (!container) return;
     if (pendingOrders.length === 0) { container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-inbox"></i>No new orders</div>'; return; }
-    container.innerHTML = pendingOrders.map(order => {
+    
+    let html = '';
+    for (let i = 0; i < pendingOrders.length; i++) {
+        const order = pendingOrders[i];
         let productsText = parseProductsText(order.products);
         let displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
-        // 直接使用单引号包裹 JSON，不编码
-        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-pending">Pending</span></div></div>`;
-    }).join('');
+        html += `<div class="order-card" data-id="${order.id}" data-order-no="${order.order_no}"><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-pending">Pending</span></div></div>`;
+    }
+    container.innerHTML = html;
+    
     document.querySelectorAll('#newOrdersList .order-card').forEach(card => {
-        card.addEventListener('click', () => {
-            try {
-                const order = JSON.parse(card.dataset.order);
-                openOrderModal(order);
-            } catch(e) {
-                console.error('解析订单失败:', e);
-                showToast('Failed to load order details', 'error');
-            }
+        card.addEventListener('click', async () => {
+            const orderId = card.dataset.id;
+            const orderNo = card.dataset.orderNo;
+            const { data: order } = await sb.from('user_orders').select('*').eq('id', orderId).single();
+            if (order) openOrderModal(order);
         });
     });
 }
 
-// 修复版：不使用 encodeURIComponent，直接传递
 function renderProcessingOrders() {
     const container = document.getElementById('processingOrdersList');
     if (!container) return;
     if (processingOrders.length === 0) { container.innerHTML = '<div class="empty-state"><i class="fa-regular fa-clock"></i>No orders in processing</div>'; return; }
-    container.innerHTML = processingOrders.map(order => {
+    
+    let html = '';
+    for (let i = 0; i < processingOrders.length; i++) {
+        const order = processingOrders[i];
         let productsText = parseProductsText(order.products);
         let displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
-        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-processing">In Transit</span></div></div>`;
-    }).join('');
+        html += `<div class="order-card" data-order-no="${order.order_no}"><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-processing">In Transit</span></div></div>`;
+    }
+    container.innerHTML = html;
+    
     document.querySelectorAll('#processingOrdersList .order-card').forEach(card => {
         card.addEventListener('click', () => {
-            try {
-                const order = JSON.parse(card.dataset.order);
-                window.location.href = 'order-tracking.html?order_no=' + order.order_no;
-            } catch(e) {
-                console.error('解析订单失败:', e);
-                showToast('Failed to load order details', 'error');
-            }
+            window.location.href = 'order-tracking.html?order_no=' + card.dataset.orderNo;
         });
     });
 }
 
-function openOrderModal(order) {
+async function openOrderModal(order) {
     if (order.status !== 'pending') {
         showToast('This order has already been processed', 'warning');
         return;
@@ -498,7 +528,6 @@ document.getElementById('confirmOrderBtn').addEventListener('click', async funct
     let newBalance = currentBalance - currentOrder.total_supply_price;
     await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
     
-    // 记录扣款（货款扣除）
     await sb.from('deposits').insert([{
         uid: user.uid,
         username: user.username,
