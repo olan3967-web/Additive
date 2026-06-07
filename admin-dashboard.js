@@ -1,4 +1,5 @@
-// admin-dashboard.js - 完整版（琥珀金通知 + 实时订阅 + Email待发送统计 + 实时活动）
+// admin-dashboard.js - 完整版（Onboarding Progress 环形图）
+
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -145,30 +146,55 @@ async function loadChartData(days, force = false) {
     } catch (e) { console.error('加载图表数据失败:', e); }
 }
 
+// ========== Onboarding 环形图（替代原来的用户行为分析） ==========
 async function loadRingData() {
     try {
         const { data: users } = await sb.from('users').select('uid');
         if (!users || users.length === 0) return;
         
-        let completed30Orders = 0;
-        const batchSize = 50;
-        for (let i = 0; i < users.length; i += batchSize) {
-            const batch = users.slice(i, i + batchSize);
-            const promises = batch.map(user => sb.from('order_history').select('id', { count: 'exact', head: true }).eq('uid', user.uid));
-            const results = await Promise.all(promises);
-            completed30Orders += results.filter(r => (r.count || 0) >= 30).length;
+        const { data: onboardingData } = await sb.from('user_onboarding').select('*');
+        const onboardingMap = {};
+        if (onboardingData) {
+            onboardingData.forEach(o => { onboardingMap[o.uid] = o; });
         }
-        const rate = Math.round((completed30Orders / users.length) * 100);
+        
+        const { data: kycStatuses } = await sb.from('user_kyc_status').select('*');
+        const kycMap = {};
+        if (kycStatuses) {
+            kycStatuses.forEach(k => { kycMap[k.uid] = k.is_verified; });
+        }
+        
+        let completedCount = 0;
+        for (const user of users) {
+            const onboarding = onboardingMap[user.uid] || {};
+            const step1Completed = onboarding.step1_completed || false;
+            const step2Completed = kycMap[user.uid] || false;
+            const step3Completed = onboarding.step3_completed || false;
+            
+            if (step1Completed && step2Completed && step3Completed) {
+                completedCount++;
+            }
+        }
+        
+        const rate = Math.round((completedCount / users.length) * 100);
         const percentEl = document.getElementById('ringPercent');
         if (percentEl) percentEl.innerText = rate + '%';
         
         if (ringChart) {
-            ringChart.setOption({ series: [{ data: [{ value: rate }, { value: 100 - rate }] }] });
+            ringChart.setOption({ 
+                series: [{ 
+                    data: [
+                        { value: rate, name: '已完成', itemStyle: { color: '#4a7cff', borderRadius: 8 } },
+                        { value: 100 - rate, name: '未完成', itemStyle: { color: '#1a2a3a', borderRadius: 8 } }
+                    ] 
+                }] 
+            });
         }
-    } catch (e) { console.error('加载环形图数据失败:', e); }
+    } catch (e) { 
+        console.error('加载Onboarding数据失败:', e);
+    }
 }
 
-// ========== 实时活动加载函数 ==========
 async function loadActivityTimeline(force = false) {
     const now = Date.now();
     if (!force && cachedData.activity && (now - cachedData.lastActivityTime) < CACHE_DURATION) {
@@ -194,7 +220,6 @@ async function loadActivityTimeline(force = false) {
         
         const activities = [];
         
-        // AddKYC活动
         for (const k of kycList) {
             let username = k.username || k.uid;
             if (!k.username || k.username === k.uid) {
@@ -217,7 +242,6 @@ async function loadActivityTimeline(force = false) {
             });
         }
         
-        // AddWithdraw活动
         for (const w of withdrawalList) {
             let statusText = '';
             if (w.status === 'pending') statusText = '待审核';
@@ -235,7 +259,6 @@ async function loadActivityTimeline(force = false) {
             });
         }
         
-        // Add新用户注册活动
         for (const u of userList) {
             activities.push({
                 type: 'user',
@@ -247,7 +270,6 @@ async function loadActivityTimeline(force = false) {
             });
         }
         
-        // Add邮箱验证请求活动
         for (const e of emailList) {
             let statusText = '';
             if (e.code && !e.is_verified) statusText = '待验证';
@@ -264,7 +286,6 @@ async function loadActivityTimeline(force = false) {
             });
         }
         
-        // 按时间倒序排序
         activities.sort((a, b) => new Date(b.time) - new Date(a.time));
         
         console.log(`📋 生成活动列表: ${activities.length} 条`);
@@ -299,7 +320,7 @@ function renderActivityList(activities) {
                     <i class="${a.icon}" style="color: ${a.color};"></i>
                 </div>
                 <div style="flex: 1;">
-                    <div style="font-size: 13px; font-weight: 500;">${escapeHtml(a.title)}</div>
+                    <div style="font-size: 13px; font-weight: 500; color: #eef5ff;">${escapeHtml(a.title)}</div>
                     <div style="font-size: 11px; color: #8a9abb;">${escapeHtml(a.user)}</div>
                     ${amountHtml}
                 </div>
@@ -309,7 +330,6 @@ function renderActivityList(activities) {
     }).join('');
 }
 
-// 点击活动跳转
 window.handleActivityClick = function(type) {
     if (type === 'kyc') {
         showPage('kyc');
@@ -361,7 +381,7 @@ function initTrendChart() {
         },
         yAxis: { 
             type: 'value', 
-            name: 'Amount (€)', 
+            name: '金额 (€)', 
             nameTextStyle: { color: '#8a9abb' }, 
             axisLabel: { color: '#8a9abb' }, 
             splitLine: { lineStyle: { color: '#1a2a3a', type: 'dashed' } } 
@@ -429,14 +449,19 @@ function initRingChart() {
     
     ringChart = echarts.init(dom);
     ringChart.setOption({
-        tooltip: { show: false },
+        tooltip: { 
+            trigger: 'item',
+            backgroundColor: 'rgba(15,25,40,0.95)',
+            borderColor: '#4a7cff',
+            formatter: '{b}: {d}%'
+        },
         series: [{
             type: 'pie',
             radius: ['55%', '75%'],
             center: ['50%', '50%'],
             data: [
-                { value: 0, name: '完成', itemStyle: { color: '#4a7cff', borderRadius: 8 } },
-                { value: 100, name: '剩余', itemStyle: { color: '#1a2a3a', borderRadius: 8 } }
+                { value: 0, name: '已完成', itemStyle: { color: '#4a7cff', borderRadius: 8 } },
+                { value: 100, name: '未完成', itemStyle: { color: '#1a2a3a', borderRadius: 8 } }
             ],
             label: { show: false },
             startAngle: 90,
@@ -516,12 +541,12 @@ function loadDashboardPage(days = 1) {
             </div>
             <div class="card" style="padding: 20px; text-align: center;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;">📊 用户行为分析</div>
-                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #4a7cff; border-radius: 2px; margin-right: 6px;"></span>做单率</span></div>
+                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;">📊 Onboarding Progress</div>
+                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #4a7cff; border-radius: 2px; margin-right: 6px;"></span>已完成 (3/3)</span></div>
                 </div>
                 <div id="ringChart" style="height: 220px; width: 100%;"></div>
-                <div id="ringPercent" style="font-size: 24px; font-weight: 700; color: #fff; margin-top: 8px;">0%</div>
-                <div style="font-size: 11px; color: #6a7a9a;">完成30单以上用户占比</div>
+                <div id="ringPercent" style="font-size: 24px; font-weight: 700; color: #ffdd99; margin-top: 8px;">0%</div>
+                <div style="font-size: 11px; color: #6a7a9a;">完成全部3步Onboarding的用户占比</div>
             </div>
         </div>
         <div class="card">
