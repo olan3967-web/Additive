@@ -146,12 +146,11 @@ function generateRandomBuyer() {
 // ========== 加载 Manual Release 订单 ==========
 async function loadManualReleaseOrders() {
     try {
-        // 查询 Manual 订单：包括 pending 和 processing 状态
         const { data: orders, error } = await sb
             .from('user_orders')
             .select('*')
             .or('payment_release_timer.is.null,payment_release_timer.eq.0')
-            .in('status', ['pending', 'processing'])
+            .eq('status', 'processing')
             .order('created_at', { ascending: false });
         
         if (error) throw error;
@@ -168,15 +167,16 @@ async function loadManualReleaseOrders() {
                         : order.tracking_timeline;
                 } catch(e) {}
                 
-                // 查找等待中的 Payment released
+                // 兼容两种状态名
                 const hasPending = timeline.some(item => 
-                    item.status === "Payment released" && item.isPending === true
+                    item.status === "Payment released (pending)" || 
+                    (item.status === "Payment released" && item.isPending === true)
                 );
                 const hasReleased = timeline.some(item => 
                     item.status === "Payment released" && !item.isPending
                 );
                 
-                console.log(`订单 ${order.order_no}: status=${order.status}, hasPending=${hasPending}, hasReleased=${hasReleased}`);
+                console.log(`订单 ${order.order_no}: hasPending=${hasPending}, hasReleased=${hasReleased}`);
                 
                 if (hasPending && !hasReleased) {
                     pendingReleaseOrders.push(order);
@@ -246,52 +246,29 @@ function renderManualReleaseCard() {
 // ========== 触发 Payment Release ==========
 async function triggerPaymentRelease(orderNo) {
     try {
-        console.log('开始释放订单:', orderNo);
-        
-        const { data: order, error: orderError } = await sb.from('user_orders').select('*').eq('order_no', orderNo).single();
-        if (orderError) {
-            console.error('获取订单失败:', orderError);
-            return false;
-        }
-        if (!order) {
-            console.error('订单不存在');
-            return false;
-        }
+        const { data: order } = await sb.from('user_orders').select('*').eq('order_no', orderNo).single();
+        if (!order) return false;
         
         let timeline = [];
         try {
             timeline = typeof order.tracking_timeline === 'string' 
                 ? JSON.parse(order.tracking_timeline) 
                 : (order.tracking_timeline || []);
-        } catch(e) { 
-            console.error('解析 timeline 失败:', e);
-            return false;
-        }
-        
-        console.log('当前 timeline:', timeline);
+        } catch(e) { timeline = []; }
         
         // 1. 找到并更新等待中的 Payment released
         let paymentReleasedTime = new Date();
         let foundPending = false;
-        let pendingIndex = -1;
-        
         for (let i = 0; i < timeline.length; i++) {
-            if (timeline[i].status === "Payment released" && timeline[i].isPending === true) {
-                pendingIndex = i;
+            if (timeline[i].status === "Payment released (pending)" || 
+                (timeline[i].status === "Payment released" && timeline[i].isPending === true)) {
+                timeline[i] = { status: "Payment released", time: paymentReleasedTime.toISOString() };
                 foundPending = true;
                 break;
             }
         }
         
-        if (!foundPending) {
-            console.error('没有找到等待中的 Payment released 状态');
-            return false;
-        }
-        
-        console.log('找到等待状态，索引:', pendingIndex);
-        
-        // 更新为完成状态
-        timeline[pendingIndex] = { status: "Payment released", time: paymentReleasedTime.toISOString() };
+        if (!foundPending) return false;
         
         // 2. 更新后续状态
         const orderConfirmedDelay = 5 + Math.random() * 5;
@@ -301,10 +278,10 @@ async function triggerPaymentRelease(orderNo) {
         const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
         
         for (let i = 0; i < timeline.length; i++) {
-            if (timeline[i].status === "Order confirmed" && timeline[i].isPending === true) {
+            if (timeline[i].status === "Order confirmed" && timeline[i].isPending) {
                 timeline[i] = { status: "Order confirmed", time: orderConfirmedTime.toISOString() };
             }
-            if (timeline[i].status === "Preparing parcel for shipment" && timeline[i].isPending === true) {
+            if (timeline[i].status === "Preparing parcel for shipment" && timeline[i].isPending) {
                 timeline[i] = { status: "Preparing parcel for shipment", time: preparingTime.toISOString() };
             }
         }
@@ -327,7 +304,7 @@ async function triggerPaymentRelease(orderNo) {
         let laterTime = new Date(preparingTime);
         let remainingIndex = 0;
         for (let i = 0; i < timeline.length; i++) {
-            if (timeline[i].isPending === true && remainingStatuses.includes(timeline[i].status)) {
+            if (timeline[i].isPending && remainingStatuses.includes(timeline[i].status)) {
                 laterTime = new Date(laterTime.getTime() + intervals[remainingIndex]);
                 timeline[i] = { status: remainingStatuses[remainingIndex], time: laterTime.toISOString() };
                 remainingIndex++;
@@ -338,29 +315,18 @@ async function triggerPaymentRelease(orderNo) {
         const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
         const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
         const newBalance = (user?.balance || 0) + refundAmount;
-        
-        console.log('返还余额:', refundAmount, '新余额:', newBalance);
-        
         await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
         
         await sb.from('deposits').insert([{
-            uid: order.uid, 
-            username: order.username, 
-            amount: order.total_commission || 0, 
-            type: 'order_settlement', 
-            created_at: new Date().toISOString()
+            uid: order.uid, username: order.username, amount: order.total_commission || 0,
+            type: 'order_settlement', created_at: new Date().toISOString()
         }]);
         
         // 5. 更新订单
-        const updateResult = await sb.from('user_orders').update({
+        await sb.from('user_orders').update({
             tracking_timeline: JSON.stringify(timeline),
             status: 'processing'
         }).eq('order_no', orderNo);
-        
-        if (updateResult.error) {
-            console.error('更新订单失败:', updateResult.error);
-            return false;
-        }
         
         // 6. 写入 order_history
         try {
@@ -390,9 +356,7 @@ async function triggerPaymentRelease(orderNo) {
             localStorage.setItem('currentUser', JSON.stringify(localUser));
         }
         
-        console.log('释放成功');
         return true;
-        
     } catch (err) {
         console.error('触发失败:', err);
         return false;
