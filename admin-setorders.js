@@ -7,13 +7,158 @@ let manualReleaseOrders = [];
 let paymentReleaseTimer = null;
 
 function generateRandomBuyer() {
-    const firstNames = ['Liam', 'Emma', 'Noah', 'Olivia', 'John', 'Jane', 'Michael', 'Sarah', 'David', 'Lisa'];
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Wilson', 'Anderson'];
-    const cities = ['London', 'Berlin', 'Paris', 'Madrid', 'Rome', 'Amsterdam', 'Vienna', 'Brussels', 'Zurich', 'Stockholm'];
-    const name = firstNames[Math.floor(Math.random() * firstNames.length)] + ' ' + lastNames[Math.floor(Math.random() * lastNames.length)];
-    const phone = '+' + Math.floor(Math.random() * 90 + 10) + '****' + Math.floor(Math.random() * 9000 + 1000);
-    const address = Math.floor(Math.random() * 200 + 1) + ' Main Street, ' + cities[Math.floor(Math.random() * cities.length)] + ', Europe';
-    return { name, phone, address };
+    // ========== 欧洲各国名字库 ==========
+    const namesByCountry = {
+        'UK': {
+            first: ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth', 'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica', 'Thomas', 'Sarah', 'Charles', 'Karen'],
+            last: ['Smith', 'Jones', 'Taylor', 'Brown', 'Williams', 'Wilson', 'Johnson', 'Davies', 'Robinson', 'Wright', 'Thompson', 'Evans', 'Walker', 'White', 'Roberts', 'Green', 'Hall', 'Wood', 'Jackson', 'Clarke']
+        },
+        'Germany': {
+            first: ['Lukas', 'Hanna', 'Finn', 'Mia', 'Jonas', 'Emma', 'Leon', 'Sophie', 'Paul', 'Marie', 'Felix', 'Lena', 'Max', 'Lea', 'Moritz', 'Anna', 'Ben', 'Julia', 'Noah', 'Laura'],
+            last: ['Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann', 'Schäfer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf', 'Schröder', 'Neumann', 'Schwarz', 'Zimmermann']
+        },
+        'France': {
+            first: ['Lucas', 'Emma', 'Louis', 'Jade', 'Gabriel', 'Louise', 'Raphael', 'Alice', 'Jules', 'Chloé', 'Hugo', 'Lina', 'Adam', 'Rose', 'Paul', 'Anna', 'Nathan', 'Léa', 'Arthur', 'Inès'],
+            last: ['Martin', 'Bernard', 'Dubois', 'Thomas', 'Robert', 'Richard', 'Petit', 'Durand', 'Leroy', 'Moreau', 'Simon', 'Laurent', 'Michel', 'Garcia', 'David', 'Bertrand', 'Roux', 'Vincent', 'Fournier', 'Morel']
+        },
+        'Spain': {
+            first: ['Lucas', 'Sofia', 'Mateo', 'Martina', 'Leo', 'Lucia', 'Daniel', 'Paula', 'Alejandro', 'Valentina', 'Pablo', 'Emma', 'Manuel', 'Julia', 'Adrian', 'Carla', 'Hugo', 'Alba', 'David', 'Carmen'],
+            last: ['García', 'Martínez', 'López', 'González', 'Rodríguez', 'Fernández', 'Sánchez', 'Pérez', 'Gómez', 'Martín', 'Jiménez', 'Ruiz', 'Hernández', 'Díaz', 'Moreno', 'Muñoz', 'Álvarez', 'Romero', 'Alonso', 'Gutiérrez']
+        },
+        'Italy': {
+            first: ['Leonardo', 'Sofia', 'Alessandro', 'Giulia', 'Mattia', 'Aurora', 'Lorenzo', 'Alice', 'Andrea', 'Emma', 'Tommaso', 'Giorgia', 'Gabriele', 'Martina', 'Francesco', 'Anna', 'Riccardo', 'Sara', 'Davide', 'Chiara'],
+            last: ['Rossi', 'Russo', 'Ferrari', 'Esposito', 'Bianchi', 'Romano', 'Colombo', 'Ricci', 'Marino', 'Greco', 'Bruno', 'Gallo', 'Conti', 'De Luca', 'Costa', 'Giordano', 'Mancini', 'Rizzo', 'Lombardi', 'Moretti']
+        },
+        'Austria': {
+            first: ['Lukas', 'Anna', 'David', 'Lea', 'Felix', 'Lena', 'Max', 'Sophie', 'Paul', 'Hanna', 'Moritz', 'Emma', 'Jonas', 'Marie', 'Florian', 'Laura', 'Tobias', 'Julia', 'Simon', 'Nina'],
+            last: ['Gruber', 'Huber', 'Bauer', 'Wagner', 'Müller', 'Pichler', 'Steiner', 'Moser', 'Leitner', 'Weber', 'Schmid', 'Egger', 'Mayr', 'Schneider', 'Fischer', 'Winkler', 'Haas', 'Koller', 'Reiter', 'Berger']
+        },
+        'Netherlands': {
+            first: ['Daan', 'Emma', 'Sem', 'Julia', 'Lucas', 'Sophie', 'Finn', 'Lynn', 'Levi', 'Mila', 'Luuk', 'Eva', 'Milan', 'Lisa', 'Jesse', 'Anna', 'Bram', 'Noa', 'Julian', 'Sanne'],
+            last: ['de Jong', 'Jansen', 'de Vries', 'van den Berg', 'van Dijk', 'Bakker', 'Janssen', 'Visser', 'Smit', 'Meijer', 'de Boer', 'Mulder', 'de Groot', 'Bos', 'Vos', 'Peters', 'Hendriks', 'van Leeuwen', 'Dekker', 'Koster']
+        },
+        'Belgium': {
+            first: ['Noah', 'Emma', 'Liam', 'Louise', 'Arthur', 'Mila', 'Lucas', 'Juliette', 'Louis', 'Lina', 'Adam', 'Alice', 'Jules', 'Chloé', 'Gabriel', 'Jade', 'Raphael', 'Anna', 'Elias', 'Lucie'],
+            last: ['Peeters', 'Janssens', 'Maes', 'Jacobs', 'Mertens', 'Willems', 'Claes', 'Goossens', 'Wouters', 'De Smet', 'Verstraeten', 'Van Damme', 'Van den Bossche', 'Leroy', 'Simon', 'François', 'Dubois', 'Laurent', 'Renard', 'Leclercq']
+        },
+        'Switzerland': {
+            first: ['Liam', 'Emma', 'Noah', 'Mia', 'Luca', 'Sofia', 'Elias', 'Lina', 'Leon', 'Anna', 'David', 'Laura', 'Simon', 'Lea', 'Samuel', 'Julia', 'Fabio', 'Nina', 'Jan', 'Lara'],
+            last: ['Meier', 'Keller', 'Müller', 'Schmid', 'Weber', 'Schneider', 'Fischer', 'Gerber', 'Wyss', 'Steiner', 'Moser', 'Brunner', 'Ammann', 'Zimmermann', 'Burkhard', 'Marty', 'Stucki', 'Hofmann', 'Bachmann', 'Roth']
+        },
+        'Sweden': {
+            first: ['Elias', 'Alice', 'Liam', 'Maja', 'Lucas', 'Ella', 'Oliver', 'Wilma', 'William', 'Alma', 'Hugo', 'Ebba', 'Oscar', 'Julia', 'Axel', 'Klara', 'Alexander', 'Astrid', 'Filip', 'Ellen'],
+            last: ['Andersson', 'Johansson', 'Karlsson', 'Nilsson', 'Eriksson', 'Larsson', 'Olsson', 'Persson', 'Svensson', 'Gustafsson', 'Pettersson', 'Jansson', 'Hansson', 'Bengtsson', 'Jonsson', 'Lindberg', 'Magnusson', 'Holm', 'Bergström', 'Åberg']
+        },
+        'Denmark': {
+            first: ['William', 'Emma', 'Noah', 'Ida', 'Oliver', 'Clara', 'Lucas', 'Sofie', 'Emil', 'Alma', 'Magnus', 'Karla', 'Malthe', 'Freja', 'Felix', 'Frida', 'Elliot', 'Lærke', 'Oscar', 'Mathilde'],
+            last: ['Jensen', 'Nielsen', 'Hansen', 'Pedersen', 'Andersen', 'Christensen', 'Larsen', 'Sørensen', 'Rasmussen', 'Jørgensen', 'Petersen', 'Madsen', 'Kristensen', 'Olsen', 'Thomsen', 'Christiansen', 'Poulsen', 'Johansen', 'Kjær', 'Lund']
+        },
+        'Norway': {
+            first: ['Lucas', 'Nora', 'Oliver', 'Emma', 'Emil', 'Sofie', 'Oskar', 'Olivia', 'Jakob', 'Sara', 'Alexander', 'Leah', 'Magnus', 'Sofia', 'Theodor', 'Ingrid', 'Elias', 'Maja', 'Kristian', 'Anna'],
+            last: ['Hansen', 'Johansen', 'Olsen', 'Larsen', 'Andersen', 'Pedersen', 'Nilsen', 'Jensen', 'Eriksen', 'Christensen', 'Martinsen', 'Knudsen', 'Johnsen', 'Solberg', 'Moen', 'Berge', 'Jacobsen', 'Bakken', 'Halvorsen', 'Myhre']
+        },
+        'Finland': {
+            first: ['Eino', 'Helmi', 'Leo', 'Aino', 'Väinö', 'Eevi', 'Oliver', 'Sofia', 'Elias', 'Lilja', 'Onni', 'Mila', 'Toivo', 'Ellen', 'Lauri', 'Linnea', 'Veeti', 'Venla', 'Eetu', 'Iiris'],
+            last: ['Korhonen', 'Virtanen', 'Mäkinen', 'Nieminen', 'Mäkelä', 'Hämäläinen', 'Laine', 'Heikkinen', 'Koskinen', 'Järvinen', 'Lehtonen', 'Leinonen', 'Lahtinen', 'Salminen', 'Heinonen', 'Niskanen', 'Järvinen', 'Kinnunen', 'Rantanen', 'Karjalainen']
+        },
+        'Ireland': {
+            first: ['Jack', 'Emma', 'Noah', 'Grace', 'Conor', 'Anna', 'James', 'Molly', 'Sean', 'Saoirse', 'Oisin', 'Fiona', 'Liam', 'Ava', 'Cillian', 'Ciara', 'Ryan', 'Chloe', 'Eoin', 'Niamh'],
+            last: ['Murphy', 'Kelly', 'O\'Brien', 'Walsh', 'O\'Sullivan', 'Byrne', 'Ryan', 'Connor', 'McCarthy', 'Dunne', 'Doyle', 'Lynch', 'Nolan', 'McGuinness', 'Kennedy', 'Sheridan', 'Gallagher', 'Fitzgerald', 'Flynn', 'O\'Donnell']
+        },
+        'Portugal': {
+            first: ['Francisco', 'Maria', 'Afonso', 'Leonor', 'João', 'Matilde', 'Santiago', 'Carolina', 'Miguel', 'Beatriz', 'Martim', 'Ana', 'Tomás', 'Mariana', 'Guilherme', 'Inês', 'Duarte', 'Sofia', 'Luís', 'Lara'],
+            last: ['Silva', 'Santos', 'Ferreira', 'Pereira', 'Oliveira', 'Costa', 'Rodrigues', 'Martins', 'Jesus', 'Sousa', 'Fernandes', 'Gonçalves', 'Gomes', 'Lopes', 'Marques', 'Alves', 'Almeida', 'Ribeiro', 'Pinto', 'Carvalho']
+        }
+    };
+    
+    // 所有国家列表
+    const countries = Object.keys(namesByCountry);
+    
+    // 根据国家选择对应的城市
+    const countryCitiesMap = {
+        'UK': ['London', 'Manchester', 'Birmingham', 'Liverpool', 'Edinburgh', 'Glasgow', 'Leeds', 'Bristol', 'Newcastle', 'Sheffield'],
+        'Germany': ['Berlin', 'Munich', 'Hamburg', 'Frankfurt', 'Cologne', 'Stuttgart', 'Düsseldorf', 'Dresden', 'Hanover', 'Nuremberg'],
+        'France': ['Paris', 'Marseille', 'Lyon', 'Toulouse', 'Nice', 'Nantes', 'Strasbourg', 'Montpellier', 'Bordeaux', 'Lille'],
+        'Spain': ['Madrid', 'Barcelona', 'Valencia', 'Seville', 'Zaragoza', 'Malaga', 'Murcia', 'Palma', 'Las Palmas', 'Bilbao'],
+        'Italy': ['Rome', 'Milan', 'Naples', 'Turin', 'Palermo', 'Genoa', 'Bologna', 'Florence', 'Venice', 'Verona'],
+        'Austria': ['Vienna', 'Salzburg', 'Graz', 'Innsbruck', 'Linz', 'Klagenfurt', 'Bregenz', 'Eisenstadt', 'St. Pölten'],
+        'Netherlands': ['Amsterdam', 'Rotterdam', 'The Hague', 'Utrecht', 'Eindhoven', 'Groningen', 'Tilburg', 'Almere', 'Breda', 'Nijmegen'],
+        'Belgium': ['Brussels', 'Antwerp', 'Ghent', 'Charleroi', 'Liège', 'Bruges', 'Namur', 'Leuven', 'Mons', 'Aalst'],
+        'Switzerland': ['Zurich', 'Geneva', 'Basel', 'Bern', 'Lausanne', 'Lucerne', 'St. Gallen', 'Lugano', 'Fribourg', 'Winterthur'],
+        'Sweden': ['Stockholm', 'Gothenburg', 'Malmo', 'Uppsala', 'Västerås', 'Örebro', 'Linköping', 'Helsingborg', 'Jönköping', 'Norrköping'],
+        'Denmark': ['Copenhagen', 'Aarhus', 'Odense', 'Aalborg', 'Esbjerg', 'Randers', 'Kolding', 'Horsens', 'Vejle', 'Roskilde'],
+        'Norway': ['Oslo', 'Bergen', 'Trondheim', 'Stavanger', 'Drammen', 'Fredrikstad', 'Kristiansand', 'Sandnes', 'Tromsø', 'Ålesund'],
+        'Finland': ['Helsinki', 'Espoo', 'Tampere', 'Vantaa', 'Turku', 'Oulu', 'Lahti', 'Kuopio', 'Jyväskylä', 'Pori'],
+        'Ireland': ['Dublin', 'Cork', 'Limerick', 'Galway', 'Waterford', 'Drogheda', 'Dundalk', 'Swords', 'Bray', 'Navan'],
+        'Portugal': ['Lisbon', 'Porto', 'Braga', 'Coimbra', 'Faro', 'Amadora', 'Setúbal', 'Funchal', 'Agualva', 'Queluz']
+    };
+    
+    // 随机选择国家
+    const selectedCountry = countries[Math.floor(Math.random() * countries.length)];
+    const countryData = namesByCountry[selectedCountry];
+    const cities = countryCitiesMap[selectedCountry];
+    const selectedCity = cities[Math.floor(Math.random() * cities.length)];
+    
+    // 随机选择名字
+    const firstName = countryData.first[Math.floor(Math.random() * countryData.first.length)];
+    const lastName = countryData.last[Math.floor(Math.random() * countryData.last.length)];
+    const fullName = firstName + ' ' + lastName;
+    
+    // 根据国家生成手机区号
+    const countryCodeMap = {
+        'UK': '+44',
+        'Germany': '+49',
+        'France': '+33',
+        'Spain': '+34',
+        'Italy': '+39',
+        'Austria': '+43',
+        'Netherlands': '+31',
+        'Belgium': '+32',
+        'Switzerland': '+41',
+        'Sweden': '+46',
+        'Denmark': '+45',
+        'Norway': '+47',
+        'Finland': '+358',
+        'Ireland': '+353',
+        'Portugal': '+351'
+    };
+    
+    const countryCode = countryCodeMap[selectedCountry];
+    
+    // 生成手机号（根据国家格式）
+    let phone;
+    if (selectedCountry === 'Germany') {
+        phone = countryCode + '1' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    } else if (selectedCountry === 'UK') {
+        phone = countryCode + '7' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    } else if (selectedCountry === 'France') {
+        phone = countryCode + '6' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    } else if (selectedCountry === 'Spain') {
+        phone = countryCode + '6' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    } else if (selectedCountry === 'Italy') {
+        phone = countryCode + '3' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    } else if (selectedCountry === 'Austria') {
+        phone = countryCode + '6' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    } else if (selectedCountry === 'Netherlands') {
+        phone = countryCode + '6' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    } else if (selectedCountry === 'Belgium') {
+        phone = countryCode + '4' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    } else if (selectedCountry === 'Switzerland') {
+        phone = countryCode + '7' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    } else if (selectedCountry === 'Sweden') {
+        phone = countryCode + '7' + Math.floor(Math.random() * 9) + Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+    } else {
+        phone = countryCode + Math.floor(Math.random() * 900000000) + 100000000;
+    }
+    
+    // 生成地址
+    const streetNames = ['Main Street', 'High Street', 'Park Avenue', 'Church Road', 'Queen Street', 'King Street', 'Station Road', 'London Road', 'Broadway', 'Sunset Boulevard', 'Garden Street', 'Maple Avenue', 'Oak Street', 'Pine Street', 'Cedar Road'];
+    const streetNum = Math.floor(Math.random() * 200 + 1);
+    const street = streetNames[Math.floor(Math.random() * streetNames.length)];
+    const postalCode = Math.floor(Math.random() * 90000 + 10000);
+    const address = streetNum + ' ' + street + ', ' + postalCode + ', ' + selectedCity + ', ' + selectedCountry;
+    
+    return { name: fullName, phone, address, country: selectedCountry, city: selectedCity };
 }
 
 // ========== 加载 Manual Release 订单（创建后立即显示） ==========
