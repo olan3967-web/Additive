@@ -20,6 +20,8 @@
             color: #1A1F2E;
             line-height: 1.5;
             min-height: 100vh;
+            /* 覆盖 user-common.css 的 flex 居中样式 */
+            display: block !important;
         }
 
         /* 全局字体 */
@@ -37,6 +39,8 @@
             padding: 0 32px;
             position: relative;
             z-index: 2;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         /* ========== 三层叠加渐变 ========== */
@@ -66,6 +70,8 @@
                     #9a6040 85%,
                     #d4b896 100%
                 );
+            width: 100%;
+            overflow-x: hidden;
         }
 
         /* 视频 Hero 区域 */
@@ -608,6 +614,7 @@
             color: #7A8A9A;
             text-align: center;
             background: #ffffff;
+            width: 100%;
         }
         .footer-links {
             display: flex;
@@ -655,7 +662,7 @@
             .platform-img-wrapper { width: 120px; height: 74px; }
         }
     </style>
-    <link rel="stylesheet" href="user-common.css">
+    <!-- 不再引用 user-common.css，避免样式冲突 -->
 </head>
 <body>
     <div class="gradient-wrapper">
@@ -757,30 +764,32 @@
             <div class="agents-grid" id="agentsGrid"></div>
         </div>
 
-    </div>
-
-    <div class="container">
-        <div class="cta-section">
-            <h2>Ready to scale your dropshipping business?</h2>
-            <p>Join 50,000+ merchants who trust us for sourcing, fulfillment, and growth.</p>
-            <button class="btn-primary" onclick="redirectToOnboarding('register.html')">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
-        </div>
-    </div>
-
-    <footer class="footer">
+        <!-- ========== CTA 区块 - 已移入 gradient-wrapper 内部 ========== -->
         <div class="container">
-            <div class="footer-links">
-                <a href="#">About Us</a>
-                <a href="#">Sourcing</a>
-                <a href="#">Fulfillment</a>
-                <a href="#">Pricing</a>
-                <a href="#">Affiliate Program</a>
-                <a href="#">API</a>
-                <a href="#">Contact</a>
+            <div class="cta-section">
+                <h2>Ready to scale your dropshipping business?</h2>
+                <p>Join 50,000+ merchants who trust us for sourcing, fulfillment, and growth.</p>
+                <button class="btn-primary" onclick="redirectToOnboarding('register.html')">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
             </div>
-            <div>© 2026 CJDropshipping | Global Dropshipping Platform</div>
         </div>
-    </footer>
+
+        <!-- ========== FOOTER - 已移入 gradient-wrapper 内部 ========== -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-links">
+                    <a href="#">About Us</a>
+                    <a href="#">Sourcing</a>
+                    <a href="#">Fulfillment</a>
+                    <a href="#">Pricing</a>
+                    <a href="#">Affiliate Program</a>
+                    <a href="#">API</a>
+                    <a href="#">Contact</a>
+                </div>
+                <div>© 2026 CJDropshipping | Global Dropshipping Platform</div>
+            </div>
+        </footer>
+
+    </div>  <!-- gradient-wrapper 结束 -->
 
     <script>
         const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
@@ -788,15 +797,11 @@
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ========== 跳转函数 ==========
-        // Sign Up, Get Started, Start Sourcing Now 都跳转到 onboarding
         function redirectToOnboarding(targetUrl) {
-            // Save目标页面到 sessionStorage
             sessionStorage.setItem('onboarding_redirect', targetUrl);
-            // 跳转到引导页面
             window.location.href = 'onboarding.html';
         }
 
-        // Sign In 直接跳转到登录页面（不经过 onboarding）
         function redirectToSignIn() {
             window.location.href = 'signin.html';
         }
