@@ -637,9 +637,9 @@
                 <div class="rule-desc" id="rewardsDesc">Loading...</div>
             </div>
             <div class="rule-item">
-                <div class="rule-title">✅ ELIGIBILITY</div>
-                <div class="rule-desc">Complete <strong>30 orders</strong> to unlock reward claims.</div>
-            </div>
+    <div class="rule-title">✅ ELIGIBILITY</div>
+    <div class="rule-desc">No requirements. Just check in daily to claim rewards!</div>
+</div>
             <div class="rule-item">
                 <div class="rule-title">⚠️ MISS A DAY</div>
                 <div class="rule-desc">Your streak resets to Day 1, but you can start again!</div>
@@ -916,138 +916,132 @@
     }
 
     async function render() {
-        if (signInRewards.length === 0) {
-            await loadSignInRewards();
-        }
-        
-        const userOrderCount = await getUserOrderCount();
-        
-        animateNumber(document.getElementById('totalClaimed'), totalClaimedAmount, '€');
-        document.getElementById('totalDays').innerText = totalDaysCount;
-        
-        const rewardsDesc = signInRewards.map(r => `Day ${r.day}: €${r.amount}`).join(' | ');
-        document.getElementById('rewardsDesc').innerHTML = rewardsDesc;
-        
-        const grid = document.getElementById('daysGrid');
-        grid.innerHTML = '';
-        
-        for (let i = 0; i < signInRewards.length; i++) {
-            const reward = signInRewards[i];
-            const dayNum = reward.day;
-            const isClaimed = claimedDays.includes(dayNum);
-            const isToday = !hasClaimedToday() && (streak + 1) === dayNum;
-            
-            const div = document.createElement('div');
-            div.className = 'day-card';
-            
-            if (isClaimed) {
-                div.classList.add('completed');
-            } else if (isToday) {
-                div.classList.add('today');
-            } else {
-                div.classList.add('pending');
-            }
-            
-            div.innerHTML = `
-                <div class="day-num">Day ${dayNum}</div>
-                <div class="day-reward">€${reward.amount}</div>
-                ${isClaimed ? '<i class="fas fa-check-circle check-icon"></i>' : '<div style="height: 20px;"></div>'}
-            `;
-            grid.appendChild(div);
-        }
-        
-        const percent = totalDaysCount > 0 ? (streak / totalDaysCount) * 100 : 0;
-        document.getElementById('streakBar').style.width = percent + '%';
-        document.getElementById('streakCount').innerText = streak;
-        
-        const claimBtn = document.getElementById('claimBtn');
-        const nextDay = streak + 1;
-        const canClaim = !hasClaimedToday() && nextDay <= totalDaysCount && userOrderCount >= 30;
-        
-        if (canClaim) {
-            const nextReward = signInRewards.find(r => r.day === nextDay);
-            claimBtn.classList.remove('disabled');
-            claimBtn.disabled = false;
-            document.getElementById('claimWarning').innerHTML = `✨ Day ${nextDay} reward: €${nextReward?.amount || 0} ✨`;
-        } else if (hasClaimedToday()) {
-            claimBtn.classList.add('disabled');
-            claimBtn.disabled = true;
-            document.getElementById('claimWarning').innerHTML = `✅ Already claimed today. Come back tomorrow!`;
-        } else if (userOrderCount < 30) {
-            claimBtn.classList.add('disabled');
-            claimBtn.disabled = true;
-            document.getElementById('claimWarning').innerHTML = `📋 Complete ${30 - userOrderCount} more orders to unlock rewards.`;
-        } else if (nextDay > totalDaysCount) {
-            claimBtn.classList.add('disabled');
-            claimBtn.disabled = true;
-            document.getElementById('claimWarning').innerHTML = `🏆 Champion! You completed all days!`;
-        } else {
-            claimBtn.classList.add('disabled');
-            claimBtn.disabled = true;
-            document.getElementById('claimWarning').innerHTML = `🔒 Complete Day ${streak} to unlock Day ${nextDay}`;
-        }
+    if (signInRewards.length === 0) {
+        await loadSignInRewards();
     }
+    
+    // 删除用户订单数量检查
+    // const userOrderCount = await getUserOrderCount();  // 不再需要
+    
+    animateNumber(document.getElementById('totalClaimed'), totalClaimedAmount, '€');
+    document.getElementById('totalDays').innerText = totalDaysCount;
+    
+    const rewardsDesc = signInRewards.map(r => `Day ${r.day}: €${r.amount}`).join(' | ');
+    document.getElementById('rewardsDesc').innerHTML = rewardsDesc;
+    
+    const grid = document.getElementById('daysGrid');
+    grid.innerHTML = '';
+    
+    for (let i = 0; i < signInRewards.length; i++) {
+        const reward = signInRewards[i];
+        const dayNum = reward.day;
+        const isClaimed = claimedDays.includes(dayNum);
+        const isToday = !hasClaimedToday() && (streak + 1) === dayNum;
+        
+        const div = document.createElement('div');
+        div.className = 'day-card';
+        
+        if (isClaimed) {
+            div.classList.add('completed');
+        } else if (isToday) {
+            div.classList.add('today');
+        } else {
+            div.classList.add('pending');
+        }
+        
+        div.innerHTML = `
+            <div class="day-num">Day ${dayNum}</div>
+            <div class="day-reward">€${reward.amount}</div>
+            ${isClaimed ? '<i class="fas fa-check-circle check-icon"></i>' : '<div style="height: 20px;"></div>'}
+        `;
+        grid.appendChild(div);
+    }
+    
+    const percent = totalDaysCount > 0 ? (streak / totalDaysCount) * 100 : 0;
+    document.getElementById('streakBar').style.width = percent + '%';
+    document.getElementById('streakCount').innerText = streak;
+    
+    const claimBtn = document.getElementById('claimBtn');
+    const nextDay = streak + 1;
+    // 删除订单数量检查，新用户可直接领取
+    const canClaim = !hasClaimedToday() && nextDay <= totalDaysCount;
+    
+    if (canClaim) {
+        const nextReward = signInRewards.find(r => r.day === nextDay);
+        claimBtn.classList.remove('disabled');
+        claimBtn.disabled = false;
+        document.getElementById('claimWarning').innerHTML = `✨ Day ${nextDay} reward: €${nextReward?.amount || 0} ✨`;
+    } else if (hasClaimedToday()) {
+        claimBtn.classList.add('disabled');
+        claimBtn.disabled = true;
+        document.getElementById('claimWarning').innerHTML = `✅ Already claimed today. Come back tomorrow!`;
+    } else if (nextDay > totalDaysCount) {
+        claimBtn.classList.add('disabled');
+        claimBtn.disabled = true;
+        document.getElementById('claimWarning').innerHTML = `🏆 Champion! You completed all days!`;
+    } else {
+        claimBtn.classList.add('disabled');
+        claimBtn.disabled = true;
+        document.getElementById('claimWarning').innerHTML = `🔒 Complete Day ${streak} to unlock Day ${nextDay}`;
+    }
+}
 
     async function claimReward() {
-        if (hasClaimedToday()) {
-            showToast('Already claimed today!', 'warning');
-            return;
-        }
-        
-        const nextDay = streak + 1;
-        if (nextDay > totalDaysCount) {
-            showToast('You already completed all days!', 'info');
-            return;
-        }
-        
-        const userOrderCount = await getUserOrderCount();
-        if (userOrderCount < 30) {
-            showToast(`Need 30 orders to claim rewards. You have ${userOrderCount}/30.`, 'error');
-            return;
-        }
-        
-        const nextReward = signInRewards.find(r => r.day === nextDay);
-        const amount = nextReward ? nextReward.amount : 0;
-        
-        if (streak > 0 && !isConsecutive()) {
-            const firstReward = signInRewards.find(r => r.day === 1);
-            const success = await addRewardToBalance(firstReward?.amount || 5);
-            if (success) {
-                streak = 1;
-                claimedDays = [1];
-                totalClaimedAmount += firstReward?.amount || 5;
-                lastClaimDate = new Date().toISOString();
-                saveLocalData();
-                await render();
-                animateCard(1);
-                burstConfetti();
-                showToast(`⚠️ Streak reset! You got €${firstReward?.amount || 5} for Day 1.`, 'warning');
-            }
-            return;
-        }
-        
-        const success = await addRewardToBalance(amount);
-        
+    if (hasClaimedToday()) {
+        showToast('Already claimed today!', 'warning');
+        return;
+    }
+    
+    const nextDay = streak + 1;
+    if (nextDay > totalDaysCount) {
+        showToast('You already completed all days!', 'info');
+        return;
+    }
+    
+    // 删除订单数量检查，新用户无需完成任何订单
+    // 直接获取下一个奖励
+    const nextReward = signInRewards.find(r => r.day === nextDay);
+    const amount = nextReward ? nextReward.amount : 0;
+    
+    if (streak > 0 && !isConsecutive()) {
+        const firstReward = signInRewards.find(r => r.day === 1);
+        const success = await addRewardToBalance(firstReward?.amount || 5);
         if (success) {
-            streak = nextDay;
-            claimedDays.push(nextDay);
-            totalClaimedAmount += amount;
+            streak = 1;
+            claimedDays = [1];
+            totalClaimedAmount += firstReward?.amount || 5;
             lastClaimDate = new Date().toISOString();
             saveLocalData();
             await render();
-            animateCard(nextDay);
+            animateCard(1);
             burstConfetti();
-            showToast(`🎉 Day ${nextDay} claimed! +€${amount}`, 'success');
-            
-            if (nextDay === totalDaysCount) {
-                setTimeout(() => {
-                    showToast(`🏆 AMAZING! Total claimed: €${totalClaimedAmount}`, 'success');
-                }, 500);
-            }
-        } else {
-            showToast('Failed to claim reward. Please try again.', 'error');
+            showToast(`⚠️ Streak reset! You got €${firstReward?.amount || 5} for Day 1.`, 'warning');
         }
+        return;
     }
+    
+    const success = await addRewardToBalance(amount);
+    
+    if (success) {
+        streak = nextDay;
+        claimedDays.push(nextDay);
+        totalClaimedAmount += amount;
+        lastClaimDate = new Date().toISOString();
+        saveLocalData();
+        await render();
+        animateCard(nextDay);
+        burstConfetti();
+        showToast(`🎉 Day ${nextDay} claimed! +€${amount}`, 'success');
+        
+        if (nextDay === totalDaysCount) {
+            setTimeout(() => {
+                showToast(`🏆 AMAZING! Total claimed: €${totalClaimedAmount}`, 'success');
+            }, 500);
+        }
+    } else {
+        showToast('Failed to claim reward. Please try again.', 'error');
+    }
+}
 
     function setupBottomNav() {
         document.querySelectorAll('.nav-item').forEach(item => {
