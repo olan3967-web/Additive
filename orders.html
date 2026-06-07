@@ -384,9 +384,16 @@ function renderNewOrders() {
     container.innerHTML = pendingOrders.map(order => {
         let productsText = parseProductsText(order.products);
         let displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
-        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-pending">Pending</span></div></div>`;
+        // 使用 encodeURIComponent 编码 order 数据
+        const encodedOrder = encodeURIComponent(JSON.stringify(order));
+        return `<div class="order-card" data-order='${encodedOrder}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-pending">Pending</span></div></div>`;
     }).join('');
-    document.querySelectorAll('#newOrdersList .order-card').forEach(card => card.addEventListener('click', () => openOrderModal(JSON.parse(card.dataset.order))));
+    document.querySelectorAll('#newOrdersList .order-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const decodedOrder = JSON.parse(decodeURIComponent(card.dataset.order));
+            openOrderModal(decodedOrder);
+        });
+    });
 }
 
 function renderProcessingOrders() {
@@ -396,11 +403,12 @@ function renderProcessingOrders() {
     container.innerHTML = processingOrders.map(order => {
         let productsText = parseProductsText(order.products);
         let displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
-        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-processing">In Transit</span></div></div>`;
+        const encodedOrder = encodeURIComponent(JSON.stringify(order));
+        return `<div class="order-card" data-order='${encodedOrder}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-processing">In Transit</span></div></div>`;
     }).join('');
     document.querySelectorAll('#processingOrdersList .order-card').forEach(card => {
         card.addEventListener('click', () => {
-            const order = JSON.parse(card.dataset.order);
+            const order = JSON.parse(decodeURIComponent(card.dataset.order));
             window.location.href = 'order-tracking.html?order_no=' + order.order_no;
         });
     });
