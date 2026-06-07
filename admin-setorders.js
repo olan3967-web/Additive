@@ -381,14 +381,7 @@ async function triggerPaymentRelease(orderNo) {
                     }
                 }
             }
-        } catch(e) { console.error('Failed to record order history:', e); }
-        
-        // 7. 更新本地用户余额
-        const localUser = getCurrentUser();
-        if (localUser && localUser.uid === order.uid) {
-            localUser.balance = newBalance;
-            localStorage.setItem('currentUser', JSON.stringify(localUser));
-        }
+        } catch(e) { console.error('Failed to record order history:', e); }      
         
         console.log('释放成功');
         return true;
