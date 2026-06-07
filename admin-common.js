@@ -253,6 +253,21 @@ window.showAmberNotification = function(title, message, type) {
         icon = 'fa-id-card';
     } else if (type === 'email') {
         icon = 'fa-envelope';
+    } else if (type === 'user') {
+        icon = 'fa-user-plus';
+        iconColor = '#2ed15a';
+    } else if (type === 'payment') {
+        icon = 'fa-check-double';
+        iconColor = '#10b981';
+    } else if (type === 'deposit') {
+        icon = 'fa-coins';
+        iconColor = '#ffb84d';
+    } else if (type === 'bonus') {
+        icon = 'fa-gift';
+        iconColor = '#ff9f43';
+    } else if (type === 'trial') {
+        icon = 'fa-flask';
+        iconColor = '#a855f7';
     }
     
     const notification = document.createElement('div');
@@ -371,7 +386,7 @@ function initGlobalRealtime() {
                 handleNewKyc(payload.new);
             }
         )
-        // 监听Withdraw新申请
+        // 监听 Withdraw 新申请
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'withdrawals' },
@@ -386,21 +401,75 @@ function initGlobalRealtime() {
             { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
             (payload) => {
                 console.log('🔔 检测到新邮箱验证请求:', payload.new);
-                console.log('📧 邮箱:', payload.new.email);
                 handleNewEmailRequest(payload.new);
+            }
+        )
+        // 监听新用户注册
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'users' },
+            (payload) => {
+                console.log('👤 检测到新用户注册:', payload.new);
+                handleNewUser(payload.new);
+            }
+        )
+        // 监听订单结算（Payment release 完成）
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'deposits' },
+            (payload) => {
+                if (payload.new.type === 'order_settlement') {
+                    console.log('💰 检测到订单结算:', payload.new);
+                    handlePaymentRelease(payload.new);
+                }
+            }
+        )
+        // 监听充值（手动充值 + 充值奖励）
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'deposits' },
+            (payload) => {
+                if (payload.new.type === 'manual' || payload.new.type === 'deposit_bonus') {
+                    console.log('💳 检测到充值:', payload.new);
+                    handleDeposit(payload.new);
+                }
+            }
+        )
+        // 监听奖励（推荐奖励、签到奖励）
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'deposits' },
+            (payload) => {
+                if (payload.new.type === 'referral_bonus' || payload.new.type === 'signin_reward') {
+                    console.log('🎁 检测到奖励:', payload.new);
+                    handleBonusAdded(payload.new);
+                }
+            }
+        )
+        // 监听体验金
+        .on(
+            'postgres_changes',
+            { event: 'INSERT', schema: 'public', table: 'deposits' },
+            (payload) => {
+                if (payload.new.type === 'trial_bonus') {
+                    console.log('🧪 检测到体验金:', payload.new);
+                    handleTrialBonus(payload.new);
+                }
             }
         )
         .subscribe((status) => {
             console.log('📡 全局实时订阅状态:', status);
             if (status === 'SUBSCRIBED') {
                 console.log('✅ 全局实时订阅已成功连接！');
-                console.log('✅ 正在监听: kyc_verifications, withdrawals, email_verification_requests');
+                console.log('✅ 正在监听: kyc_verifications, withdrawals, email_verification_requests, users, deposits');
             } else if (status === 'CHANNEL_ERROR') {
                 console.error('❌ 实时订阅连接失败，5秒后重试...');
                 setTimeout(() => initGlobalRealtime(), 5000);
             }
         });
 }
+
+// ========== 处理函数 ==========
 
 // 处理新KYC申请
 function handleNewKyc(data) {
@@ -417,8 +486,8 @@ function handleNewKyc(data) {
     
     if (window.showAmberNotification) {
         window.showAmberNotification(
-            '📋 新KYC申请',
-            `用户 ${data.username || data.uid} Submit了身份验证申请`,
+            '📋 New KYC Application',
+            `User ${data.username || data.uid} submitted verification`,
             'kyc'
         );
     }
@@ -439,8 +508,8 @@ function handleNewWithdrawal(data) {
     
     if (window.showAmberNotification) {
         window.showAmberNotification(
-            '💰 新Withdraw申请',
-            `用户 ${data.username} 申请Withdraw €${data.amount}`,
+            '💰 New Withdrawal Request',
+            `User ${data.username} requested €${data.amount}`,
             'withdrawal'
         );
     }
@@ -464,13 +533,105 @@ function handleNewEmailRequest(data) {
     
     if (window.showAmberNotification) {
         window.showAmberNotification(
-            '📧 新邮箱验证请求',
-            `用户 ${data.email} 请求邮箱验证，请设置验证码`,
+            '📧 New Email Verification',
+            `User ${data.email} requested verification`,
             'email'
         );
-    } else {
-        console.log('琥珀通知函数不存在，使用 alert 代替');
-        alert(`新邮箱验证请求: ${data.email}`);
+    }
+}
+
+// 处理新用户注册
+function handleNewUser(data) {
+    console.log('👤 处理新用户注册:', data);
+    
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    
+    if (window.loadUsersPage && document.getElementById('page_users')?.classList.contains('active')) {
+        window.loadUsersPage();
+    }
+    
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '👤 New User Registration',
+            `User ${data.username || data.uid} just signed up`,
+            'user'
+        );
+    }
+}
+
+// 处理订单结算（Payment release 完成）
+function handlePaymentRelease(data) {
+    console.log('💰 处理订单结算:', data);
+    
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '💰 Order Settlement Completed',
+            `User ${data.username} received €${data.amount.toFixed(2)} commission`,
+            'payment'
+        );
+    }
+}
+
+// 处理充值
+function handleDeposit(data) {
+    console.log('💳 处理充值:', data);
+    
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    
+    let typeText = data.type === 'manual' ? 'Manual Deposit' : 'Deposit Bonus';
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '💳 Deposit Completed',
+            `User ${data.username} ${typeText} €${data.amount.toFixed(2)}`,
+            'deposit'
+        );
+    }
+}
+
+// 处理奖励
+function handleBonusAdded(data) {
+    console.log('🎁 处理奖励:', data);
+    
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    
+    let typeText = data.type === 'referral_bonus' ? 'Referral Bonus' : 'Check-in Reward';
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '🎁 Bonus Added',
+            `User ${data.username} received ${typeText} €${data.amount.toFixed(2)}`,
+            'bonus'
+        );
+    }
+}
+
+// 处理体验金
+function handleTrialBonus(data) {
+    console.log('🧪 处理体验金:', data);
+    
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    
+    if (window.loadTrialPage && document.getElementById('page_trial')?.classList.contains('active')) {
+        window.loadTrialPage();
+    }
+    
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '🧪 Trial Funds Added',
+            `User ${data.username} received €${data.amount.toFixed(2)} trial bonus`,
+            'trial'
+        );
     }
 }
 
