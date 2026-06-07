@@ -143,26 +143,20 @@
             color: #7e8aa8;
         }
 
-        /* 双卡片并排样式 */
-        .stats-row {
-            display: flex;
-            gap: 12px;
-            margin: 16px;
-        }
-
-        .stats-card-half {
-            flex: 1;
+        .stats-card,
+        .half-card {
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 122, 0, 0.5);
             border-radius: 20px;
-            padding: 16px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.2);
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease;
         }
 
-        .stats-card-half::before {
+        .stats-card::before,
+        .half-card::before {
             content: '';
             position: absolute;
             top: 0;
@@ -175,7 +169,8 @@
             pointer-events: none;
         }
 
-        .stats-card-half::after {
+        .stats-card::after,
+        .half-card::after {
             content: '';
             position: absolute;
             bottom: -2px;
@@ -187,27 +182,59 @@
             pointer-events: none;
         }
 
-        .stats-card-half:hover {
-            transform: translateY(-4px);
-            background: rgba(255, 255, 255, 0.28);
-        }
-
         @keyframes shimmer {
             0% { left: -100%; }
             100% { left: 200%; }
         }
 
+        .stats-card:hover,
+        .half-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 30px 40px -12px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.28);
+        }
+
+        .stats-card {
+            margin: 16px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .stat-label {
-            font-size: 12px;
+            font-size: 13px;
             color: #1f2937;
             margin-bottom: 8px;
             font-weight: 500;
         }
 
         .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1f2937;
+        }
+
+        .right-stat-value {
             font-size: 24px;
             font-weight: 800;
             color: #1f2937;
+        }
+
+        .divider-line {
+            width: 1px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 0 16px;
+        }
+
+        .stats-left {
+            flex: 1;
+        }
+
+        .stats-right {
+            flex: 1;
+            text-align: right;
         }
 
         .wallet-card {
@@ -288,45 +315,8 @@
 
         .half-card {
             flex: 1;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 122, 0, 0.5);
-            border-radius: 20px;
             padding: 18px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .half-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transform: skewX(-20deg);
-            animation: shimmer 3s infinite;
-            pointer-events: none;
-        }
-
-        .half-card::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 10%;
-            width: 80%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #ff7a00, #ffcc00, transparent);
-            border-radius: 3px;
-            pointer-events: none;
-        }
-
-        .half-card:hover {
-            transform: translateY(-4px);
-            background: rgba(255, 255, 255, 0.28);
         }
 
         .half-card-header {
@@ -477,6 +467,94 @@
             font-weight: 600;
         }
 
+        /* ========== 活动弹窗样式 ========== */
+        .activity-popup {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 260px;
+            background: transparent;
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .activity-popup.show {
+            transform: translateX(0);
+        }
+
+        .popup-card {
+            position: relative;
+            background: linear-gradient(145deg, #fff7ed, #ffe7cc);
+            border-radius: 20px;
+            padding: 16px 12px 16px 16px;
+            border: 1px solid rgba(255, 122, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .popup-img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 14px;
+            background: white;
+            padding: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .popup-text h4 {
+            font-size: 15px;
+            font-weight: 800;
+            color: #ff7a00;
+            margin-bottom: 4px;
+        }
+
+        .popup-text p {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        .close-popup:hover {
+            background: #ff7a00;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 390px) {
+            .activity-popup {
+                width: 240px;
+                bottom: 75px;
+                right: 12px;
+            }
+            .popup-img {
+                width: 60px;
+                height: 60px;
+            }
+        }
+
         @media (max-width: 390px) {
             .phone { width: 100%; }
             .grid-label { font-size: 9px; }
@@ -504,15 +582,15 @@
         </div>
     </div>
 
-    <!-- 双卡片并排：Today's Earnings 和 Pending Release -->
-    <div class="stats-row">
-        <div class="stats-card-half">
+    <div class="stats-card">
+        <div class="stats-left">
             <div class="stat-label">Today's Earnings</div>
             <div class="stat-value" id="totalCommissions">€0.00</div>
         </div>
-        <div class="stats-card-half">
+        <div class="divider-line"></div>
+        <div class="stats-right">
             <div class="stat-label">Pending Release</div>
-            <div class="stat-value" id="pendingReleaseAmount">€0.00</div>
+            <div class="right-stat-value" id="pendingReleaseAmount">€0.00</div>
         </div>
     </div>
 
@@ -636,6 +714,18 @@
         <div class="nav-item active" data-page="profile">
             <i class="fa-solid fa-user"></i>
             <span>My Profile</span>
+        </div>
+    </div>
+
+    <!-- 右下角活动弹窗 -->
+    <div id="activityPopup" class="activity-popup">
+        <div class="popup-card">
+            <img class="popup-img" src="cjbonus.png" alt="Bonus" id="popupImage" onerror="this.style.display='none'">
+            <div class="popup-text">
+                <h4>✨ Invitation Code</h4>
+                <p>Share your code & earn €10 per referral!</p>
+            </div>
+            <div class="close-popup" id="closePopupBtn">✕</div>
         </div>
     </div>
 
@@ -794,26 +884,27 @@
             kycBadge.style.color = '#ffb347';
         }
 
-        // ========== 获取佣金统计（从 order_history 表） ==========
-const { data: historyOrders } = await sb
-    .from('order_history')
-    .select('commission, date')
-    .eq('uid', user.uid);
+        // ========== 获取已完成订单（用于佣金统计） ==========
+        const { data: deliveredOrders } = await sb
+            .from('user_orders')
+            .select('total_commission, completed_at')
+            .eq('uid', user.uid)
+            .eq('status', 'delivered');
 
-// 总佣金（My Sales 卡片）- 所有订单佣金总和
-const totalCommission = historyOrders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
+        // 总佣金（My Sales 卡片）- 所有已完成订单的佣金总和
+        const totalCommission = deliveredOrders?.reduce((sum, o) => sum + (o.total_commission || 0), 0) || 0;
 
-// 今日佣金（Today's Earnings）- 今天的订单佣金
-const today = new Date();
-const todayStr = today.toISOString().split('T')[0];
+        // 今日佣金（Today's Earnings）- 今天完成的订单佣金
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
 
-const todayOrders = historyOrders?.filter(o => {
-    if (!o.date) return false;
-    const dateStr = new Date(o.date).toISOString().split('T')[0];
-    return dateStr === todayStr;
-}) || [];
+        const todayOrders = deliveredOrders?.filter(o => {
+            if (!o.completed_at) return false;
+            const dateStr = new Date(o.completed_at).toISOString().split('T')[0];
+            return dateStr === todayStr;
+        }) || [];
 
-const todayCommission = todayOrders.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
+        const todayCommission = todayOrders.reduce((sum, o) => sum + (o.total_commission || 0), 0) || 0;
 
         // ========== 计算 Pending Release 金额 ==========
         const { data: processingOrders } = await sb
@@ -854,6 +945,29 @@ const todayCommission = todayOrders.reduce((sum, o) => sum + (o.commission || 0)
         document.getElementById('salesAmount').innerHTML = '€' + totalCommission.toFixed(2) + ' earned';
         document.getElementById('pendingReleaseAmount').innerHTML = '€' + pendingReleaseTotal.toFixed(2);
     }
+
+    // ========== 右下角弹窗逻辑 ==========
+    function showActivityPopup() {
+        const popup = document.getElementById('activityPopup');
+        if (popup) {
+            popup.classList.add('show');
+        }
+    }
+
+    function closeActivityPopup() {
+        const popup = document.getElementById('activityPopup');
+        if (popup) {
+            popup.classList.remove('show');
+        }
+    }
+
+    // 页面加载后 3 秒弹出弹窗
+    setTimeout(() => {
+        showActivityPopup();
+    }, 3000);
+
+    // 绑定关闭按钮事件
+    document.getElementById('closePopupBtn')?.addEventListener('click', closeActivityPopup);
 
     function topUp() {
         alert('Please contact support for deposit.');
