@@ -108,14 +108,62 @@
 </div>
 
 <script>
-function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
-function formatDate(dateStr) { const date = new Date(dateStr); return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
-function goBack() { window.location.href = 'dashboard.html'; }
+function escapeHtml(str) { 
+    if (!str) return ''; 
+    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); 
+}
+
+function formatDate(dateStr) { 
+    const date = new Date(dateStr); 
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); 
+}
+
+function goBack() { 
+    window.location.href = 'dashboard.html'; 
+}
+
+// 安全解析 products 字段
 function parseProductsText(productsData) {
-    try { let products = typeof productsData === 'string' ? JSON.parse(productsData) : productsData;
+    if (!productsData) return '-';
+    try {
+        let products = null;
+        if (typeof productsData === 'string') {
+            let cleanData = productsData.trim();
+            if (cleanData === '' || cleanData === 'null' || cleanData === 'undefined') {
+                return '-';
+            }
+            products = JSON.parse(cleanData);
+        } else {
+            products = productsData;
+        }
         if (!Array.isArray(products)) return '-';
         return products.map(p => (p.product_name || 'Product') + ' ×' + (p.quantity || 1)).join(', ');
-    } catch(e) { return String(productsData || '-'); }
+    } catch(e) {
+        console.error('JSON解析失败:', e);
+        return '-';
+    }
+}
+
+// 安全解析产品列表用于弹窗
+function parseProductsList(productsData) {
+    if (!productsData) return [];
+    try {
+        let products = null;
+        if (typeof productsData === 'string') {
+            let cleanData = productsData.trim();
+            if (cleanData === '' || cleanData === 'null' || cleanData === 'undefined') {
+                return [];
+            }
+            products = JSON.parse(cleanData);
+        } else {
+            products = productsData;
+        }
+        if (!Array.isArray(products)) return [];
+        return products;
+    } catch(e) {
+        console.error('产品列表解析失败:', e);
+        return [];
+    }
 }
 
 let currentTab = 'new', pendingOrders = [], processingOrders = [], currentOrder = null, hasCheckedShipping = false;
@@ -126,10 +174,8 @@ function generateProcessingTimeline(confirmTime, paymentReleaseTimer = null) {
     const startTime = new Date(confirmTime);
     const timeline = [];
     
-    // Status 1: Order is placed - completed immediately
     timeline.push({ status: "Order is placed", time: startTime.toISOString() });
     
-    // Status 2: Payment received from buyer - wait 5-7 minutes
     const paymentReceivedDelay = 5 + Math.random() * 2;
     const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
     timeline.push({ 
@@ -138,13 +184,11 @@ function generateProcessingTimeline(confirmTime, paymentReleaseTimer = null) {
         isPending: true
     });
     
-    // Status 3: Payment under escrow protection - follows immediately
     timeline.push({ 
         status: "Payment under escrow protection", 
         time: paymentReceivedTime.toISOString()
     });
     
-    // Status 4: Payment released - unified handling with isPending
     const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     let paymentReleasedTime;
     
@@ -160,7 +204,6 @@ function generateProcessingTimeline(confirmTime, paymentReleaseTimer = null) {
         isPending: true
     });
     
-    // Subsequent statuses (placeholder)
     const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
     for (let i = 0; i < subsequent.length; i++) {
         timeline.push({ status: subsequent[i], time: futureDate.toISOString(), isPending: true });
@@ -175,7 +218,10 @@ async function checkAndCompleteDeliveredOrders() {
     
     const now = new Date();
     for (const order of orders) {
-        let timeline = JSON.parse(order.tracking_timeline || '[]');
+        let timeline = [];
+        try {
+            timeline = JSON.parse(order.tracking_timeline || '[]');
+        } catch(e) { timeline = []; }
         let lastStatus = timeline[timeline.length - 1];
         if (lastStatus && lastStatus.status === "Parcel delivered") {
             let deliveredTime = new Date(lastStatus.time);
@@ -187,21 +233,21 @@ async function checkAndCompleteDeliveredOrders() {
     }
 }
 
-// Activate Payment Release
 async function activatePaymentRelease(orderNo, paymentReleasedTime) {
     const { data: order } = await sb.from('user_orders').select('*').eq('order_no', orderNo).single();
     if (!order) return false;
     
-    let timeline = JSON.parse(order.tracking_timeline || '[]');
+    let timeline = [];
+    try {
+        timeline = JSON.parse(order.tracking_timeline || '[]');
+    } catch(e) { timeline = []; }
     
-    // 1. Anti-duplicate check: if already processed, skip
     const alreadyProcessed = timeline.find(t => t.status === "Payment released" && !t.isPending);
     if (alreadyProcessed) {
         console.log('Order already processed, skipping');
         return false;
     }
     
-    // 2. Find pending Payment released
     const pendingIndex = timeline.findIndex(t => t.status === "Payment released" && t.isPending === true);
     if (pendingIndex === -1) {
         console.log('No pending Payment released found');
@@ -210,11 +256,9 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
     
     let timelineUpdated = false;
     
-    // 3. Update Payment released (pending) to completed
     timeline[pendingIndex] = { status: "Payment released", time: paymentReleasedTime.toISOString() };
     timelineUpdated = true;
     
-    // 4. Calculate and update Order confirmed and Preparing parcel for shipment
     const orderConfirmedDelay = 5 + Math.random() * 5;
     const preparingDelay = 30 + Math.random() * 30;
     
@@ -232,48 +276,63 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
         }
     }
     
-    // 5. Return balance to user
     const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
-    const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
+    const supplyPrice = order.total_supply_price || 0;
+    const commission = order.total_commission || 0;
+    const refundAmount = supplyPrice + commission;
     const newBalance = (user?.balance || 0) + refundAmount;
-    await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
-    await sb.from('deposits').insert([{
-    uid: user.uid,
-    username: user.username,
-    amount: -currentOrder.total_supply_price,
-    type: 'order_price_deducted',
-    created_at: new Date().toISOString()
-}]);
     
-    // 6. Save updated timeline
+    await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
+    
+    // 记录货款返还
+    if (supplyPrice > 0) {
+        await sb.from('deposits').insert([{
+            uid: order.uid,
+            username: order.username,
+            amount: supplyPrice,
+            type: 'order_payment_release',
+            created_at: new Date().toISOString()
+        }]);
+    }
+    
+    // 记录佣金
+    if (commission > 0) {
+        await sb.from('deposits').insert([{
+            uid: order.uid,
+            username: order.username,
+            amount: commission,
+            type: 'order_commission',
+            created_at: new Date().toISOString()
+        }]);
+    }
+    
     if (timelineUpdated) {
         await sb.from('user_orders').update({ 
-            tracking_timeline: JSON.stringify(timeline) 
+            tracking_timeline: JSON.stringify(timeline),
+            status: 'processing'
         }).eq('order_no', orderNo);
     }
     
-    // 7. Write to order_history (commission records) - AFTER all checks
     try {
-        let products = typeof order.products === 'string' ? JSON.parse(order.products) : order.products;
+        let products = parseProductsList(order.products);
         if (Array.isArray(products)) {
             for (let product of products) {
-    let qty = parseInt(product.quantity) || 1;  // 确保是数字
-    for (let j = 0; j < qty; j++) {
-        await sb.from('order_history').insert({ 
-            uid: order.uid, 
-            username: order.username, 
-            order_code: order.order_no, 
-            accommodation_name: product.product_name, 
-            price: product.unit_price, 
-            commission: product.commission_per_item || 0, 
-            date: new Date().toISOString() 
-        });
-    }
-}
+                let qty = parseInt(product.quantity) || 1;
+                for (let j = 0; j < qty; j++) {
+                    await sb.from('order_history').insert({ 
+                        uid: order.uid, 
+                        username: order.username, 
+                        order_code: order.order_no, 
+                        accommodation_name: product.product_name, 
+                        price: product.unit_price, 
+                        commission: product.commission_per_item || 0, 
+                        date: new Date().toISOString() 
+                    });
+                }
+            }
         }
     } catch(e) { console.error('Failed to record order history:', e); }
     
-    // 8. Update local user balance
     const localUser = getCurrentUser();
     if (localUser && localUser.uid === order.uid) {
         localUser.balance = newBalance;
@@ -283,15 +342,16 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
     return true;
 }
 
-// Check and activate timer orders
 async function checkAndActivateTimers() {
     const { data: orders } = await sb.from('user_orders').select('*').eq('status', 'processing');
     if (!orders) return;
     const now = new Date();
     for (const order of orders) {
-        let timeline = JSON.parse(order.tracking_timeline || '[]');
+        let timeline = [];
+        try {
+            timeline = JSON.parse(order.tracking_timeline || '[]');
+        } catch(e) { timeline = []; }
         for (let i = 0; i < timeline.length; i++) {
-            // Check for Payment released with isPending === true
             if (timeline[i].status === "Payment released" && timeline[i].isPending === true) {
                 let pendingTime = new Date(timeline[i].time);
                 if (pendingTime <= now) {
@@ -307,8 +367,8 @@ async function loadOrders() {
     const user = getCurrentUser();
     if (!user) { window.location.href = 'signin.html'; return; }
     const { data: orders } = await sb.from('user_orders').select('*').eq('uid', user.uid).order('created_at', { ascending: false });
-    pendingOrders = orders.filter(o => o.status === 'pending');
-    processingOrders = orders.filter(o => o.status === 'processing');
+    pendingOrders = (orders || []).filter(o => o.status === 'pending');
+    processingOrders = (orders || []).filter(o => o.status === 'processing');
     renderOrders();
     
     await checkAndActivateTimers();
@@ -354,18 +414,35 @@ function openOrderModal(order) {
     currentOrder = order;
     hasCheckedShipping = false;
     document.getElementById('modalOrderNo').innerHTML = 'Order ' + order.order_no;
+    
     let productsHtml = '';
-    try {
-        let products = typeof order.products === 'string' ? JSON.parse(order.products) : order.products;
-        if (Array.isArray(products)) {
-            products.forEach(p => { productsHtml += `<div class="product-item-modal"><img src="${p.image_url || 'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'}" onerror="this.src='https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'"><div style="flex:1;"><div style="font-weight:600;">${escapeHtml(p.product_name)}</div><div style="font-size:12px; color:#6b7280;">×${p.quantity} | €${p.unit_price.toFixed(2)}/each</div></div><div style="font-weight:700; color:#ff7a00;">€${(p.unit_price * p.quantity).toFixed(2)}</div></div>`; });
-        }
-    } catch(e) { productsHtml = '<div>Failed to load products</div>'; }
+    const products = parseProductsList(order.products);
+    if (products.length > 0) {
+        products.forEach(p => {
+            const productName = p.product_name || 'Product';
+            const quantity = p.quantity || 1;
+            const unitPrice = p.unit_price || 0;
+            productsHtml += `<div class="product-item-modal">
+                <img src="${p.image_url || 'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'}" 
+                     onerror="this.src='https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'">
+                <div style="flex:1;">
+                    <div style="font-weight:600;">${escapeHtml(productName)}</div>
+                    <div style="font-size:12px; color:#6b7280;">×${quantity} | €${unitPrice.toFixed(2)}/each</div>
+                </div>
+                <div style="font-weight:700; color:#ff7a00;">€${(unitPrice * quantity).toFixed(2)}</div>
+            </div>`;
+        });
+    } else {
+        productsHtml = '<div style="text-align:center; padding:20px;">No product details</div>';
+    }
     document.getElementById('modalProductsList').innerHTML = productsHtml;
     document.getElementById('modalBuyerInfo').innerHTML = `<p><strong>👤 Buyer Info</strong></p><p>Name: ${escapeHtml(order.buyer_name || 'Unknown')}</p><p>Phone: ${escapeHtml(order.buyer_phone || 'Unknown')}</p><p>Address: ${escapeHtml(order.buyer_address || 'Unknown')}</p>`;
+    
     let checkBtn = document.getElementById('checkShippingBtn'), confirmBtn = document.getElementById('confirmOrderBtn');
-    checkBtn.classList.remove('checked'); checkBtn.innerHTML = '<i class="fas fa-truck"></i> Check Shipping Info';
-    confirmBtn.classList.add('disabled'); confirmBtn.disabled = true;
+    checkBtn.classList.remove('checked');
+    checkBtn.innerHTML = '<i class="fas fa-truck"></i> Check Shipping Info';
+    confirmBtn.classList.add('disabled');
+    confirmBtn.disabled = true;
     document.getElementById('orderModal').classList.add('active');
 }
 
@@ -377,8 +454,10 @@ document.getElementById('checkShippingBtn').addEventListener('click', function()
     document.getElementById('shippingModal').classList.add('active');
     hasCheckedShipping = true;
     let checkBtn = document.getElementById('checkShippingBtn'), confirmBtn = document.getElementById('confirmOrderBtn');
-    checkBtn.classList.add('checked'); checkBtn.innerHTML = '<i class="fas fa-check-circle"></i> Shipping Info Checked';
-    confirmBtn.classList.remove('disabled'); confirmBtn.disabled = false;
+    checkBtn.classList.add('checked');
+    checkBtn.innerHTML = '<i class="fas fa-check-circle"></i> Shipping Info Checked';
+    confirmBtn.classList.remove('disabled');
+    confirmBtn.disabled = false;
 });
 
 document.getElementById('closeShippingBtn').addEventListener('click', () => document.getElementById('shippingModal').classList.remove('active'));
@@ -400,6 +479,15 @@ document.getElementById('confirmOrderBtn').addEventListener('click', async funct
     
     let newBalance = currentBalance - currentOrder.total_supply_price;
     await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+    
+    // 记录扣款（货款扣除）
+    await sb.from('deposits').insert([{
+        uid: user.uid,
+        username: user.username,
+        amount: currentOrder.total_supply_price,
+        type: 'order_price_deducted',
+        created_at: new Date().toISOString()
+    }]);
     
     const timerValue = currentOrder.payment_release_timer;
     const fullTimeline = generateProcessingTimeline(new Date(), timerValue);
