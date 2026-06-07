@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
-<script src="notification.js"></script>
+    <script src="notification.js"></script>
     <style>
         * {
             margin: 0;
@@ -55,7 +55,6 @@
             cursor: pointer;
         }
 
-        /* 统计卡片 */
         .stats-card {
             background: white;
             margin: 0 16px 20px;
@@ -78,7 +77,6 @@
             color: #ff7a00;
         }
 
-        /* 历史列表 */
         .history-list {
             margin: 0 16px;
         }
@@ -142,6 +140,11 @@
             color: #0284c7;
         }
 
+        .badge-payment-release {
+            background: #d1fae5;
+            color: #059669;
+        }
+
         .history-date {
             font-size: 11px;
             color: #94a3b8;
@@ -162,7 +165,6 @@
             color: #ef4444;
         }
 
-        /* 加载状态 */
         .loading-container {
             display: flex;
             justify-content: center;
@@ -198,7 +200,6 @@
             display: block;
         }
 
-        /* 底部导航栏 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -214,13 +215,13 @@
         }
 
         .nav-item {
-    flex: 1;
-    text-align: center;
-    font-size: 11px;
-    color: #9ca3af;
-    cursor: pointer;
-    position: relative;  /* 👈 Add这一行 */
-}
+            flex: 1;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+            cursor: pointer;
+            position: relative;
+        }
 
         .nav-item i {
             display: block;
@@ -244,13 +245,11 @@
         <div style="width: 30px;"></div>
     </div>
 
-    <!-- 统计卡片 -->
     <div class="stats-card">
         <span class="stats-label">Total Balance Changes</span>
         <span class="stats-value" id="totalChanges">€0</span>
     </div>
 
-    <!-- 历史列表 -->
     <div class="history-list" id="historyList">
         <div class="loading-container">
             <div class="loading-spinner">
@@ -270,7 +269,6 @@
 </div>
 
 <script>
-
     function getCurrentUser() {
         const userStr = localStorage.getItem('currentUser');
         if (!userStr) return null;
@@ -288,86 +286,104 @@
         container.innerHTML = `<div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading...</div></div></div>`;
 
         try {
-            // 获取Top Up/奖励记录
             const { data: deposits } = await sb
                 .from('deposits')
                 .select('*')
                 .eq('uid', user.uid)
                 .order('created_at', { ascending: false });
 
-            // 获取Withdraw记录
             const { data: withdrawals } = await sb
                 .from('withdrawals')
                 .select('*')
                 .eq('uid', user.uid)
                 .order('request_date', { ascending: false });
 
-            // 合并数据
             let records = [];
 
+            // 处理 deposits 记录
             deposits?.forEach(d => {
                 let typeName = '';
                 let badgeClass = '';
                 let isPositive = true;
                 
                 if (d.type === 'manual') {
-    typeName = 'Deposit Successful';
-    badgeClass = 'badge-deposit';
-} else if (d.type === 'deposit_bonus') {
-    typeName = 'Funds Added';
-    badgeClass = 'badge-bonus';
-} else if (d.type === 'order_commission') {
-    typeName = 'Order\'s Commissions';
-    badgeClass = 'badge-commission';
-} else if (d.type === 'order_settlement') {
-    typeName = 'Order\'s Payment Release';
-    badgeClass = 'badge-commission';
-} else if (d.type === 'trial_bonus') {
-    typeName = 'Trial Funds';
-    badgeClass = 'badge-bonus';
-} else if (d.type === 'signin_reward') {
-    typeName = 'Check In Reward';
-    badgeClass = 'badge-bonus';
-} else if (d.type === 'referral_bonus') {
-    typeName = 'Referral Bonus';
-    badgeClass = 'badge-bonus';
-} else {
-    typeName = 'Deposit';
-    badgeClass = 'badge-deposit';
-}
+                    typeName = 'Deposit Successful';
+                    badgeClass = 'badge-deposit';
+                } else if (d.type === 'deposit_bonus') {
+                    typeName = 'Funds Added';
+                    badgeClass = 'badge-bonus';
+                } else if (d.type === 'order_commission') {
+                    typeName = 'Order\'s Commissions';
+                    badgeClass = 'badge-commission';
+                } else if (d.type === 'order_settlement') {
+                    typeName = 'Order\'s Payment Release';
+                    badgeClass = 'badge-commission';
+                } else if (d.type === 'trial_bonus') {
+                    typeName = 'Trial Funds';
+                    badgeClass = 'badge-bonus';
+                } else if (d.type === 'signin_reward') {
+                    typeName = 'Check In Reward';
+                    badgeClass = 'badge-bonus';
+                } else if (d.type === 'referral_bonus') {
+                    typeName = 'Referral Bonus';
+                    badgeClass = 'badge-bonus';
+                } else if (d.type === 'order_price_deducted') {
+                    // 扣货款（负数）
+                    typeName = 'Order Price Deducted';
+                    badgeClass = 'badge-withdrawal';
+                    isPositive = false;
+                } else if (d.type === 'order_payment_release') {
+                    // 返还货款（正数）
+                    typeName = 'Order\'s Payment Release';
+                    badgeClass = 'badge-payment-release';
+                    isPositive = true;
+                } else {
+                    typeName = 'Deposit';
+                    badgeClass = 'badge-deposit';
+                }
+                
+                // 处理 amount 符号（如果已经是负数，保持负数）
+                let displayAmount = d.amount;
+                let finalIsPositive = isPositive;
+                if (d.type === 'order_price_deducted') {
+                    // 确保扣款显示为负数
+                    displayAmount = -Math.abs(d.amount);
+                    finalIsPositive = false;
+                } else {
+                    displayAmount = Math.abs(d.amount);
+                }
                 
                 records.push({
                     id: d.id,
                     date: d.created_at,
                     title: typeName,
-                    amount: d.amount,
-                    isPositive: true,
+                    amount: displayAmount,
+                    isPositive: finalIsPositive,
                     badgeClass: badgeClass
                 });
             });
 
+            // 处理 withdrawals 记录
             withdrawals?.forEach(w => {
                 let statusText = '';
                 if (w.status === 'pending') statusText = ' (Submitted)';
-else if (w.status === 'approved') statusText = ' (Processed)';
-else if (w.status === 'rejected') statusText = ' (Rejected)';
+                else if (w.status === 'approved') statusText = ' (Processed)';
+                else if (w.status === 'rejected') statusText = ' (Rejected)';
 
-records.push({
-    id: w.id,
-    date: w.request_date,
-    title: `Withdrawal${statusText}`,
-    amount: w.amount,
-    isPositive: false,
-    badgeClass: 'badge-withdrawal'
-});
+                records.push({
+                    id: w.id,
+                    date: w.request_date,
+                    title: `Withdrawal${statusText}`,
+                    amount: w.amount,
+                    isPositive: false,
+                    badgeClass: 'badge-withdrawal'
+                });
             });
 
-            // 按时间倒序排序
             records.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            // 计算总变动Amount（入金 - 出金）
-            const totalIn = records.filter(r => r.isPositive).reduce((sum, r) => sum + r.amount, 0);
-            const totalOut = records.filter(r => !r.isPositive).reduce((sum, r) => sum + r.amount, 0);
+            const totalIn = records.filter(r => r.isPositive).reduce((sum, r) => sum + Math.abs(r.amount), 0);
+            const totalOut = records.filter(r => !r.isPositive).reduce((sum, r) => sum + Math.abs(r.amount), 0);
             const totalChange = totalIn - totalOut;
             document.getElementById('totalChanges').innerHTML = `€${totalChange.toFixed(2)}`;
 
@@ -392,7 +408,7 @@ records.push({
                         <div class="history-date">${formatDate(record.date)}</div>
                     </div>
                     <div class="history-amount ${record.isPositive ? 'amount-positive' : 'amount-negative'}">
-                        ${record.isPositive ? '+' : '-'}€${record.amount.toFixed(2)}
+                        ${record.isPositive ? '+' : '-'}€${Math.abs(record.amount).toFixed(2)}
                     </div>
                 </div>
             `).join('');

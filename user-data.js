@@ -1,4 +1,5 @@
-// 删除 body 开头的空白文本节点
+// user-data.js - 所有页面共享的用户数据管理
+
 (function() {
     if (document.body) {
         while (document.body.firstChild && 
@@ -8,8 +9,6 @@
         }
     }
 })();
-
-// user-data.js - 所有页面共享的用户数据管理
 
 const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
@@ -238,6 +237,149 @@ function generateTrackingTimeline() {
     return timeline;
 }
 
+// ========== 激活 Payment Release（修改版 - 分别记录货款和佣金） ==========
+async function activatePaymentRelease(orderNo, paymentReleasedTime) {
+    const { data: order } = await sb.from('user_orders').select('*').eq('order_no', orderNo).single();
+    if (!order) return false;
+    
+    let timeline = JSON.parse(order.tracking_timeline || '[]');
+    
+    // 1. 防重复：如果已经处理过，跳过
+    const alreadyProcessed = timeline.find(t => t.status === "Payment released" && !t.isPending);
+    if (alreadyProcessed) {
+        console.log('Order already processed, skipping');
+        return false;
+    }
+    
+    // 2. 找到等待中的 Payment released
+    const pendingIndex = timeline.findIndex(t => t.status === "Payment released" && t.isPending === true);
+    if (pendingIndex === -1) {
+        console.log('No pending Payment released found');
+        return false;
+    }
+    
+    let timelineUpdated = false;
+    
+    // 3. 更新 Payment released
+    timeline[pendingIndex] = { status: "Payment released", time: paymentReleasedTime.toISOString() };
+    timelineUpdated = true;
+    
+    // 4. 计算并更新 Order confirmed 和 Preparing parcel
+    const orderConfirmedDelay = 5 + Math.random() * 5;
+    const preparingDelay = 30 + Math.random() * 30;
+    
+    const orderConfirmedTime = new Date(paymentReleasedTime.getTime() + orderConfirmedDelay * 60 * 1000);
+    const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
+    
+    for (let i = 0; i < timeline.length; i++) {
+        if (timeline[i].status === "Order confirmed" && timeline[i].isPending === true) {
+            timeline[i] = { status: "Order confirmed", time: orderConfirmedTime.toISOString() };
+            timelineUpdated = true;
+        }
+        if (timeline[i].status === "Preparing parcel for shipment" && timeline[i].isPending === true) {
+            timeline[i] = { status: "Preparing parcel for shipment", time: preparingTime.toISOString() };
+            timelineUpdated = true;
+        }
+    }
+    
+    // 5. 后续物流状态
+    const remainingStatuses = [
+        "Courier assigned", "Parcel picked up by logistics partner",
+        "Parcel arrived at sorting facility", "Parcel departed from sorting facility",
+        "Parcel arrived at delivery hub", "Parcel out for delivery", "Parcel delivered"
+    ];
+    
+    const totalMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
+    let intervals = [], remaining = totalMs;
+    for (let i = 0; i < remainingStatuses.length; i++) {
+        const gap = (remaining / (remainingStatuses.length - i)) * (0.3 + Math.random() * 0.7);
+        intervals.push(gap);
+        remaining -= gap;
+    }
+    
+    let laterTime = new Date(preparingTime);
+    let remainingIndex = 0;
+    for (let i = 0; i < timeline.length; i++) {
+        if (timeline[i].isPending === true && remainingStatuses.includes(timeline[i].status)) {
+            laterTime = new Date(laterTime.getTime() + intervals[remainingIndex]);
+            timeline[i] = { status: remainingStatuses[remainingIndex], time: laterTime.toISOString() };
+            remainingIndex++;
+        }
+    }
+    
+    // 6. 返回余额 - 分别记录货款和佣金到 deposits 表
+    const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
+    
+    const supplyPrice = order.total_supply_price || 0;
+    const commission = order.total_commission || 0;
+    const refundAmount = supplyPrice + commission;
+    const newBalance = (user?.balance || 0) + refundAmount;
+    
+    console.log('Payment Release - Supply Price:', supplyPrice, 'Commission:', commission, 'Total Refund:', refundAmount);
+    
+    await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
+    
+    // 记录货款返还
+    if (supplyPrice > 0) {
+        await sb.from('deposits').insert([{
+            uid: order.uid,
+            username: order.username,
+            amount: supplyPrice,
+            type: 'order_payment_release',
+            created_at: new Date().toISOString()
+        }]);
+    }
+    
+    // 记录佣金
+    if (commission > 0) {
+        await sb.from('deposits').insert([{
+            uid: order.uid,
+            username: order.username,
+            amount: commission,
+            type: 'order_commission',
+            created_at: new Date().toISOString()
+        }]);
+    }
+    
+    // 7. 保存更新后的 timeline
+    if (timelineUpdated) {
+        await sb.from('user_orders').update({ 
+            tracking_timeline: JSON.stringify(timeline),
+            status: 'processing'
+        }).eq('order_no', orderNo);
+    }
+    
+    // 8. 写入 order_history（用于订单记录）
+    try {
+        let products = typeof order.products === 'string' ? JSON.parse(order.products) : order.products;
+        if (Array.isArray(products)) {
+            for (let product of products) {
+                let qty = parseInt(product.quantity) || 1;
+                for (let j = 0; j < qty; j++) {
+                    await sb.from('order_history').insert({ 
+                        uid: order.uid, 
+                        username: order.username, 
+                        order_code: order.order_no, 
+                        accommodation_name: product.product_name, 
+                        price: product.unit_price, 
+                        commission: product.commission_per_item || 0, 
+                        date: new Date().toISOString() 
+                    });
+                }
+            }
+        }
+    } catch(e) { console.error('Failed to record order history:', e); }
+    
+    // 9. 更新本地用户余额
+    const localUser = getCurrentUser();
+    if (localUser && localUser.uid === order.uid) {
+        localUser.balance = newBalance;
+        localStorage.setItem('currentUser', JSON.stringify(localUser));
+    }
+    
+    return true;
+}
+
 // ========== 暴露全局函数 ==========
 window.getCurrentUser = getCurrentUser;
 window.syncUserData = syncUserData;
@@ -252,6 +394,7 @@ window.getUserPendingOrders = getUserPendingOrders;
 window.getUserProcessingOrders = getUserProcessingOrders;
 window.getUserCompletedOrders = getUserCompletedOrders;
 window.generateTrackingTimeline = generateTrackingTimeline;
+window.activatePaymentRelease = activatePaymentRelease;
 window.sb = sb;
 
 // ========== 移除点击蓝色高亮 ==========

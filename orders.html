@@ -237,13 +237,13 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
     const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
     const newBalance = (user?.balance || 0) + refundAmount;
     await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
-    await sb.from('deposits').insert([{ 
-        uid: order.uid, 
-        username: order.username, 
-        amount: order.total_commission || 0, 
-        type: 'order_settlement', 
-        created_at: new Date().toISOString() 
-    }]);
+    await sb.from('deposits').insert([{
+    uid: user.uid,
+    username: user.username,
+    amount: -currentOrder.total_supply_price,
+    type: 'order_price_deducted',
+    created_at: new Date().toISOString()
+}]);
     
     // 6. Save updated timeline
     if (timelineUpdated) {
