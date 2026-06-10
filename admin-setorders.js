@@ -143,12 +143,89 @@ function generateRandomBuyer() {
     return { name: fullName, phone, address, country: selectedCountry, city: selectedCity };
 }
 
+// ========== manualReleasePayment 函数（核心修复） ==========
+async function manualReleasePayment(orderNo) {
+    console.log(`🔓 手动释放订单 ${orderNo}`);
+    
+    const { data: order, error } = await sb
+        .from('user_orders')
+        .select('*')
+        .eq('order_no', orderNo)
+        .single();
+    
+    if (error || !order) {
+        console.error('订单不存在:', error);
+        return false;
+    }
+    
+    let timeline = [];
+    try {
+        timeline = JSON.parse(order.tracking_timeline || '[]');
+    } catch(e) {
+        console.error('解析 timeline 失败:', e);
+        return false;
+    }
+    
+    const now = new Date();
+    let updated = false;
+    
+    for (let i = 0; i < timeline.length; i++) {
+        if (timeline[i].status === "Payment released" && timeline[i].isPending === true) {
+            timeline[i] = {
+                status: "Payment released",
+                time: now.toISOString(),
+                isCompleted: true
+            };
+            updated = true;
+            break;
+        }
+    }
+    
+    if (!updated) {
+        console.log('没有找到等待中的 Payment released');
+        return false;
+    }
+    
+    await sb.from('user_orders').update({
+        tracking_timeline: JSON.stringify(timeline)
+    }).eq('order_no', orderNo);
+    
+    // ✅ 记录 Product Payment Release
+    await sb.from('deposits').insert({
+        uid: order.uid,
+        username: order.username,
+        amount: order.total_supply_price || 0,
+        type: 'order_settlement',
+        created_at: now.toISOString()
+    });
+    
+    // ✅ 记录 Commission（佣金）
+    const commissionAmount = order.total_commission || 0;
+    await sb.from('deposits').insert({
+        uid: order.uid,
+        username: order.username,
+        amount: commissionAmount,
+        type: 'order_commission',
+        created_at: now.toISOString()
+    });
+    
+    // 更新用户余额
+    const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
+    if (user) {
+        const refundAmount = (order.total_supply_price || 0) + commissionAmount;
+        const newBalance = (user.balance || 0) + refundAmount;
+        await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
+    }
+    
+    console.log(`✅ 订单 ${orderNo} Payment released 完成，佣金 €${commissionAmount} 已记录`);
+    return true;
+}
+
 // ========== 加载 Manual Release 订单 ==========
 async function loadManualReleaseOrders() {
     try {
         console.log('开始加载 Manual Release 订单...');
         
-        // 如果没有选中用户，清空并返回
         if (!selectedUser || !selectedUser.uid) {
             manualReleaseOrders = [];
             renderManualReleaseCard();
@@ -158,7 +235,7 @@ async function loadManualReleaseOrders() {
         const { data: orders, error } = await sb
             .from('user_orders')
             .select('*')
-            .eq('uid', selectedUser.uid)  // 关键：只显示当前用户
+            .eq('uid', selectedUser.uid)
             .or('payment_release_timer.is.null,payment_release_timer.eq.0')
             .order('created_at', { ascending: false });
         
@@ -210,10 +287,9 @@ function renderManualReleaseCard() {
                         <div style="font-weight:700; color:#ffb84d;">${order.order_no}</div>
                         <div style="font-size:11px; color:#8a9abb;">User: ${order.uid} | €${order.total_supply_price} | 状态: ${order.status}</div>
                     </div>
-                    <button class="release-order-btn" data-order="${order.order_no}" data-released="${isReleased}" 
-                        style="background:${isReleased ? '#475569' : '#2f6b3a'}; border:none; padding:6px 16px; border-radius:20px; color:white; cursor:${isReleased ? 'default' : 'pointer'};" 
-                        ${isReleased ? 'disabled' : ''}>
-                        <i class="fas ${isReleased ? 'fa-check' : 'fa-play'}"></i> ${isReleased ? 'Release Successful' : 'Release Now'}
+                    <button class="release-order-btn" data-order="${order.order_no}" 
+                        style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:white; cursor:pointer;">
+                        <i class="fas fa-play"></i> Release Now
                     </button>
                 </div>
             </div>
@@ -227,20 +303,23 @@ function renderManualReleaseCard() {
     
     container.innerHTML = html;
     
-    document.querySelectorAll('.release-order-btn:not([disabled])').forEach(btn => {
+    document.querySelectorAll('.release-order-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const orderNo = btn.dataset.order;
             console.log('点击释放订单:', orderNo);
-            if (typeof manualReleasePayment === 'function') {
-                const success = await manualReleasePayment(orderNo);
-                if (success) {
-                    showToast(`订单 ${orderNo} Payment released 成功`, 'success');
-                    await loadManualReleaseOrders();
-                } else {
-                    showToast(`释放失败`, 'error');
+            const success = await manualReleasePayment(orderNo);
+            if (success) {
+                showToast(`订单 ${orderNo} Payment released 成功，佣金已记录`, 'success');
+                await loadManualReleaseOrders();
+                // 刷新用户余额显示
+                if (selectedUser) {
+                    const { data: user } = await sb.from('users').select('balance').eq('uid', selectedUser.uid).single();
+                    if (user && document.getElementById('selectedUidDisplay')) {
+                        // 可选：更新页面上的余额显示
+                    }
                 }
             } else {
-                showToast('释放功能未加载，请刷新页面', 'error');
+                showToast(`释放失败`, 'error');
             }
         });
     });
@@ -339,7 +418,7 @@ async function selectUser(uid, username) {
     document.getElementById('selectedUidDisplay').innerText = uid;
     document.getElementById('selectedUsernameDisplay').innerText = username;
     await loadUserProducts(uid);
-    await loadManualReleaseOrders();  // 新增：加载该用户的 Manual 订单
+    await loadManualReleaseOrders();
     document.getElementById('setordersUserSearch').style.display = 'none';
     document.getElementById('setordersMain').style.display = 'block';
 }
@@ -468,34 +547,22 @@ async function confirmSetOrder() {
     
     const startTime = new Date();
     
-    // 阶段1: 基础状态
-    const paymentReceivedDelay = 5 + Math.random() * 2;  // 5-7 分钟
+    const paymentReceivedDelay = 5 + Math.random() * 2;
     const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
     
     const initialTimeline = [
         { status: "Order is placed", time: startTime.toISOString(), isCompleted: true },
-        { 
-            status: "Payment received from buyer", 
-            time: paymentReceivedTime.toISOString(),
-            isCompleted: true
-        },
-        { 
-            status: "Payment under escrow protection", 
-            time: paymentReceivedTime.toISOString(),
-            isCompleted: true
-        }
+        { status: "Payment received from buyer", time: paymentReceivedTime.toISOString(), isCompleted: true },
+        { status: "Payment under escrow protection", time: paymentReceivedTime.toISOString(), isCompleted: true }
     ];
     
-    // 阶段2: Payment released
     let paymentReleasedTime = null;
     let releaseMechanism = null;
     
     if (paymentReleaseTimer && paymentReleaseTimer > 0) {
-        // Timer 模式：从 Payment under escrow protection 的时间开始计算
         paymentReleasedTime = new Date(paymentReceivedTime.getTime() + paymentReleaseTimer * 60 * 1000);
         releaseMechanism = 'timer';
     } else {
-        // Manual 模式：设置一个未来的占位时间
         paymentReleasedTime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         releaseMechanism = 'manual';
     }
@@ -508,18 +575,12 @@ async function confirmSetOrder() {
         timerMinutes: paymentReleaseTimer || null
     });
     
-    // 阶段3: 后续状态（占位，等待自动推进器处理）
     const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     const subsequentStatuses = [
-        "Order confirmed",
-        "Preparing parcel for shipment",
-        "Courier assigned",
-        "Parcel picked up by logistics partner",
-        "Parcel arrived at sorting facility",
-        "Parcel departed from sorting facility",
-        "Parcel arrived at delivery hub",
-        "Parcel out for delivery",
-        "Parcel delivered"
+        "Order confirmed", "Preparing parcel for shipment", "Courier assigned",
+        "Parcel picked up by logistics partner", "Parcel arrived at sorting facility",
+        "Parcel departed from sorting facility", "Parcel arrived at delivery hub",
+        "Parcel out for delivery", "Parcel delivered"
     ];
     
     for (let i = 0; i < subsequentStatuses.length; i++) {
@@ -580,3 +641,4 @@ function showToast(msg) {
 }
 
 window.loadSetordersPage = loadSetordersPage;
+window.manualReleasePayment = manualReleasePayment;
