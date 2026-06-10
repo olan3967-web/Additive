@@ -148,7 +148,6 @@ async function loadManualReleaseOrders() {
     try {
         console.log('开始加载 Manual Release 订单...');
         
-        // 查询所有 Manual 订单（payment_release_timer 为空或0）
         const { data: orders, error } = await sb
             .from('user_orders')
             .select('*')
@@ -157,9 +156,6 @@ async function loadManualReleaseOrders() {
         
         if (error) throw error;
         
-        console.log('找到的 Manual 订单数量:', orders?.length);
-        
-        // 显示所有 Manual 订单
         manualReleaseOrders = orders || [];
         renderManualReleaseCard();
     } catch (err) { 
@@ -186,17 +182,14 @@ function renderManualReleaseCard() {
     `;
     
     for (const order of manualReleaseOrders) {
-        // 检查是否已释放（Payment released 已完成且没有 isPending）
         let isReleased = false;
         if (order.tracking_timeline) {
             try {
                 let timeline = typeof order.tracking_timeline === 'string' 
                     ? JSON.parse(order.tracking_timeline) 
                     : order.tracking_timeline;
-                // 检查是否有 Payment released 且没有 isPending（已完成）
-                isReleased = timeline.some(item => 
-                    item.status === "Payment released" && !item.isPending
-                );
+                const paymentReleased = timeline.find(item => item.status === "Payment released");
+                isReleased = paymentReleased && !paymentReleased.isPending;
             } catch(e) {
                 console.error('解析 timeline 失败:', e);
             }
@@ -226,170 +219,23 @@ function renderManualReleaseCard() {
     
     container.innerHTML = html;
     
-    // 绑定未释放订单的点击事件
     document.querySelectorAll('.release-order-btn:not([disabled])').forEach(btn => {
         btn.addEventListener('click', async () => {
             const orderNo = btn.dataset.order;
             console.log('点击释放订单:', orderNo);
-            const success = await triggerPaymentRelease(orderNo);
-            if (success) {
-                showToast(`订单 ${orderNo} 释放成功`, 'success');
-                // 重新加载列表，更新按钮状态
-                await loadManualReleaseOrders();
+            if (typeof manualReleasePayment === 'function') {
+                const success = await manualReleasePayment(orderNo);
+                if (success) {
+                    showToast(`订单 ${orderNo} Payment released 成功`, 'success');
+                    await loadManualReleaseOrders();
+                } else {
+                    showToast(`释放失败`, 'error');
+                }
             } else {
-                showToast(`释放失败，请查看控制台日志`, 'error');
+                showToast('释放功能未加载，请刷新页面', 'error');
             }
         });
     });
-}
-
-// ========== 触发 Payment Release ==========
-async function triggerPaymentRelease(orderNo) {
-    try {
-        console.log('开始释放订单:', orderNo);
-        
-        const { data: order, error: orderError } = await sb.from('user_orders').select('*').eq('order_no', orderNo).single();
-        if (orderError) {
-            console.error('获取订单失败:', orderError);
-            return false;
-        }
-        if (!order) {
-            console.error('订单不存在');
-            return false;
-        }
-        
-        let timeline = [];
-        try {
-            timeline = typeof order.tracking_timeline === 'string' 
-                ? JSON.parse(order.tracking_timeline) 
-                : (order.tracking_timeline || []);
-        } catch(e) { 
-            console.error('解析 timeline 失败:', e);
-            return false;
-        }
-        
-        console.log('当前 timeline:', timeline);
-        
-        // 1. 找到并更新等待中的 Payment released（isPending === true）
-        let paymentReleasedTime = new Date();
-        let foundPending = false;
-        let pendingIndex = -1;
-        
-        for (let i = 0; i < timeline.length; i++) {
-            if (timeline[i].status === "Payment released" && timeline[i].isPending === true) {
-                pendingIndex = i;
-                foundPending = true;
-                break;
-            }
-        }
-        
-        if (!foundPending) {
-            console.error('没有找到等待中的 Payment released 状态');
-            return false;
-        }
-        
-        console.log('找到等待状态，索引:', pendingIndex);
-        
-        // 更新为完成状态（去掉 isPending）
-        timeline[pendingIndex] = { status: "Payment released", time: paymentReleasedTime.toISOString() };
-        
-        // 2. 更新后续状态
-        const orderConfirmedDelay = 5 + Math.random() * 5;
-        const preparingDelay = 30 + Math.random() * 30;
-        
-        const orderConfirmedTime = new Date(paymentReleasedTime.getTime() + orderConfirmedDelay * 60 * 1000);
-        const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
-        
-        for (let i = 0; i < timeline.length; i++) {
-            if (timeline[i].status === "Order confirmed" && timeline[i].isPending === true) {
-                timeline[i] = { status: "Order confirmed", time: orderConfirmedTime.toISOString() };
-            }
-            if (timeline[i].status === "Preparing parcel for shipment" && timeline[i].isPending === true) {
-                timeline[i] = { status: "Preparing parcel for shipment", time: preparingTime.toISOString() };
-            }
-        }
-        
-        // 3. 后续物流状态
-        const remainingStatuses = [
-            "Courier assigned", "Parcel picked up by logistics partner",
-            "Parcel arrived at sorting facility", "Parcel departed from sorting facility",
-            "Parcel arrived at delivery hub", "Parcel out for delivery", "Parcel delivered"
-        ];
-        
-        const totalMs = (3 + Math.random() * 1) * 24 * 60 * 60 * 1000;
-        let intervals = [], remaining = totalMs;
-        for (let i = 0; i < remainingStatuses.length; i++) {
-            const gap = (remaining / (remainingStatuses.length - i)) * (0.3 + Math.random() * 0.7);
-            intervals.push(gap);
-            remaining -= gap;
-        }
-        
-        let laterTime = new Date(preparingTime);
-        let remainingIndex = 0;
-        for (let i = 0; i < timeline.length; i++) {
-            if (timeline[i].isPending === true && remainingStatuses.includes(timeline[i].status)) {
-                laterTime = new Date(laterTime.getTime() + intervals[remainingIndex]);
-                timeline[i] = { status: remainingStatuses[remainingIndex], time: laterTime.toISOString() };
-                remainingIndex++;
-            }
-        }
-        
-        // 4. 返还余额
-        const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
-        const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
-        const newBalance = (user?.balance || 0) + refundAmount;
-        
-        console.log('返还余额:', refundAmount, '新余额:', newBalance);
-        
-        await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
-        
-        await sb.from('deposits').insert([{
-            uid: order.uid, 
-            username: order.username, 
-            amount: order.total_commission || 0, 
-            type: 'order_settlement', 
-            created_at: new Date().toISOString()
-        }]);
-        
-        // 5. 更新订单
-        const updateResult = await sb.from('user_orders').update({
-            tracking_timeline: JSON.stringify(timeline),
-            status: 'processing'
-        }).eq('order_no', orderNo);
-        
-        if (updateResult.error) {
-            console.error('更新订单失败:', updateResult.error);
-            return false;
-        }
-        
-        // 6. 写入 order_history
-        try {
-            let products = typeof order.products === 'string' ? JSON.parse(order.products) : order.products;
-            if (Array.isArray(products)) {
-                for (let product of products) {
-                    let qty = parseInt(product.quantity) || 1;
-                    for (let j = 0; j < qty; j++) {
-                        await sb.from('order_history').insert({ 
-                            uid: order.uid, 
-                            username: order.username, 
-                            order_code: order.order_no, 
-                            accommodation_name: product.product_name, 
-                            price: product.unit_price, 
-                            commission: product.commission_per_item || 0, 
-                            date: new Date().toISOString() 
-                        });
-                    }
-                }
-            }
-        } catch(e) { console.error('Failed to record order history:', e); }      
-        
-        console.log('释放成功');
-        return true;
-        
-    } catch (err) {
-        console.error('触发失败:', err);
-        return false;
-    }
 }
 
 // ========== 页面加载函数 ==========
@@ -422,7 +268,7 @@ async function loadSetordersPage() {
                     <h4 style="color:#ffb84d;"><i class="fas fa-hourglass-half"></i> Payment Release Timer</h4>
                     <input type="number" id="paymentTimerInput" placeholder="Enter minutes (leave empty for Manual Release)" style="width:100%; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:12px; color:#fff;">
                     <div style="font-size:12px; color:#6a7a9a; margin-top:12px;">
-                        <i class="fas fa-info-circle"></i> Auto trigger Payment Release after entered minutes. Leave empty for Manual Release.
+                        <i class="fas fa-info-circle"></i> Timer 从 Payment under escrow protection 打勾后开始计时。留空则为 Manual Release。
                     </div>
                 </div>
                 
@@ -612,27 +458,67 @@ async function confirmSetOrder() {
     }
     
     const startTime = new Date();
+    
+    // 阶段1: 基础状态
+    const paymentReceivedDelay = 5 + Math.random() * 2;  // 5-7 分钟
+    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
+    
     const initialTimeline = [
-        { status: "Order is placed", time: startTime.toISOString() }
+        { status: "Order is placed", time: startTime.toISOString(), isCompleted: true },
+        { 
+            status: "Payment received from buyer", 
+            time: paymentReceivedTime.toISOString(),
+            isCompleted: true
+        },
+        { 
+            status: "Payment under escrow protection", 
+            time: paymentReceivedTime.toISOString(),
+            isCompleted: true
+        }
     ];
     
-    const paymentReceivedDelay = 5 + Math.random() * 2;
-    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
-    initialTimeline.push({ status: "Payment received from buyer", time: paymentReceivedTime.toISOString(), isPending: true });
-    initialTimeline.push({ status: "Payment under escrow protection", time: paymentReceivedTime.toISOString() });
+    // 阶段2: Payment released
+    let paymentReleasedTime = null;
+    let releaseMechanism = null;
     
     if (paymentReleaseTimer && paymentReleaseTimer > 0) {
-        const paymentReleasedTime = new Date(paymentReceivedTime.getTime() + paymentReleaseTimer * 60 * 1000);
-        initialTimeline.push({ status: "Payment released", time: paymentReleasedTime.toISOString(), isPending: true });
+        // Timer 模式：从 Payment under escrow protection 的时间开始计算
+        paymentReleasedTime = new Date(paymentReceivedTime.getTime() + paymentReleaseTimer * 60 * 1000);
+        releaseMechanism = 'timer';
     } else {
-        const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        initialTimeline.push({ status: "Payment released", time: futureDate.toISOString(), isPending: true });
+        // Manual 模式：设置一个未来的占位时间
+        paymentReleasedTime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        releaseMechanism = 'manual';
     }
     
-    const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
+    initialTimeline.push({
+        status: "Payment released",
+        time: paymentReleasedTime.toISOString(),
+        isPending: true,
+        releaseMechanism: releaseMechanism,
+        timerMinutes: paymentReleaseTimer || null
+    });
+    
+    // 阶段3: 后续状态（占位，等待自动推进器处理）
     const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    for (let i = 0; i < subsequent.length; i++) {
-        initialTimeline.push({ status: subsequent[i], time: futureDate.toISOString(), isPending: true });
+    const subsequentStatuses = [
+        "Order confirmed",
+        "Preparing parcel for shipment",
+        "Courier assigned",
+        "Parcel picked up by logistics partner",
+        "Parcel arrived at sorting facility",
+        "Parcel departed from sorting facility",
+        "Parcel arrived at delivery hub",
+        "Parcel out for delivery",
+        "Parcel delivered"
+    ];
+    
+    for (let i = 0; i < subsequentStatuses.length; i++) {
+        initialTimeline.push({
+            status: subsequentStatuses[i],
+            time: futureDate.toISOString(),
+            isPending: true
+        });
     }
     
     const { error } = await sb.from('user_orders').insert({
@@ -646,7 +532,7 @@ async function confirmSetOrder() {
         buyer_phone: buyer.phone,
         buyer_address: buyer.address,
         shipping_address: "Supplier Warehouse, Shanghai, China",
-        status: 'pending',
+        status: 'processing',
         payment_release_timer: paymentReleaseTimer || null,
         tracking_timeline: JSON.stringify(initialTimeline),
         created_at: new Date().toISOString()
@@ -660,7 +546,7 @@ async function confirmSetOrder() {
     if (paymentReleaseTimer && paymentReleaseTimer > 0) {
         showToast(`Order ${orderNo} created! Payment release will auto trigger after ${paymentReleaseTimer} minutes`, 'success');
     } else {
-        showToast(`Order ${orderNo} created! It will appear in Manual Release after user confirms the order`, 'success');
+        showToast(`Order ${orderNo} created! It will appear in Manual Release`, 'success');
     }
     
     orderItems = orderItems.map(item => ({ ...item, quantity: 0 }));
@@ -668,7 +554,6 @@ async function confirmSetOrder() {
     paymentReleaseTimer = null;
     document.getElementById('paymentTimerInput').value = '';
     
-    // 刷新 Manual Release 列表
     await loadManualReleaseOrders();
 }
 

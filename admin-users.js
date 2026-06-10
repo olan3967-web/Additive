@@ -1,4 +1,4 @@
-// admin-users.js - 完整版（含Top UpAmount + 奖励Amount + Onboarding进度条）
+// admin-users.js - 完整版（含Top UpAmount + 奖励Amount）
 
 let searchKeyword = '';
 
@@ -16,7 +16,7 @@ async function loadUsersPage() {
             <div class="table-container">
                 <table class="data-table">
                     <thead>
-                        <tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>Onboarding Status</th><th>VIP等级</th><th>钱包地址</th><th>操作</th>
+                        <tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>钱包地址</th><th>操作</th>
                     </thead>
                     <tbody id="usersTableBody"></tbody>
                 </table>
@@ -33,92 +33,60 @@ async function loadUsers() {
     let query = sb.from('users').select('*').order('created_at', { ascending: false });
     if (searchKeyword) query = query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
     const { data: users } = await query;
-    
-    // 加载 onboarding 数据
-    const { data: onboardingData } = await sb.from('user_onboarding').select('*');
-    const onboardingMap = {};
-    if (onboardingData) {
-        onboardingData.forEach(o => { onboardingMap[o.uid] = o; });
-    }
-    
-    // 获取 KYC 状态
-    const { data: kycStatuses } = await sb.from('user_kyc_status').select('*');
-    const kycMap = {};
-    if (kycStatuses) {
-        kycStatuses.forEach(k => { kycMap[k.uid] = k.is_verified; });
-    }
-    
+    const { data: allOrders } = await sb.from('order_history').select('*');
+    const { data: vipSettings } = await sb.from('vip_settings').select('*');
+    const vipLimitMap = {};
+    if (vipSettings) vipSettings.forEach(v => vipLimitMap[v.level] = v.orders_limit);
     const tbody = document.getElementById('usersTableBody');
     if (tbody && users) {
         tbody.innerHTML = '';
         for (let u of users) {
-            const onboarding = onboardingMap[u.uid] || {};
-            const step1Completed = onboarding.step1_completed || false;
-            const step2Completed = kycMap[u.uid] || false;
-            const step3Completed = onboarding.step3_completed || false;
-            
-            let completedCount = 0;
-            if (step1Completed) completedCount++;
-            if (step2Completed) completedCount++;
-            if (step3Completed) completedCount++;
-            
-            const percentage = (completedCount / 3) * 100;
-            
-            let statusText = '';
-            let statusColor = '';
-            if (completedCount === 3) {
-                statusText = '✓ Completed';
-                statusColor = '#2ed15a';
-            } else if (completedCount === 0) {
-                statusText = 'Not Started';
-                statusColor = '#8a9abb';
-            } else {
-                statusText = `${completedCount}/3 Steps`;
-                statusColor = '#ffb84d';
-            }
-            
+            const userOrders = allOrders?.filter(o => o.uid === u.uid).length || 0;
+            const ordersLimit = vipLimitMap[u.vip_level] || 30;
             const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<span class="badge" style="background:#1e2a3a; color:#ffb84d;">${u.uid}</span>`;
+            row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
             row.insertCell(1).innerText = u.username;
-            row.insertCell(2).innerHTML = `<span class="badge" style="background:#1e2a3a; color:#8a9abb;">${u.invite_code || '-'}</span>`;
+            row.insertCell(2).innerHTML = `<span class="badge">${u.invite_code || '-'}</span>`;
             row.insertCell(3).innerText = u.invited_by_username || '-';
-            row.insertCell(4).innerHTML = `<span style="color:#2ed15a; font-weight:600;">€${(u.balance || 0).toFixed(2)}</span>`;
-            row.insertCell(5).innerHTML = `<span style="color:#ffb84d; font-weight:600;">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
-            
-            // Onboarding Status 进度条（有色背景，非白色）
-            row.insertCell(6).innerHTML = `
-                <div style="display: flex; align-items: center; gap: 8px; min-width: 140px;">
-                    <div style="flex: 1; background: #1e2a3a; border-radius: 10px; height: 8px; overflow: hidden;">
-                        <div style="width: ${percentage}%; height: 100%; background: linear-gradient(90deg, #ffb84d, #2ed15a); border-radius: 10px;"></div>
-                    </div>
-                    <span style="font-size: 11px; color: ${statusColor};">${statusText}</span>
-                </div>
-            `;
-            
-            row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px; color:#fff;"><option value="1" ${u.vip_level == 1 ? 'selected' : ''}>Normal</option><option value="2" ${u.vip_level == 2 ? 'selected' : ''}>VIP</option><option value="3" ${u.vip_level == 3 ? 'selected' : ''}>SVIP</option></select>`;
-            row.insertCell(8).innerHTML = u.withdrawal_address ? u.withdrawal_address.substring(0, 12) + '...' : '<span style="color:#6a7a9a;">-</span>';
-            row.insertCell(9).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}" style="background:#2f6b3a; border:none; padding:4px 10px; font-size:11px; margin-right:4px; border-radius:6px; color:#fff; cursor:pointer;"><i class="fas fa-plus-circle"></i> Top Up</button><button class="cut-btn" data-uid="${u.uid}" style="background:#7a2f2f; border:none; padding:4px 10px; font-size:11px; margin-right:4px; border-radius:6px; color:#fff; cursor:pointer;"><i class="fas fa-minus-circle"></i> 扣款</button><button class="edit-user-btn" data-uid="${u.uid}" data-phone="${u.phone || ''}" data-username="${u.username}" data-pin="${u.pin || ''}" style="background:#2f6b3a; border:none; padding:4px 10px; font-size:11px; margin-right:4px; border-radius:6px; color:#fff; cursor:pointer;"><i class="fas fa-edit"></i> 修改</button><button class="delete-btn" data-uid="${u.uid}" style="background:#7a2f2f; border:none; padding:4px 10px; font-size:11px; border-radius:6px; color:#fff; cursor:pointer;"><i class="fas fa-trash"></i> Delete</button>`;
+            row.insertCell(4).innerHTML = `<span class="text-green">€${(u.balance || 0).toFixed(2)}</span>`;
+            row.insertCell(5).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
+            row.insertCell(6).innerHTML = `${userOrders}/${ordersLimit} <button class="reset-orders-btn" data-uid="${u.uid}" style="background:#7a5f2f; padding:2px 8px; font-size:10px; margin-left:8px;"><i class="fas fa-undo-alt"></i> 重置</button>`;
+            row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px;"><option value="1" ${u.vip_level == 1 ? 'selected' : ''}>Normal</option><option value="2" ${u.vip_level == 2 ? 'selected' : ''}>VIP</option><option value="3" ${u.vip_level == 3 ? 'selected' : ''}>SVIP</option></select>`;
+            row.insertCell(8).innerHTML = u.withdrawal_address ? u.withdrawal_address.substring(0, 12) + '...' : '-';
+            row.insertCell(9).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-plus-circle"></i> Top Up</button><button class="cut-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-minus-circle"></i> 扣款</button><button class="edit-user-btn" data-uid="${u.uid}" data-phone="${u.phone || ''}" data-username="${u.username}" data-pin="${u.pin || ''}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-edit"></i> 修改</button><button class="delete-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;"><i class="fas fa-trash"></i> Delete</button>`;
         }
         document.querySelectorAll('.vip-select').forEach(sel => sel.addEventListener('change', () => updateVip(sel.dataset.uid, sel.value)));
         document.querySelectorAll('.deposit-btn').forEach(btn => btn.addEventListener('click', () => depositBalance(btn.dataset.uid)));
         document.querySelectorAll('.cut-btn').forEach(btn => btn.addEventListener('click', () => cutBalance(btn.dataset.uid)));
         document.querySelectorAll('.edit-user-btn').forEach(btn => btn.addEventListener('click', () => openEditUserModal(btn.dataset.uid, btn.dataset.phone, btn.dataset.username, btn.dataset.pin)));
         document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => delUser(btn.dataset.uid)));
+        document.querySelectorAll('.reset-orders-btn').forEach(btn => btn.addEventListener('click', () => resetUserOrders(btn.dataset.uid)));
     }
+}
+
+async function resetUserOrders(uid) {
+    showConfirm('Confirm重置', '重置后该用户订单数将归0，订单记录将被Delete，是否继续？', async () => {
+        await sb.from('order_history').delete().eq('uid', uid);
+        showToast('订单已重置', 'success');
+        loadUsers();
+    });
 }
 
 // ========== Top Up：输入Top UpAmount + 奖励Amount ==========
 async function depositBalance(uid) {
-    showPrompt('Top Up Amount', '请输入Top Up Amount (€)', async (amount) => {
+    // 第一步：输入Top UpAmount
+    showPrompt('Top UpAmount', '请输入Top UpAmount (€)', async (amount) => {
         const depositAmount = parseFloat(amount);
         if (isNaN(depositAmount) || depositAmount <= 0) {
-            showToast('请输入有效的Top Up Amount', 'error');
+            showToast('请输入有效的Top UpAmount', 'error');
             return;
         }
         
-        showPrompt('Bonus Amount', '请输入奖励Amount (€) - 可不填', async (bonus) => {
+        // 第二步：输入奖励Amount（可选）
+        showPrompt('奖励Amount', '请输入奖励Amount (€) - 可不填', async (bonus) => {
             const bonusAmount = parseFloat(bonus) || 0;
             
+            // 获取用户信息
             const { data: user, error: fetchError } = await sb
                 .from('users')
                 .select('balance, username')
@@ -133,11 +101,15 @@ async function depositBalance(uid) {
             const currentBalance = user.balance || 0;
             const newBalance = currentBalance + depositAmount + bonusAmount;
             
-            let confirmMessage = `用户：${user.username} Top Up：€${depositAmount.toFixed(2)}`;
-            if (bonusAmount > 0) confirmMessage += ` 奖励：€${bonusAmount.toFixed(2)}`;
-            confirmMessage += ` 新余额：€${newBalance.toFixed(2)}`;
+            // 第三步：二次Confirm
+            let confirmMessage = `用户：${user.username}Top UpAmount：€${depositAmount.toFixed(2)}`;
+            if (bonusAmount > 0) {
+                confirmMessage += `奖励Amount：€${bonusAmount.toFixed(2)}`;
+            }
+            confirmMessage += `Top Up后总余额：€${newBalance.toFixed(2)}`;
             
-            showConfirm('Confirm Top Up', confirmMessage, async () => {
+            showConfirm('ConfirmTop Up', confirmMessage, async () => {
+                // 更新余额
                 const { error: updateError } = await sb
                     .from('users')
                     .update({ balance: newBalance })
@@ -148,6 +120,7 @@ async function depositBalance(uid) {
                     return;
                 }
                 
+                // 记录Top Up记录
                 await sb.from('deposits').insert([{
                     uid: uid,
                     username: user.username,
@@ -156,6 +129,7 @@ async function depositBalance(uid) {
                     created_at: new Date().toISOString()
                 }]);
                 
+                // 如果有奖励，记录奖励记录
                 if (bonusAmount > 0) {
                     await sb.from('deposits').insert([{
                         uid: uid,
@@ -176,10 +150,10 @@ async function depositBalance(uid) {
 
 // ========== 扣款（无奖励） ==========
 async function cutBalance(uid) {
-    showPrompt('扣款金额', '请输入扣款金额 (€)', async (amt) => {
+    showPrompt('扣款Amount', '请输入扣款Amount (€)', async (amt) => {
         const amount = parseFloat(amt);
         if (!amount || amount <= 0) {
-            showToast('请输入有效金额', 'error');
+            showToast('请输入有效Amount', 'error');
             return;
         }
         
@@ -196,7 +170,7 @@ async function cutBalance(uid) {
         
         const newBalance = (user.balance || 0) - amount;
         
-        showConfirm('Confirm扣款', `用户: ${user.username} 扣款: €${amount.toFixed(2)} 新余额: €${newBalance.toFixed(2)}`, async () => {
+        showConfirm('Confirm扣款', `用户: ${user.username}扣款Amount: €${amount.toFixed(2)}扣款后余额: €${newBalance.toFixed(2)}`, async () => {
             const { error } = await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
             if (error) {
                 showToast('扣款失败: ' + error.message, 'error');
@@ -214,13 +188,13 @@ function openEditUserModal(uid, phone, username, pin) {
     const modalHtml = `
         <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
             <div class="modal-card">
-                <h3 style="color:#ffb84d;"><i class="fas fa-edit"></i> 修改用户信息 - ${escapeHtml(username)}</h3>
-                <div><label style="color:#8a9abb;">Phone Number</label><input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
-                <div><label style="color:#8a9abb;">Login Password</label><input type="password" id="editPassword" placeholder="留空则不修改" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"><small style="color:#6a7a9a;">留空表示不修改密码</small></div>
-                <div><label style="color:#8a9abb;">Withdrawal PIN (4 digits)</label><input type="password" id="editPin" maxlength="4" value="${escapeHtml(pin || '')}" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
+                <h3><i class="fas fa-edit"></i> 修改用户信息 - ${escapeHtml(username)}</h3>
+                <div><label>Phone Number</label><input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
+                <div><label>Login Password</label><input type="password" id="editPassword" placeholder="留空则不修改" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"><small>留空表示不修改密码</small></div>
+                <div><label>Withdrawal PIN (4 digits)</label><input type="password" id="editPin" maxlength="4" value="${escapeHtml(pin || '')}" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
                 <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button id="confirmEditBtn" class="success" style="background:#2f6b3a; border:none; padding:8px 16px; border-radius:8px; color:#fff; cursor:pointer;">保存修改</button>
-                    <button id="cancelEditBtn" style="background:#4a5a6a; border:none; padding:8px 16px; border-radius:8px; color:#fff; cursor:pointer;">取消</button>
+                    <button id="confirmEditBtn" class="success">Save修改</button>
+                    <button id="cancelEditBtn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -260,14 +234,14 @@ async function updateVip(uid, level) {
 }
 
 async function delUser(uid) {
-    showConfirm('Confirm Delete', '永久删除用户？此操作不可恢复', async () => {
+    showConfirm('ConfirmDelete', '永久Delete用户？此操作不可恢复', async () => {
         await sb.from('users').delete().eq('uid', uid);
         await sb.from('order_history').delete().eq('uid', uid);
         await sb.from('deposits').delete().eq('uid', uid);
         await sb.from('withdrawals').delete().eq('uid', uid);
         loadUsers();
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        showToast('已删除', 'success');
+        showToast('已Delete', 'success');
     });
 }
 
