@@ -882,108 +882,115 @@
     }
 
     async function loadProfile() {
-        const user = getCurrentUser();
-        if (!user) return;
+    const user = getCurrentUser();
+    if (!user) return;
 
-        const userData = await fetchUserData(user.uid);
-        if (!userData) return;
+    const userData = await fetchUserData(user.uid);
+    if (!userData) return;
 
-        user.username = userData.username;
-        user.balance = userData.balance || 0;
-        user.vipLevel = userData.vip_level || 1;
-        user.uid = userData.uid;
-        localStorage.setItem('currentUser', JSON.stringify(user));
+    user.username = userData.username;
+    user.balance = userData.balance || 0;
+    user.vipLevel = userData.vip_level || 1;
+    user.uid = userData.uid;
+    localStorage.setItem('currentUser', JSON.stringify(user));
 
-        document.getElementById('displayUsername').innerText = userData.username;
-        document.getElementById('displayUid').innerText = userData.uid;
-        document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
+    document.getElementById('displayUsername').innerText = userData.username;
+    document.getElementById('displayUid').innerText = userData.uid;
+    document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
 
-        const initial = (userData.username?.charAt(0) || 'U').toUpperCase();
-        document.getElementById('avatarInitial').innerText = initial;
+    const initial = (userData.username?.charAt(0) || 'U').toUpperCase();
+    document.getElementById('avatarInitial').innerText = initial;
 
-        const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
-        const vipLevel = vipMap[userData.vip_level] || 'Normal';
-        document.getElementById('vipBadge').innerText = vipLevel;
+    const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
+    const vipLevel = vipMap[userData.vip_level] || 'Normal';
+    document.getElementById('vipBadge').innerText = vipLevel;
 
-        const isKycVerified = await getUserKycStatus(user.uid);
-        const kycBadge = document.getElementById('kycBadge');
-        if (isKycVerified) {
-            kycBadge.innerText = 'KYC Verified';
-            kycBadge.style.background = 'rgba(0, 255, 255, 0.12)';
-            kycBadge.style.color = '#00e5ff';
-        } else {
-            kycBadge.innerText = 'KYC Pending';
-            kycBadge.style.background = 'rgba(255, 122, 0, 0.2)';
-            kycBadge.style.color = '#ffb347';
-        }
-
-        // ========== 获取总佣金和今日佣金（从 deposits 表，type = 'order_commission'） ==========
-        const { data: allCommissions, error: commissionError } = await sb
-            .from('deposits')
-            .select('amount, created_at')
-            .eq('uid', user.uid)
-            .eq('type', 'order_commission');
-
-        if (commissionError) {
-            console.error('查询佣金失败:', commissionError);
-        }
-
-        // 总佣金（My Sales 卡片）- 所有订单佣金的总和
-        const totalCommission = allCommissions?.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
-
-        // 今日佣金（Today's Earnings）- 今天释放的佣金
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
-
-        const todayCommissions = allCommissions?.filter(d => {
-            if (!d.created_at) return false;
-            const dateStr = new Date(d.created_at).toISOString().split('T')[0];
-            return dateStr === todayStr;
-        }) || [];
-
-        const todayCommission = todayCommissions.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
-
-        // 使用动画显示
-        animateNumber(document.getElementById('totalCommissions'), 0, todayCommission, 1200, true);
-        animateNumber(document.getElementById('salesAmount'), 0, totalCommission, 1200, true);
-
-        // ========== 计算 Pending Release 金额 ==========
-        const { data: processingOrders } = await sb
-            .from('user_orders')
-            .select('total_supply_price, total_commission, tracking_timeline')
-            .eq('uid', user.uid)
-            .eq('status', 'processing');
-
-        const now = new Date();
-        let pendingReleaseTotal = 0;
-
-        for (const order of processingOrders || []) {
-            let timeline = [];
-            try {
-                timeline = JSON.parse(order.tracking_timeline || '[]');
-            } catch(e) {}
-            
-            // 查找 Payment released 状态
-            const paymentReleased = timeline.find(t => t.status === 'Payment released');
-            
-            // 判断 Payment released 是否已经打勾（时间已到且没有 isPending）
-            let isPaymentReleased = false;
-            if (paymentReleased) {
-                const releasedTime = new Date(paymentReleased.time);
-                if (releasedTime <= now && !paymentReleased.isPending) {
-                    isPaymentReleased = true;
-                }
-            }
-            
-            // 如果 Payment released 还没有打勾，则计入 Pending Release
-            if (!isPaymentReleased) {
-                pendingReleaseTotal += (order.total_supply_price || 0) + (order.total_commission || 0);
-            }
-        }
-
-        // 更新 Pending Release UI
-        animateNumber(document.getElementById('pendingReleaseAmount'), 0, pendingReleaseTotal, 1200, true);
+    const isKycVerified = await getUserKycStatus(user.uid);
+    const kycBadge = document.getElementById('kycBadge');
+    if (isKycVerified) {
+        kycBadge.innerText = 'KYC Verified';
+        kycBadge.style.background = 'rgba(0, 255, 255, 0.12)';
+        kycBadge.style.color = '#00e5ff';
+    } else {
+        kycBadge.innerText = 'KYC Pending';
+        kycBadge.style.background = 'rgba(255, 122, 0, 0.2)';
+        kycBadge.style.color = '#ffb347';
     }
+
+    // ========== 获取总佣金和今日佣金（从 deposits 表，type = 'order_commission'） ==========
+    const { data: allCommissions, error: commissionError } = await sb
+        .from('deposits')
+        .select('amount, created_at')
+        .eq('uid', user.uid)
+        .eq('type', 'order_commission');
+
+    if (commissionError) {
+        console.error('查询佣金失败:', commissionError);
+    }
+
+    // 总佣金（My Sales 卡片）- 所有订单佣金的总和
+    const totalCommission = allCommissions?.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
+
+    // 今日佣金（Today's Earnings）- 今天释放的佣金
+    const today = new Date();
+    // 获取今天的开始时间（00:00:00）
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    // 获取今天的结束时间（23:59:59）
+    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+    const todayCommissions = allCommissions?.filter(d => {
+        if (!d.created_at) return false;
+        const recordDate = new Date(d.created_at);
+        return recordDate >= todayStart && recordDate < todayEnd;
+    }) || [];
+
+    const todayCommission = todayCommissions.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
+
+    console.log('总佣金:', totalCommission);
+    console.log('今日佣金:', todayCommission);
+    console.log('今日佣金记录数:', todayCommissions.length);
+
+    // 使用动画显示
+    animateNumber(document.getElementById('totalCommissions'), 0, todayCommission, 1200, true);
+    animateNumber(document.getElementById('salesAmount'), 0, totalCommission, 1200, true);
+
+    // ========== 计算 Pending Release 金额 ==========
+    const { data: processingOrders } = await sb
+        .from('user_orders')
+        .select('total_supply_price, total_commission, tracking_timeline')
+        .eq('uid', user.uid)
+        .eq('status', 'processing');
+
+    const now = new Date();
+    let pendingReleaseTotal = 0;
+
+    for (const order of processingOrders || []) {
+        let timeline = [];
+        try {
+            timeline = JSON.parse(order.tracking_timeline || '[]');
+        } catch(e) {}
+        
+        // 查找 Payment released 状态
+        const paymentReleased = timeline.find(t => t.status === 'Payment released');
+        
+        // 判断 Payment released 是否已经打勾（时间已到且没有 isPending）
+        let isPaymentReleased = false;
+        if (paymentReleased) {
+            const releasedTime = new Date(paymentReleased.time);
+            if (releasedTime <= now && !paymentReleased.isPending) {
+                isPaymentReleased = true;
+            }
+        }
+        
+        // 如果 Payment released 还没有打勾，则计入 Pending Release
+        if (!isPaymentReleased) {
+            pendingReleaseTotal += (order.total_supply_price || 0) + (order.total_commission || 0);
+        }
+    }
+
+    // 更新 Pending Release UI
+    animateNumber(document.getElementById('pendingReleaseAmount'), 0, pendingReleaseTotal, 1200, true);
+}
 
     // ========== 右下角弹窗逻辑 ==========
     function showActivityPopup() {
