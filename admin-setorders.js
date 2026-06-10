@@ -148,9 +148,17 @@ async function loadManualReleaseOrders() {
     try {
         console.log('开始加载 Manual Release 订单...');
         
+        // 如果没有选中用户，清空并返回
+        if (!selectedUser || !selectedUser.uid) {
+            manualReleaseOrders = [];
+            renderManualReleaseCard();
+            return;
+        }
+        
         const { data: orders, error } = await sb
             .from('user_orders')
             .select('*')
+            .eq('uid', selectedUser.uid)  // 关键：只显示当前用户
             .or('payment_release_timer.is.null,payment_release_timer.eq.0')
             .order('created_at', { ascending: false });
         
@@ -331,6 +339,7 @@ async function selectUser(uid, username) {
     document.getElementById('selectedUidDisplay').innerText = uid;
     document.getElementById('selectedUsernameDisplay').innerText = username;
     await loadUserProducts(uid);
+    await loadManualReleaseOrders();  // 新增：加载该用户的 Manual 订单
     document.getElementById('setordersUserSearch').style.display = 'none';
     document.getElementById('setordersMain').style.display = 'block';
 }
