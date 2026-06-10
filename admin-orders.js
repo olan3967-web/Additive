@@ -87,7 +87,6 @@ function generateLogisticsPlan(startTime) {
         "Parcel delivered"
     ];
     
-    // 随机分配每个状态的时间点
     const timePoints = [];
     let remaining = totalDurationMs;
     
@@ -101,7 +100,6 @@ function generateLogisticsPlan(startTime) {
     }
     timePoints.push(remaining);
     
-    // 累积计算实际时间点
     const plan = [];
     let currentTime = new Date(startTime);
     
@@ -168,12 +166,40 @@ async function manualReleasePayment(orderNo) {
         tracking_timeline: JSON.stringify(timeline)
     }).eq('order_no', orderNo);
     
+    // ✅ 记录 Product Payment Release 到 deposits
+    await sb.from('deposits').insert({
+        uid: order.uid,
+        username: order.username,
+        amount: order.total_supply_price || 0,
+        type: 'order_settlement',
+        description: 'Product Payment Release',
+        created_at: now.toISOString()
+    });
+    
+    // ✅ 记录 Commission 到 deposits
+    await sb.from('deposits').insert({
+        uid: order.uid,
+        username: order.username,
+        amount: order.total_commission || 0,
+        type: 'order_commission',
+        description: 'Commissions',
+        created_at: now.toISOString()
+    });
+    
+    // 更新用户余额
+    const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
+    if (user) {
+        const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
+        const newBalance = (user.balance || 0) + refundAmount;
+        await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
+    }
+    
     console.log(`✅ 订单 ${orderNo} Payment released 已手动释放`);
     return true;
 }
 
 /**
- * 订单完成后记录到 order_history
+ * 订单完成后记录到 order_history 和 deposits
  */
 async function recordOrderToHistory(order) {
     try {
@@ -196,20 +222,11 @@ async function recordOrderToHistory(order) {
         }
         console.log(`📝 订单 ${order.order_no} 已写入 order_history`);
         
-        // 更新用户余额（返还佣金）
+        // 更新用户余额（返还佣金）- 注意：本金释放已经在 activatePaymentRelease 中处理
         const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
         if (user) {
             const newBalance = (user.balance || 0) + (order.total_commission || 0);
             await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
-            
-            // 记录到 deposits
-            await sb.from('deposits').insert({
-                uid: order.uid,
-                username: order.username,
-                amount: order.total_commission || 0,
-                type: 'order_commission',
-                created_at: new Date().toISOString()
-            });
         }
     } catch(e) {
         console.error('写入 order_history 失败:', e);
@@ -388,7 +405,7 @@ async function loadAdminOrdersPage() {
                     <thead>
                         <tr><th>Order No</th><th>UID</th><th>Username</th><th>Products</th><th>Total Price</th><th>Commission</th><th>Buyer</th><th>Status</th><th>Created</th>
                     </thead>
-                    <tbody id="adminOrdersTableBody"><tr><td colspan="9" class="loading">Loading...</td></tr></tbody>
+                    <tbody id="adminOrdersTableBody"><tr><td colspan="9" class="loading">Loading...</td></tr>
                 </table>
             </div>
             <div class="pagination" id="adminOrderPagination"></div>
