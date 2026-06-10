@@ -541,7 +541,7 @@ async function confirmSetOrder() {
         buyer_phone: buyer.phone,
         buyer_address: buyer.address,
         shipping_address: "Supplier Warehouse, Shanghai, China",
-        status: 'processing',
+        status: 'pending',
         payment_release_timer: paymentReleaseTimer || null,
         tracking_timeline: JSON.stringify(initialTimeline),
         created_at: new Date().toISOString()
