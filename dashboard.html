@@ -467,7 +467,7 @@
             font-weight: 600;
         }
 
-        /* ========== 活动弹窗样式（底部紧贴菜单栏） ========== */
+        /* 活动弹窗样式 */
         .activity-popup {
             position: fixed;
             bottom: 70px;
@@ -523,11 +523,7 @@
             .grid-label { font-size: 9px; }
             .stat-value { font-size: 20px; }
             .wallet-balance { font-size: 28px; }
-            .activity-popup {
-                width: 240px;
-                bottom: 65px;
-                right: 12px;
-            }
+            .activity-popup { width: 240px; bottom: 65px; right: 12px; }
         }
 
         /* 双卡片流光效果 */
@@ -586,7 +582,7 @@
         </div>
     </div>
 
-    <!-- 双卡片并排：Today's Earnings 和 Pending Release -->
+    <!-- 双卡片并排 -->
     <div style="display: flex; gap: 12px; margin: 16px;">
         <div class="stats-card-half" style="flex: 1; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(20px); border: 1px solid rgba(255, 122, 0, 0.5); border-radius: 20px; padding: 16px; position: relative; overflow: hidden;">
             <div style="font-size: 12px; color: #1f2937; margin-bottom: 8px;">Today's Earnings</div>
@@ -628,100 +624,42 @@
 
     <div class="glass-card" id="particleCard1">
         <div class="card-inner">
-            <div class="section-title">
-                <i class="fa-regular fa-star" style="color:#ff7a00;"></i>
-                QUICK ACTIONS
-            </div>
+            <div class="section-title"><i class="fa-regular fa-star" style="color:#ff7a00;"></i> QUICK ACTIONS</div>
             <div class="grid-4">
-                <div class="grid-item" onclick="location.href='store-settings.html'">
-                    <div class="grid-icon"><i class="fa-solid fa-store"></i></div>
-                    <div class="grid-label">Store</div>
-                </div>
-                <div class="grid-item" onclick="location.href='my-products.html'">
-                    <div class="grid-icon"><i class="fa-regular fa-bookmark"></i></div>
-                    <div class="grid-label">My Products</div>
-                </div>
-                <div class="grid-item" onclick="location.href='certificate.html'">
-                    <div class="grid-icon"><i class="fa-solid fa-certificate"></i></div>
-                    <div class="grid-label">Certificate</div>
-                </div>
-                <div class="grid-item" onclick="location.href='kyc.html'">
-                    <div class="grid-icon"><i class="fa-solid fa-id-card"></i></div>
-                    <div class="grid-label">KYC</div>
-                </div>
-                <div class="grid-item" onclick="location.href='orders-history.html'">
-                    <div class="grid-icon"><i class="fa-solid fa-list-check"></i></div>
-                    <div class="grid-label">My Orders</div>
-                </div>
-                <div class="grid-item" onclick="location.href='withdrawal.html'">
-                    <div class="grid-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
-                    <div class="grid-label">Withdrawal</div>
-                </div>
-                <div class="grid-item" onclick="location.href='membership.html'">
-                    <div class="grid-icon"><i class="fa-solid fa-crown"></i></div>
-                    <div class="grid-label">Premium</div>
-                </div>
-                <div class="grid-item" onclick="location.href='events.html'">
-                    <div class="grid-icon"><i class="fas fa-trophy"></i></div>
-                    <div class="grid-label">Event</div>
-                </div>
+                <div class="grid-item" onclick="location.href='store-settings.html'"><div class="grid-icon"><i class="fa-solid fa-store"></i></div><div class="grid-label">Store</div></div>
+                <div class="grid-item" onclick="location.href='my-products.html'"><div class="grid-icon"><i class="fa-regular fa-bookmark"></i></div><div class="grid-label">My Products</div></div>
+                <div class="grid-item" onclick="location.href='certificate.html'"><div class="grid-icon"><i class="fa-solid fa-certificate"></i></div><div class="grid-label">Certificate</div></div>
+                <div class="grid-item" onclick="location.href='kyc.html'"><div class="grid-icon"><i class="fa-solid fa-id-card"></i></div><div class="grid-label">KYC</div></div>
+                <div class="grid-item" onclick="location.href='orders-history.html'"><div class="grid-icon"><i class="fa-solid fa-list-check"></i></div><div class="grid-label">My Orders</div></div>
+                <div class="grid-item" onclick="location.href='withdrawal.html'"><div class="grid-icon"><i class="fa-solid fa-money-bill-wave"></i></div><div class="grid-label">Withdrawal</div></div>
+                <div class="grid-item" onclick="location.href='membership.html'"><div class="grid-icon"><i class="fa-solid fa-crown"></i></div><div class="grid-label">Premium</div></div>
+                <div class="grid-item" onclick="location.href='events.html'"><div class="grid-icon"><i class="fas fa-trophy"></i></div><div class="grid-label">Event</div></div>
             </div>
         </div>
     </div>
 
     <div class="glass-card" id="particleCard2">
         <div class="card-inner">
-            <div class="section-title">
-                <i class="fa-regular fa-circle-question" style="color:#ff7a00;"></i>
-                SUPPORT & HISTORY
-            </div>
+            <div class="section-title"><i class="fa-regular fa-circle-question" style="color:#ff7a00;"></i> SUPPORT & HISTORY</div>
             <div class="grid-4">
-                <div class="grid-item" onclick="location.href='chat.html'">
-                    <div class="grid-icon"><i class="fas fa-headset"></i></div>
-                    <div class="grid-label">Support</div>
-                </div>
-                <div class="grid-item" onclick="location.href='balance-history.html'">
-                    <div class="grid-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                    <div class="grid-label">Balance History</div>
-                </div>
-                <div class="grid-item" onclick="location.href='orders-history.html'">
-                    <div class="grid-icon"><i class="fa-solid fa-cart-flatbed"></i></div>
-                    <div class="grid-label">Orders History</div>
-                </div>
-                <div class="grid-item" onclick="location.href='checkin.html'">
-                    <div class="grid-icon"><i class="fa-regular fa-calendar-check"></i></div>
-                    <div class="grid-label">Check In</div>
-                </div>
+                <div class="grid-item" onclick="location.href='chat.html'"><div class="grid-icon"><i class="fas fa-headset"></i></div><div class="grid-label">Support</div></div>
+                <div class="grid-item" onclick="location.href='balance-history.html'"><div class="grid-icon"><i class="fa-solid fa-clock-rotate-left"></i></div><div class="grid-label">Balance History</div></div>
+                <div class="grid-item" onclick="location.href='orders-history.html'"><div class="grid-icon"><i class="fa-solid fa-cart-flatbed"></i></div><div class="grid-label">Orders History</div></div>
+                <div class="grid-item" onclick="location.href='checkin.html'"><div class="grid-icon"><i class="fa-regular fa-calendar-check"></i></div><div class="grid-label">Check In</div></div>
             </div>
             <div class="settings-row">
-                <div class="grid-item" onclick="location.href='settings.html'">
-                    <div class="grid-icon"><i class="fa-solid fa-sliders-h"></i></div>
-                    <div class="grid-label">Settings</div>
-                </div>
+                <div class="grid-item" onclick="location.href='settings.html'"><div class="grid-icon"><i class="fa-solid fa-sliders-h"></i></div><div class="grid-label">Settings</div></div>
             </div>
         </div>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item" data-page="dashboard">
-            <i class="fa-solid fa-house"></i>
-            <span>Dashboard</span>
-        </div>
-        <div class="nav-item" data-page="products">
-            <i class="fa-solid fa-box"></i>
-            <span>Products</span>
-        </div>
-        <div class="nav-item" data-page="orders">
-            <i class="fa-solid fa-list-check"></i>
-            <span>Orders</span>
-        </div>
-        <div class="nav-item active" data-page="profile">
-            <i class="fa-solid fa-user"></i>
-            <span>My Profile</span>
-        </div>
+        <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
+        <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
+        <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
+        <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
     </div>
 
-    <!-- 右下角活动弹窗（纯图片） -->
     <div id="activityPopup" class="activity-popup">
         <img class="popup-img" src="cjbonus.png" alt="Bonus" id="popupImage" onerror="this.style.display='none'">
         <div class="close-popup" id="closePopupBtn">✕</div>
@@ -827,26 +765,17 @@
     }
 
     async function fetchUserData(uid) {
-        const { data, error } = await sb
-            .from('users')
-            .select('*')
-            .eq('uid', uid)
-            .single();
+        const { data, error } = await sb.from('users').select('*').eq('uid', uid).single();
         if (error) return null;
         return data;
     }
 
     async function getUserKycStatus(uid) {
-        const { data, error } = await sb
-            .from('user_kyc_status')
-            .select('is_verified')
-            .eq('uid', uid)
-            .single();
+        const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
         if (error) return false;
         return data?.is_verified || false;
     }
 
-    // 数字滚动动画
     function animateNumber(element, start, end, duration = 1500, isCurrency = false) {
         if (!element) return;
         const startTime = performance.now();
@@ -882,137 +811,120 @@
     }
 
     async function loadProfile() {
-    const user = getCurrentUser();
-    if (!user) return;
+        const user = getCurrentUser();
+        if (!user) return;
 
-    const userData = await fetchUserData(user.uid);
-    if (!userData) return;
+        const userData = await fetchUserData(user.uid);
+        if (!userData) return;
 
-    user.username = userData.username;
-    user.balance = userData.balance || 0;
-    user.vipLevel = userData.vip_level || 1;
-    user.uid = userData.uid;
-    localStorage.setItem('currentUser', JSON.stringify(user));
+        user.username = userData.username;
+        user.balance = userData.balance || 0;
+        user.vipLevel = userData.vip_level || 1;
+        user.uid = userData.uid;
+        localStorage.setItem('currentUser', JSON.stringify(user));
 
-    document.getElementById('displayUsername').innerText = userData.username;
-    document.getElementById('displayUid').innerText = userData.uid;
-    document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
+        document.getElementById('displayUsername').innerText = userData.username;
+        document.getElementById('displayUid').innerText = userData.uid;
+        document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
 
-    const initial = (userData.username?.charAt(0) || 'U').toUpperCase();
-    document.getElementById('avatarInitial').innerText = initial;
+        const initial = (userData.username?.charAt(0) || 'U').toUpperCase();
+        document.getElementById('avatarInitial').innerText = initial;
 
-    const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
-    const vipLevel = vipMap[userData.vip_level] || 'Normal';
-    document.getElementById('vipBadge').innerText = vipLevel;
+        const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
+        const vipLevel = vipMap[userData.vip_level] || 'Normal';
+        document.getElementById('vipBadge').innerText = vipLevel;
 
-    const isKycVerified = await getUserKycStatus(user.uid);
-    const kycBadge = document.getElementById('kycBadge');
-    if (isKycVerified) {
-        kycBadge.innerText = 'KYC Verified';
-        kycBadge.style.background = 'rgba(0, 255, 255, 0.12)';
-        kycBadge.style.color = '#00e5ff';
-    } else {
-        kycBadge.innerText = 'KYC Pending';
-        kycBadge.style.background = 'rgba(255, 122, 0, 0.2)';
-        kycBadge.style.color = '#ffb347';
-    }
+        const isKycVerified = await getUserKycStatus(user.uid);
+        const kycBadge = document.getElementById('kycBadge');
+        if (isKycVerified) {
+            kycBadge.innerText = 'KYC Verified';
+            kycBadge.style.background = 'rgba(0, 255, 255, 0.12)';
+            kycBadge.style.color = '#00e5ff';
+        } else {
+            kycBadge.innerText = 'KYC Pending';
+            kycBadge.style.background = 'rgba(255, 122, 0, 0.2)';
+            kycBadge.style.color = '#ffb347';
+        }
 
-    // ========== 获取总佣金和今日佣金（从 deposits 表，type = 'order_commission'） ==========
-    const { data: allCommissions, error: commissionError } = await sb
-        .from('deposits')
-        .select('amount, created_at')
-        .eq('uid', user.uid)
-        .eq('type', 'order_commission');
+        // ========== 获取总佣金和今日佣金（只统计正数金额） ==========
+        const { data: allDeposits, error: depositError } = await sb
+            .from('deposits')
+            .select('amount, created_at, type')
+            .eq('uid', user.uid);
 
-    if (commissionError) {
-        console.error('查询佣金失败:', commissionError);
-    }
+        if (depositError) {
+            console.error('查询失败:', depositError);
+        }
 
-    // 总佣金（My Sales 卡片）- 所有订单佣金的总和
-    const totalCommission = allCommissions?.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
+        // 只统计正数的佣金记录（排除 order_payment 等负数）
+        const allCommissions = allDeposits?.filter(d => d.type === 'order_commission' && d.amount > 0) || [];
 
-    // 今日佣金（Today's Earnings）- 今天释放的佣金
-    const today = new Date();
-    // 获取今天的开始时间（00:00:00）
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    // 获取今天的结束时间（23:59:59）
-    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+        // 总佣金
+        const totalCommission = allCommissions.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
 
-    const todayCommissions = allCommissions?.filter(d => {
-        if (!d.created_at) return false;
-        const recordDate = new Date(d.created_at);
-        return recordDate >= todayStart && recordDate < todayEnd;
-    }) || [];
+        // 今日佣金
+        const today = new Date();
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
 
-    const todayCommission = todayCommissions.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
+        const todayCommissions = allCommissions.filter(d => {
+            if (!d.created_at) return false;
+            const recordDate = new Date(d.created_at);
+            return recordDate >= todayStart && recordDate < todayEnd;
+        });
+        const todayCommission = todayCommissions.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
 
-    console.log('总佣金:', totalCommission);
-    console.log('今日佣金:', todayCommission);
-    console.log('今日佣金记录数:', todayCommissions.length);
+        console.log('总佣金:', totalCommission);
+        console.log('今日佣金:', todayCommission);
 
-    // 使用动画显示
-    animateNumber(document.getElementById('totalCommissions'), 0, todayCommission, 1200, true);
-    animateNumber(document.getElementById('salesAmount'), 0, totalCommission, 1200, true);
+        // 更新 UI
+        animateNumber(document.getElementById('totalCommissions'), 0, todayCommission, 1200, true);
+        animateNumber(document.getElementById('salesAmount'), 0, totalCommission, 1200, true);
 
-    // ========== 计算 Pending Release 金额 ==========
-    const { data: processingOrders } = await sb
-        .from('user_orders')
-        .select('total_supply_price, total_commission, tracking_timeline')
-        .eq('uid', user.uid)
-        .eq('status', 'processing');
+        // ========== 计算 Pending Release 金额 ==========
+        const { data: processingOrders } = await sb
+            .from('user_orders')
+            .select('total_supply_price, total_commission, tracking_timeline')
+            .eq('uid', user.uid)
+            .eq('status', 'processing');
 
-    const now = new Date();
-    let pendingReleaseTotal = 0;
+        const now = new Date();
+        let pendingReleaseTotal = 0;
 
-    for (const order of processingOrders || []) {
-        let timeline = [];
-        try {
-            timeline = JSON.parse(order.tracking_timeline || '[]');
-        } catch(e) {}
-        
-        // 查找 Payment released 状态
-        const paymentReleased = timeline.find(t => t.status === 'Payment released');
-        
-        // 判断 Payment released 是否已经打勾（时间已到且没有 isPending）
-        let isPaymentReleased = false;
-        if (paymentReleased) {
-            const releasedTime = new Date(paymentReleased.time);
-            if (releasedTime <= now && !paymentReleased.isPending) {
-                isPaymentReleased = true;
+        for (const order of processingOrders || []) {
+            let timeline = [];
+            try {
+                timeline = JSON.parse(order.tracking_timeline || '[]');
+            } catch(e) {}
+            
+            const paymentReleased = timeline.find(t => t.status === 'Payment released');
+            let isPaymentReleased = false;
+            if (paymentReleased) {
+                const releasedTime = new Date(paymentReleased.time);
+                if (releasedTime <= now && !paymentReleased.isPending) {
+                    isPaymentReleased = true;
+                }
+            }
+            
+            if (!isPaymentReleased) {
+                pendingReleaseTotal += (order.total_supply_price || 0) + (order.total_commission || 0);
             }
         }
-        
-        // 如果 Payment released 还没有打勾，则计入 Pending Release
-        if (!isPaymentReleased) {
-            pendingReleaseTotal += (order.total_supply_price || 0) + (order.total_commission || 0);
-        }
+
+        animateNumber(document.getElementById('pendingReleaseAmount'), 0, pendingReleaseTotal, 1200, true);
     }
 
-    // 更新 Pending Release UI
-    animateNumber(document.getElementById('pendingReleaseAmount'), 0, pendingReleaseTotal, 1200, true);
-}
-
-    // ========== 右下角弹窗逻辑 ==========
     function showActivityPopup() {
         const popup = document.getElementById('activityPopup');
-        if (popup) {
-            popup.classList.add('show');
-        }
+        if (popup) popup.classList.add('show');
     }
 
     function closeActivityPopup() {
         const popup = document.getElementById('activityPopup');
-        if (popup) {
-            popup.classList.remove('show');
-        }
+        if (popup) popup.classList.remove('show');
     }
 
-    // 页面加载后 3 秒弹出弹窗
-    setTimeout(() => {
-        showActivityPopup();
-    }, 3000);
-
-    // 绑定关闭按钮事件
+    setTimeout(() => showActivityPopup(), 3000);
     document.getElementById('closePopupBtn')?.addEventListener('click', closeActivityPopup);
 
     function topUp() {
@@ -1023,15 +935,10 @@
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => {
                 const page = item.dataset.page;
-                if (page === 'dashboard') {
-                    window.location.href = 'start.html';
-                } else if (page === 'products') {
-                    window.location.href = 'products.html';
-                } else if (page === 'orders') {
-                    window.location.href = 'orders.html';
-                } else if (page === 'profile') {
-                    // 当前页面
-                }
+                if (page === 'dashboard') window.location.href = 'start.html';
+                else if (page === 'products') window.location.href = 'products.html';
+                else if (page === 'orders') window.location.href = 'orders.html';
+                else if (page === 'profile') {}
             });
         });
     }
@@ -1041,30 +948,20 @@
         const soundIcon = soundBtn ? soundBtn.querySelector('i') : null;
         if (soundIcon) {
             const audioEnabled = localStorage.getItem('audio_enabled') === 'true';
-            if (audioEnabled) {
-                soundIcon.className = 'fas fa-volume-up';
-            } else {
-                soundIcon.className = 'fas fa-volume-mute';
-            }
+            soundIcon.className = audioEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
         }
     }
 
     updateSoundIconFromGlobal();
-    window.addEventListener('storage', () => {
-        updateSoundIconFromGlobal();
-    });
+    window.addEventListener('storage', () => updateSoundIconFromGlobal());
 
     document.getElementById('topUpBtn').addEventListener('click', topUp);
-    document.getElementById('withdrawBtn').addEventListener('click', () => {
-        window.location.href = 'withdrawal.html';
-    });
+    document.getElementById('withdrawBtn').addEventListener('click', () => window.location.href = 'withdrawal.html');
 
     loadProfile();
     setupBottomNav();
 
-    setTimeout(() => {
-        initSpiralBreathingParticles();
-    }, 100);
+    setTimeout(() => initSpiralBreathingParticles(), 100);
 </script>
 </body>
 </html>

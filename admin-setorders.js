@@ -9,70 +9,24 @@ let paymentReleaseTimer = null;
 function generateRandomBuyer() {
     // ========== 欧洲各国名字库 ==========
     const namesByCountry = {
-        'UK': {
-            first: ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth', 'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica', 'Thomas', 'Sarah', 'Charles', 'Karen'],
-            last: ['Smith', 'Jones', 'Taylor', 'Brown', 'Williams', 'Wilson', 'Johnson', 'Davies', 'Robinson', 'Wright', 'Thompson', 'Evans', 'Walker', 'White', 'Roberts', 'Green', 'Hall', 'Wood', 'Jackson', 'Clarke']
-        },
-        'Germany': {
-            first: ['Lukas', 'Hanna', 'Finn', 'Mia', 'Jonas', 'Emma', 'Leon', 'Sophie', 'Paul', 'Marie', 'Felix', 'Lena', 'Max', 'Lea', 'Moritz', 'Anna', 'Ben', 'Julia', 'Noah', 'Laura'],
-            last: ['Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann', 'Schäfer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf', 'Schröder', 'Neumann', 'Schwarz', 'Zimmermann']
-        },
-        'France': {
-            first: ['Lucas', 'Emma', 'Louis', 'Jade', 'Gabriel', 'Louise', 'Raphael', 'Alice', 'Jules', 'Chloé', 'Hugo', 'Lina', 'Adam', 'Rose', 'Paul', 'Anna', 'Nathan', 'Léa', 'Arthur', 'Inès'],
-            last: ['Martin', 'Bernard', 'Dubois', 'Thomas', 'Robert', 'Richard', 'Petit', 'Durand', 'Leroy', 'Moreau', 'Simon', 'Laurent', 'Michel', 'Garcia', 'David', 'Bertrand', 'Roux', 'Vincent', 'Fournier', 'Morel']
-        },
-        'Spain': {
-            first: ['Lucas', 'Sofia', 'Mateo', 'Martina', 'Leo', 'Lucia', 'Daniel', 'Paula', 'Alejandro', 'Valentina', 'Pablo', 'Emma', 'Manuel', 'Julia', 'Adrian', 'Carla', 'Hugo', 'Alba', 'David', 'Carmen'],
-            last: ['García', 'Martínez', 'López', 'González', 'Rodríguez', 'Fernández', 'Sánchez', 'Pérez', 'Gómez', 'Martín', 'Jiménez', 'Ruiz', 'Hernández', 'Díaz', 'Moreno', 'Muñoz', 'Álvarez', 'Romero', 'Alonso', 'Gutiérrez']
-        },
-        'Italy': {
-            first: ['Leonardo', 'Sofia', 'Alessandro', 'Giulia', 'Mattia', 'Aurora', 'Lorenzo', 'Alice', 'Andrea', 'Emma', 'Tommaso', 'Giorgia', 'Gabriele', 'Martina', 'Francesco', 'Anna', 'Riccardo', 'Sara', 'Davide', 'Chiara'],
-            last: ['Rossi', 'Russo', 'Ferrari', 'Esposito', 'Bianchi', 'Romano', 'Colombo', 'Ricci', 'Marino', 'Greco', 'Bruno', 'Gallo', 'Conti', 'De Luca', 'Costa', 'Giordano', 'Mancini', 'Rizzo', 'Lombardi', 'Moretti']
-        },
-        'Austria': {
-            first: ['Lukas', 'Anna', 'David', 'Lea', 'Felix', 'Lena', 'Max', 'Sophie', 'Paul', 'Hanna', 'Moritz', 'Emma', 'Jonas', 'Marie', 'Florian', 'Laura', 'Tobias', 'Julia', 'Simon', 'Nina'],
-            last: ['Gruber', 'Huber', 'Bauer', 'Wagner', 'Müller', 'Pichler', 'Steiner', 'Moser', 'Leitner', 'Weber', 'Schmid', 'Egger', 'Mayr', 'Schneider', 'Fischer', 'Winkler', 'Haas', 'Koller', 'Reiter', 'Berger']
-        },
-        'Netherlands': {
-            first: ['Daan', 'Emma', 'Sem', 'Julia', 'Lucas', 'Sophie', 'Finn', 'Lynn', 'Levi', 'Mila', 'Luuk', 'Eva', 'Milan', 'Lisa', 'Jesse', 'Anna', 'Bram', 'Noa', 'Julian', 'Sanne'],
-            last: ['de Jong', 'Jansen', 'de Vries', 'van den Berg', 'van Dijk', 'Bakker', 'Janssen', 'Visser', 'Smit', 'Meijer', 'de Boer', 'Mulder', 'de Groot', 'Bos', 'Vos', 'Peters', 'Hendriks', 'van Leeuwen', 'Dekker', 'Koster']
-        },
-        'Belgium': {
-            first: ['Noah', 'Emma', 'Liam', 'Louise', 'Arthur', 'Mila', 'Lucas', 'Juliette', 'Louis', 'Lina', 'Adam', 'Alice', 'Jules', 'Chloé', 'Gabriel', 'Jade', 'Raphael', 'Anna', 'Elias', 'Lucie'],
-            last: ['Peeters', 'Janssens', 'Maes', 'Jacobs', 'Mertens', 'Willems', 'Claes', 'Goossens', 'Wouters', 'De Smet', 'Verstraeten', 'Van Damme', 'Van den Bossche', 'Leroy', 'Simon', 'François', 'Dubois', 'Laurent', 'Renard', 'Leclercq']
-        },
-        'Switzerland': {
-            first: ['Liam', 'Emma', 'Noah', 'Mia', 'Luca', 'Sofia', 'Elias', 'Lina', 'Leon', 'Anna', 'David', 'Laura', 'Simon', 'Lea', 'Samuel', 'Julia', 'Fabio', 'Nina', 'Jan', 'Lara'],
-            last: ['Meier', 'Keller', 'Müller', 'Schmid', 'Weber', 'Schneider', 'Fischer', 'Gerber', 'Wyss', 'Steiner', 'Moser', 'Brunner', 'Ammann', 'Zimmermann', 'Burkhard', 'Marty', 'Stucki', 'Hofmann', 'Bachmann', 'Roth']
-        },
-        'Sweden': {
-            first: ['Elias', 'Alice', 'Liam', 'Maja', 'Lucas', 'Ella', 'Oliver', 'Wilma', 'William', 'Alma', 'Hugo', 'Ebba', 'Oscar', 'Julia', 'Axel', 'Klara', 'Alexander', 'Astrid', 'Filip', 'Ellen'],
-            last: ['Andersson', 'Johansson', 'Karlsson', 'Nilsson', 'Eriksson', 'Larsson', 'Olsson', 'Persson', 'Svensson', 'Gustafsson', 'Pettersson', 'Jansson', 'Hansson', 'Bengtsson', 'Jonsson', 'Lindberg', 'Magnusson', 'Holm', 'Bergström', 'Åberg']
-        },
-        'Denmark': {
-            first: ['William', 'Emma', 'Noah', 'Ida', 'Oliver', 'Clara', 'Lucas', 'Sofie', 'Emil', 'Alma', 'Magnus', 'Karla', 'Malthe', 'Freja', 'Felix', 'Frida', 'Elliot', 'Lærke', 'Oscar', 'Mathilde'],
-            last: ['Jensen', 'Nielsen', 'Hansen', 'Pedersen', 'Andersen', 'Christensen', 'Larsen', 'Sørensen', 'Rasmussen', 'Jørgensen', 'Petersen', 'Madsen', 'Kristensen', 'Olsen', 'Thomsen', 'Christiansen', 'Poulsen', 'Johansen', 'Kjær', 'Lund']
-        },
-        'Norway': {
-            first: ['Lucas', 'Nora', 'Oliver', 'Emma', 'Emil', 'Sofie', 'Oskar', 'Olivia', 'Jakob', 'Sara', 'Alexander', 'Leah', 'Magnus', 'Sofia', 'Theodor', 'Ingrid', 'Elias', 'Maja', 'Kristian', 'Anna'],
-            last: ['Hansen', 'Johansen', 'Olsen', 'Larsen', 'Andersen', 'Pedersen', 'Nilsen', 'Jensen', 'Eriksen', 'Christensen', 'Martinsen', 'Knudsen', 'Johnsen', 'Solberg', 'Moen', 'Berge', 'Jacobsen', 'Bakken', 'Halvorsen', 'Myhre']
-        },
-        'Finland': {
-            first: ['Eino', 'Helmi', 'Leo', 'Aino', 'Väinö', 'Eevi', 'Oliver', 'Sofia', 'Elias', 'Lilja', 'Onni', 'Mila', 'Toivo', 'Ellen', 'Lauri', 'Linnea', 'Veeti', 'Venla', 'Eetu', 'Iiris'],
-            last: ['Korhonen', 'Virtanen', 'Mäkinen', 'Nieminen', 'Mäkelä', 'Hämäläinen', 'Laine', 'Heikkinen', 'Koskinen', 'Järvinen', 'Lehtonen', 'Leinonen', 'Lahtinen', 'Salminen', 'Heinonen', 'Niskanen', 'Järvinen', 'Kinnunen', 'Rantanen', 'Karjalainen']
-        },
-        'Ireland': {
-            first: ['Jack', 'Emma', 'Noah', 'Grace', 'Conor', 'Anna', 'James', 'Molly', 'Sean', 'Saoirse', 'Oisin', 'Fiona', 'Liam', 'Ava', 'Cillian', 'Ciara', 'Ryan', 'Chloe', 'Eoin', 'Niamh'],
-            last: ['Murphy', 'Kelly', 'O\'Brien', 'Walsh', 'O\'Sullivan', 'Byrne', 'Ryan', 'Connor', 'McCarthy', 'Dunne', 'Doyle', 'Lynch', 'Nolan', 'McGuinness', 'Kennedy', 'Sheridan', 'Gallagher', 'Fitzgerald', 'Flynn', 'O\'Donnell']
-        },
-        'Portugal': {
-            first: ['Francisco', 'Maria', 'Afonso', 'Leonor', 'João', 'Matilde', 'Santiago', 'Carolina', 'Miguel', 'Beatriz', 'Martim', 'Ana', 'Tomás', 'Mariana', 'Guilherme', 'Inês', 'Duarte', 'Sofia', 'Luís', 'Lara'],
-            last: ['Silva', 'Santos', 'Ferreira', 'Pereira', 'Oliveira', 'Costa', 'Rodrigues', 'Martins', 'Jesus', 'Sousa', 'Fernandes', 'Gonçalves', 'Gomes', 'Lopes', 'Marques', 'Alves', 'Almeida', 'Ribeiro', 'Pinto', 'Carvalho']
-        }
+        'UK': { first: ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth', 'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica', 'Thomas', 'Sarah', 'Charles', 'Karen'], last: ['Smith', 'Jones', 'Taylor', 'Brown', 'Williams', 'Wilson', 'Johnson', 'Davies', 'Robinson', 'Wright', 'Thompson', 'Evans', 'Walker', 'White', 'Roberts', 'Green', 'Hall', 'Wood', 'Jackson', 'Clarke'] },
+        'Germany': { first: ['Lukas', 'Hanna', 'Finn', 'Mia', 'Jonas', 'Emma', 'Leon', 'Sophie', 'Paul', 'Marie', 'Felix', 'Lena', 'Max', 'Lea', 'Moritz', 'Anna', 'Ben', 'Julia', 'Noah', 'Laura'], last: ['Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann', 'Schäfer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf', 'Schröder', 'Neumann', 'Schwarz', 'Zimmermann'] },
+        'France': { first: ['Lucas', 'Emma', 'Louis', 'Jade', 'Gabriel', 'Louise', 'Raphael', 'Alice', 'Jules', 'Chloé', 'Hugo', 'Lina', 'Adam', 'Rose', 'Paul', 'Anna', 'Nathan', 'Léa', 'Arthur', 'Inès'], last: ['Martin', 'Bernard', 'Dubois', 'Thomas', 'Robert', 'Richard', 'Petit', 'Durand', 'Leroy', 'Moreau', 'Simon', 'Laurent', 'Michel', 'Garcia', 'David', 'Bertrand', 'Roux', 'Vincent', 'Fournier', 'Morel'] },
+        'Spain': { first: ['Lucas', 'Sofia', 'Mateo', 'Martina', 'Leo', 'Lucia', 'Daniel', 'Paula', 'Alejandro', 'Valentina', 'Pablo', 'Emma', 'Manuel', 'Julia', 'Adrian', 'Carla', 'Hugo', 'Alba', 'David', 'Carmen'], last: ['García', 'Martínez', 'López', 'González', 'Rodríguez', 'Fernández', 'Sánchez', 'Pérez', 'Gómez', 'Martín', 'Jiménez', 'Ruiz', 'Hernández', 'Díaz', 'Moreno', 'Muñoz', 'Álvarez', 'Romero', 'Alonso', 'Gutiérrez'] },
+        'Italy': { first: ['Leonardo', 'Sofia', 'Alessandro', 'Giulia', 'Mattia', 'Aurora', 'Lorenzo', 'Alice', 'Andrea', 'Emma', 'Tommaso', 'Giorgia', 'Gabriele', 'Martina', 'Francesco', 'Anna', 'Riccardo', 'Sara', 'Davide', 'Chiara'], last: ['Rossi', 'Russo', 'Ferrari', 'Esposito', 'Bianchi', 'Romano', 'Colombo', 'Ricci', 'Marino', 'Greco', 'Bruno', 'Gallo', 'Conti', 'De Luca', 'Costa', 'Giordano', 'Mancini', 'Rizzo', 'Lombardi', 'Moretti'] },
+        'Austria': { first: ['Lukas', 'Anna', 'David', 'Lea', 'Felix', 'Lena', 'Max', 'Sophie', 'Paul', 'Hanna', 'Moritz', 'Emma', 'Jonas', 'Marie', 'Florian', 'Laura', 'Tobias', 'Julia', 'Simon', 'Nina'], last: ['Gruber', 'Huber', 'Bauer', 'Wagner', 'Müller', 'Pichler', 'Steiner', 'Moser', 'Leitner', 'Weber', 'Schmid', 'Egger', 'Mayr', 'Schneider', 'Fischer', 'Winkler', 'Haas', 'Koller', 'Reiter', 'Berger'] },
+        'Netherlands': { first: ['Daan', 'Emma', 'Sem', 'Julia', 'Lucas', 'Sophie', 'Finn', 'Lynn', 'Levi', 'Mila', 'Luuk', 'Eva', 'Milan', 'Lisa', 'Jesse', 'Anna', 'Bram', 'Noa', 'Julian', 'Sanne'], last: ['de Jong', 'Jansen', 'de Vries', 'van den Berg', 'van Dijk', 'Bakker', 'Janssen', 'Visser', 'Smit', 'Meijer', 'de Boer', 'Mulder', 'de Groot', 'Bos', 'Vos', 'Peters', 'Hendriks', 'van Leeuwen', 'Dekker', 'Koster'] },
+        'Belgium': { first: ['Noah', 'Emma', 'Liam', 'Louise', 'Arthur', 'Mila', 'Lucas', 'Juliette', 'Louis', 'Lina', 'Adam', 'Alice', 'Jules', 'Chloé', 'Gabriel', 'Jade', 'Raphael', 'Anna', 'Elias', 'Lucie'], last: ['Peeters', 'Janssens', 'Maes', 'Jacobs', 'Mertens', 'Willems', 'Claes', 'Goossens', 'Wouters', 'De Smet', 'Verstraeten', 'Van Damme', 'Van den Bossche', 'Leroy', 'Simon', 'François', 'Dubois', 'Laurent', 'Renard', 'Leclercq'] },
+        'Switzerland': { first: ['Liam', 'Emma', 'Noah', 'Mia', 'Luca', 'Sofia', 'Elias', 'Lina', 'Leon', 'Anna', 'David', 'Laura', 'Simon', 'Lea', 'Samuel', 'Julia', 'Fabio', 'Nina', 'Jan', 'Lara'], last: ['Meier', 'Keller', 'Müller', 'Schmid', 'Weber', 'Schneider', 'Fischer', 'Gerber', 'Wyss', 'Steiner', 'Moser', 'Brunner', 'Ammann', 'Zimmermann', 'Burkhard', 'Marty', 'Stucki', 'Hofmann', 'Bachmann', 'Roth'] },
+        'Sweden': { first: ['Elias', 'Alice', 'Liam', 'Maja', 'Lucas', 'Ella', 'Oliver', 'Wilma', 'William', 'Alma', 'Hugo', 'Ebba', 'Oscar', 'Julia', 'Axel', 'Klara', 'Alexander', 'Astrid', 'Filip', 'Ellen'], last: ['Andersson', 'Johansson', 'Karlsson', 'Nilsson', 'Eriksson', 'Larsson', 'Olsson', 'Persson', 'Svensson', 'Gustafsson', 'Pettersson', 'Jansson', 'Hansson', 'Bengtsson', 'Jonsson', 'Lindberg', 'Magnusson', 'Holm', 'Bergström', 'Åberg'] },
+        'Denmark': { first: ['William', 'Emma', 'Noah', 'Ida', 'Oliver', 'Clara', 'Lucas', 'Sofie', 'Emil', 'Alma', 'Magnus', 'Karla', 'Malthe', 'Freja', 'Felix', 'Frida', 'Elliot', 'Lærke', 'Oscar', 'Mathilde'], last: ['Jensen', 'Nielsen', 'Hansen', 'Pedersen', 'Andersen', 'Christensen', 'Larsen', 'Sørensen', 'Rasmussen', 'Jørgensen', 'Petersen', 'Madsen', 'Kristensen', 'Olsen', 'Thomsen', 'Christiansen', 'Poulsen', 'Johansen', 'Kjær', 'Lund'] },
+        'Norway': { first: ['Lucas', 'Nora', 'Oliver', 'Emma', 'Emil', 'Sofie', 'Oskar', 'Olivia', 'Jakob', 'Sara', 'Alexander', 'Leah', 'Magnus', 'Sofia', 'Theodor', 'Ingrid', 'Elias', 'Maja', 'Kristian', 'Anna'], last: ['Hansen', 'Johansen', 'Olsen', 'Larsen', 'Andersen', 'Pedersen', 'Nilsen', 'Jensen', 'Eriksen', 'Christensen', 'Martinsen', 'Knudsen', 'Johnsen', 'Solberg', 'Moen', 'Berge', 'Jacobsen', 'Bakken', 'Halvorsen', 'Myhre'] },
+        'Finland': { first: ['Eino', 'Helmi', 'Leo', 'Aino', 'Väinö', 'Eevi', 'Oliver', 'Sofia', 'Elias', 'Lilja', 'Onni', 'Mila', 'Toivo', 'Ellen', 'Lauri', 'Linnea', 'Veeti', 'Venla', 'Eetu', 'Iiris'], last: ['Korhonen', 'Virtanen', 'Mäkinen', 'Nieminen', 'Mäkelä', 'Hämäläinen', 'Laine', 'Heikkinen', 'Koskinen', 'Järvinen', 'Lehtonen', 'Leinonen', 'Lahtinen', 'Salminen', 'Heinonen', 'Niskanen', 'Järvinen', 'Kinnunen', 'Rantanen', 'Karjalainen'] },
+        'Ireland': { first: ['Jack', 'Emma', 'Noah', 'Grace', 'Conor', 'Anna', 'James', 'Molly', 'Sean', 'Saoirse', 'Oisin', 'Fiona', 'Liam', 'Ava', 'Cillian', 'Ciara', 'Ryan', 'Chloe', 'Eoin', 'Niamh'], last: ['Murphy', 'Kelly', 'O\'Brien', 'Walsh', 'O\'Sullivan', 'Byrne', 'Ryan', 'Connor', 'McCarthy', 'Dunne', 'Doyle', 'Lynch', 'Nolan', 'McGuinness', 'Kennedy', 'Sheridan', 'Gallagher', 'Fitzgerald', 'Flynn', 'O\'Donnell'] },
+        'Portugal': { first: ['Francisco', 'Maria', 'Afonso', 'Leonor', 'João', 'Matilde', 'Santiago', 'Carolina', 'Miguel', 'Beatriz', 'Martim', 'Ana', 'Tomás', 'Mariana', 'Guilherme', 'Inês', 'Duarte', 'Sofia', 'Luís', 'Lara'], last: ['Silva', 'Santos', 'Ferreira', 'Pereira', 'Oliveira', 'Costa', 'Rodrigues', 'Martins', 'Jesus', 'Sousa', 'Fernandes', 'Gonçalves', 'Gomes', 'Lopes', 'Marques', 'Alves', 'Almeida', 'Ribeiro', 'Pinto', 'Carvalho'] }
     };
     
     const countries = Object.keys(namesByCountry);
-    
     const countryCitiesMap = {
         'UK': ['London', 'Manchester', 'Birmingham', 'Liverpool', 'Edinburgh', 'Glasgow', 'Leeds', 'Bristol', 'Newcastle', 'Sheffield'],
         'Germany': ['Berlin', 'Munich', 'Hamburg', 'Frankfurt', 'Cologne', 'Stuttgart', 'Düsseldorf', 'Dresden', 'Hanover', 'Nuremberg'],
@@ -190,16 +144,16 @@ async function manualReleasePayment(orderNo) {
         tracking_timeline: JSON.stringify(timeline)
     }).eq('order_no', orderNo);
     
-    // ✅ 记录 Product Payment Release
+    // ✅ 记录 Product Payment Release（本金释放）
     await sb.from('deposits').insert({
         uid: order.uid,
         username: order.username,
-        amount: order.total_supply_price || 0,
+        amount: order.total_supply_price,
         type: 'order_settlement',
         created_at: now.toISOString()
     });
     
-    // ✅ 记录 Commission（佣金）
+    // ✅ 记录 Commissions（佣金）
     const commissionAmount = order.total_commission || 0;
     await sb.from('deposits').insert({
         uid: order.uid,
@@ -209,15 +163,22 @@ async function manualReleasePayment(orderNo) {
         created_at: now.toISOString()
     });
     
-    // 更新用户余额
+    // 更新用户余额（返还本金+佣金）
     const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
     if (user) {
         const refundAmount = (order.total_supply_price || 0) + commissionAmount;
         const newBalance = (user.balance || 0) + refundAmount;
         await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
+        
+        // 更新本地 storage
+        const localUser = getCurrentUser();
+        if (localUser && localUser.uid === order.uid) {
+            localUser.balance = newBalance;
+            localStorage.setItem('currentUser', JSON.stringify(localUser));
+        }
     }
     
-    console.log(`✅ 订单 ${orderNo} Payment released 完成，佣金 €${commissionAmount} 已记录`);
+    console.log(`✅ 订单 ${orderNo} Payment released 完成，本金 €${order.total_supply_price}，佣金 €${commissionAmount} 已记录`);
     return true;
 }
 
@@ -275,9 +236,7 @@ function renderManualReleaseCard() {
                     : order.tracking_timeline;
                 const paymentReleased = timeline.find(item => item.status === "Payment released");
                 isReleased = paymentReleased && !paymentReleased.isPending;
-            } catch(e) {
-                console.error('解析 timeline 失败:', e);
-            }
+            } catch(e) {}
         }
         
         html += `
@@ -285,7 +244,7 @@ function renderManualReleaseCard() {
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <div>
                         <div style="font-weight:700; color:#ffb84d;">${order.order_no}</div>
-                        <div style="font-size:11px; color:#8a9abb;">User: ${order.uid} | €${order.total_supply_price} | 状态: ${order.status}</div>
+                        <div style="font-size:11px; color:#8a9abb;">User: ${order.uid} | €${order.total_supply_price} | 佣金: €${order.total_commission}</div>
                     </div>
                     <button class="release-order-btn" data-order="${order.order_no}" 
                         style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:white; cursor:pointer;">
@@ -296,28 +255,16 @@ function renderManualReleaseCard() {
         `;
     }
     
-    html += `
-            </div>
-        </div>
-    `;
-    
+    html += `</div></div>`;
     container.innerHTML = html;
     
     document.querySelectorAll('.release-order-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const orderNo = btn.dataset.order;
-            console.log('点击释放订单:', orderNo);
             const success = await manualReleasePayment(orderNo);
             if (success) {
-                showToast(`订单 ${orderNo} Payment released 成功，佣金已记录`, 'success');
+                showToast(`订单 ${orderNo} 释放成功，本金和佣金已记录`, 'success');
                 await loadManualReleaseOrders();
-                // 刷新用户余额显示
-                if (selectedUser) {
-                    const { data: user } = await sb.from('users').select('balance').eq('uid', selectedUser.uid).single();
-                    if (user && document.getElementById('selectedUidDisplay')) {
-                        // 可选：更新页面上的余额显示
-                    }
-                }
             } else {
                 showToast(`释放失败`, 'error');
             }
