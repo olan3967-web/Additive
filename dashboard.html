@@ -11,562 +11,77 @@
     <script src="toast.js"></script>
     <script src="notification.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            color: #1f2937;
-            display: flex;
-            justify-content: center;
-        }
-
-        .phone {
-            width: 390px;
-            min-height: 100vh;
-            background: transparent;
-            padding-bottom: 80px;
-            position: relative;
-        }
-
-        /* 顶部用户卡片 */
-        .profile-header {
-            background: #0f0f23;
-            padding: 24px 20px;
-            margin: 0;
-            border-bottom: 2px solid #ff7a00;
-            box-shadow: 0 0 20px rgba(255, 122, 0, 0.3);
-            border-radius: 0 0 28px 28px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .dust-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .profile-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 30% 0%, rgba(255, 122, 0, 0.15), transparent 70%);
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .profile-header::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 100%;
-            background: linear-gradient(180deg, rgba(255, 122, 0, 0.08) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .profile-row {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .avatar {
-            width: 70px;
-            height: 70px;
-            border-radius: 24px;
-            background: #ff7a00;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            font-weight: 700;
-            color: white;
-            box-shadow: 0 0 20px rgba(255, 122, 0, 0.4);
-        }
-
-        .profile-info {
-            flex: 1;
-        }
-
-        .username {
-            font-size: 22px;
-            font-weight: 700;
-            color: #ffb347;
-            margin-bottom: 6px;
-        }
-
-        .user-badges {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            padding: 4px 12px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .badge-normal {
-            background: rgba(255, 122, 0, 0.2);
-            color: #ffb347;
-            border: 1px solid rgba(255, 122, 0, 0.3);
-        }
-
-        .badge-kyc {
-            background: rgba(0, 255, 255, 0.12);
-            color: #00e5ff;
-            border: 1px solid rgba(0, 255, 255, 0.25);
-        }
-
-        .user-uid {
-            font-size: 12px;
-            color: #7e8aa8;
-        }
-
-        .stats-card,
-        .half-card {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 122, 0, 0.5);
-            border-radius: 20px;
-            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .stats-card::before,
-        .half-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transform: skewX(-20deg);
-            animation: shimmer 3s infinite;
-            pointer-events: none;
-        }
-
-        .stats-card::after,
-        .half-card::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 10%;
-            width: 80%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #ff7a00, #ffcc00, transparent);
-            border-radius: 3px;
-            pointer-events: none;
-        }
-
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 200%; }
-        }
-
-        .stats-card:hover,
-        .half-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 30px 40px -12px rgba(0, 0, 0, 0.25);
-            background: rgba(255, 255, 255, 0.28);
-        }
-
-        .stats-card {
-            margin: 16px;
-            padding: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stat-label {
-            font-size: 13px;
-            color: #1f2937;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: 800;
-            color: #1f2937;
-        }
-
-        .right-stat-value {
-            font-size: 24px;
-            font-weight: 800;
-            color: #1f2937;
-        }
-
-        .divider-line {
-            width: 1px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.3);
-            margin: 0 16px;
-        }
-
-        .stats-left {
-            flex: 1;
-        }
-
-        .stats-right {
-            flex: 1;
-            text-align: right;
-        }
-
-        .wallet-card {
-            background: linear-gradient(135deg, #ff7a00, #ff6b6b);
-            margin: 16px;
-            padding: 20px;
-            border-radius: 24px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .wallet-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-            animation: scan 3s infinite;
-            pointer-events: none;
-        }
-
-        @keyframes scan {
-            0% { left: -100%; }
-            100% { left: 200%; }
-        }
-
-        .wallet-title {
-            font-size: 14px;
-            font-weight: 500;
-            opacity: 0.9;
-        }
-
-        .wallet-balance {
-            font-size: 34px;
-            font-weight: 800;
-            margin: 12px 0 16px;
-        }
-
-        .wallet-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn-topup {
-            flex: 1;
-            background: transparent;
-            border: 2px solid white;
-            color: white;
-            padding: 12px;
-            border-radius: 14px;
-            text-align: center;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .btn-withdraw {
-            flex: 1;
-            background: white;
-            color: #ff7a00;
-            padding: 12px;
-            border-radius: 14px;
-            text-align: center;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            font-size: 14px;
-        }
-
-        .double-card-row {
-            display: flex;
-            gap: 16px;
-            margin: 16px;
-        }
-
-        .half-card {
-            flex: 1;
-            padding: 18px;
-            cursor: pointer;
-        }
-
-        .half-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .half-card-icon {
-            width: 48px;
-            height: 48px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            color: #ff7a00;
-        }
-
-        .half-card-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1f2937;
-        }
-
-        .half-card .view-link {
-            color: #ff7a00;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        .half-card .earnings-amount {
-            font-size: 12px;
-            color: #4b5563;
-            margin-top: 6px;
-        }
-
-        .glass-card {
-            background: #f5efe7;
-            background-image: radial-gradient(circle at 10% 20%, rgba(160, 130, 100, 0.06) 1.5px, transparent 1.5px);
-            background-size: 16px 16px;
-            border-radius: 28px;
-            margin: 16px;
-            position: relative;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(160, 130, 100, 0.2);
-            overflow: visible;
-        }
-
-        .card-inner {
-            padding: 20px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .section-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #5a4a3a;
-            letter-spacing: 1px;
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .grid-4 {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px 12px;
-        }
-
-        .grid-item {
-            text-align: center;
-            cursor: pointer;
-        }
-
-        .grid-icon {
-            width: 52px;
-            height: 52px;
-            background: linear-gradient(135deg, #ff7a00, #ff9f43);
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            font-size: 22px;
-            color: white;
-            box-shadow: 0 6px 14px rgba(255, 122, 0, 0.25);
-            transition: all 0.2s;
-        }
-
-        .grid-item:hover .grid-icon {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(255, 122, 0, 0.35);
-        }
-
-        .grid-label {
-            font-size: 10px;
-            font-weight: 500;
-            color: #7a6a5a;
-            white-space: nowrap;
-            letter-spacing: 0.2px;
-        }
-
-        .settings-row {
-            margin-top: 20px;
-            padding-top: 16px;
-            border-top: 1px solid rgba(160, 130, 100, 0.15);
-            display: flex;
-            justify-content: center;
-        }
-
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid #eef2f7;
-            display: flex;
-            padding: 10px 0 14px;
-            z-index: 100;
-        }
-
-        .nav-item {
-            flex: 1;
-            text-align: center;
-            font-size: 11px;
-            color: #9ca3af;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .nav-item i {
-            display: block;
-            font-size: 20px;
-            margin-bottom: 4px;
-        }
-
-        .nav-item.active {
-            color: #ff7a00;
-            font-weight: 600;
-        }
-
-        /* 活动弹窗样式 */
-        .activity-popup {
-            position: fixed;
-            bottom: 70px;
-            right: 20px;
-            width: 280px;
-            z-index: 1000;
-            transform: translateX(120%);
-            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            background: transparent;
-            line-height: 0;
-        }
-
-        .activity-popup.show {
-            transform: translateX(0);
-        }
-
-        .popup-img {
-            width: 100%;
-            height: auto;
-            display: block;
-            background: transparent;
-            border: none;
-            outline: none;
-            box-shadow: none;
-        }
-
-        .close-popup {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 28px;
-            height: 28px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            transition: 0.2s;
-            z-index: 1001;
-        }
-
-        .close-popup:hover {
-            background: #ff7a00;
-            transform: scale(1.05);
-        }
-
-        @media (max-width: 390px) {
-            .phone { width: 100%; }
-            .grid-label { font-size: 9px; }
-            .stat-value { font-size: 20px; }
-            .wallet-balance { font-size: 28px; }
-            .activity-popup { width: 240px; bottom: 65px; right: 12px; }
-        }
-
-        /* 双卡片流光效果 */
-        .stats-card-half {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stats-card-half::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transform: skewX(-20deg);
-            animation: shimmer 3s infinite;
-            pointer-events: none;
-        }
-
-        .stats-card-half::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 10%;
-            width: 80%;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #ff7a00, #ffcc00, transparent);
-            border-radius: 3px;
-            pointer-events: none;
-        }
-
-        .stats-card-half:hover {
-            transform: translateY(-4px);
-            background: rgba(255, 255, 255, 0.28);
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: 'Inter', sans-serif; color: #1f2937; display: flex; justify-content: center; }
+        .phone { width: 390px; min-height: 100vh; background: transparent; padding-bottom: 80px; position: relative; }
+        .profile-header { background: #0f0f23; padding: 24px 20px; margin: 0; border-bottom: 2px solid #ff7a00; box-shadow: 0 0 20px rgba(255,122,0,0.3); border-radius: 0 0 28px 28px; position: relative; overflow: hidden; }
+        .dust-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .profile-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 30% 0%, rgba(255,122,0,0.15), transparent 70%); pointer-events: none; z-index: 1; }
+        .profile-header::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 100%; background: linear-gradient(180deg, rgba(255,122,0,0.08) 0%, transparent 50%); pointer-events: none; z-index: 1; }
+        .profile-row { display: flex; align-items: center; gap: 16px; position: relative; z-index: 2; }
+        .avatar { width: 70px; height: 70px; border-radius: 24px; background: #ff7a00; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: white; box-shadow: 0 0 20px rgba(255,122,0,0.4); }
+        .profile-info { flex: 1; }
+        .username { font-size: 22px; font-weight: 700; color: #ffb347; margin-bottom: 6px; }
+        .user-badges { display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+        .badge { padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+        .badge-normal { background: rgba(255,122,0,0.2); color: #ffb347; border: 1px solid rgba(255,122,0,0.3); }
+        .badge-kyc { background: rgba(0,255,255,0.12); color: #00e5ff; border: 1px solid rgba(0,255,255,0.25); }
+        .user-uid { font-size: 12px; color: #7e8aa8; }
+        .stats-card, .half-card { background: rgba(255,255,255,0.2); backdrop-filter: blur(20px); border: 1px solid rgba(255,122,0,0.5); border-radius: 20px; box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2); position: relative; overflow: hidden; transition: all 0.3s ease; }
+        .stats-card::before, .half-card::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transform: skewX(-20deg); animation: shimmer 3s infinite; pointer-events: none; }
+        .stats-card::after, .half-card::after { content: ''; position: absolute; bottom: -2px; left: 10%; width: 80%; height: 3px; background: linear-gradient(90deg, transparent, #ff7a00, #ffcc00, transparent); border-radius: 3px; pointer-events: none; }
+        @keyframes shimmer { 0% { left: -100%; } 100% { left: 200%; } }
+        .stats-card:hover, .half-card:hover { transform: translateY(-4px); box-shadow: 0 30px 40px -12px rgba(0,0,0,0.25); background: rgba(255,255,255,0.28); }
+        .stats-card { margin: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .stat-label { font-size: 13px; color: #1f2937; margin-bottom: 8px; font-weight: 500; }
+        .stat-value { font-size: 28px; font-weight: 800; color: #1f2937; }
+        .right-stat-value { font-size: 24px; font-weight: 800; color: #1f2937; }
+        .divider-line { width: 1px; height: 40px; background: rgba(255,255,255,0.3); margin: 0 16px; }
+        .stats-left { flex: 1; }
+        .stats-right { flex: 1; text-align: right; }
+        .wallet-card { background: linear-gradient(135deg, #ff7a00, #ff6b6b); margin: 16px; padding: 20px; border-radius: 24px; color: white; position: relative; overflow: hidden; }
+        .wallet-card::after { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent); animation: scan 3s infinite; pointer-events: none; }
+        @keyframes scan { 0% { left: -100%; } 100% { left: 200%; } }
+        .wallet-title { font-size: 14px; font-weight: 500; opacity: 0.9; }
+        .wallet-balance { font-size: 34px; font-weight: 800; margin: 12px 0 16px; }
+        .wallet-actions { display: flex; gap: 12px; }
+        .btn-topup { flex: 1; background: transparent; border: 2px solid white; color: white; padding: 12px; border-radius: 14px; text-align: center; font-weight: 700; cursor: pointer; font-size: 14px; }
+        .btn-withdraw { flex: 1; background: white; color: #ff7a00; padding: 12px; border-radius: 14px; text-align: center; font-weight: 700; cursor: pointer; border: none; font-size: 14px; }
+        .double-card-row { display: flex; gap: 16px; margin: 16px; }
+        .half-card { flex: 1; padding: 18px; cursor: pointer; }
+        .half-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .half-card-icon { width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #ff7a00; }
+        .half-card-title { font-size: 18px; font-weight: 700; color: #1f2937; }
+        .half-card .view-link { color: #ff7a00; font-size: 13px; font-weight: 600; text-decoration: none; }
+        .half-card .earnings-amount { font-size: 12px; color: #4b5563; margin-top: 6px; }
+        .glass-card { background: #f5efe7; background-image: radial-gradient(circle at 10% 20%, rgba(160,130,100,0.06) 1.5px, transparent 1.5px); background-size: 16px 16px; border-radius: 28px; margin: 16px; position: relative; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border: 1px solid rgba(160,130,100,0.2); overflow: visible; }
+        .card-inner { padding: 20px; position: relative; z-index: 10; }
+        .section-title { font-size: 13px; font-weight: 600; color: #5a4a3a; letter-spacing: 1px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 12px; }
+        .grid-item { text-align: center; cursor: pointer; }
+        .grid-icon { width: 52px; height: 52px; background: linear-gradient(135deg, #ff7a00, #ff9f43); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 22px; color: white; box-shadow: 0 6px 14px rgba(255,122,0,0.25); transition: all 0.2s; }
+        .grid-item:hover .grid-icon { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255,122,0,0.35); }
+        .grid-label { font-size: 10px; font-weight: 500; color: #7a6a5a; white-space: nowrap; letter-spacing: 0.2px; }
+        .settings-row { margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(160,130,100,0.15); display: flex; justify-content: center; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: rgba(255,255,255,0.96); backdrop-filter: blur(20px); border-top: 1px solid #eef2f7; display: flex; padding: 10px 0 14px; z-index: 100; }
+        .nav-item { flex: 1; text-align: center; font-size: 11px; color: #9ca3af; cursor: pointer; position: relative; }
+        .nav-item i { display: block; font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: #ff7a00; font-weight: 600; }
+        .activity-popup { position: fixed; bottom: 70px; right: 20px; width: 280px; z-index: 1000; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.2,0.9,0.4,1.1); background: transparent; line-height: 0; }
+        .activity-popup.show { transform: translateX(0); }
+        .popup-img { width: 100%; height: auto; display: block; }
+        .close-popup { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; background: rgba(0,0,0,0.6); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 16px; font-weight: bold; transition: 0.2s; z-index: 1001; }
+        .close-popup:hover { background: #ff7a00; transform: scale(1.05); }
+        @media (max-width: 390px) { .phone { width: 100%; } .grid-label { font-size: 9px; } .stat-value { font-size: 20px; } .wallet-balance { font-size: 28px; } .activity-popup { width: 240px; bottom: 65px; right: 12px; } }
+        .stats-card-half { position: relative; overflow: hidden; }
+        .stats-card-half::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transform: skewX(-20deg); animation: shimmer 3s infinite; pointer-events: none; }
+        .stats-card-half::after { content: ''; position: absolute; bottom: -2px; left: 10%; width: 80%; height: 3px; background: linear-gradient(90deg, transparent, #ff7a00, #ffcc00, transparent); border-radius: 3px; pointer-events: none; }
+        .stats-card-half:hover { transform: translateY(-4px); background: rgba(255,255,255,0.28); }
     </style>
     <link rel="stylesheet" href="user-common.css">
 </head>
 <body>
 <div class="phone">
-
     <div class="profile-header" id="profileHeader">
         <canvas id="dustCanvas" class="dust-canvas"></canvas>
         <div class="profile-row">
@@ -581,19 +96,16 @@
             </div>
         </div>
     </div>
-
-    <!-- 双卡片并排 -->
     <div style="display: flex; gap: 12px; margin: 16px;">
-        <div class="stats-card-half" style="flex: 1; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(20px); border: 1px solid rgba(255, 122, 0, 0.5); border-radius: 20px; padding: 16px; position: relative; overflow: hidden;">
-            <div style="font-size: 12px; color: #1f2937; margin-bottom: 8px;">Today's Earnings</div>
-            <div style="font-size: 24px; font-weight: 800; color: #1f2937;" id="totalCommissions">€0.00</div>
+        <div class="stats-card-half" style="flex:1; background:rgba(255,255,255,0.2); backdrop-filter:blur(20px); border:1px solid rgba(255,122,0,0.5); border-radius:20px; padding:16px; position:relative; overflow:hidden;">
+            <div style="font-size:12px; color:#1f2937; margin-bottom:8px;">Today's Earnings</div>
+            <div style="font-size:24px; font-weight:800; color:#1f2937;" id="totalCommissions">€0.00</div>
         </div>
-        <div class="stats-card-half" style="flex: 1; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(20px); border: 1px solid rgba(255, 122, 0, 0.5); border-radius: 20px; padding: 16px; position: relative; overflow: hidden;">
-            <div style="font-size: 12px; color: #1f2937; margin-bottom: 8px;">Pending Release</div>
-            <div style="font-size: 24px; font-weight: 800; color: #1f2937;" id="pendingReleaseAmount">€0.00</div>
+        <div class="stats-card-half" style="flex:1; background:rgba(255,255,255,0.2); backdrop-filter:blur(20px); border:1px solid rgba(255,122,0,0.5); border-radius:20px; padding:16px; position:relative; overflow:hidden;">
+            <div style="font-size:12px; color:#1f2937; margin-bottom:8px;">Pending Release</div>
+            <div style="font-size:24px; font-weight:800; color:#1f2937;" id="pendingReleaseAmount">€0.00</div>
         </div>
     </div>
-
     <div class="wallet-card">
         <div class="wallet-title">Account Balance</div>
         <div class="wallet-balance" id="displayBalance">€0.00</div>
@@ -602,26 +114,18 @@
             <button class="btn-withdraw" id="withdrawBtn">Withdraw</button>
         </div>
     </div>
-
     <div class="double-card-row">
         <div class="half-card" onclick="location.href='my-sales.html'">
-            <div class="half-card-header">
-                <div class="half-card-icon"><i class="fa-solid fa-chart-line"></i></div>
-                <span class="view-link">View →</span>
-            </div>
+            <div class="half-card-header"><div class="half-card-icon"><i class="fa-solid fa-chart-line"></i></div><span class="view-link">View →</span></div>
             <div class="half-card-title">My Sales</div>
             <div class="earnings-amount" id="salesAmount">€0.00 earned</div>
         </div>
         <div class="half-card" onclick="location.href='start.html'">
-            <div class="half-card-header">
-                <div class="half-card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-                <span class="view-link">View →</span>
-            </div>
+            <div class="half-card-header"><div class="half-card-icon"><i class="fa-solid fa-magnifying-glass"></i></div><span class="view-link">View →</span></div>
             <div class="half-card-title">Sourcing</div>
             <div class="earnings-amount">Find products</div>
         </div>
     </div>
-
     <div class="glass-card" id="particleCard1">
         <div class="card-inner">
             <div class="section-title"><i class="fa-regular fa-star" style="color:#ff7a00;"></i> QUICK ACTIONS</div>
@@ -637,7 +141,6 @@
             </div>
         </div>
     </div>
-
     <div class="glass-card" id="particleCard2">
         <div class="card-inner">
             <div class="section-title"><i class="fa-regular fa-circle-question" style="color:#ff7a00;"></i> SUPPORT & HISTORY</div>
@@ -647,321 +150,153 @@
                 <div class="grid-item" onclick="location.href='orders-history.html'"><div class="grid-icon"><i class="fa-solid fa-cart-flatbed"></i></div><div class="grid-label">Orders History</div></div>
                 <div class="grid-item" onclick="location.href='checkin.html'"><div class="grid-icon"><i class="fa-regular fa-calendar-check"></i></div><div class="grid-label">Check In</div></div>
             </div>
-            <div class="settings-row">
-                <div class="grid-item" onclick="location.href='settings.html'"><div class="grid-icon"><i class="fa-solid fa-sliders-h"></i></div><div class="grid-label">Settings</div></div>
-            </div>
+            <div class="settings-row"><div class="grid-item" onclick="location.href='settings.html'"><div class="grid-icon"><i class="fa-solid fa-sliders-h"></i></div><div class="grid-label">Settings</div></div></div>
         </div>
     </div>
-
     <div class="bottom-nav">
         <div class="nav-item" data-page="dashboard"><i class="fa-solid fa-house"></i><span>Dashboard</span></div>
         <div class="nav-item" data-page="products"><i class="fa-solid fa-box"></i><span>Products</span></div>
         <div class="nav-item" data-page="orders"><i class="fa-solid fa-list-check"></i><span>Orders</span></div>
         <div class="nav-item active" data-page="profile"><i class="fa-solid fa-user"></i><span>My Profile</span></div>
     </div>
-
-    <div id="activityPopup" class="activity-popup">
-        <img class="popup-img" src="cjbonus.png" alt="Bonus" id="popupImage" onerror="this.style.display='none'">
-        <div class="close-popup" id="closePopupBtn">✕</div>
-    </div>
-
+    <div id="activityPopup" class="activity-popup"><img class="popup-img" src="cjbonus.png" alt="Bonus" id="popupImage" onerror="this.style.display='none'"><div class="close-popup" id="closePopupBtn">✕</div></div>
 </div>
 
 <script>
-    let particleAnimationId = null;
+let particleAnimationId = null;
 
-    function initSpiralBreathingParticles() {
-        const canvas = document.getElementById('dustCanvas');
-        const container = document.getElementById('profileHeader');
-        if (!canvas || !container) return;
-        
-        const resizeCanvas = () => {
-            const rect = container.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-        };
-        resizeCanvas();
-        
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        
-        function createParticle() {
-            return {
-                x: Math.random() * canvas.width,
-                y: canvas.height - 15 + Math.random() * 40,
-                size: 1.5 + Math.random() * 2.5,
-                speedX: (Math.random() - 0.5) * 0.3,
-                speedY: -0.2 - Math.random() * 0.35,
-                alpha: 0.2 + Math.random() * 0.3,
-                color: `rgba(255, ${140 + Math.random() * 60}, ${40 + Math.random() * 40}, 0.4)`,
-                life: 1,
-                decay: 0.002 + Math.random() * 0.005,
-                breathPhase: Math.random() * Math.PI * 2
-            };
-        }
-        
-        for (let i = 0; i < 55; i++) {
-            const p = createParticle();
-            p.y = Math.random() * canvas.height;
-            particles.push(p);
-        }
-        
-        let startTime = performance.now();
-        
-        function animate() {
-            if (!canvas.parentNode) return;
-            
-            const now = performance.now();
-            const elapsed = (now - startTime) * 0.002;
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                const spiralOffset = Math.sin(elapsed * 1.5 + p.y * 0.08) * 0.8;
-                p.x += p.speedX + spiralOffset * 0.15;
-                p.y += p.speedY;
-                p.life -= p.decay;
-                
-                const breath = 0.5 + Math.sin(elapsed * 2 + p.breathPhase) * 0.3;
-                
-                if (p.life <= 0.02 || p.y < -15) {
-                    particles.splice(i, 1);
-                    continue;
-                }
-                
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                const finalAlpha = Math.min(p.life * 0.5 * breath, 0.6);
-                ctx.fillStyle = `rgba(255, ${140 + Math.random() * 60}, 40, ${finalAlpha})`;
-                ctx.shadowBlur = 6;
-                ctx.shadowColor = 'rgba(255, 122, 0, 0.35)';
-                ctx.fill();
-                
-                ctx.beginPath();
-                ctx.arc(p.x - p.speedX * 5, p.y - p.speedY * 5, p.size * 0.6, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 150, 60, ${finalAlpha * 0.3})`;
-                ctx.fill();
-            }
-            
-            if (particles.length < 40) {
-                for (let i = 0; i < 2; i++) {
-                    particles.push(createParticle());
-                }
-            }
-            
-            particleAnimationId = requestAnimationFrame(animate);
-        }
-        
-        animate();
-        
-        const resizeObserver = new ResizeObserver(() => resizeCanvas());
-        resizeObserver.observe(container);
-        
-        return () => {
-            if (particleAnimationId) cancelAnimationFrame(particleAnimationId);
-            resizeObserver.disconnect();
-        };
+function initSpiralBreathingParticles() {
+    const canvas = document.getElementById('dustCanvas');
+    const container = document.getElementById('profileHeader');
+    if (!canvas || !container) return;
+    const resizeCanvas = () => { const rect = container.getBoundingClientRect(); canvas.width = rect.width; canvas.height = rect.height; };
+    resizeCanvas();
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function createParticle() {
+        return { x: Math.random() * canvas.width, y: canvas.height - 15 + Math.random() * 40, size: 1.5 + Math.random() * 2.5, speedX: (Math.random() - 0.5) * 0.3, speedY: -0.2 - Math.random() * 0.35, alpha: 0.2 + Math.random() * 0.3, color: `rgba(255,${140+Math.random()*60},${40+Math.random()*40},0.4)`, life: 1, decay: 0.002+Math.random()*0.005, breathPhase: Math.random()*Math.PI*2 };
     }
-
-    async function fetchUserData(uid) {
-        const { data, error } = await sb.from('users').select('*').eq('uid', uid).single();
-        if (error) return null;
-        return data;
+    for (let i = 0; i < 55; i++) { const p = createParticle(); p.y = Math.random() * canvas.height; particles.push(p); }
+    let startTime = performance.now();
+    function animate() {
+        if (!canvas.parentNode) return;
+        const now = performance.now();
+        const elapsed = (now - startTime) * 0.002;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            const spiralOffset = Math.sin(elapsed * 1.5 + p.y * 0.08) * 0.8;
+            p.x += p.speedX + spiralOffset * 0.15;
+            p.y += p.speedY;
+            p.life -= p.decay;
+            const breath = 0.5 + Math.sin(elapsed * 2 + p.breathPhase) * 0.3;
+            if (p.life <= 0.02 || p.y < -15) { particles.splice(i, 1); continue; }
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            const finalAlpha = Math.min(p.life * 0.5 * breath, 0.6);
+            ctx.fillStyle = `rgba(255,${140+Math.random()*60},40,${finalAlpha})`;
+            ctx.shadowBlur = 6; ctx.shadowColor = 'rgba(255,122,0,0.35)'; ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x - p.speedX * 5, p.y - p.speedY * 5, p.size * 0.6, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,150,60,${finalAlpha * 0.3})`; ctx.fill();
+        }
+        if (particles.length < 40) { for (let i = 0; i < 2; i++) particles.push(createParticle()); }
+        particleAnimationId = requestAnimationFrame(animate);
     }
+    animate();
+    const resizeObserver = new ResizeObserver(() => resizeCanvas());
+    resizeObserver.observe(container);
+    return () => { if (particleAnimationId) cancelAnimationFrame(particleAnimationId); resizeObserver.disconnect(); };
+}
 
-    async function getUserKycStatus(uid) {
-        const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
-        if (error) return false;
-        return data?.is_verified || false;
+async function fetchUserData(uid) { const { data, error } = await sb.from('users').select('*').eq('uid', uid).single(); if (error) return null; return data; }
+async function getUserKycStatus(uid) { const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single(); if (error) return false; return data?.is_verified || false; }
+
+function animateNumber(element, start, end, duration = 1500, isCurrency = false) {
+    if (!element) return;
+    const startTime = performance.now();
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        let progress = Math.min(elapsed / duration, 1);
+        const eased = easeOutCubic(progress);
+        const currentValue = start + (end - start) * eased;
+        if (isCurrency) { element.innerHTML = '€' + currentValue.toFixed(2); } else { element.innerHTML = Math.round(currentValue).toString(); }
+        if (progress < 1) { requestAnimationFrame(update); } else { if (isCurrency) { element.innerHTML = '€' + end.toFixed(2); } else { element.innerHTML = Math.round(end).toString(); } }
     }
+    requestAnimationFrame(update);
+}
 
-    function animateNumber(element, start, end, duration = 1500, isCurrency = false) {
-        if (!element) return;
-        const startTime = performance.now();
-        
-        function easeOutCubic(t) {
-            return 1 - Math.pow(1 - t, 3);
-        }
-        
-        function update(currentTime) {
-            const elapsed = currentTime - startTime;
-            let progress = Math.min(elapsed / duration, 1);
-            const eased = easeOutCubic(progress);
-            const currentValue = start + (end - start) * eased;
-            
-            if (isCurrency) {
-                element.innerHTML = '€' + currentValue.toFixed(2);
-            } else {
-                element.innerHTML = Math.round(currentValue).toString();
-            }
-            
-            if (progress < 1) {
-                requestAnimationFrame(update);
-            } else {
-                if (isCurrency) {
-                    element.innerHTML = '€' + end.toFixed(2);
-                } else {
-                    element.innerHTML = Math.round(end).toString();
-                }
-            }
-        }
-        
-        requestAnimationFrame(update);
+async function loadProfile() {
+    const user = getCurrentUser();
+    if (!user) return;
+    const userData = await fetchUserData(user.uid);
+    if (!userData) return;
+    user.username = userData.username; user.balance = userData.balance || 0; user.vipLevel = userData.vip_level || 1; user.uid = userData.uid;
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    document.getElementById('displayUsername').innerText = userData.username;
+    document.getElementById('displayUid').innerText = userData.uid;
+    document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
+    const initial = (userData.username?.charAt(0) || 'U').toUpperCase();
+    document.getElementById('avatarInitial').innerText = initial;
+    const vipMap = {1:'Normal',2:'VIP',3:'SVIP'};
+    document.getElementById('vipBadge').innerText = vipMap[userData.vip_level] || 'Normal';
+    const isKycVerified = await getUserKycStatus(user.uid);
+    const kycBadge = document.getElementById('kycBadge');
+    if (isKycVerified) { kycBadge.innerText = 'KYC Verified'; kycBadge.style.background = 'rgba(0,255,255,0.12)'; kycBadge.style.color = '#00e5ff'; } 
+    else { kycBadge.innerText = 'KYC Pending'; kycBadge.style.background = 'rgba(255,122,0,0.2)'; kycBadge.style.color = '#ffb347'; }
+    
+    // ========== 佣金统计（只统计 order_commission 类型） ==========
+    const { data: allDeposits } = await sb.from('deposits').select('amount, created_at, type').eq('uid', user.uid);
+    const allCommissions = allDeposits?.filter(d => d.type === 'order_commission') || [];
+    const totalCommission = allCommissions.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const todayCommissions = allCommissions.filter(d => { const recordDate = new Date(d.created_at); return recordDate >= todayStart; });
+    const todayCommission = todayCommissions.reduce((sum, d) => sum + d.amount, 0) || 0;
+    animateNumber(document.getElementById('totalCommissions'), 0, todayCommission, 1200, true);
+    animateNumber(document.getElementById('salesAmount'), 0, totalCommission, 1200, true);
+    
+    // ========== Pending Release ==========
+    const { data: processingOrders } = await sb.from('user_orders').select('total_supply_price, total_commission, tracking_timeline').eq('uid', user.uid).eq('status', 'processing');
+    const now = new Date();
+    let pendingReleaseTotal = 0;
+    for (const order of processingOrders || []) {
+        let timeline = [];
+        try { timeline = JSON.parse(order.tracking_timeline || '[]'); } catch(e) {}
+        const paymentReleased = timeline.find(t => t.status === 'Payment released');
+        let isPaymentReleased = false;
+        if (paymentReleased) { const releasedTime = new Date(paymentReleased.time); if (releasedTime <= now && !paymentReleased.isPending) isPaymentReleased = true; }
+        if (!isPaymentReleased) pendingReleaseTotal += (order.total_supply_price || 0) + (order.total_commission || 0);
     }
+    animateNumber(document.getElementById('pendingReleaseAmount'), 0, pendingReleaseTotal, 1200, true);
+}
 
-    async function loadProfile() {
-        const user = getCurrentUser();
-        if (!user) return;
-
-        const userData = await fetchUserData(user.uid);
-        if (!userData) return;
-
-        user.username = userData.username;
-        user.balance = userData.balance || 0;
-        user.vipLevel = userData.vip_level || 1;
-        user.uid = userData.uid;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-
-        document.getElementById('displayUsername').innerText = userData.username;
-        document.getElementById('displayUid').innerText = userData.uid;
-        document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
-
-        const initial = (userData.username?.charAt(0) || 'U').toUpperCase();
-        document.getElementById('avatarInitial').innerText = initial;
-
-        const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
-        const vipLevel = vipMap[userData.vip_level] || 'Normal';
-        document.getElementById('vipBadge').innerText = vipLevel;
-
-        const isKycVerified = await getUserKycStatus(user.uid);
-        const kycBadge = document.getElementById('kycBadge');
-        if (isKycVerified) {
-            kycBadge.innerText = 'KYC Verified';
-            kycBadge.style.background = 'rgba(0, 255, 255, 0.12)';
-            kycBadge.style.color = '#00e5ff';
-        } else {
-            kycBadge.innerText = 'KYC Pending';
-            kycBadge.style.background = 'rgba(255, 122, 0, 0.2)';
-            kycBadge.style.color = '#ffb347';
-        }
-
-        // ========== 获取总佣金和今日佣金（只统计正数金额） ==========
-        const { data: allDeposits, error: depositError } = await sb
-            .from('deposits')
-            .select('amount, created_at, type')
-            .eq('uid', user.uid);
-
-        if (depositError) {
-            console.error('查询失败:', depositError);
-        }
-
-        // 只统计正数的佣金记录（排除 order_payment 等负数）
-        const allCommissions = allDeposits?.filter(d => d.type === 'order_commission' && d.amount > 0) || [];
-
-        // 总佣金
-        const totalCommission = allCommissions.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
-
-        // 今日佣金
-        const today = new Date();
-        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-
-        const todayCommissions = allCommissions.filter(d => {
-            if (!d.created_at) return false;
-            const recordDate = new Date(d.created_at);
-            return recordDate >= todayStart && recordDate < todayEnd;
+function showActivityPopup() { const popup = document.getElementById('activityPopup'); if (popup) popup.classList.add('show'); }
+function closeActivityPopup() { const popup = document.getElementById('activityPopup'); if (popup) popup.classList.remove('show'); }
+setTimeout(() => showActivityPopup(), 3000);
+document.getElementById('closePopupBtn')?.addEventListener('click', closeActivityPopup);
+function topUp() { alert('Please contact support for deposit.'); }
+function setupBottomNav() {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const page = item.dataset.page;
+            if (page === 'dashboard') window.location.href = 'start.html';
+            else if (page === 'products') window.location.href = 'products.html';
+            else if (page === 'orders') window.location.href = 'orders.html';
+            else if (page === 'profile') {}
         });
-        const todayCommission = todayCommissions.reduce((sum, d) => sum + (d.amount || 0), 0) || 0;
-
-        console.log('总佣金:', totalCommission);
-        console.log('今日佣金:', todayCommission);
-
-        // 更新 UI
-        animateNumber(document.getElementById('totalCommissions'), 0, todayCommission, 1200, true);
-        animateNumber(document.getElementById('salesAmount'), 0, totalCommission, 1200, true);
-
-        // ========== 计算 Pending Release 金额 ==========
-        const { data: processingOrders } = await sb
-            .from('user_orders')
-            .select('total_supply_price, total_commission, tracking_timeline')
-            .eq('uid', user.uid)
-            .eq('status', 'processing');
-
-        const now = new Date();
-        let pendingReleaseTotal = 0;
-
-        for (const order of processingOrders || []) {
-            let timeline = [];
-            try {
-                timeline = JSON.parse(order.tracking_timeline || '[]');
-            } catch(e) {}
-            
-            const paymentReleased = timeline.find(t => t.status === 'Payment released');
-            let isPaymentReleased = false;
-            if (paymentReleased) {
-                const releasedTime = new Date(paymentReleased.time);
-                if (releasedTime <= now && !paymentReleased.isPending) {
-                    isPaymentReleased = true;
-                }
-            }
-            
-            if (!isPaymentReleased) {
-                pendingReleaseTotal += (order.total_supply_price || 0) + (order.total_commission || 0);
-            }
-        }
-
-        animateNumber(document.getElementById('pendingReleaseAmount'), 0, pendingReleaseTotal, 1200, true);
-    }
-
-    function showActivityPopup() {
-        const popup = document.getElementById('activityPopup');
-        if (popup) popup.classList.add('show');
-    }
-
-    function closeActivityPopup() {
-        const popup = document.getElementById('activityPopup');
-        if (popup) popup.classList.remove('show');
-    }
-
-    setTimeout(() => showActivityPopup(), 3000);
-    document.getElementById('closePopupBtn')?.addEventListener('click', closeActivityPopup);
-
-    function topUp() {
-        alert('Please contact support for deposit.');
-    }
-
-    function setupBottomNav() {
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const page = item.dataset.page;
-                if (page === 'dashboard') window.location.href = 'start.html';
-                else if (page === 'products') window.location.href = 'products.html';
-                else if (page === 'orders') window.location.href = 'orders.html';
-                else if (page === 'profile') {}
-            });
-        });
-    }
-
-    function updateSoundIconFromGlobal() {
-        const soundBtn = document.querySelector('.notification-icon');
-        const soundIcon = soundBtn ? soundBtn.querySelector('i') : null;
-        if (soundIcon) {
-            const audioEnabled = localStorage.getItem('audio_enabled') === 'true';
-            soundIcon.className = audioEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
-        }
-    }
-
-    updateSoundIconFromGlobal();
-    window.addEventListener('storage', () => updateSoundIconFromGlobal());
-
-    document.getElementById('topUpBtn').addEventListener('click', topUp);
-    document.getElementById('withdrawBtn').addEventListener('click', () => window.location.href = 'withdrawal.html');
-
-    loadProfile();
-    setupBottomNav();
-
-    setTimeout(() => initSpiralBreathingParticles(), 100);
+    });
+}
+function updateSoundIconFromGlobal() {
+    const soundBtn = document.querySelector('.notification-icon');
+    const soundIcon = soundBtn ? soundBtn.querySelector('i') : null;
+    if (soundIcon) { soundIcon.className = localStorage.getItem('audio_enabled') === 'true' ? 'fas fa-volume-up' : 'fas fa-volume-mute'; }
+}
+updateSoundIconFromGlobal();
+window.addEventListener('storage', () => updateSoundIconFromGlobal());
+document.getElementById('topUpBtn').addEventListener('click', topUp);
+document.getElementById('withdrawBtn').addEventListener('click', () => window.location.href = 'withdrawal.html');
+loadProfile();
+setupBottomNav();
+setTimeout(() => initSpiralBreathingParticles(), 100);
 </script>
 </body>
 </html>

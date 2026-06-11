@@ -121,117 +121,60 @@ function parseProductsText(productsData) {
 let currentTab = 'new', pendingOrders = [], processingOrders = [], currentOrder = null, hasCheckedShipping = false;
 let refreshInterval = null;
 
-// Generate initial timeline (from Confirm Order)
-function generateProcessingTimeline(confirmTime, paymentReleaseTimer = null) {
-    const startTime = new Date(confirmTime);
-    const timeline = [];
+// ========== 统一释放函数（Timer 和 Manual 都用这个） ==========
+async function processPaymentRelease(orderNo, releaseTime) {
+    console.log(`处理订单释放: ${orderNo}, 时间: ${releaseTime}`);
     
-    timeline.push({ status: "Order is placed", time: startTime.toISOString() });
-    
-    const paymentReceivedDelay = 5 + Math.random() * 2;
-    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
-    timeline.push({ 
-        status: "Payment received from buyer", 
-        time: paymentReceivedTime.toISOString(),
-        isPending: true
-    });
-    
-    timeline.push({ 
-        status: "Payment under escrow protection", 
-        time: paymentReceivedTime.toISOString()
-    });
-    
-    const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    let paymentReleasedTime;
-    
-    if (paymentReleaseTimer && paymentReleaseTimer > 0) {
-        paymentReleasedTime = new Date(paymentReceivedTime.getTime() + paymentReleaseTimer * 60 * 1000);
-    } else {
-        paymentReleasedTime = futureDate;
-    }
-    
-    timeline.push({ 
-        status: "Payment released", 
-        time: paymentReleasedTime.toISOString(),
-        isPending: true
-    });
-    
-    const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
-    for (let i = 0; i < subsequent.length; i++) {
-        timeline.push({ status: subsequent[i], time: futureDate.toISOString(), isPending: true });
-    }
-    
-    return timeline;
-}
-
-async function checkAndCompleteDeliveredOrders() {
-    const { data: orders } = await sb.from('user_orders').select('*').eq('status', 'processing');
-    if (!orders) return;
-    
-    const now = new Date();
-    for (const order of orders) {
-        let timeline = JSON.parse(order.tracking_timeline || '[]');
-        let lastStatus = timeline[timeline.length - 1];
-        if (lastStatus && lastStatus.status === "Parcel delivered") {
-            let deliveredTime = new Date(lastStatus.time);
-            if (deliveredTime <= now) {
-                await sb.from('user_orders').update({ status: 'delivered' }).eq('order_no', order.order_no);
-                console.log(`Order ${order.order_no} completed, moved to history`);
-            }
-        }
-    }
-}
-
-async function activatePaymentRelease(orderNo, paymentReleasedTime) {
     const { data: order } = await sb.from('user_orders').select('*').eq('order_no', orderNo).single();
-    if (!order) return false;
+    if (!order) {
+        console.error('订单不存在');
+        return false;
+    }
     
-    let timeline = JSON.parse(order.tracking_timeline || '[]');
+    let timeline = [];
+    try {
+        timeline = JSON.parse(order.tracking_timeline || '[]');
+    } catch(e) {
+        console.error('解析 timeline 失败');
+        return false;
+    }
     
-    // 防重复检查
     const alreadyProcessed = timeline.find(t => t.status === "Payment released" && !t.isPending);
     if (alreadyProcessed) {
-        console.log('Order already processed, skipping');
+        console.log('订单已处理过，跳过');
         return false;
     }
     
     const pendingIndex = timeline.findIndex(t => t.status === "Payment released" && t.isPending === true);
     if (pendingIndex === -1) {
-        console.log('No pending Payment released found');
+        console.error('没有找到待释放的 Payment released');
         return false;
     }
     
-    let timelineUpdated = false;
-    const now = new Date();
-    
-    // 更新 Payment released 为完成
+    const now = new Date(releaseTime);
     timeline[pendingIndex] = { status: "Payment released", time: now.toISOString() };
-    timelineUpdated = true;
     
-    // 计算后续状态时间
-    const orderConfirmedDelay = 5 + Math.random() * 5;
-    const preparingDelay = 30 + Math.random() * 30;
-    
-    const orderConfirmedTime = new Date(now.getTime() + orderConfirmedDelay * 60 * 1000);
-    const preparingTime = new Date(orderConfirmedTime.getTime() + preparingDelay * 60 * 1000);
+    const orderConfirmedTime = new Date(now.getTime() + 5 * 60 * 1000);
+    const preparingTime = new Date(orderConfirmedTime.getTime() + (10 + Math.random() * 5) * 60 * 1000);
     
     for (let i = 0; i < timeline.length; i++) {
         if (timeline[i].status === "Order confirmed" && timeline[i].isPending === true) {
             timeline[i] = { status: "Order confirmed", time: orderConfirmedTime.toISOString() };
-            timelineUpdated = true;
         }
         if (timeline[i].status === "Preparing parcel for shipment" && timeline[i].isPending === true) {
             timeline[i] = { status: "Preparing parcel for shipment", time: preparingTime.toISOString() };
-            timelineUpdated = true;
         }
     }
     
-    // ✅✅✅ 关键修复：Timer Release 时写入 deposits
+    await sb.from('user_orders').update({
+        tracking_timeline: JSON.stringify(timeline)
+    }).eq('order_no', orderNo);
+    
+    // ✅✅✅ 写入 deposits（Product Payment Release + Commissions）
     const supplyPrice = order.total_supply_price || 0;
     const commissionAmount = order.total_commission || 0;
     
-    console.log(`Timer Release: 记录本金 €${supplyPrice}，佣金 €${commissionAmount}`);
-    
+    console.log(`写入本金释放: €${supplyPrice}`);
     await sb.from('deposits').insert({
         uid: order.uid,
         username: order.username,
@@ -240,6 +183,7 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
         created_at: now.toISOString()
     });
     
+    console.log(`写入佣金: €${commissionAmount}`);
     await sb.from('deposits').insert({
         uid: order.uid,
         username: order.username,
@@ -248,57 +192,103 @@ async function activatePaymentRelease(orderNo, paymentReleasedTime) {
         created_at: now.toISOString()
     });
     
-    // 返还余额
     const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
     if (user) {
-        const refundAmount = supplyPrice + commissionAmount;
-        const newBalance = (user.balance || 0) + refundAmount;
+        const newBalance = (user.balance || 0) + supplyPrice + commissionAmount;
         await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
+        
+        const localUser = getCurrentUser();
+        if (localUser && localUser.uid === order.uid) {
+            localUser.balance = newBalance;
+            localStorage.setItem('currentUser', JSON.stringify(localUser));
+        }
     }
     
-    if (timelineUpdated) {
-        await sb.from('user_orders').update({ 
-            tracking_timeline: JSON.stringify(timeline) 
-        }).eq('order_no', orderNo);
-    }
-    
-    // 写入 order_history
     try {
         let products = typeof order.products === 'string' ? JSON.parse(order.products) : order.products;
         if (Array.isArray(products)) {
             for (let product of products) {
                 let qty = parseInt(product.quantity) || 1;
                 for (let j = 0; j < qty; j++) {
-                    await sb.from('order_history').insert({ 
-                        uid: order.uid, 
-                        username: order.username, 
-                        order_code: order.order_no, 
-                        accommodation_name: product.product_name, 
-                        price: product.unit_price, 
-                        commission: product.commission_per_item || 0, 
-                        date: new Date().toISOString() 
+                    await sb.from('order_history').insert({
+                        uid: order.uid,
+                        username: order.username,
+                        order_code: order.order_no,
+                        accommodation_name: product.product_name,
+                        price: product.unit_price,
+                        commission: product.commission_per_item || 0,
+                        date: now.toISOString()
                     });
                 }
             }
         }
-    } catch(e) { console.error('Failed to record order history:', e); }
+    } catch(e) { console.error('写入 order_history 失败:', e); }
     
+    console.log(`✅ 订单 ${orderNo} 释放完成`);
     return true;
+}
+
+async function manualReleasePayment(orderNo) {
+    return await processPaymentRelease(orderNo, new Date());
 }
 
 async function checkAndActivateTimers() {
     const { data: orders } = await sb.from('user_orders').select('*').eq('status', 'processing');
     if (!orders) return;
+    
+    const now = new Date();
+    for (const order of orders) {
+        let timeline = [];
+        try {
+            timeline = JSON.parse(order.tracking_timeline || '[]');
+        } catch(e) { continue; }
+        
+        for (const status of timeline) {
+            if (status.status === "Payment released" && status.isPending === true) {
+                const pendingTime = new Date(status.time);
+                if (pendingTime <= now) {
+                    await processPaymentRelease(order.order_no, now);
+                }
+                break;
+            }
+        }
+    }
+}
+
+function generateProcessingTimeline(confirmTime, paymentReleaseTimer = null) {
+    const startTime = new Date(confirmTime);
+    const timeline = [];
+    timeline.push({ status: "Order is placed", time: startTime.toISOString() });
+    const paymentReceivedDelay = 5 + Math.random() * 2;
+    const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
+    timeline.push({ status: "Payment received from buyer", time: paymentReceivedTime.toISOString(), isPending: true });
+    timeline.push({ status: "Payment under escrow protection", time: paymentReceivedTime.toISOString() });
+    const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    let paymentReleasedTime;
+    if (paymentReleaseTimer && paymentReleaseTimer > 0) {
+        paymentReleasedTime = new Date(paymentReceivedTime.getTime() + paymentReleaseTimer * 60 * 1000);
+    } else {
+        paymentReleasedTime = futureDate;
+    }
+    timeline.push({ status: "Payment released", time: paymentReleasedTime.toISOString(), isPending: true });
+    const subsequent = ["Order confirmed","Preparing parcel for shipment","Courier assigned","Parcel picked up by logistics partner","Parcel arrived at sorting facility","Parcel departed from sorting facility","Parcel arrived at delivery hub","Parcel out for delivery","Parcel delivered"];
+    for (let i = 0; i < subsequent.length; i++) {
+        timeline.push({ status: subsequent[i], time: futureDate.toISOString(), isPending: true });
+    }
+    return timeline;
+}
+
+async function checkAndCompleteDeliveredOrders() {
+    const { data: orders } = await sb.from('user_orders').select('*').eq('status', 'processing');
+    if (!orders) return;
     const now = new Date();
     for (const order of orders) {
         let timeline = JSON.parse(order.tracking_timeline || '[]');
-        for (let i = 0; i < timeline.length; i++) {
-            if (timeline[i].status === "Payment released" && timeline[i].isPending === true) {
-                let pendingTime = new Date(timeline[i].time);
-                if (pendingTime <= now) {
-                    await activatePaymentRelease(order.order_no, now);
-                }
-                break;
+        let lastStatus = timeline[timeline.length - 1];
+        if (lastStatus && lastStatus.status === "Parcel delivered") {
+            let deliveredTime = new Date(lastStatus.time);
+            if (deliveredTime <= now) {
+                await sb.from('user_orders').update({ status: 'delivered' }).eq('order_no', order.order_no);
             }
         }
     }
@@ -311,7 +301,6 @@ async function loadOrders() {
     pendingOrders = orders.filter(o => o.status === 'pending');
     processingOrders = orders.filter(o => o.status === 'processing');
     renderOrders();
-    
     await checkAndActivateTimers();
     await checkAndCompleteDeliveredOrders();
 }
@@ -402,7 +391,6 @@ document.getElementById('confirmOrderBtn').addEventListener('click', async funct
     let newBalance = currentBalance - currentOrder.total_supply_price;
     await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
     
-    // ✅ 关键：记录 Product Payment Deducted
     await sb.from('deposits').insert({
         uid: user.uid,
         username: user.username,
