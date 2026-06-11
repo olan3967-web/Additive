@@ -1,4 +1,4 @@
-// admin-setorders.js - 后台设置订单（Timer 输入框 + Manual Release）
+// admin-setorders.js - 完整修复版
 
 let setordersSearchKeyword = '';
 let selectedUser = null;
@@ -7,7 +7,6 @@ let manualReleaseOrders = [];
 let paymentReleaseTimer = null;
 
 function generateRandomBuyer() {
-    // ========== 欧洲各国名字库 ==========
     const namesByCountry = {
         'UK': { first: ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth', 'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica', 'Thomas', 'Sarah', 'Charles', 'Karen'], last: ['Smith', 'Jones', 'Taylor', 'Brown', 'Williams', 'Wilson', 'Johnson', 'Davies', 'Robinson', 'Wright', 'Thompson', 'Evans', 'Walker', 'White', 'Roberts', 'Green', 'Hall', 'Wood', 'Jackson', 'Clarke'] },
         'Germany': { first: ['Lukas', 'Hanna', 'Finn', 'Mia', 'Jonas', 'Emma', 'Leon', 'Sophie', 'Paul', 'Marie', 'Felix', 'Lena', 'Max', 'Lea', 'Moritz', 'Anna', 'Ben', 'Julia', 'Noah', 'Laura'], last: ['Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann', 'Schäfer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf', 'Schröder', 'Neumann', 'Schwarz', 'Zimmermann'] },
@@ -97,7 +96,7 @@ function generateRandomBuyer() {
     return { name: fullName, phone, address, country: selectedCountry, city: selectedCity };
 }
 
-// ========== manualReleasePayment 函数（核心修复） ==========
+// ========== manualReleasePayment 函数（最终修复版） ==========
 async function manualReleasePayment(orderNo) {
     console.log(`🔓 手动释放订单 ${orderNo}`);
     
@@ -144,29 +143,37 @@ async function manualReleasePayment(orderNo) {
         tracking_timeline: JSON.stringify(timeline)
     }).eq('order_no', orderNo);
     
-    // ✅ 记录 Product Payment Release（本金释放）
-    await sb.from('deposits').insert({
+    // ✅✅✅ 关键：记录 Product Payment Release（本金释放）
+    const supplyPrice = order.total_supply_price || 0;
+    const commissionAmount = order.total_commission || 0;
+    
+    console.log(`记录本金释放: €${supplyPrice}`);
+    console.log(`记录佣金: €${commissionAmount}`);
+    
+    // 插入本金释放记录
+    const { error: err1 } = await sb.from('deposits').insert({
         uid: order.uid,
         username: order.username,
-        amount: order.total_supply_price,
+        amount: supplyPrice,
         type: 'order_settlement',
         created_at: now.toISOString()
     });
+    if (err1) console.error('写入 order_settlement 失败:', err1);
     
-    // ✅ 记录 Commissions（佣金）
-    const commissionAmount = order.total_commission || 0;
-    await sb.from('deposits').insert({
+    // 插入佣金记录
+    const { error: err2 } = await sb.from('deposits').insert({
         uid: order.uid,
         username: order.username,
         amount: commissionAmount,
         type: 'order_commission',
         created_at: now.toISOString()
     });
+    if (err2) console.error('写入 order_commission 失败:', err2);
     
-    // 更新用户余额（返还本金+佣金）
+    // 更新用户余额
     const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
     if (user) {
-        const refundAmount = (order.total_supply_price || 0) + commissionAmount;
+        const refundAmount = supplyPrice + commissionAmount;
         const newBalance = (user.balance || 0) + refundAmount;
         await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
         
@@ -178,15 +185,13 @@ async function manualReleasePayment(orderNo) {
         }
     }
     
-    console.log(`✅ 订单 ${orderNo} Payment released 完成，本金 €${order.total_supply_price}，佣金 €${commissionAmount} 已记录`);
+    console.log(`✅ 订单 ${orderNo} 释放完成！本金 €${supplyPrice}，佣金 €${commissionAmount}`);
     return true;
 }
 
 // ========== 加载 Manual Release 订单 ==========
 async function loadManualReleaseOrders() {
     try {
-        console.log('开始加载 Manual Release 订单...');
-        
         if (!selectedUser || !selectedUser.uid) {
             manualReleaseOrders = [];
             renderManualReleaseCard();
@@ -205,7 +210,7 @@ async function loadManualReleaseOrders() {
         manualReleaseOrders = orders || [];
         renderManualReleaseCard();
     } catch (err) { 
-        console.error('加载 Manual Release 订单失败:', err);
+        console.error('加载失败:', err);
         manualReleaseOrders = [];
         renderManualReleaseCard();
     }
@@ -221,38 +226,15 @@ function renderManualReleaseCard() {
     }
     
     container.style.display = 'block';
-    let html = `
-        <div style="background: rgba(15,25,40,0.9); border-radius: 16px; padding: 16px; margin-top: 20px; border: 1px solid rgba(255,122,0,0.3);">
-            <h4 style="color: #ffb84d; margin-bottom: 12px;"><i class="fas fa-hand-pointer"></i> Manual Release</h4>
-            <div style="max-height: 300px; overflow-y: auto;">
-    `;
+    let html = `<div style="background: rgba(15,25,40,0.9); border-radius: 16px; padding: 16px; margin-top: 20px; border: 1px solid rgba(255,122,0,0.3);"><h4 style="color: #ffb84d; margin-bottom: 12px;"><i class="fas fa-hand-pointer"></i> Manual Release</h4><div style="max-height: 300px; overflow-y: auto;">`;
     
     for (const order of manualReleaseOrders) {
-        let isReleased = false;
-        if (order.tracking_timeline) {
-            try {
-                let timeline = typeof order.tracking_timeline === 'string' 
-                    ? JSON.parse(order.tracking_timeline) 
-                    : order.tracking_timeline;
-                const paymentReleased = timeline.find(item => item.status === "Payment released");
-                isReleased = paymentReleased && !paymentReleased.isPending;
-            } catch(e) {}
-        }
-        
-        html += `
-            <div style="background: #0f172a; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <div style="font-weight:700; color:#ffb84d;">${order.order_no}</div>
-                        <div style="font-size:11px; color:#8a9abb;">User: ${order.uid} | €${order.total_supply_price} | 佣金: €${order.total_commission}</div>
-                    </div>
-                    <button class="release-order-btn" data-order="${order.order_no}" 
-                        style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:white; cursor:pointer;">
-                        <i class="fas fa-play"></i> Release Now
-                    </button>
-                </div>
+        html += `<div style="background: #0f172a; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div><div style="font-weight:700; color:#ffb84d;">${order.order_no}</div><div style="font-size:11px; color:#8a9abb;">User: ${order.uid} | 本金: €${order.total_supply_price} | 佣金: €${order.total_commission}</div></div>
+                <button class="release-order-btn" data-order="${order.order_no}" style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:white; cursor:pointer;"><i class="fas fa-play"></i> Release Now</button>
             </div>
-        `;
+        </div>`;
     }
     
     html += `</div></div>`;
@@ -263,7 +245,7 @@ function renderManualReleaseCard() {
             const orderNo = btn.dataset.order;
             const success = await manualReleasePayment(orderNo);
             if (success) {
-                showToast(`订单 ${orderNo} 释放成功，本金和佣金已记录`, 'success');
+                showToast(`订单 ${orderNo} 释放成功！本金和佣金已记录`, 'success');
                 await loadManualReleaseOrders();
             } else {
                 showToast(`释放失败`, 'error');
@@ -272,7 +254,6 @@ function renderManualReleaseCard() {
     });
 }
 
-// ========== 页面加载函数 ==========
 async function loadSetordersPage() {
     const container = document.getElementById('page_setorders');
     if (!container) return;
@@ -293,19 +274,13 @@ async function loadSetordersPage() {
                 </div>
             </div>
             <div id="setordersMain" style="display:none;">
-                <div style="background:rgba(74,124,255,0.1); padding:10px 16px; border-radius:12px; margin-bottom:20px;">
-                    Current User: <span id="selectedUidDisplay" style="color:#4a7cff;"></span> - <span id="selectedUsernameDisplay"></span>
-                </div>
+                <div style="background:rgba(74,124,255,0.1); padding:10px 16px; border-radius:12px; margin-bottom:20px;">Current User: <span id="selectedUidDisplay" style="color:#4a7cff;"></span> - <span id="selectedUsernameDisplay"></span></div>
                 <div id="userProductsList" style="max-height:500px; overflow-y:auto; margin-bottom:20px; display:flex; flex-wrap:wrap; gap:12px;"></div>
-                
                 <div style="background:rgba(74,124,255,0.08); border:1px solid rgba(74,124,255,0.2); border-radius:16px; padding:16px; margin-bottom:20px;">
                     <h4 style="color:#ffb84d;"><i class="fas fa-hourglass-half"></i> Payment Release Timer</h4>
                     <input type="number" id="paymentTimerInput" placeholder="Enter minutes (leave empty for Manual Release)" style="width:100%; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:12px; color:#fff;">
-                    <div style="font-size:12px; color:#6a7a9a; margin-top:12px;">
-                        <i class="fas fa-info-circle"></i> Timer 从 Payment under escrow protection 打勾后开始计时。留空则为 Manual Release。
-                    </div>
+                    <div style="font-size:12px; color:#6a7a9a; margin-top:12px;">Timer 从 Payment under escrow protection 打勾后开始计时。留空则为 Manual Release。</div>
                 </div>
-                
                 <div id="orderSummary" style="background:#0f172a; border-radius:16px; padding:16px; border:1px solid rgba(74,124,255,0.2);">
                     <h4 style="margin-bottom:12px; color:#ffb84d;"><i class="fas fa-receipt"></i> Order Summary</h4>
                     <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Total Supply Price:</span><span id="totalSupplyPrice" style="color:#ffb84d; font-weight:700;">€0</span></div>
@@ -313,7 +288,6 @@ async function loadSetordersPage() {
                     <div style="display:flex; justify-content:space-between; margin-bottom:16px;"><span>Final Account Increase:</span><span id="totalIncrease" style="color:#4a7cff; font-weight:700;">€0</span></div>
                     <button id="confirmSetOrderBtn" class="success" style="width:100%; padding:12px;"><i class="fas fa-check"></i> Create Order</button>
                 </div>
-                
                 <div id="manualReleaseContainer" style="margin-top:20px;"></div>
             </div>
         </div>
@@ -360,7 +334,6 @@ async function loadUserList() {
 }
 
 async function selectUser(uid, username) {
-    console.log('选择用户:', uid, username);
     selectedUser = { uid, username };
     document.getElementById('selectedUidDisplay').innerText = uid;
     document.getElementById('selectedUsernameDisplay').innerText = username;
@@ -373,25 +346,11 @@ async function selectUser(uid, username) {
 async function loadUserProducts(uid) {
     const container = document.getElementById('userProductsList');
     if (!container) return;
-    
     container.innerHTML = '<div style="text-align:center; padding:40px;">Loading...</div>';
     
-    const { data: products, error } = await sb
-        .from('user_products')
-        .select('*')
-        .eq('uid', uid)
-        .order('added_at', { ascending: false });
-    
-    if (error) {
-        console.error('查询错误:', error);
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;">加载失败: ' + error.message + '</div>';
-        return;
-    }
-    
-    if (!products || products.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">No products added by this user</div>';
-        return;
-    }
+    const { data: products, error } = await sb.from('user_products').select('*').eq('uid', uid).order('added_at', { ascending: false });
+    if (error) { container.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;">加载失败</div>'; return; }
+    if (!products || products.length === 0) { container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">No products added</div>'; return; }
     
     orderItems = products.map(p => ({
         product_id: p.product_id || p.id,
@@ -401,18 +360,13 @@ async function loadUserProducts(uid) {
         quantity: 0,
         image_url: p.image_url
     }));
-    
     renderProducts();
 }
 
 function renderProducts() {
     const container = document.getElementById('userProductsList');
     if (!container) return;
-    
-    if (orderItems.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">No products available</div>';
-        return;
-    }
+    if (orderItems.length === 0) { container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">No products available</div>'; return; }
     
     container.innerHTML = '';
     container.style.cssText = 'display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;';
@@ -422,7 +376,7 @@ function renderProducts() {
         const div = document.createElement('div');
         div.style.cssText = 'background:#0f172a; border-radius:16px; padding:12px; width:calc(16.666% - 10px); min-width:140px; text-align:center; border:1px solid rgba(74,124,255,0.2);';
         div.innerHTML = `
-            <img src="${item.image_url || 'https://placehold.co/80x80/1e2a3a/4a7cff?text=No+Image'}" style="width:80px; height:80px; border-radius:12px; margin-bottom:10px;" onerror="this.src='https://placehold.co/80x80/1e2a3a/4a7cff?text=No+Image'">
+            <img src="${item.image_url || 'https://placehold.co/80x80/1e2a3a/4a7cff?text=No+Image'}" style="width:80px; height:80px; border-radius:12px; margin-bottom:10px;">
             <div style="font-weight:600; color:#ffb84d;">${escapeHtml(item.product_name)}</div>
             <div style="font-size:11px; color:#8a9abb;">€${item.price} | +€${item.margin_profit}</div>
             <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:10px;">
@@ -444,7 +398,6 @@ function renderProducts() {
             }
         });
     });
-    
     document.querySelectorAll('.qty-incr').forEach(btn => {
         btn.addEventListener('click', () => {
             const idx = parseInt(btn.dataset.index);
@@ -453,7 +406,6 @@ function renderProducts() {
             updateSummary();
         });
     });
-    
     updateSummary();
 }
 
@@ -470,10 +422,7 @@ function updateSummary() {
 
 async function confirmSetOrder() {
     const selectedItems = orderItems.filter(item => item.quantity > 0);
-    if (selectedItems.length === 0) {
-        showToast('Please select at least one product', 'error');
-        return;
-    }
+    if (selectedItems.length === 0) { showToast('Please select at least one product', 'error'); return; }
     
     const orderNo = 'ORD' + Date.now() + Math.floor(Math.random() * 1000);
     const buyer = generateRandomBuyer();
@@ -482,18 +431,10 @@ async function confirmSetOrder() {
     for (const item of selectedItems) {
         totalSupplyPrice += item.price * item.quantity;
         totalCommission += item.margin_profit * item.quantity;
-        productsList.push({
-            product_id: item.product_id,
-            product_name: item.product_name,
-            quantity: item.quantity,
-            unit_price: item.price,
-            commission_per_item: item.margin_profit,
-            image_url: item.image_url
-        });
+        productsList.push({ product_id: item.product_id, product_name: item.product_name, quantity: item.quantity, unit_price: item.price, commission_per_item: item.margin_profit, image_url: item.image_url });
     }
     
     const startTime = new Date();
-    
     const paymentReceivedDelay = 5 + Math.random() * 2;
     const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
     
@@ -503,9 +444,7 @@ async function confirmSetOrder() {
         { status: "Payment under escrow protection", time: paymentReceivedTime.toISOString(), isCompleted: true }
     ];
     
-    let paymentReleasedTime = null;
-    let releaseMechanism = null;
-    
+    let paymentReleasedTime, releaseMechanism;
     if (paymentReleaseTimer && paymentReleaseTimer > 0) {
         paymentReleasedTime = new Date(paymentReceivedTime.getTime() + paymentReleaseTimer * 60 * 1000);
         releaseMechanism = 'timer';
@@ -514,78 +453,38 @@ async function confirmSetOrder() {
         releaseMechanism = 'manual';
     }
     
-    initialTimeline.push({
-        status: "Payment released",
-        time: paymentReleasedTime.toISOString(),
-        isPending: true,
-        releaseMechanism: releaseMechanism,
-        timerMinutes: paymentReleaseTimer || null
-    });
+    initialTimeline.push({ status: "Payment released", time: paymentReleasedTime.toISOString(), isPending: true, releaseMechanism: releaseMechanism, timerMinutes: paymentReleaseTimer || null });
     
     const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    const subsequentStatuses = [
-        "Order confirmed", "Preparing parcel for shipment", "Courier assigned",
-        "Parcel picked up by logistics partner", "Parcel arrived at sorting facility",
-        "Parcel departed from sorting facility", "Parcel arrived at delivery hub",
-        "Parcel out for delivery", "Parcel delivered"
-    ];
-    
+    const subsequentStatuses = ["Order confirmed", "Preparing parcel for shipment", "Courier assigned", "Parcel picked up by logistics partner", "Parcel arrived at sorting facility", "Parcel departed from sorting facility", "Parcel arrived at delivery hub", "Parcel out for delivery", "Parcel delivered"];
     for (let i = 0; i < subsequentStatuses.length; i++) {
-        initialTimeline.push({
-            status: subsequentStatuses[i],
-            time: futureDate.toISOString(),
-            isPending: true
-        });
+        initialTimeline.push({ status: subsequentStatuses[i], time: futureDate.toISOString(), isPending: true });
     }
     
     const { error } = await sb.from('user_orders').insert({
-        uid: selectedUser.uid,
-        username: selectedUser.username,
-        order_no: orderNo,
-        products: JSON.stringify(productsList),
-        total_supply_price: totalSupplyPrice,
-        total_commission: totalCommission,
-        buyer_name: buyer.name,
-        buyer_phone: buyer.phone,
-        buyer_address: buyer.address,
-        shipping_address: "Supplier Warehouse, Shanghai, China",
-        status: 'pending',
-        payment_release_timer: paymentReleaseTimer || null,
-        tracking_timeline: JSON.stringify(initialTimeline),
-        created_at: new Date().toISOString()
+        uid: selectedUser.uid, username: selectedUser.username, order_no: orderNo, products: JSON.stringify(productsList),
+        total_supply_price: totalSupplyPrice, total_commission: totalCommission, buyer_name: buyer.name, buyer_phone: buyer.phone,
+        buyer_address: buyer.address, shipping_address: "Supplier Warehouse, Shanghai, China", status: 'pending',
+        payment_release_timer: paymentReleaseTimer || null, tracking_timeline: JSON.stringify(initialTimeline), created_at: new Date().toISOString()
     });
     
-    if (error) {
-        showToast('Failed: ' + error.message, 'error');
-        return;
-    }
+    if (error) { showToast('Failed: ' + error.message, 'error'); return; }
     
     if (paymentReleaseTimer && paymentReleaseTimer > 0) {
-        showToast(`Order ${orderNo} created! Payment release will auto trigger after ${paymentReleaseTimer} minutes`, 'success');
+        showToast(`Order ${orderNo} created! Auto release after ${paymentReleaseTimer} minutes`, 'success');
     } else {
-        showToast(`Order ${orderNo} created! It will appear in Manual Release`, 'success');
+        showToast(`Order ${orderNo} created! Manual Release`, 'success');
     }
     
     orderItems = orderItems.map(item => ({ ...item, quantity: 0 }));
     renderProducts();
     paymentReleaseTimer = null;
     document.getElementById('paymentTimerInput').value = '';
-    
     await loadManualReleaseOrders();
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
-}
-
-function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.textContent = msg;
-    toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#ffb84d;padding:10px 20px;border-radius:40px;font-size:13px;z-index:10000;';
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-}
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
+function showToast(msg) { const toast = document.createElement('div'); toast.textContent = msg; toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#ffb84d;padding:10px 20px;border-radius:40px;font-size:13px;z-index:10000;'; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2000); }
 
 window.loadSetordersPage = loadSetordersPage;
 window.manualReleasePayment = manualReleasePayment;
