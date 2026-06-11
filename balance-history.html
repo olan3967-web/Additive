@@ -141,14 +141,14 @@
         }
 
         .badge-payment {
-    background: #fef3c7;
-    color: #d97706;
-}
+            background: #fef3c7;
+            color: #d97706;
+        }
 
-.badge-settlement {
-    background: #dcfce7;
-    color: #10b981;
-}
+        .badge-settlement {
+            background: #dcfce7;
+            color: #10b981;
+        }
 
         .history-date {
             font-size: 11px;
@@ -310,58 +310,57 @@
 
             // 处理 deposits 记录
             deposits?.forEach(d => {
-    let typeName = '';
-    let badgeClass = '';
-    let isPositive = true;
-    
-    if (d.type === 'manual') {
-        typeName = 'Manual Deposit';
-        badgeClass = 'badge-deposit';
-        isPositive = true;
-    } else if (d.type === 'deposit_bonus') {
-        typeName = 'Deposit Bonus';
-        badgeClass = 'badge-bonus';
-        isPositive = true;
-    } else if (d.type === 'order_commission') {
-        typeName = 'Commissions';
-        badgeClass = 'badge-commission';
-        isPositive = true;
-    } else if (d.type === 'order_settlement') {
-        typeName = 'Product Payment Release';
-        badgeClass = 'badge-settlement';
-        isPositive = true;
-    } else if (d.type === 'order_payment') {
-        // 👇 新增：订单付款扣除
-        typeName = 'Product Payment Deducted';
-        badgeClass = 'badge-payment';
-        isPositive = false;
-    } else if (d.type === 'trial_bonus') {
-        typeName = 'Trial Funds';
-        badgeClass = 'badge-bonus';
-        isPositive = true;
-    } else if (d.type === 'signin_reward') {
-        typeName = 'Check In Reward';
-        badgeClass = 'badge-bonus';
-        isPositive = true;
-    } else if (d.type === 'referral_bonus') {
-        typeName = 'Referral Bonus';
-        badgeClass = 'badge-bonus';
-        isPositive = true;
-    } else {
-        typeName = 'Deposit';
-        badgeClass = 'badge-deposit';
-        isPositive = true;
-    }
-    
-    records.push({
-        id: d.id,
-        date: d.created_at,
-        title: typeName,
-        amount: Math.abs(d.amount),
-        isPositive: isPositive,
-        badgeClass: badgeClass
-    });
-});
+                let typeName = '';
+                let badgeClass = '';
+                let isPositive = true;
+                
+                if (d.type === 'manual') {
+                    typeName = 'Manual Deposit';
+                    badgeClass = 'badge-deposit';
+                    isPositive = true;
+                } else if (d.type === 'deposit_bonus') {
+                    typeName = 'Deposit Bonus';
+                    badgeClass = 'badge-bonus';
+                    isPositive = true;
+                } else if (d.type === 'order_commission') {
+                    typeName = 'Commissions';
+                    badgeClass = 'badge-commission';
+                    isPositive = true;
+                } else if (d.type === 'order_settlement') {
+                    typeName = 'Product Payment Release';
+                    badgeClass = 'badge-settlement';
+                    isPositive = true;
+                } else if (d.type === 'order_payment') {
+                    typeName = 'Product Payment Deducted';
+                    badgeClass = 'badge-payment';
+                    isPositive = false;
+                } else if (d.type === 'trial_bonus') {
+                    typeName = 'Trial Funds';
+                    badgeClass = 'badge-bonus';
+                    isPositive = true;
+                } else if (d.type === 'signin_reward') {
+                    typeName = 'Check In Reward';
+                    badgeClass = 'badge-bonus';
+                    isPositive = true;
+                } else if (d.type === 'referral_bonus') {
+                    typeName = 'Referral Bonus';
+                    badgeClass = 'badge-bonus';
+                    isPositive = true;
+                } else {
+                    typeName = 'Deposit';
+                    badgeClass = 'badge-deposit';
+                    isPositive = true;
+                }
+                
+                records.push({
+                    id: d.id,
+                    date: d.created_at,
+                    title: typeName,
+                    amount: Math.abs(d.amount),
+                    isPositive: isPositive,
+                    badgeClass: badgeClass
+                });
+            });
 
             // 处理 withdrawals 记录
             withdrawals?.forEach(w => {
