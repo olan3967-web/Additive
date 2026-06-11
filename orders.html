@@ -400,13 +400,12 @@ document.getElementById('confirmOrderBtn').addEventListener('click', async funct
     let newBalance = currentBalance - currentOrder.total_supply_price;
     await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
     
-    // ✅ 记录 Product Payment Deducted 到 deposits 表
+    // ✅ 关键：记录 Product Payment Deducted
     await sb.from('deposits').insert({
         uid: user.uid,
         username: user.username,
         amount: -currentOrder.total_supply_price,
         type: 'order_payment',
-        description: 'Product Payment Deducted',
         created_at: new Date().toISOString()
     });
     
