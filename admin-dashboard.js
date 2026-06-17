@@ -100,9 +100,9 @@ function applyStatsData(data) {
     if (newUsersEl) animateNumber(newUsersEl, data.newUsers, '', '');
     if (newUsersTrendEl) newUsersTrendEl.innerHTML = getTrendHtml(data.newUsers, data.prevNewUsers);
     if (totalUsersEl) animateNumber(totalUsersEl, data.totalUsers, '', '');
-    if (totalDepositEl) animateNumber(totalDepositEl, data.totalDeposit, '€', '');
+    if (totalDepositEl) animateNumber(totalDepositEl, data.totalDeposit, 'RM', '');
     if (totalDepositTrendEl) totalDepositTrendEl.innerHTML = getTrendHtml(data.periodDeposit, data.prevPeriodDeposit);
-    if (totalWithdrawEl) animateNumber(totalWithdrawEl, data.totalWithdraw, '€', '');
+    if (totalWithdrawEl) animateNumber(totalWithdrawEl, data.totalWithdraw, 'RM', '');
     if (totalWithdrawTrendEl) totalWithdrawTrendEl.innerHTML = getTrendHtml(data.periodWithdraw, data.prevPeriodWithdraw);
 }
 
@@ -228,7 +228,7 @@ async function loadActivityTimeline(force = false) {
                 type: 'withdrawal',
                 title: `💰 Withdraw申请 ${statusText}`,
                 user: w.username,
-                amount: `€${(w.amount || 0).toFixed(2)}`,
+                amount: `RM${(w.amount || 0).toFixed(2)}`,
                 time: w.request_date,
                 icon: 'fas fa-money-bill-wave',
                 color: '#4a7cff'
@@ -361,7 +361,7 @@ function initTrendChart() {
         },
         yAxis: { 
             type: 'value', 
-            name: 'Amount (€)', 
+            name: 'Amount (RM)', 
             nameTextStyle: { color: '#8a9abb' }, 
             axisLabel: { color: '#8a9abb' }, 
             splitLine: { lineStyle: { color: '#1a2a3a', type: 'dashed' } } 
@@ -503,8 +503,8 @@ function loadDashboardPage(days = 1) {
         <div class="stats-grid">
             <div class="stat-card"><i class="fas fa-user-plus"></i><div class="stat-number" id="newUsersCount">0</div><div class="stat-label">今日新增用户</div><div class="stat-trend" id="newUsersTrend"></div></div>
             <div class="stat-card"><i class="fas fa-users"></i><div class="stat-number" id="totalUsersCount">0</div><div class="stat-label">总用户</div><div class="stat-trend" id="totalUsersTrend"></div></div>
-            <div class="stat-card"><i class="fas fa-arrow-down"></i><div class="stat-number" id="totalDepositCount">€0</div><div class="stat-label">总入金</div><div class="stat-trend" id="totalDepositTrend"></div></div>
-            <div class="stat-card"><i class="fas fa-arrow-up"></i><div class="stat-number" id="totalWithdrawCount">€0</div><div class="stat-label">总出金</div><div class="stat-trend" id="totalWithdrawTrend"></div></div>
+            <div class="stat-card"><i class="fas fa-arrow-down"></i><div class="stat-number" id="totalDepositCount">RM0</div><div class="stat-label">总入金</div><div class="stat-trend" id="totalDepositTrend"></div></div>
+            <div class="stat-card"><i class="fas fa-arrow-up"></i><div class="stat-number" id="totalWithdrawCount">RM0</div><div class="stat-label">总出金</div><div class="stat-trend" id="totalWithdrawTrend"></div></div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
             <div class="card" style="padding: 20px;">

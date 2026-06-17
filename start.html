@@ -685,7 +685,7 @@
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">Total Sales</div>
-            <div class="stat-value" id="totalSales">€0</div>
+            <div class="stat-value" id="totalSales">RM0</div>
             <div class="trend-up" id="salesTrend"><i class="fas fa-arrow-up"></i> 0%</div>
         </div>
         <div class="stat-card">
@@ -700,7 +700,7 @@
         </div>
         <div class="stat-card">
             <div class="stat-label">Profit</div>
-            <div class="stat-value" id="profitValue">€0</div>
+            <div class="stat-value" id="profitValue">RM0</div>
             <div class="trend-up" id="profitTrend"><i class="fas fa-arrow-up"></i> 0%</div>
         </div>
     </div>
@@ -725,7 +725,7 @@
                     <div class="overview-title-row">
                         <span class="overview-label">TOTAL EARNINGS</span>
                     </div>
-                    <div class="overview-value" id="overviewEarnings">€0</div>
+                    <div class="overview-value" id="overviewEarnings">RM0</div>
                     <div class="overview-tag">Lifetime earnings</div>
                 </div>
             </div>
@@ -769,15 +769,15 @@
         <div class="products-title">🔥 Top Products</div>
         <div class="product-row">
             <span class="product-name">Wireless Earbuds</span>
-            <span class="product-amount">€2,340</span>
+            <span class="product-amount">RM2,340</span>
         </div>
         <div class="product-row">
             <span class="product-name">Smart Watch Pro</span>
-            <span class="product-amount">€1,890</span>
+            <span class="product-amount">RM1,890</span>
         </div>
         <div class="product-row">
             <span class="product-name">Portable Speaker</span>
-            <span class="product-amount">€1,245</span>
+            <span class="product-amount">RM1,245</span>
         </div>
     </div>
 
@@ -1022,7 +1022,7 @@
             let currentValue = start + (end - start) * eased;
             
             if (isCurrency) {
-                element.innerHTML = '€' + Math.round(currentValue).toLocaleString();
+                element.innerHTML = 'RM' + Math.round(currentValue).toLocaleString();
             } else if (isPercent) {
                 element.innerHTML = currentValue.toFixed(1) + '%';
             } else {
@@ -1033,7 +1033,7 @@
                 requestAnimationFrame(update);
             } else {
                 if (isCurrency) {
-                    element.innerHTML = '€' + Math.round(end).toLocaleString();
+                    element.innerHTML = 'RM' + Math.round(end).toLocaleString();
                 } else if (isPercent) {
                     element.innerHTML = end.toFixed(1) + '%';
                 } else {
@@ -1096,12 +1096,11 @@
                 }
                 
                 const hasRealData = dailyData.some(v => v > 0);
-if (hasRealData) {
-    commissionData = dailyData;
-} else {
-    // 没有真实数据时，全部设为 0
-    commissionData = [0, 0, 0, 0, 0, 0, 0];
-}
+                if (hasRealData) {
+                    commissionData = dailyData;
+                } else {
+                    commissionData = [0, 0, 0, 0, 0, 0, 0];
+                }
             }
         } catch (err) {
             console.error('获取图表数据失败:', err);
@@ -1127,7 +1126,7 @@ if (hasRealData) {
             data: {
                 labels: chartDates,
                 datasets: [{
-                    label: 'Revenue (€)',
+                    label: 'Revenue (RM)',
                     data: data,
                     borderColor: '#ff7a00',
                     borderWidth: 3,
@@ -1155,7 +1154,7 @@ if (hasRealData) {
                         titleFont: { size: 12, weight: 'bold', family: 'Inter' },
                         bodyFont: { size: 11, family: 'Inter' },
                         callbacks: {
-                            label: (context) => `Revenue: €${context.raw.toFixed(2)}`
+                            label: (context) => `Revenue: RM${context.raw.toFixed(2)}`
                         }
                     }
                 },
@@ -1167,7 +1166,7 @@ if (hasRealData) {
                     y: {
                         grid: { color: '#e2e8f0', drawBorder: false },
                         ticks: {
-                            callback: (value) => '€' + value,
+                            callback: (value) => 'RM' + value,
                             font: { size: 11, weight: '500', family: 'Inter' },
                             color: '#64748b',
                             stepSize: stepSize,
@@ -1202,7 +1201,7 @@ if (hasRealData) {
             data: {
                 labels: chartDates,
                 datasets: [{
-                    label: 'Revenue (€)',
+                    label: 'Revenue (RM)',
                     data: data,
                     backgroundColor: barColors,
                     borderRadius: 8,
@@ -1225,7 +1224,7 @@ if (hasRealData) {
                         titleFont: { size: 12, weight: 'bold', family: 'Inter' },
                         bodyFont: { size: 11, family: 'Inter' },
                         callbacks: {
-                            label: (context) => `Revenue: €${context.raw.toFixed(2)}`
+                            label: (context) => `Revenue: RM${context.raw.toFixed(2)}`
                         }
                     }
                 },
@@ -1237,7 +1236,7 @@ if (hasRealData) {
                     y: {
                         grid: { color: '#e2e8f0', drawBorder: false },
                         ticks: {
-                            callback: (value) => '€' + value,
+                            callback: (value) => 'RM' + value,
                             font: { size: 11, weight: '500', family: 'Inter' },
                             color: '#64748b',
                             stepSize: stepSize,

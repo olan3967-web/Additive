@@ -99,16 +99,16 @@
     <div style="display: flex; gap: 12px; margin: 16px;">
         <div class="stats-card-half" style="flex:1; background:rgba(255,255,255,0.2); backdrop-filter:blur(20px); border:1px solid rgba(255,122,0,0.5); border-radius:20px; padding:16px; position:relative; overflow:hidden;">
             <div style="font-size:12px; color:#1f2937; margin-bottom:8px;">Today's Earnings</div>
-            <div style="font-size:24px; font-weight:800; color:#1f2937;" id="totalCommissions">€0.00</div>
+            <div style="font-size:24px; font-weight:800; color:#1f2937;" id="totalCommissions">RM0.00</div>
         </div>
         <div class="stats-card-half" style="flex:1; background:rgba(255,255,255,0.2); backdrop-filter:blur(20px); border:1px solid rgba(255,122,0,0.5); border-radius:20px; padding:16px; position:relative; overflow:hidden;">
             <div style="font-size:12px; color:#1f2937; margin-bottom:8px;">Pending Release</div>
-            <div style="font-size:24px; font-weight:800; color:#1f2937;" id="pendingReleaseAmount">€0.00</div>
+            <div style="font-size:24px; font-weight:800; color:#1f2937;" id="pendingReleaseAmount">RM0.00</div>
         </div>
     </div>
     <div class="wallet-card">
         <div class="wallet-title">Account Balance</div>
-        <div class="wallet-balance" id="displayBalance">€0.00</div>
+        <div class="wallet-balance" id="displayBalance">RM0.00</div>
         <div class="wallet-actions">
             <button class="btn-topup" id="topUpBtn">Top Up</button>
             <button class="btn-withdraw" id="withdrawBtn">Withdraw</button>
@@ -118,7 +118,7 @@
         <div class="half-card" onclick="location.href='my-sales.html'">
             <div class="half-card-header"><div class="half-card-icon"><i class="fa-solid fa-chart-line"></i></div><span class="view-link">View →</span></div>
             <div class="half-card-title">My Sales</div>
-            <div class="earnings-amount" id="salesAmount">€0.00 earned</div>
+            <div class="earnings-amount" id="salesAmount">RM0.00 earned</div>
         </div>
         <div class="half-card" onclick="location.href='start.html'">
             <div class="half-card-header"><div class="half-card-icon"><i class="fa-solid fa-magnifying-glass"></i></div><span class="view-link">View →</span></div>
@@ -219,8 +219,8 @@ function animateNumber(element, start, end, duration = 1500, isCurrency = false)
         let progress = Math.min(elapsed / duration, 1);
         const eased = easeOutCubic(progress);
         const currentValue = start + (end - start) * eased;
-        if (isCurrency) { element.innerHTML = '€' + currentValue.toFixed(2); } else { element.innerHTML = Math.round(currentValue).toString(); }
-        if (progress < 1) { requestAnimationFrame(update); } else { if (isCurrency) { element.innerHTML = '€' + end.toFixed(2); } else { element.innerHTML = Math.round(end).toString(); } }
+        if (isCurrency) { element.innerHTML = 'RM' + currentValue.toFixed(2); } else { element.innerHTML = Math.round(currentValue).toString(); }
+        if (progress < 1) { requestAnimationFrame(update); } else { if (isCurrency) { element.innerHTML = 'RM' + end.toFixed(2); } else { element.innerHTML = Math.round(end).toString(); } }
     }
     requestAnimationFrame(update);
 }
@@ -234,7 +234,7 @@ async function loadProfile() {
     localStorage.setItem('currentUser', JSON.stringify(user));
     document.getElementById('displayUsername').innerText = userData.username;
     document.getElementById('displayUid').innerText = userData.uid;
-    document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
+    document.getElementById('displayBalance').innerHTML = 'RM' + (userData.balance || 0).toFixed(2);
     const initial = (userData.username?.charAt(0) || 'U').toUpperCase();
     document.getElementById('avatarInitial').innerText = initial;
     const vipMap = {1:'Normal',2:'VIP',3:'SVIP'};

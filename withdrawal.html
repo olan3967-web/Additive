@@ -460,20 +460,20 @@
         <div class="step-title"><i class="fas fa-money-bill-wave"></i> Amount</div>
         <div class="balance-card">
             <span><i class="fas fa-wallet"></i> Available Balance</span>
-            <div class="balance-amount" id="availableBalance">€0.00</div>
+            <div class="balance-amount" id="availableBalance">RM0.00</div>
         </div>
         <div class="amount-input-wrapper">
             <input type="number" id="amountInput" placeholder="0" value="">
-            <span>€</span>
+            <span>RM</span>
         </div>
         <div class="amount-limits">
-            <span>Minimum: €10</span>
-            <span id="availableHint">Available: €0.00</span>
+            <span>Minimum: RM10</span>
+            <span id="availableHint">Available: RM0.00</span>
         </div>
         <div class="quick-amounts">
-            <button class="quick-amount" data-value="10">€10</button>
-            <button class="quick-amount" data-value="100">€100</button>
-            <button class="quick-amount" data-value="1000">€1,000</button>
+            <button class="quick-amount" data-value="10">RM10</button>
+            <button class="quick-amount" data-value="100">RM100</button>
+            <button class="quick-amount" data-value="1000">RM1,000</button>
         </div>
         <button id="withdrawBtn" class="step-btn">Request Withdrawal</button>
     </div>
@@ -526,8 +526,8 @@
         const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
         if (userData) {
             currentUserBalance = userData.balance || 0;
-            document.getElementById('availableBalance').innerHTML = `€${currentUserBalance.toFixed(2)}`;
-            document.getElementById('availableHint').innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
+            document.getElementById('availableBalance').innerHTML = `RM${currentUserBalance.toFixed(2)}`;
+            document.getElementById('availableHint').innerHTML = `Available: RM${currentUserBalance.toFixed(2)}`;
             boundAddress = userData.withdrawal_address || null;
         }
         
@@ -608,7 +608,7 @@
 
     async function requestWithdrawal() {
         const amount = parseFloat(document.getElementById('amountInput').value);
-        if (isNaN(amount) || amount < 10) { showToast('Minimum withdrawal amount is €10', 'error'); return; }
+        if (isNaN(amount) || amount < 10) { showToast('Minimum withdrawal amount is RM10', 'error'); return; }
         if (amount > currentUserBalance) { showToast('Insufficient balance', 'error'); return; }
         
         const { data: userData } = await sb.from('users').select('withdrawal_address').eq('uid', currentUser.uid).single();
@@ -635,10 +635,10 @@
         
         currentUserBalance = newBalance;
         if (currentUser) { currentUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(currentUser)); }
-        document.getElementById('availableBalance').innerHTML = `€${newBalance.toFixed(2)}`;
-        document.getElementById('availableHint').innerHTML = `Available: €${newBalance.toFixed(2)}`;
+        document.getElementById('availableBalance').innerHTML = `RM${newBalance.toFixed(2)}`;
+        document.getElementById('availableHint').innerHTML = `Available: RM${newBalance.toFixed(2)}`;
         document.getElementById('amountInput').value = '';
-        showToast(`Withdrawal of €${amount.toFixed(2)} submitted successfully!`, 'success');
+        showToast(`Withdrawal of RM${amount.toFixed(2)} submitted successfully!`, 'success');
     }
 
     function setupBottomNav() {

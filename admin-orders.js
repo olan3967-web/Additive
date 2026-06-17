@@ -121,7 +121,7 @@ function generateLogisticsPlan(startTime) {
  * 手动释放 Payment released（后台点击 Release Now）
  */
 async function manualReleasePayment(orderNo) {
-    console.log(`🔓 手动释放订单 ${orderNo} 的 Payment released`);
+    console.log(`🔓 手动释放订单 ${orderNo}`);
     
     const { data: order, error } = await sb
         .from('user_orders')
@@ -480,8 +480,8 @@ function renderAdminOrdersTable() {
         row.insertCell(1).innerHTML = `<span class="badge">${order.uid}</span>`;
         row.insertCell(2).innerText = order.username || '-';
         row.insertCell(3).innerHTML = productsText.substring(0, 60) + (productsText.length > 60 ? '...' : '');
-        row.insertCell(4).innerHTML = `<span class="text-gold">€${(order.total_supply_price || 0).toFixed(2)}</span>`;
-        row.insertCell(5).innerHTML = `<span class="text-green">€${(order.total_commission || 0).toFixed(2)}</span>`;
+        row.insertCell(4).innerHTML = `<span class="text-gold">RM${(order.total_supply_price || 0).toFixed(2)}</span>`;
+        row.insertCell(5).innerHTML = `<span class="text-green">RM${(order.total_commission || 0).toFixed(2)}</span>`;
         row.insertCell(6).innerHTML = `${escapeHtml(order.buyer_name || '-')}<br><small style="color:#8a9abb;">${escapeHtml(order.buyer_phone || '')}</small>`;
         row.insertCell(7).innerHTML = statusMap[order.status] || order.status;
         row.insertCell(8).innerText = new Date(order.created_at).toLocaleString();

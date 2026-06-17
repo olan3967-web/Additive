@@ -147,8 +147,8 @@ async function manualReleasePayment(orderNo) {
     const supplyPrice = order.total_supply_price || 0;
     const commissionAmount = order.total_commission || 0;
     
-    console.log(`记录本金释放: €${supplyPrice}`);
-    console.log(`记录佣金: €${commissionAmount}`);
+    console.log(`记录本金释放: RM${supplyPrice}`);
+    console.log(`记录佣金: RM${commissionAmount}`);
     
     // 插入本金释放记录
     const { error: err1 } = await sb.from('deposits').insert({
@@ -185,7 +185,7 @@ async function manualReleasePayment(orderNo) {
         }
     }
     
-    console.log(`✅ 订单 ${orderNo} 释放完成！本金 €${supplyPrice}，佣金 €${commissionAmount}`);
+    console.log(`✅ 订单 ${orderNo} 释放完成！本金 RM${supplyPrice}，佣金 RM${commissionAmount}`);
     return true;
 }
 
@@ -231,7 +231,7 @@ function renderManualReleaseCard() {
     for (const order of manualReleaseOrders) {
         html += `<div style="background: #0f172a; border-radius: 12px; padding: 12px; margin-bottom: 10px;">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div><div style="font-weight:700; color:#ffb84d;">${order.order_no}</div><div style="font-size:11px; color:#8a9abb;">User: ${order.uid} | 本金: €${order.total_supply_price} | 佣金: €${order.total_commission}</div></div>
+                <div><div style="font-weight:700; color:#ffb84d;">${order.order_no}</div><div style="font-size:11px; color:#8a9abb;">User: ${order.uid} | 本金: RM${order.total_supply_price} | 佣金: RM${order.total_commission}</div></div>
                 <button class="release-order-btn" data-order="${order.order_no}" style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:white; cursor:pointer;"><i class="fas fa-play"></i> Release Now</button>
             </div>
         </div>`;
@@ -283,9 +283,9 @@ async function loadSetordersPage() {
                 </div>
                 <div id="orderSummary" style="background:#0f172a; border-radius:16px; padding:16px; border:1px solid rgba(74,124,255,0.2);">
                     <h4 style="margin-bottom:12px; color:#ffb84d;"><i class="fas fa-receipt"></i> Order Summary</h4>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Total Supply Price:</span><span id="totalSupplyPrice" style="color:#ffb84d; font-weight:700;">€0</span></div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Total Commission:</span><span id="totalCommission" style="color:#2ed15a; font-weight:700;">€0</span></div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:16px;"><span>Final Account Increase:</span><span id="totalIncrease" style="color:#4a7cff; font-weight:700;">€0</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Total Supply Price:</span><span id="totalSupplyPrice" style="color:#ffb84d; font-weight:700;">RM0</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>Total Commission:</span><span id="totalCommission" style="color:#2ed15a; font-weight:700;">RM0</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:16px;"><span>Final Account Increase:</span><span id="totalIncrease" style="color:#4a7cff; font-weight:700;">RM0</span></div>
                     <button id="confirmSetOrderBtn" class="success" style="width:100%; padding:12px;"><i class="fas fa-check"></i> Create Order</button>
                 </div>
                 <div id="manualReleaseContainer" style="margin-top:20px;"></div>
@@ -378,7 +378,7 @@ function renderProducts() {
         div.innerHTML = `
             <img src="${item.image_url || 'https://placehold.co/80x80/1e2a3a/4a7cff?text=No+Image'}" style="width:80px; height:80px; border-radius:12px; margin-bottom:10px;">
             <div style="font-weight:600; color:#ffb84d;">${escapeHtml(item.product_name)}</div>
-            <div style="font-size:11px; color:#8a9abb;">€${item.price} | +€${item.margin_profit}</div>
+            <div style="font-size:11px; color:#8a9abb;">RM${item.price} | +RM${item.margin_profit}</div>
             <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-top:10px;">
                 <button class="qty-decr" data-index="${i}" style="background:#4a7cff; width:28px; height:28px; border-radius:6px; color:white;">-</button>
                 <span id="qty_${i}" style="min-width:30px;">${item.quantity}</span>
@@ -415,9 +415,9 @@ function updateSummary() {
         totalSupply += item.price * item.quantity;
         totalCommission += item.margin_profit * item.quantity;
     }
-    document.getElementById('totalSupplyPrice').innerHTML = `€${totalSupply.toFixed(2)}`;
-    document.getElementById('totalCommission').innerHTML = `€${totalCommission.toFixed(2)}`;
-    document.getElementById('totalIncrease').innerHTML = `€${(totalSupply + totalCommission).toFixed(2)}`;
+    document.getElementById('totalSupplyPrice').innerHTML = `RM${totalSupply.toFixed(2)}`;
+    document.getElementById('totalCommission').innerHTML = `RM${totalCommission.toFixed(2)}`;
+    document.getElementById('totalIncrease').innerHTML = `RM${(totalSupply + totalCommission).toFixed(2)}`;
 }
 
 async function confirmSetOrder() {

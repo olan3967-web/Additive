@@ -123,7 +123,7 @@ function renderOrderInfo() {
     container.innerHTML = `<div class="order-no">${orderData.order_no}</div>
         <div class="order-date">Order Placed Time: ${formatDate(orderData.created_at)}</div>
         <div class="order-date" style="margin-top:8px;">Product: ${productsText}</div>
-        <div class="order-date">Total Price: €${(orderData.total_supply_price || 0).toFixed(2)}</div>`;
+        <div class="order-date">Total Price: RM${(orderData.total_supply_price || 0).toFixed(2)}</div>`;
 }
 
 function renderTimeline() {

@@ -515,12 +515,12 @@
         </div>
         <div class="stat-card">
             <div class="stat-label"><i class="fas fa-euro-sign"></i> Total Revenue</div>
-            <div class="stat-value" id="totalRevenue">€0</div>
+            <div class="stat-value" id="totalRevenue">RM0</div>
             <div class="stat-sub">Gross sales</div>
         </div>
         <div class="stat-card">
             <div class="stat-label"><i class="fas fa-coins"></i> Total Profit</div>
-            <div class="stat-value" id="totalProfit">€0</div>
+            <div class="stat-value" id="totalProfit">RM0</div>
             <div class="stat-sub">Commission earned</div>
         </div>
     </div>
@@ -568,7 +568,7 @@
             const currentValue = start + (end - start) * eased;
             
             if (isCurrency) {
-                element.innerHTML = '€' + Math.round(currentValue).toLocaleString();
+                element.innerHTML = 'RM' + Math.round(currentValue).toLocaleString();
             } else {
                 element.innerHTML = Math.round(currentValue).toString();
             }
@@ -577,7 +577,7 @@
                 requestAnimationFrame(update);
             } else {
                 if (isCurrency) {
-                    element.innerHTML = '€' + Math.round(end).toLocaleString();
+                    element.innerHTML = 'RM' + Math.round(end).toLocaleString();
                 } else {
                     element.innerHTML = Math.round(end).toString();
                 }
@@ -671,8 +671,7 @@
                 return;
             }
 
-            const { data: orders, error: ordersError } = await sb
-                .from('order_history')
+            const { data: orders, error: ordersError } = await sb                .from('order_history')
                 .select('accommodation_name, price, commission')
                 .eq('uid', user.uid);
 
@@ -757,7 +756,7 @@
                         <div class="product-info">
                             <div class="product-name">${escapeHtml(product.product_name)}</div>
                             <div class="product-meta">
-                                <span class="product-price">€${product.price.toFixed(2)}</span>
+                                <span class="product-price">RM${product.price.toFixed(2)}</span>
                                 <span class="product-margin">+${product.margin_percent || 0}% margin</span>
                             </div>
                         </div>
@@ -770,15 +769,15 @@
                         </div>
                         <div class="sales-item">
                             <div class="sales-label">REVENUE</div>
-                            <div class="sales-value orange revenue-value" data-revenue="${revenue}">€0</div>
+                            <div class="sales-value orange revenue-value" data-revenue="${revenue}">RM0</div>
                         </div>
                         <div class="sales-item">
                             <div class="sales-label">PROFIT</div>
-                            <div class="sales-value green profit-value" data-profit="${profit}">€0</div>
+                            <div class="sales-value green profit-value" data-profit="${profit}">RM0</div>
                         </div>
                         <div class="sales-item">
                             <div class="sales-label">AVG VALUE</div>
-                            <div class="sales-value">€${avgOrderValue.toFixed(2)}</div>
+                            <div class="sales-value">RM${avgOrderValue.toFixed(2)}</div>
                         </div>
                     </div>
                     
@@ -865,7 +864,7 @@
             const currentValue = start + (end - start) * eased;
             
             if (isCurrency) {
-                element.innerHTML = '€' + currentValue.toFixed(2);
+                element.innerHTML = 'RM' + currentValue.toFixed(2);
             } else {
                 element.innerHTML = Math.floor(currentValue).toString();
             }
@@ -874,7 +873,7 @@
                 requestAnimationFrame(update);
             } else {
                 if (isCurrency) {
-                    element.innerHTML = '€' + end.toFixed(2);
+                    element.innerHTML = 'RM' + end.toFixed(2);
                 } else {
                     element.innerHTML = Math.round(end).toString();
                 }

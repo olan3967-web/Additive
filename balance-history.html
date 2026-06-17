@@ -59,7 +59,7 @@
     </div>
     <div class="stats-card">
         <span class="stats-label">Total Balance Changes</span>
-        <span class="stats-value" id="totalChanges">€0</span>
+        <span class="stats-value" id="totalChanges">RM0</span>
     </div>
     <div class="history-list" id="historyList">
         <div class="loading-container"><div class="loading-spinner"><i class="fas fa-spinner"></i><div>Loading...</div></div></div>
@@ -193,7 +193,7 @@
             const totalIn = records.filter(r => r.isPositive).reduce((sum, r) => sum + r.amount, 0);
             const totalOut = records.filter(r => !r.isPositive).reduce((sum, r) => sum + r.amount, 0);
             const totalChange = totalIn - totalOut;
-            document.getElementById('totalChanges').innerHTML = `€${totalChange.toFixed(2)}`;
+            document.getElementById('totalChanges').innerHTML = `RM${totalChange.toFixed(2)}`;
 
             if (records.length === 0) {
                 container.innerHTML = `<div class="empty-state"><i class="fa-regular fa-clock"></i>No balance history<div style="margin-top: 12px; font-size: 12px;">Your transactions will appear here</div></div>`;
@@ -210,7 +210,7 @@
                         <div class="history-date">${formatDate(record.date)}</div>
                     </div>
                     <div class="history-amount ${record.isPositive ? 'amount-positive' : 'amount-negative'}">
-                        ${record.isPositive ? '+' : '-'}€${record.amount.toFixed(2)}
+                        ${record.isPositive ? '+' : '-'}RM${record.amount.toFixed(2)}
                     </div>
                 </div>
             `).join('');

@@ -420,7 +420,7 @@
     let allProducts = [];
     let filteredProducts = [];
     let currentCategory = 'all';
-    let currentSort = 'random';  // 默认随机排序，每次打开都不一样
+    let currentSort = 'random';
     let displayCount = 10;
     let userAddedProductIds = new Set();
     let isLoading = false;
@@ -536,11 +536,11 @@
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100%25\' height=\'100%25\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23f0f2f5\'/%3E%3Ctext x=\'50\' y=\'55\' text-anchor=\'middle\' fill=\'%2394a3b8\' font-size=\'10\'%3ENo Image%3C/text%3E%3C/svg%3E'">
                     <div class="product-info">
                         <div class="product-name">${escapeHtml(product.accommodation_name || 'Premium Task')}</div>
-                        <div class="product-price">€${product.price.toFixed(2)}</div>
+                        <div class="product-price">RM${product.price.toFixed(2)}</div>
                         ${tagsHtml ? `<div class="product-tags">${tagsHtml}</div>` : ''}
                         <div class="product-margin">
                             <span class="margin-badge">+${margin.percent}% Margin</span>
-                            <span class="margin-amount">+€${margin.profit} profit</span>
+                            <span class="margin-amount">+RM${margin.profit} profit</span>
                         </div>
                         <button class="add-btn ${isAdded ? 'added' : ''}" data-id="${product.id}" data-price="${product.price}" data-name="${escapeHtml(product.accommodation_name)}" data-image="${product.image_url || ''}" data-margin="${margin.percent}" data-profit="${margin.profit}" ${isAdded ? 'disabled' : ''}>
                             <i class="fas ${isAdded ? 'fa-check' : 'fa-plus-circle'}"></i> ${isAdded ? 'Added' : 'Add Product'}
@@ -571,7 +571,7 @@
                 const id = parseInt(card.dataset.id);
                 const product = allProducts.find(p => p.id === id);
                 if (product) {
-                    showToast(`📦 ${product.accommodation_name || 'Premium Task'} Price: €${product.price}`, 'info');
+                    showToast(`📦 ${product.accommodation_name || 'Premium Task'} Price: RM${product.price}`, 'info');
                 }
             });
         });
@@ -696,13 +696,11 @@
             
             await loadUserAddedProducts();
             
-            // 关键：每次加载时自动随机排序（让用户每次看到不同顺序）
             const randomSorted = shuffleArray(allProducts);
             
             const filterFn = categoryMap[currentCategory]?.filter || (() => true);
             let filtered = randomSorted.filter(filterFn);
             
-            // 如果不是随机排序模式，再应用其他排序
             if (currentSort !== 'random') {
                 filtered = sortProducts(filtered, currentSort);
             }

@@ -13,7 +13,7 @@ async function loadTrialPage() {
             </div>
             <div class="table-container">
                 <table class="data-table">
-                    <thead><tr><th>UID</th><th>用户名</th><th>当前体验金 (€)</th><th>调整Amount (€)</th><th>操作</th></tr></thead>
+                    <thead><tr><th>UID</th><th>用户名</th><th>当前体验金 (RM)</th><th>调整Amount (RM)</th><th>操作</th></tr></thead>
                     <tbody id="trialTableBody"></tbody>
                 <tr>
             </div>
@@ -35,7 +35,7 @@ async function loadTrialUsers() {
             const row = tbody.insertRow();
             row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
             row.insertCell(1).innerText = u.username;
-            row.insertCell(2).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
+            row.insertCell(2).innerHTML = `<span class="text-gold">RM${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
             const amountInput = document.createElement('input');
             amountInput.type = 'number';
             amountInput.placeholder = 'Amount';
@@ -77,14 +77,14 @@ async function adjustTrialBonus(uid, amount, action) {
     if (action === 'add') {
         newAmount = currentAmount + amount;
         await sb.from('deposits').insert([{ uid: uid, username: user.username, amount: amount, type: 'trial_bonus' }]);
-        showToast(`成功Add €${amount} 体验金`, 'success');
+        showToast(`成功Add RM${amount} 体验金`, 'success');
     } else {
         if (currentAmount < amount) {
             showToast('体验金不足', 'error');
             return;
         }
         newAmount = currentAmount - amount;
-        showToast(`成功扣除 €${amount} 体验金`, 'success');
+        showToast(`成功扣除 RM${amount} 体验金`, 'success');
     }
     await sb.from('users').update({ trial_bonus_amount: newAmount }).eq('uid', uid);
     loadTrialUsers();

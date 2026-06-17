@@ -48,8 +48,8 @@ async function loadUsers() {
             row.insertCell(1).innerText = u.username;
             row.insertCell(2).innerHTML = `<span class="badge">${u.invite_code || '-'}</span>`;
             row.insertCell(3).innerText = u.invited_by_username || '-';
-            row.insertCell(4).innerHTML = `<span class="text-green">€${(u.balance || 0).toFixed(2)}</span>`;
-            row.insertCell(5).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
+            row.insertCell(4).innerHTML = `<span class="text-green">RM${(u.balance || 0).toFixed(2)}</span>`;
+            row.insertCell(5).innerHTML = `<span class="text-gold">RM${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
             row.insertCell(6).innerHTML = `${userOrders}/${ordersLimit} <button class="reset-orders-btn" data-uid="${u.uid}" style="background:#7a5f2f; padding:2px 8px; font-size:10px; margin-left:8px;"><i class="fas fa-undo-alt"></i> 重置</button>`;
             row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px;"><option value="1" ${u.vip_level == 1 ? 'selected' : ''}>Normal</option><option value="2" ${u.vip_level == 2 ? 'selected' : ''}>VIP</option><option value="3" ${u.vip_level == 3 ? 'selected' : ''}>SVIP</option></select>`;
             row.insertCell(8).innerHTML = u.withdrawal_address ? u.withdrawal_address.substring(0, 12) + '...' : '-';
@@ -75,7 +75,7 @@ async function resetUserOrders(uid) {
 // ========== Top Up：输入Top UpAmount + 奖励Amount ==========
 async function depositBalance(uid) {
     // 第一步：输入Top UpAmount
-    showPrompt('Top UpAmount', '请输入Top UpAmount (€)', async (amount) => {
+    showPrompt('Top UpAmount', '请输入Top UpAmount (RM)', async (amount) => {
         const depositAmount = parseFloat(amount);
         if (isNaN(depositAmount) || depositAmount <= 0) {
             showToast('请输入有效的Top UpAmount', 'error');
@@ -83,7 +83,7 @@ async function depositBalance(uid) {
         }
         
         // 第二步：输入奖励Amount（可选）
-        showPrompt('奖励Amount', '请输入奖励Amount (€) - 可不填', async (bonus) => {
+        showPrompt('奖励Amount', '请输入奖励Amount (RM) - 可不填', async (bonus) => {
             const bonusAmount = parseFloat(bonus) || 0;
             
             // 获取用户信息
@@ -102,11 +102,11 @@ async function depositBalance(uid) {
             const newBalance = currentBalance + depositAmount + bonusAmount;
             
             // 第三步：二次Confirm
-            let confirmMessage = `用户：${user.username}Top UpAmount：€${depositAmount.toFixed(2)}`;
+            let confirmMessage = `用户：${user.username}Top UpAmount：RM${depositAmount.toFixed(2)}`;
             if (bonusAmount > 0) {
-                confirmMessage += `奖励Amount：€${bonusAmount.toFixed(2)}`;
+                confirmMessage += `奖励Amount：RM${bonusAmount.toFixed(2)}`;
             }
-            confirmMessage += `Top Up后总余额：€${newBalance.toFixed(2)}`;
+            confirmMessage += `Top Up后总余额：RM${newBalance.toFixed(2)}`;
             
             showConfirm('ConfirmTop Up', confirmMessage, async () => {
                 // 更新余额
@@ -150,7 +150,7 @@ async function depositBalance(uid) {
 
 // ========== 扣款（无奖励） ==========
 async function cutBalance(uid) {
-    showPrompt('扣款Amount', '请输入扣款Amount (€)', async (amt) => {
+    showPrompt('扣款Amount', '请输入扣款Amount (RM)', async (amt) => {
         const amount = parseFloat(amt);
         if (!amount || amount <= 0) {
             showToast('请输入有效Amount', 'error');
@@ -170,13 +170,13 @@ async function cutBalance(uid) {
         
         const newBalance = (user.balance || 0) - amount;
         
-        showConfirm('Confirm扣款', `用户: ${user.username}扣款Amount: €${amount.toFixed(2)}扣款后余额: €${newBalance.toFixed(2)}`, async () => {
+        showConfirm('Confirm扣款', `用户: ${user.username}扣款Amount: RM${amount.toFixed(2)}扣款后余额: RM${newBalance.toFixed(2)}`, async () => {
             const { error } = await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
             if (error) {
                 showToast('扣款失败: ' + error.message, 'error');
                 return;
             }
-            showToast(`-€${amount.toFixed(2)}`, 'success');
+            showToast(`-RM${amount.toFixed(2)}`, 'success');
             loadUsers();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
         });

@@ -87,7 +87,7 @@ function renderOrderPoolPage() {
             row.insertCell(0).innerText = o.id;
             row.insertCell(1).innerHTML = `<span class="badge">${o.order_code || '-'}</span>`;
             row.insertCell(2).innerText = o.accommodation_name || '-';
-            row.insertCell(3).innerHTML = `<span class="text-gold">€${(o.price || 0).toFixed(2)}</span>`;
+            row.insertCell(3).innerHTML = `<span class="text-gold">RM${(o.price || 0).toFixed(2)}</span>`;
             row.insertCell(4).innerHTML = o.image_url ? `<img src="${o.image_url}" style="width:60px;height:45px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="window.open('${o.image_url}','_blank')">` : '-';
             row.insertCell(5).innerHTML = `<span class="${o.status === 'available' ? 'text-green' : 'text-red'}">${o.status || 'available'}</span>`;
             row.insertCell(6).innerHTML = `<button class="edit-order" data-id="${o.id}" style="background:#2f6b3a; padding:4px 8px; font-size:11px; margin-right:4px;">Edit</button><button class="delete-order" data-id="${o.id}" style="background:#7a2f2f; padding:4px 8px; font-size:11px;">Delete</button>`;

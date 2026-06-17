@@ -29,13 +29,13 @@ async function loadWithdrawals() {
             const row = tbody.insertRow();
             row.insertCell(0).innerHTML = `<span class="badge">${w.uid}</span>`;
             row.insertCell(1).innerText = w.username;
-            row.insertCell(2).innerHTML = `<span class="text-gold">€${(w.amount || 0).toFixed(2)}</span>`;
+            row.insertCell(2).innerHTML = `<span class="text-gold">RM${(w.amount || 0).toFixed(2)}</span>`;
             row.insertCell(3).innerText = w.wallet_address || '-';
             row.insertCell(4).innerText = new Date(w.request_date).toLocaleString();
             row.insertCell(5).innerHTML = `<button class="approve-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;">批准</button><button class="reject-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;">拒绝</button>`;
         }
         document.querySelectorAll('.approve-withdraw').forEach(btn => btn.addEventListener('click', async () => {
-            showConfirm('批准Withdraw', `批准 €${parseFloat(btn.dataset.amt)} Withdraw？`, async () => {
+            showConfirm('批准Withdraw', `批准 RM${parseFloat(btn.dataset.amt)} Withdraw？`, async () => {
                 await sb.from('withdrawals').update({ status: 'approved' }).eq('id', parseInt(btn.dataset.id));
                 loadWithdrawals();
                 if (window.loadDashboardPage) window.loadDashboardPage(currentDays);

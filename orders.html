@@ -174,7 +174,7 @@ async function processPaymentRelease(orderNo, releaseTime) {
     const supplyPrice = order.total_supply_price || 0;
     const commissionAmount = order.total_commission || 0;
     
-    console.log(`写入本金释放: €${supplyPrice}`);
+    console.log(`写入本金释放: RM${supplyPrice}`);
     await sb.from('deposits').insert({
         uid: order.uid,
         username: order.username,
@@ -183,7 +183,7 @@ async function processPaymentRelease(orderNo, releaseTime) {
         created_at: now.toISOString()
     });
     
-    console.log(`写入佣金: €${commissionAmount}`);
+    console.log(`写入佣金: RM${commissionAmount}`);
     await sb.from('deposits').insert({
         uid: order.uid,
         username: order.username,
@@ -314,7 +314,7 @@ function renderNewOrders() {
     container.innerHTML = pendingOrders.map(order => {
         let productsText = parseProductsText(order.products);
         let displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
-        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-pending">Pending</span></div></div>`;
+        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">RM${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+RM${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-pending">Pending</span></div></div>`;
     }).join('');
     document.querySelectorAll('#newOrdersList .order-card').forEach(card => card.addEventListener('click', () => openOrderModal(JSON.parse(card.dataset.order))));
 }
@@ -326,7 +326,7 @@ function renderProcessingOrders() {
     container.innerHTML = processingOrders.map(order => {
         let productsText = parseProductsText(order.products);
         let displayText = productsText.length > 60 ? productsText.substring(0, 60) + '...' : productsText;
-        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">€${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+€${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-processing">In Transit</span></div></div>`;
+        return `<div class="order-card" data-order='${JSON.stringify(order)}'><div class="order-header"><span class="order-no">${order.order_no}</span><span class="order-date">${formatDate(order.created_at)}</span></div><div class="order-products">${displayText}</div><div class="order-footer"><span class="order-total">RM${(order.total_supply_price || 0).toFixed(2)}</span><span class="order-commission">+RM${(order.total_commission || 0).toFixed(2)}</span><span class="status-badge status-processing">In Transit</span></div></div>`;
     }).join('');
     document.querySelectorAll('#processingOrdersList .order-card').forEach(card => {
         card.addEventListener('click', () => {
@@ -348,7 +348,7 @@ function openOrderModal(order) {
     try {
         let products = typeof order.products === 'string' ? JSON.parse(order.products) : order.products;
         if (Array.isArray(products)) {
-            products.forEach(p => { productsHtml += `<div class="product-item-modal"><img src="${p.image_url || 'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'}" onerror="this.src='https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'"><div style="flex:1;"><div style="font-weight:600;">${escapeHtml(p.product_name)}</div><div style="font-size:12px; color:#6b7280;">×${p.quantity} | €${p.unit_price.toFixed(2)}/each</div></div><div style="font-weight:700; color:#ff7a00;">€${(p.unit_price * p.quantity).toFixed(2)}</div></div>`; });
+            products.forEach(p => { productsHtml += `<div class="product-item-modal"><img src="${p.image_url || 'https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'}" onerror="this.src='https://placehold.co/50x50/f0f2f5/94a3b8?text=Product'"><div style="flex:1;"><div style="font-weight:600;">${escapeHtml(p.product_name)}</div><div style="font-size:12px; color:#6b7280;">×${p.quantity} | RM${p.unit_price.toFixed(2)}/each</div></div><div style="font-weight:700; color:#ff7a00;">RM${(p.unit_price * p.quantity).toFixed(2)}</div></div>`; });
         }
     } catch(e) { productsHtml = '<div>Failed to load products</div>'; }
     document.getElementById('modalProductsList').innerHTML = productsHtml;
@@ -382,7 +382,7 @@ document.getElementById('confirmOrderBtn').addEventListener('click', async funct
     let userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
     let currentBalance = userDataResult.data?.balance || 0;
     if (currentBalance < currentOrder.total_supply_price) {
-        showToast('Insufficient balance! Need €' + currentOrder.total_supply_price.toFixed(2), 'error');
+        showToast('Insufficient balance! Need RM' + currentOrder.total_supply_price.toFixed(2), 'error');
         return;
     }
     

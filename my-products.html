@@ -305,8 +305,8 @@
                      onerror="this.src='https://placehold.co/80x80/f0f2f5/94a3b8?text=Product'">
                 <div class="product-details">
                     <div class="product-name">${escapeHtml(product.product_name)}</div>
-                    <div class="product-price">€${product.price.toFixed(2)}</div>
-                    <div class="product-margin">+${product.margin_percent}% Margin (+€${product.margin_profit} profit)</div>
+                    <div class="product-price">RM${product.price.toFixed(2)}</div>
+                    <div class="product-margin">+${product.margin_percent}% Margin (+RM${product.margin_profit} profit)</div>
                     <div class="product-date">Added on ${formatDate(product.added_at)}</div>
                 </div>
                 <button class="remove-btn" data-id="${product.id}" data-name="${escapeHtml(product.product_name)}">

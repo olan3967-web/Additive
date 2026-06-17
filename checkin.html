@@ -602,7 +602,7 @@
 
     <div class="stats-card">
         <span class="stats-label">TOTAL CLAIMED</span>
-        <span class="stats-value" id="totalClaimed">€0</span>
+        <span class="stats-value" id="totalClaimed">RM0</span>
     </div>
 
     <div class="checkin-grid" id="daysGrid"></div>
@@ -768,7 +768,7 @@
         }
     }
 
-    function animateNumber(element, target, prefix = '€') {
+    function animateNumber(element, target, prefix = 'RM') {
         let current = 0;
         const duration = 800;
         const step = target / (duration / 16);
@@ -922,10 +922,10 @@
         
         const userOrderCount = await getUserOrderCount();
         
-        animateNumber(document.getElementById('totalClaimed'), totalClaimedAmount, '€');
+        animateNumber(document.getElementById('totalClaimed'), totalClaimedAmount, 'RM');
         document.getElementById('totalDays').innerText = totalDaysCount;
         
-        const rewardsDesc = signInRewards.map(r => `Day ${r.day}: €${r.amount}`).join(' | ');
+        const rewardsDesc = signInRewards.map(r => `Day ${r.day}: RM${r.amount}`).join(' | ');
         document.getElementById('rewardsDesc').innerHTML = rewardsDesc;
         
         const grid = document.getElementById('daysGrid');
@@ -950,7 +950,7 @@
             
             div.innerHTML = `
                 <div class="day-num">Day ${dayNum}</div>
-                <div class="day-reward">€${reward.amount}</div>
+                <div class="day-reward">RM${reward.amount}</div>
                 ${isClaimed ? '<i class="fas fa-check-circle check-icon"></i>' : '<div style="height: 20px;"></div>'}
             `;
             grid.appendChild(div);
@@ -968,7 +968,7 @@
             const nextReward = signInRewards.find(r => r.day === nextDay);
             claimBtn.classList.remove('disabled');
             claimBtn.disabled = false;
-            document.getElementById('claimWarning').innerHTML = `✨ Day ${nextDay} reward: €${nextReward?.amount || 0} ✨`;
+            document.getElementById('claimWarning').innerHTML = `✨ Day ${nextDay} reward: RM${nextReward?.amount || 0} ✨`;
         } else if (hasClaimedToday()) {
             claimBtn.classList.add('disabled');
             claimBtn.disabled = true;
@@ -1021,7 +1021,7 @@
                 await render();
                 animateCard(1);
                 burstConfetti();
-                showToast(`⚠️ Streak reset! You got €${firstReward?.amount || 5} for Day 1.`, 'warning');
+                showToast(`⚠️ Streak reset! You got RM${firstReward?.amount || 5} for Day 1.`, 'warning');
             }
             return;
         }
@@ -1037,11 +1037,11 @@
             await render();
             animateCard(nextDay);
             burstConfetti();
-            showToast(`🎉 Day ${nextDay} claimed! +€${amount}`, 'success');
+            showToast(`🎉 Day ${nextDay} claimed! +RM${amount}`, 'success');
             
             if (nextDay === totalDaysCount) {
                 setTimeout(() => {
-                    showToast(`🏆 AMAZING! Total claimed: €${totalClaimedAmount}`, 'success');
+                    showToast(`🏆 AMAZING! Total claimed: RM${totalClaimedAmount}`, 'success');
                 }, 500);
             }
         } else {

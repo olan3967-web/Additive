@@ -67,7 +67,7 @@ function showPopup(order) {
         if (typeof products === 'string') products = JSON.parse(products);
         if (Array.isArray(products)) productsText = products.map(p => `${p.product_name} ×${p.quantity}`).join(', ');
     } catch(e) { productsText = '新订单'; }
-    toast.innerHTML = `<div class="toast-metal-content"><div class="toast-metal-icon"><i class="fas fa-gift"></i></div><div class="toast-metal-info"><div class="toast-metal-title">📦 新订单通知</div><div class="toast-metal-order">${order.order_no}</div><div class="toast-metal-product">${productsText.substring(0, 35)}</div></div><div class="toast-metal-amount">€${(order.total_supply_price || 0).toFixed(2)}</div><div class="toast-metal-close"><i class="fas fa-times"></i></div></div><div class="toast-metal-progress"></div><div class="toast-metal-shimmer"></div>`;
+    toast.innerHTML = `<div class="toast-metal-content"><div class="toast-metal-icon"><i class="fas fa-gift"></i></div><div class="toast-metal-info"><div class="toast-metal-title">📦 新订单通知</div><div class="toast-metal-order">${order.order_no}</div><div class="toast-metal-product">${productsText.substring(0, 35)}</div></div><div class="toast-metal-amount">RM${(order.total_supply_price || 0).toFixed(2)}</div><div class="toast-metal-close"><i class="fas fa-times"></i></div></div><div class="toast-metal-progress"></div><div class="toast-metal-shimmer"></div>`;
     stack.insertBefore(toast, stack.firstChild);
     let timeoutId = setTimeout(() => removeToast(toast), 5000);
     const closeBtn = toast.querySelector('.toast-metal-close');
@@ -110,7 +110,7 @@ async function checkOrders() {
             unreadCount++;
             updateBadge();
             if (Notification.permission === 'granted') {
-                new Notification('📦 新订单', { body: `${order.order_no} - €${(order.total_supply_price || 0).toFixed(2)}`, icon: 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png' });
+                new Notification('📦 新订单', { body: `${order.order_no} - RM${(order.total_supply_price || 0).toFixed(2)}`, icon: 'https://ygeawapbjcfytjoxpttk.supabase.co/storage/v1/object/public/logos/cj.png' });
             }
         }
         lastCheckTime = new Date().toISOString();
