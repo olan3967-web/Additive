@@ -1,10 +1,14 @@
-// admin-orders.js - Backend Order Management + 自动状态推进器
+// admin-orders.js - Backend Order Management + 自动状态推进器（保活版）
 let adminOrderSearchKeyword = '';
 let adminOrdersList = [];
 let adminOrdersCurrentPage = 1;
 const adminOrdersPageSize = 50;
+let autoAdvanceTimer = null;
+let isAdvancing = false;
 
-// ========== 状态流程配置 ==========
+// =====================================================
+// 状态流程配置
+// =====================================================
 const STATUS_FLOW = {
     "Payment released": { 
         index: 3, 
@@ -63,16 +67,12 @@ const STATUS_FLOW = {
 };
 
 const LOGISTICS_DURATION = {
-    MIN_HOURS: 72,   // 3天
-    MAX_HOURS: 96    // 4天
+    MIN_HOURS: 72,
+    MAX_HOURS: 96
 };
 
-// 物流计划缓存
 const logisticsPlanCache = new Map();
 
-/**
- * 为订单生成物流进度计划
- */
 function generateLogisticsPlan(startTime) {
     const totalDurationHours = LOGISTICS_DURATION.MIN_HOURS + Math.random() * (LOGISTICS_DURATION.MAX_HOURS - LOGISTICS_DURATION.MIN_HOURS);
     const totalDurationMs = totalDurationHours * 60 * 60 * 1000;
@@ -117,9 +117,212 @@ function generateLogisticsPlan(startTime) {
     return plan;
 }
 
-/**
- * 手动释放 Payment released（后台点击 Release Now）
- */
+// =====================================================
+// 核心推进函数
+// =====================================================
+async function autoAdvanceOrderStatus() {
+    if (isAdvancing) {
+        return;
+    }
+    
+    isAdvancing = true;
+    
+    try {
+        const { data: orders, error } = await sb
+            .from('user_orders')
+            .select('*')
+            .eq('status', 'processing');
+        
+        if (error || !orders || orders.length === 0) {
+            isAdvancing = false;
+            return;
+        }
+        
+        const now = new Date();
+        let anyUpdated = false;
+        
+        for (const order of orders) {
+            let timeline = [];
+            try {
+                timeline = JSON.parse(order.tracking_timeline || '[]');
+            } catch(e) {
+                console.error(`解析订单 ${order.order_no} 失败:`, e);
+                continue;
+            }
+            
+            let updated = false;
+            let newTimeline = [...timeline];
+            
+            for (let i = 0; i < newTimeline.length; i++) {
+                const statusItem = newTimeline[i];
+                
+                if (statusItem.isPending !== true) continue;
+                
+                const statusName = statusItem.status;
+                let shouldAdvance = false;
+                let nextTime = null;
+                
+                // ========== 处理 Payment released (Timer) ==========
+                if (statusName === "Payment released") {
+                    const releaseMechanism = statusItem.releaseMechanism;
+                    const timerMinutes = statusItem.timerMinutes;
+                    const releaseTime = new Date(statusItem.time);
+                    
+                    if (releaseMechanism === 'timer' && timerMinutes && timerMinutes > 0) {
+                        if (now >= releaseTime) {
+                            shouldAdvance = true;
+                            nextTime = releaseTime;
+                        }
+                    }
+                    
+                // ========== 处理其他状态 ==========
+                } else {
+                    let prevTime = null;
+                    for (let j = i - 1; j >= 0; j--) {
+                        if (newTimeline[j].isCompleted !== true) continue;
+                        prevTime = new Date(newTimeline[j].time);
+                        if (!isNaN(prevTime.getTime())) break;
+                    }
+                    
+                    if (!prevTime || isNaN(prevTime.getTime())) continue;
+                    
+                    let delayMinutes = 0;
+                    
+                    if (statusName === "Order confirmed") {
+                        delayMinutes = 5;
+                    } else if (statusName === "Preparing parcel for shipment") {
+                        delayMinutes = 10 + Math.random() * 5;
+                    } else if (statusName === "Courier assigned") {
+                        delayMinutes = 120;
+                    } else if (statusName === "Parcel picked up by logistics partner") {
+                        delayMinutes = 120;
+                    } else if (statusName === "Parcel arrived at sorting facility") {
+                        delayMinutes = 120;
+                    } else if (statusName === "Parcel departed from sorting facility") {
+                        delayMinutes = 120;
+                    } else if (statusName === "Parcel arrived at delivery hub") {
+                        delayMinutes = 120;
+                    } else if (statusName === "Parcel out for delivery") {
+                        delayMinutes = 120;
+                    } else if (statusName === "Parcel delivered") {
+                        delayMinutes = 120;
+                    } else {
+                        continue;
+                    }
+                    
+                    const expectedTime = new Date(prevTime.getTime() + delayMinutes * 60 * 1000);
+                    
+                    if (now >= expectedTime) {
+                        shouldAdvance = true;
+                        nextTime = expectedTime;
+                    }
+                }
+                
+                if (shouldAdvance && nextTime) {
+                    newTimeline[i] = {
+                        status: statusName,
+                        time: nextTime.toISOString(),
+                        isCompleted: true
+                    };
+                    
+                    if (statusName === "Parcel delivered") {
+                        await sb.from('user_orders').update({
+                            tracking_timeline: JSON.stringify(newTimeline),
+                            status: 'delivered',
+                            completed_at: now.toISOString()
+                        }).eq('order_no', order.order_no);
+                        
+                        await recordOrderToHistory(order);
+                        console.log(`✅ 订单 ${order.order_no} 已完成`);
+                        anyUpdated = true;
+                        updated = true;
+                        break;
+                    }
+                    
+                    anyUpdated = true;
+                    updated = true;
+                    console.log(`📌 订单 ${order.order_no} 状态推进: ${statusName}`);
+                    break;
+                }
+            }
+            
+            if (updated) {
+                await sb.from('user_orders').update({
+                    tracking_timeline: JSON.stringify(newTimeline)
+                }).eq('order_no', order.order_no);
+            }
+        }
+        
+        if (anyUpdated) {
+            console.log('✅ 订单状态推进完成');
+        }
+        
+    } catch (err) {
+        console.error('推进订单状态失败:', err);
+    } finally {
+        isAdvancing = false;
+    }
+}
+
+// =====================================================
+// 记录订单到 history
+// =====================================================
+async function recordOrderToHistory(order) {
+    try {
+        let products = typeof order.products === 'string' ? JSON.parse(order.products) : order.products;
+        if (!Array.isArray(products)) return;
+        
+        for (const product of products) {
+            const qty = parseInt(product.quantity) || 1;
+            for (let i = 0; i < qty; i++) {
+                await sb.from('order_history').insert({
+                    uid: order.uid,
+                    username: order.username,
+                    order_code: order.order_no,
+                    accommodation_name: product.product_name,
+                    price: product.unit_price,
+                    commission: product.commission_per_item || 0,
+                    date: new Date().toISOString()
+                });
+            }
+        }
+        console.log(`📝 订单 ${order.order_no} 已写入 order_history`);
+    } catch(e) {
+        console.error('写入 order_history 失败:', e);
+    }
+}
+
+// =====================================================
+// 启动自动推进器
+// =====================================================
+function startAutoAdvancer() {
+    if (autoAdvanceTimer) {
+        clearInterval(autoAdvanceTimer);
+        clearTimeout(autoAdvanceTimer);
+    }
+    
+    console.log('🚀 启动订单自动推进器（每 15 秒检查一次）');
+    
+    setTimeout(autoAdvanceOrderStatus, 1000);
+    
+    autoAdvanceTimer = setInterval(autoAdvanceOrderStatus, 15000);
+    
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            console.log('📱 页面回到前台，立即检查订单状态');
+            autoAdvanceOrderStatus();
+        }
+    });
+    
+    window.addEventListener('online', () => {
+        console.log('🌐 网络已恢复，立即检查订单状态');
+        autoAdvanceOrderStatus();
+    });
+}
+
+// =====================================================
+// 手动释放 Payment
+// =====================================================
 async function manualReleasePayment(orderNo) {
     console.log(`🔓 手动释放订单 ${orderNo}`);
     
@@ -166,226 +369,69 @@ async function manualReleasePayment(orderNo) {
         tracking_timeline: JSON.stringify(timeline)
     }).eq('order_no', orderNo);
     
-    // ✅ 记录 Product Payment Release 到 deposits
-    await sb.from('deposits').insert({
-        uid: order.uid,
-        username: order.username,
-        amount: order.total_supply_price || 0,
-        type: 'order_settlement',
-        description: 'Product Payment Release',
-        created_at: now.toISOString()
-    });
+    const supplyPrice = order.total_supply_price || 0;
+    const commissionAmount = order.total_commission || 0;
     
-    // ✅ 记录 Commission 到 deposits
-    await sb.from('deposits').insert({
-        uid: order.uid,
-        username: order.username,
-        amount: order.total_commission || 0,
-        type: 'order_commission',
-        description: 'Commissions',
-        created_at: now.toISOString()
-    });
+    // 获取用户当前余额
+    const { data: user, error: userError } = await sb
+        .from('users')
+        .select('balance')
+        .eq('uid', order.uid)
+        .single();
     
-    // 更新用户余额
-    const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
-    if (user) {
-        const refundAmount = (order.total_supply_price || 0) + (order.total_commission || 0);
-        const newBalance = (user.balance || 0) + refundAmount;
-        await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
+    if (userError) {
+        console.error('获取用户失败:', userError);
+        return false;
     }
     
-    console.log(`✅ 订单 ${orderNo} Payment released 已手动释放`);
+    const refundAmount = supplyPrice + commissionAmount;
+    const newBalance = (user.balance || 0) + refundAmount;
+    
+    console.log(`用户 ${order.uid} 原余额: ${user.balance}, 增加: ${refundAmount}, 新余额: ${newBalance}`);
+    
+    // 更新用户余额
+    const { error: updateError } = await sb
+        .from('users')
+        .update({ balance: newBalance })
+        .eq('uid', order.uid);
+    
+    if (updateError) {
+        console.error('更新余额失败:', updateError);
+        return false;
+    }
+    
+    // 记录 deposits
+    await sb.from('deposits').insert({
+        uid: order.uid,
+        username: order.username,
+        amount: supplyPrice,
+        type: 'order_settlement',
+        created_at: now.toISOString()
+    });
+    
+    await sb.from('deposits').insert({
+        uid: order.uid,
+        username: order.username,
+        amount: commissionAmount,
+        type: 'order_commission',
+        created_at: now.toISOString()
+    });
+    
+    // 更新本地 storage
+    const localUser = getCurrentUser();
+    if (localUser && localUser.uid === order.uid) {
+        localUser.balance = newBalance;
+        localStorage.setItem('currentUser', JSON.stringify(localUser));
+    }
+    
+    console.log(`✅ 订单 ${orderNo} 释放完成！本金 RM${supplyPrice}，佣金 RM${commissionAmount}`);
+    console.log(`✅ 用户 ${order.uid} 新余额: RM${newBalance}`);
     return true;
 }
 
-/**
- * 订单完成后记录到 order_history 和 deposits
- */
-async function recordOrderToHistory(order) {
-    try {
-        let products = typeof order.products === 'string' ? JSON.parse(order.products) : order.products;
-        if (!Array.isArray(products)) return;
-        
-        for (const product of products) {
-            const qty = parseInt(product.quantity) || 1;
-            for (let i = 0; i < qty; i++) {
-                await sb.from('order_history').insert({
-                    uid: order.uid,
-                    username: order.username,
-                    order_code: order.order_no,
-                    accommodation_name: product.product_name,
-                    price: product.unit_price,
-                    commission: product.commission_per_item || 0,
-                    date: new Date().toISOString()
-                });
-            }
-        }
-        console.log(`📝 订单 ${order.order_no} 已写入 order_history`);
-        
-        // 更新用户余额（返还佣金）- 注意：本金释放已经在 activatePaymentRelease 中处理
-        const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
-        if (user) {
-            const newBalance = (user.balance || 0) + (order.total_commission || 0);
-            await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
-        }
-    } catch(e) {
-        console.error('写入 order_history 失败:', e);
-    }
-}
-
-/**
- * 主函数：自动推进所有 processing 订单的状态
- */
-async function autoAdvanceOrderStatus() {
-    const { data: orders, error } = await sb
-        .from('user_orders')
-        .select('*')
-        .eq('status', 'processing');
-    
-    if (error || !orders || orders.length === 0) return;
-    
-    const now = new Date();
-    
-    for (const order of orders) {
-        let timeline = [];
-        try {
-            timeline = JSON.parse(order.tracking_timeline || '[]');
-        } catch(e) {
-            console.error(`解析订单 ${order.order_no} 失败:`, e);
-            continue;
-        }
-        
-        let updated = false;
-        let newTimeline = [...timeline];
-        
-        for (let i = 0; i < newTimeline.length; i++) {
-            const statusItem = newTimeline[i];
-            
-            if (statusItem.isPending !== true) continue;
-            
-            const statusName = statusItem.status;
-            const statusConfig = STATUS_FLOW[statusName];
-            
-            if (!statusConfig) continue;
-            
-            let shouldAdvance = false;
-            let nextTime = null;
-            
-            if (statusName === "Payment released") {
-                const releaseMechanism = statusItem.releaseMechanism;
-                const timerMinutes = statusItem.timerMinutes;
-                const baseTime = new Date(statusItem.time);
-                
-                if (releaseMechanism === 'timer' && timerMinutes) {
-                    if (now >= baseTime) {
-                        shouldAdvance = true;
-                        nextTime = baseTime;
-                    }
-                } else if (releaseMechanism === 'manual') {
-                    continue;
-                }
-                
-            } else if (statusName === "Preparing parcel for shipment") {
-                const prevStatusTime = new Date(newTimeline[i - 1]?.time);
-                if (isNaN(prevStatusTime.getTime())) continue;
-                
-                const delayMs = (statusConfig.delayMinutes ? statusConfig.delayMinutes() : 0) * 60 * 1000;
-                const expectedTime = new Date(prevStatusTime.getTime() + delayMs);
-                
-                if (now >= expectedTime) {
-                    shouldAdvance = true;
-                    nextTime = expectedTime;
-                    
-                    if (!logisticsPlanCache.has(order.order_no)) {
-                        const plan = generateLogisticsPlan(expectedTime);
-                        logisticsPlanCache.set(order.order_no, plan);
-                        console.log(`📦 订单 ${order.order_no} 生成物流计划，预计 ${plan[plan.length-1].plannedTime.toLocaleString()} 完成`);
-                    }
-                }
-                
-            } else if (statusConfig.isLogistics) {
-                let plan = logisticsPlanCache.get(order.order_no);
-                
-                if (!plan && statusConfig.isStartOfLogistics) {
-                    const prevStatusTime = new Date(newTimeline[i - 1]?.time);
-                    if (!isNaN(prevStatusTime.getTime())) {
-                        plan = generateLogisticsPlan(prevStatusTime);
-                        logisticsPlanCache.set(order.order_no, plan);
-                    }
-                }
-                
-                if (plan) {
-                    const planItem = plan.find(p => p.status === statusName);
-                    if (planItem && !planItem.isCompleted && now >= planItem.plannedTime) {
-                        shouldAdvance = true;
-                        nextTime = planItem.plannedTime;
-                        planItem.isCompleted = true;
-                        logisticsPlanCache.set(order.order_no, plan);
-                    }
-                } else {
-                    const baseTime = new Date(newTimeline[i - 1]?.time);
-                    if (!isNaN(baseTime.getTime())) {
-                        const delayHours = 24 + Math.random() * 48;
-                        const expectedTime = new Date(baseTime.getTime() + delayHours * 60 * 60 * 1000);
-                        if (now >= expectedTime) {
-                            shouldAdvance = true;
-                            nextTime = expectedTime;
-                        }
-                    }
-                }
-            } else {
-                const prevStatusTime = new Date(newTimeline[i - 1]?.time);
-                if (isNaN(prevStatusTime.getTime())) continue;
-                
-                const delayMs = (typeof statusConfig.delayMinutes === 'function' ? statusConfig.delayMinutes() : statusConfig.delayMinutes) * 60 * 1000;
-                const expectedTime = new Date(prevStatusTime.getTime() + delayMs);
-                
-                if (now >= expectedTime) {
-                    shouldAdvance = true;
-                    nextTime = expectedTime;
-                }
-            }
-            
-            if (shouldAdvance) {
-                newTimeline[i] = {
-                    status: statusName,
-                    time: nextTime.toISOString(),
-                    isCompleted: true
-                };
-                
-                if (statusConfig.isFinal) {
-                    await sb.from('user_orders').update({
-                        tracking_timeline: JSON.stringify(newTimeline),
-                        status: 'delivered',
-                        completed_at: now.toISOString()
-                    }).eq('order_no', order.order_no);
-                    
-                    await recordOrderToHistory(order);
-                    console.log(`✅ 订单 ${order.order_no} 已完成，移入历史记录`);
-                    logisticsPlanCache.delete(order.order_no);
-                    updated = false;
-                    break;
-                }
-                
-                updated = true;
-                console.log(`📌 订单 ${order.order_no} 状态推进: ${statusName} → ${statusConfig.nextStatus}`);
-            }
-        }
-        
-        if (updated) {
-            await sb.from('user_orders').update({
-                tracking_timeline: JSON.stringify(newTimeline)
-            }).eq('order_no', order.order_no);
-        }
-    }
-}
-
-// 启动自动推进器（每 30 秒执行一次）
-let autoAdvanceInterval = setInterval(autoAdvanceOrderStatus, 30000);
-console.log('🚀 订单状态自动推进器已启动，每 30 秒检查一次');
-
-// ========== 以下为原有的订单管理页面代码 ==========
-
+// =====================================================
+// 加载订单列表页面
+// =====================================================
 async function loadAdminOrdersPage() {
     const container = document.getElementById('page_orders');
     if (!container) return;
@@ -530,7 +576,22 @@ function escapeHtml(str) {
     return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
 
-// 导出全局函数
+// =====================================================
+// 启动自动推进器（页面加载时自动启动）
+// =====================================================
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startAutoAdvancer);
+    } else {
+        startAutoAdvancer();
+    }
+}
+
+// 暴露全局函数
 window.loadAdminOrdersPage = loadAdminOrdersPage;
 window.manualReleasePayment = manualReleasePayment;
 window.autoAdvanceOrderStatus = autoAdvanceOrderStatus;
+window.startAutoAdvancer = startAutoAdvancer;
+window.recordOrderToHistory = recordOrderToHistory;
+
+console.log('✅ admin-orders.js 加载完成（自动推进器已启动）');

@@ -1,4 +1,4 @@
-// admin-setorders.js - 完整修复版
+// admin-setorders.js - 完整修复版（修复 Timer 释放时间计算 + Manual Release）
 
 let setordersSearchKeyword = '';
 let selectedUser = null;
@@ -96,7 +96,9 @@ function generateRandomBuyer() {
     return { name: fullName, phone, address, country: selectedCountry, city: selectedCity };
 }
 
-// ========== manualReleasePayment 函数（最终修复版） ==========
+// =====================================================
+// manualReleasePayment - 完整的释放函数
+// =====================================================
 async function manualReleasePayment(orderNo) {
     console.log(`🔓 手动释放订单 ${orderNo}`);
     
@@ -143,53 +145,96 @@ async function manualReleasePayment(orderNo) {
         tracking_timeline: JSON.stringify(timeline)
     }).eq('order_no', orderNo);
     
-    // ✅✅✅ 关键：记录 Product Payment Release（本金释放）
     const supplyPrice = order.total_supply_price || 0;
     const commissionAmount = order.total_commission || 0;
     
-    console.log(`记录本金释放: RM${supplyPrice}`);
-    console.log(`记录佣金: RM${commissionAmount}`);
+    // 获取用户当前余额
+    const { data: user, error: userError } = await sb
+        .from('users')
+        .select('balance')
+        .eq('uid', order.uid)
+        .single();
     
-    // 插入本金释放记录
-    const { error: err1 } = await sb.from('deposits').insert({
+    if (userError) {
+        console.error('获取用户失败:', userError);
+        return false;
+    }
+    
+    const refundAmount = supplyPrice + commissionAmount;
+    const newBalance = (user.balance || 0) + refundAmount;
+    
+    console.log(`用户 ${order.uid} 原余额: ${user.balance}, 增加: ${refundAmount}, 新余额: ${newBalance}`);
+    
+    // 更新用户余额
+    const { error: updateError } = await sb
+        .from('users')
+        .update({ balance: newBalance })
+        .eq('uid', order.uid);
+    
+    if (updateError) {
+        console.error('更新余额失败:', updateError);
+        return false;
+    }
+    
+    // 记录 deposits - Product Payment Release
+    await sb.from('deposits').insert({
         uid: order.uid,
         username: order.username,
         amount: supplyPrice,
         type: 'order_settlement',
+        description: 'Product Payment Release',
         created_at: now.toISOString()
     });
-    if (err1) console.error('写入 order_settlement 失败:', err1);
     
-    // 插入佣金记录
-    const { error: err2 } = await sb.from('deposits').insert({
+    // 记录 deposits - Commission
+    await sb.from('deposits').insert({
         uid: order.uid,
         username: order.username,
         amount: commissionAmount,
         type: 'order_commission',
+        description: 'Commissions',
         created_at: now.toISOString()
     });
-    if (err2) console.error('写入 order_commission 失败:', err2);
     
-    // 更新用户余额
-    const { data: user } = await sb.from('users').select('balance').eq('uid', order.uid).single();
-    if (user) {
-        const refundAmount = supplyPrice + commissionAmount;
-        const newBalance = (user.balance || 0) + refundAmount;
-        await sb.from('users').update({ balance: newBalance }).eq('uid', order.uid);
-        
-        // 更新本地 storage
-        const localUser = getCurrentUser();
-        if (localUser && localUser.uid === order.uid) {
-            localUser.balance = newBalance;
-            localStorage.setItem('currentUser', JSON.stringify(localUser));
+    // 记录到 order_history
+    try {
+        let products = typeof order.products === 'string' ? JSON.parse(order.products) : order.products;
+        if (Array.isArray(products)) {
+            for (const product of products) {
+                const qty = parseInt(product.quantity) || 1;
+                for (let i = 0; i < qty; i++) {
+                    await sb.from('order_history').insert({
+                        uid: order.uid,
+                        username: order.username,
+                        order_code: order.order_no,
+                        accommodation_name: product.product_name,
+                        price: product.unit_price,
+                        commission: product.commission_per_item || 0,
+                        date: now.toISOString()
+                    });
+                }
+            }
         }
+        console.log(`📝 订单 ${orderNo} 已写入 order_history`);
+    } catch(e) {
+        console.error('写入 order_history 失败:', e);
+    }
+    
+    // 更新本地 storage
+    const localUser = getCurrentUser();
+    if (localUser && localUser.uid === order.uid) {
+        localUser.balance = newBalance;
+        localStorage.setItem('currentUser', JSON.stringify(localUser));
     }
     
     console.log(`✅ 订单 ${orderNo} 释放完成！本金 RM${supplyPrice}，佣金 RM${commissionAmount}`);
+    console.log(`✅ 用户 ${order.uid} 新余额: RM${newBalance}`);
     return true;
 }
 
-// ========== 加载 Manual Release 订单 ==========
+// =====================================================
+// 加载 Manual Release 订单
+// =====================================================
 async function loadManualReleaseOrders() {
     try {
         if (!selectedUser || !selectedUser.uid) {
@@ -420,6 +465,9 @@ function updateSummary() {
     document.getElementById('totalIncrease').innerHTML = `RM${(totalSupply + totalCommission).toFixed(2)}`;
 }
 
+// =====================================================
+// confirmSetOrder - 修复 Timer 释放时间计算
+// =====================================================
 async function confirmSetOrder() {
     const selectedItems = orderItems.filter(item => item.quantity > 0);
     if (selectedItems.length === 0) { showToast('Please select at least one product', 'error'); return; }
@@ -431,13 +479,21 @@ async function confirmSetOrder() {
     for (const item of selectedItems) {
         totalSupplyPrice += item.price * item.quantity;
         totalCommission += item.margin_profit * item.quantity;
-        productsList.push({ product_id: item.product_id, product_name: item.product_name, quantity: item.quantity, unit_price: item.price, commission_per_item: item.margin_profit, image_url: item.image_url });
+        productsList.push({ 
+            product_id: item.product_id, 
+            product_name: item.product_name, 
+            quantity: item.quantity, 
+            unit_price: item.price, 
+            commission_per_item: item.margin_profit, 
+            image_url: item.image_url 
+        });
     }
     
     const startTime = new Date();
     const paymentReceivedDelay = 5 + Math.random() * 2;
     const paymentReceivedTime = new Date(startTime.getTime() + paymentReceivedDelay * 60 * 1000);
     
+    // ✅ 初始时间线（前3个状态是已完成的）
     const initialTimeline = [
         { status: "Order is placed", time: startTime.toISOString(), isCompleted: true },
         { status: "Payment received from buyer", time: paymentReceivedTime.toISOString(), isCompleted: true },
@@ -446,26 +502,64 @@ async function confirmSetOrder() {
     
     let paymentReleasedTime, releaseMechanism;
     if (paymentReleaseTimer && paymentReleaseTimer > 0) {
+        // ✅ Timer 模式：从 Payment under escrow protection 的时间开始计时
         paymentReleasedTime = new Date(paymentReceivedTime.getTime() + paymentReleaseTimer * 60 * 1000);
         releaseMechanism = 'timer';
     } else {
-        paymentReleasedTime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        // ✅ Manual 模式：设置为未来 7 天
+        paymentReleasedTime = new Date(paymentReceivedTime.getTime() + 7 * 24 * 60 * 60 * 1000);
         releaseMechanism = 'manual';
     }
     
-    initialTimeline.push({ status: "Payment released", time: paymentReleasedTime.toISOString(), isPending: true, releaseMechanism: releaseMechanism, timerMinutes: paymentReleaseTimer || null });
+    // ✅ Payment released 状态（isPending: true 表示等待释放）
+    initialTimeline.push({ 
+        status: "Payment released", 
+        time: paymentReleasedTime.toISOString(), 
+        isPending: true, 
+        releaseMechanism: releaseMechanism, 
+        timerMinutes: paymentReleaseTimer || null 
+    });
     
-    const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    const subsequentStatuses = ["Order confirmed", "Preparing parcel for shipment", "Courier assigned", "Parcel picked up by logistics partner", "Parcel arrived at sorting facility", "Parcel departed from sorting facility", "Parcel arrived at delivery hub", "Parcel out for delivery", "Parcel delivered"];
+    // ✅ 后续状态按顺序递增，每个状态间隔一定时间
+    const subsequentStatuses = [
+        "Order confirmed",
+        "Preparing parcel for shipment",
+        "Courier assigned",
+        "Parcel picked up by logistics partner",
+        "Parcel arrived at sorting facility",
+        "Parcel departed from sorting facility",
+        "Parcel arrived at delivery hub",
+        "Parcel out for delivery",
+        "Parcel delivered"
+    ];
+    
+    let currentTime = new Date(paymentReleasedTime);
     for (let i = 0; i < subsequentStatuses.length; i++) {
-        initialTimeline.push({ status: subsequentStatuses[i], time: futureDate.toISOString(), isPending: true });
+        // 每个状态间隔 2-6 小时
+        const delayHours = 2 + Math.random() * 4;
+        currentTime = new Date(currentTime.getTime() + delayHours * 60 * 60 * 1000);
+        initialTimeline.push({ 
+            status: subsequentStatuses[i], 
+            time: currentTime.toISOString(), 
+            isPending: true 
+        });
     }
     
     const { error } = await sb.from('user_orders').insert({
-        uid: selectedUser.uid, username: selectedUser.username, order_no: orderNo, products: JSON.stringify(productsList),
-        total_supply_price: totalSupplyPrice, total_commission: totalCommission, buyer_name: buyer.name, buyer_phone: buyer.phone,
-        buyer_address: buyer.address, shipping_address: "Supplier Warehouse, Shanghai, China", status: 'pending',
-        payment_release_timer: paymentReleaseTimer || null, tracking_timeline: JSON.stringify(initialTimeline), created_at: new Date().toISOString()
+        uid: selectedUser.uid, 
+        username: selectedUser.username, 
+        order_no: orderNo, 
+        products: JSON.stringify(productsList),
+        total_supply_price: totalSupplyPrice, 
+        total_commission: totalCommission, 
+        buyer_name: buyer.name, 
+        buyer_phone: buyer.phone,
+        buyer_address: buyer.address, 
+        shipping_address: "Supplier Warehouse, Shanghai, China", 
+        status: 'pending',
+        payment_release_timer: paymentReleaseTimer || null, 
+        tracking_timeline: JSON.stringify(initialTimeline), 
+        created_at: new Date().toISOString()
     });
     
     if (error) { showToast('Failed: ' + error.message, 'error'); return; }
@@ -488,3 +582,6 @@ function showToast(msg) { const toast = document.createElement('div'); toast.tex
 
 window.loadSetordersPage = loadSetordersPage;
 window.manualReleasePayment = manualReleasePayment;
+window.loadManualReleaseOrders = loadManualReleaseOrders;
+
+console.log('✅ admin-setorders.js 加载完成');
